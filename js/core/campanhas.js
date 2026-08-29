@@ -29,12 +29,10 @@
  *
  * ============================================================
  */
-
 import {
   getSupabase,
   normalizeSupabaseError
-} from "./core/supabase.js";
-
+} from "./supabase.js";
 
 /* ============================================================
    CONFIGURAÇÃO
