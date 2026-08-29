@@ -16,6 +16,9 @@ const CONFIG = Object.freeze({
   CAMPAIGN_PAGE:
     "./campanha.html",
 
+  STORAGE_BUCKET:
+    "campaigns",
+
   MAX_NAME_LENGTH:
     120,
 
@@ -31,12 +34,6 @@ const CONFIG = Object.freeze({
       "image/png",
       "image/webp"
     ]),
-
-  STORAGE_BUCKET:
-    "campaigns",
-
-  INVITE_LENGTH:
-    5,
 
   INVITE_DURATION_MINUTES:
     5
@@ -71,6 +68,12 @@ const state = {
   isCreating:
     false,
 
+  isGeneratingInvite:
+    false,
+
+  modal:
+    null,
+
   inviteTimer:
     null,
 
@@ -81,11 +84,12 @@ const state = {
 
 
 /* ============================================================
-   DOM
+   HELPER DOM
    ============================================================ */
 
-const $ = (id) =>
-  document.getElementById(id);
+function $(id) {
+  return document.getElementById(id);
+}
 
 
 /* ============================================================
@@ -101,14 +105,33 @@ function log(
   const prefix =
     "[AERIOM][CAMPAIGNS]";
 
-  const fn =
+  if (
     level === "error"
-      ? console.error
-      : level === "warn"
-        ? console.warn
-        : console.info;
+  ) {
 
-  fn(
+    console.error(
+      prefix,
+      message,
+      details ?? ""
+    );
+
+    return;
+  }
+
+  if (
+    level === "warn"
+  ) {
+
+    console.warn(
+      prefix,
+      message,
+      details ?? ""
+    );
+
+    return;
+  }
+
+  console.info(
     prefix,
     message,
     details ?? ""
@@ -118,12 +141,12 @@ function log(
 
 
 /* ============================================================
-   ERROS
+   NORMALIZAÇÃO DE ERRO
    ============================================================ */
 
 function normalizeError(
   error,
-  context = {}
+  context
 ) {
 
   try {
@@ -141,7 +164,19 @@ function normalizeError(
         error?.message ||
         "Erro desconhecido.",
 
-      original:
+      code:
+        error?.code ||
+        null,
+
+      details:
+        error?.details ||
+        null,
+
+      hint:
+        error?.hint ||
+        null,
+
+      raw:
         error
 
     };
@@ -164,14 +199,11 @@ function showToast(
     $("aeriom-toast-region");
 
   if (!region) {
-
     return;
   }
 
   const toast =
-    document.createElement(
-      "div"
-    );
+    document.createElement("div");
 
   toast.className =
     "aeriom-toast";
@@ -185,16 +217,16 @@ function showToast(
   );
 
   toast.textContent =
-    String(
-      message ?? ""
-    );
+    String(message ?? "");
 
   region.appendChild(
     toast
   );
 
   window.setTimeout(
-    () => toast.remove(),
+    () => {
+      toast.remove();
+    },
     4000
   );
 
@@ -205,23 +237,6 @@ function showToast(
    ESTADOS DA PÁGINA
    ============================================================ */
 
-function setHidden(
-  id,
-  hidden
-) {
-
-  const element =
-    $(id);
-
-  if (element) {
-
-    element.hidden =
-      hidden;
-  }
-
-}
-
-
 function hideStates() {
 
   [
@@ -230,11 +245,16 @@ function hideStates() {
     "campaigns-error",
     "campaigns-list-section"
   ].forEach(
-    (id) =>
-      setHidden(
-        id,
-        true
-      )
+    (id) => {
+
+      const element =
+        $(id);
+
+      if (element) {
+        element.hidden = true;
+      }
+
+    }
   );
 
 }
@@ -244,10 +264,12 @@ function showLoading() {
 
   hideStates();
 
-  setHidden(
-    "campaigns-loading",
-    false
-  );
+  const element =
+    $("campaigns-loading");
+
+  if (element) {
+    element.hidden = false;
+  }
 
 }
 
@@ -256,10 +278,12 @@ function showEmpty() {
 
   hideStates();
 
-  setHidden(
-    "campaigns-empty",
-    false
-  );
+  const element =
+    $("campaigns-empty");
+
+  if (element) {
+    element.hidden = false;
+  }
 
 }
 
@@ -268,10 +292,12 @@ function showList() {
 
   hideStates();
 
-  setHidden(
-    "campaigns-list-section",
-    false
-  );
+  const element =
+    $("campaigns-list-section");
+
+  if (element) {
+    element.hidden = false;
+  }
 
 }
 
@@ -290,18 +316,21 @@ function showError(
     messageElement.textContent =
       message ||
       "Não foi possível carregar as campanhas.";
+
   }
 
-  setHidden(
-    "campaigns-error",
-    false
-  );
+  const errorElement =
+    $("campaigns-error");
+
+  if (errorElement) {
+    errorElement.hidden = false;
+  }
 
 }
 
 
 /* ============================================================
-   UTILITÁRIOS
+   STRING / DATA
    ============================================================ */
 
 function safeString(
@@ -321,14 +350,11 @@ function formatDate(
 ) {
 
   if (!value) {
-
     return "";
   }
 
   const date =
-    new Date(
-      value
-    );
+    new Date(value);
 
   if (
     Number.isNaN(
@@ -339,31 +365,40 @@ function formatDate(
     return "";
   }
 
-  return new Intl.DateTimeFormat(
-    "pt-BR",
-    {
-      day:
-        "2-digit",
+  try {
 
-      month:
-        "short",
+    return new Intl.DateTimeFormat(
+      "pt-BR",
+      {
+        day:
+          "2-digit",
 
-      year:
-        "numeric"
-    }
-  ).format(
-    date
-  );
+        month:
+          "short",
+
+        year:
+          "numeric"
+      }
+    ).format(date);
+
+  } catch {
+
+    return "";
+
+  }
 
 }
 
+
+/* ============================================================
+   URL DE IMAGEM
+   ============================================================ */
 
 function isSafeImageUrl(
   value
 ) {
 
   if (!value) {
-
     return false;
   }
 
@@ -383,13 +418,14 @@ function isSafeImageUrl(
   } catch {
 
     return false;
+
   }
 
 }
 
 
 /* ============================================================
-   NORMALIZAÇÃO DE CAMPANHA
+   CAMPANHA
    ============================================================ */
 
 function normalizeCampaign(
@@ -409,7 +445,9 @@ function normalizeCampaign(
     row.campaign ||
     row;
 
-  if (!campaign?.id) {
+  if (
+    !campaign?.id
+  ) {
 
     return null;
   }
@@ -449,6 +487,17 @@ function normalizeCampaign(
           )
         : null,
 
+    theme:
+      safeString(
+        campaign.theme,
+        "default"
+      ),
+
+    backgroundPath:
+      safeString(
+        campaign.background_path
+      ),
+
     role:
       row.role === "master"
         ? "master"
@@ -475,12 +524,20 @@ function renderUser(
   user
 ) {
 
+  const metadata =
+    user?.user_metadata ||
+    {};
+
   const name =
-    user?.user_metadata?.display_name ||
-    user?.user_metadata?.full_name ||
-    user?.user_metadata?.name ||
+    metadata.display_name ||
+    metadata.full_name ||
+    metadata.name ||
     user?.email?.split("@")[0] ||
     "Aventureiro";
+
+  const email =
+    user?.email ||
+    "";
 
   const nameElement =
     $("campaigns-user-name");
@@ -495,12 +552,14 @@ function renderUser(
 
     nameElement.textContent =
       name;
+
   }
 
   if (emailElement) {
 
     emailElement.textContent =
-      user?.email || "";
+      email;
+
   }
 
   if (avatarElement) {
@@ -511,6 +570,7 @@ function renderUser(
         .charAt(0)
         .toUpperCase() ||
       "?";
+
   }
 
 }
@@ -554,7 +614,9 @@ async function loadSession() {
   const session =
     data?.session;
 
-  if (!session?.user) {
+  if (
+    !session?.user
+  ) {
 
     window.location.replace(
       CONFIG.LOGIN_PAGE
@@ -582,7 +644,6 @@ async function loadSession() {
 async function loadCampaigns() {
 
   if (!state.user) {
-
     return;
   }
 
@@ -592,6 +653,12 @@ async function loadCampaigns() {
   showLoading();
 
   try {
+
+    /*
+     * O filtro usa o usuário autenticado.
+     *
+     * Mesmo assim, a proteção real continua no RLS.
+     */
 
     const {
       data,
@@ -616,6 +683,8 @@ async function loadCampaigns() {
             cover_path,
             cover_url,
             created_by,
+            theme,
+            background_path,
             created_at,
             updated_at
           )
@@ -694,7 +763,7 @@ async function loadCampaigns() {
 
 
 /* ============================================================
-   CARD
+   CARD DE CAMPANHA
    ============================================================ */
 
 function createCampaignCard(
@@ -713,7 +782,9 @@ function createCampaignCard(
     campaign.id;
 
 
-  /* CAPA */
+  /* ----------------------------------------------------------
+     CAPA
+     ---------------------------------------------------------- */
 
   const cover =
     document.createElement(
@@ -725,7 +796,8 @@ function createCampaignCard(
 
 
   const imageUrl =
-    campaign.coverUrl || "";
+    campaign.coverUrl ||
+    "";
 
 
   if (
@@ -804,7 +876,9 @@ function createCampaignCard(
   }
 
 
-  /* CONTEÚDO */
+  /* ----------------------------------------------------------
+     CONTEÚDO
+     ---------------------------------------------------------- */
 
   const content =
     document.createElement(
@@ -857,7 +931,9 @@ function createCampaignCard(
     "Uma nova aventura aguarda o grupo.";
 
 
-  /* RODAPÉ */
+  /* ----------------------------------------------------------
+     FOOTER
+     ---------------------------------------------------------- */
 
   const footer =
     document.createElement(
@@ -884,21 +960,30 @@ function createCampaignCard(
       : "Nova campanha";
 
 
-  const button =
+  const actions =
+    document.createElement(
+      "div"
+    );
+
+  actions.className =
+    "campaign-card__actions";
+
+
+  const openButton =
     document.createElement(
       "button"
     );
 
-  button.type =
+  openButton.type =
     "button";
 
-  button.className =
+  openButton.className =
     "campaign-card__open";
 
-  button.textContent =
+  openButton.textContent =
     "Abrir campanha";
 
-  button.addEventListener(
+  openButton.addEventListener(
     "click",
     () =>
       openCampaign(
@@ -907,9 +992,59 @@ function createCampaignCard(
   );
 
 
+  actions.appendChild(
+    openButton
+  );
+
+
+  /*
+   * Convite somente visualmente disponível para Master.
+   *
+   * A RPC também valida a permissão no banco.
+   */
+
+  if (
+    campaign.role ===
+    "master"
+  ) {
+
+    const inviteButton =
+      document.createElement(
+        "button"
+      );
+
+    inviteButton.type =
+      "button";
+
+    inviteButton.className =
+      "campaign-card__invite";
+
+    inviteButton.textContent =
+      "Convidar";
+
+    inviteButton.addEventListener(
+      "click",
+      async () => {
+
+        state.selectedCampaign =
+          campaign;
+
+        await generateInvite(
+          campaign.id
+        );
+
+      }
+    );
+
+    actions.appendChild(
+      inviteButton
+    );
+  }
+
+
   footer.append(
     date,
-    button
+    actions
   );
 
   content.append(
@@ -950,8 +1085,10 @@ function renderCampaigns() {
 
   list.replaceChildren();
 
+
   if (
-    !state.campaigns.length
+    state.campaigns.length ===
+    0
   ) {
 
     showEmpty();
@@ -959,8 +1096,10 @@ function renderCampaigns() {
     return;
   }
 
+
   const fragment =
     document.createDocumentFragment();
+
 
   state.campaigns.forEach(
     (campaign) => {
@@ -974,9 +1113,11 @@ function renderCampaigns() {
     }
   );
 
+
   list.appendChild(
     fragment
   );
+
 
   showList();
 
@@ -984,143 +1125,115 @@ function renderCampaigns() {
 
 
 /* ============================================================
-   ABRIR CAMPANHA
+   MODAL CRIAÇÃO
    ============================================================ */
 
-function openCampaign(
-  campaignId
-) {
+function openCreateCampaignModal() {
 
-  const campaign =
-    state.campaigns.find(
-      (item) =>
-        item.id ===
-        campaignId
-    );
+  const modal =
+    $("campaign-create-modal");
 
-  if (!campaign) {
-
-    showToast(
-      "Campanha não encontrada.",
-      "error"
-    );
-
+  if (!modal) {
     return;
   }
 
-  state.selectedCampaign =
-    campaign;
 
+  modal.hidden =
+    false;
 
-  /*
-   * Isto é somente uma referência
-   * de navegação.
-   *
-   * NÃO é utilizado para autorização.
-   */
-
-  try {
-
-    localStorage.setItem(
-      "aeriom_active_campaign",
-      campaign.id
-    );
-
-  } catch {
-
-    /*
-     * LocalStorage não é obrigatório.
-     */
-
-  }
-
-
-  const url =
-    new URL(
-      CONFIG.CAMPAIGN_PAGE,
-      window.location.href
-    );
-
-  url.searchParams.set(
-    "campaign",
-    campaign.id
+  modal.setAttribute(
+    "aria-hidden",
+    "false"
   );
 
-  window.location.href =
-    url.toString();
+
+  state.modal =
+    "create";
+
+
+  window.requestAnimationFrame(
+    () => {
+
+      $("campaign-name")?.focus();
+
+    }
+  );
+
+}
+
+
+function closeCreateCampaignModal() {
+
+  const modal =
+    $("campaign-create-modal");
+
+  if (!modal) {
+    return;
+  }
+
+
+  modal.hidden =
+    true;
+
+  modal.setAttribute(
+    "aria-hidden",
+    "true"
+  );
+
+
+  state.modal =
+    null;
+
+
+  const form =
+    $("campaign-create-form");
+
+  form?.reset();
+
+
+  clearCoverPreview();
+
+
+  [
+    "campaign-name-error",
+    "campaign-description-error",
+    "campaign-cover-error"
+  ]
+    .forEach(
+      (id) => {
+
+        const element =
+          $(id);
+
+        if (element) {
+
+          element.textContent =
+            "";
+
+        }
+
+      }
+    );
+
+
+  const message =
+    $("campaign-create-message");
+
+  if (message) {
+
+    message.hidden =
+      true;
+
+    message.textContent =
+      "";
+
+  }
 
 }
 
 
 /* ============================================================
-   VALIDAÇÃO
-   ============================================================ */
-
-function validateCampaignForm(
-  name,
-  description
-) {
-
-  const cleanName =
-    String(
-      name || ""
-    ).trim();
-
-  const cleanDescription =
-    String(
-      description || ""
-    ).trim();
-
-
-  if (!cleanName) {
-
-    throw new Error(
-      "Informe o nome da campanha."
-    );
-
-  }
-
-
-  if (
-    cleanName.length >
-    CONFIG.MAX_NAME_LENGTH
-  ) {
-
-    throw new Error(
-      `O nome pode ter no máximo ${CONFIG.MAX_NAME_LENGTH} caracteres.`
-    );
-
-  }
-
-
-  if (
-    cleanDescription.length >
-    CONFIG.MAX_DESCRIPTION_LENGTH
-  ) {
-
-    throw new Error(
-      `A descrição pode ter no máximo ${CONFIG.MAX_DESCRIPTION_LENGTH} caracteres.`
-    );
-
-  }
-
-
-  return {
-
-    name:
-      cleanName,
-
-    description:
-      cleanDescription ||
-      null
-
-  };
-
-}
-
-
-/* ============================================================
-   VALIDAR CAPA
+   CAPA — VALIDAÇÃO
    ============================================================ */
 
 function validateCover(
@@ -1128,7 +1241,6 @@ function validateCover(
 ) {
 
   if (!file) {
-
     return;
   }
 
@@ -1161,50 +1273,103 @@ function validateCover(
 
 
 /* ============================================================
-   FORMULÁRIO
+   PREVIEW CAPA
    ============================================================ */
 
-function getFormValues() {
+function clearCoverPreview() {
 
-  const nameInput =
-    $("campaign-name") ||
-    $("create-campaign-name") ||
-    $("campaignName");
+  const preview =
+    $("campaign-cover-preview");
 
-
-  const descriptionInput =
-    $("campaign-description") ||
-    $("create-campaign-description") ||
-    $("campaignDescription");
+  if (!preview) {
+    return;
+  }
 
 
-  const coverInput =
-    $("campaign-cover") ||
-    $("campaign-cover-input") ||
-    $("create-campaign-cover");
+  preview.replaceChildren();
 
 
-  return {
+  const placeholder =
+    document.createElement(
+      "span"
+    );
 
-    name:
-      nameInput?.value ||
-      "",
+  placeholder.className =
+    "campaign-cover-upload__placeholder";
 
-    description:
-      descriptionInput?.value ||
-      "",
+  placeholder.textContent =
+    "✦";
 
-    coverFile:
-      coverInput?.files?.[0] ||
-      null
+  preview.appendChild(
+    placeholder
+  );
 
-  };
+
+  if (
+    state.coverObjectUrl
+  ) {
+
+    URL.revokeObjectURL(
+      state.coverObjectUrl
+    );
+
+    state.coverObjectUrl =
+      null;
+
+  }
+
+}
+
+
+function previewCover(
+  file
+) {
+
+  const preview =
+    $("campaign-cover-preview");
+
+  if (
+    !preview ||
+    !file
+  ) {
+
+    return;
+  }
+
+
+  clearCoverPreview();
+
+
+  state.coverObjectUrl =
+    URL.createObjectURL(
+      file
+    );
+
+
+  const image =
+    document.createElement(
+      "img"
+    );
+
+  image.className =
+    "campaign-cover-upload__image";
+
+  image.src =
+    state.coverObjectUrl;
+
+  image.alt =
+    "Pré-visualização da capa";
+
+
+  preview.replaceChildren(
+    image
+  );
 
 }
 
 
 /* ============================================================
-   STORAGE
+   UPLOAD CAPA
    ============================================================ */
 
 async function uploadCover(
@@ -1213,21 +1378,43 @@ async function uploadCover(
 ) {
 
   if (!file) {
-
     return null;
   }
+
 
   validateCover(
     file
   );
 
 
+  const extensionMap =
+    Object.freeze({
+
+      "image/jpeg":
+        "jpg",
+
+      "image/png":
+        "png",
+
+      "image/webp":
+        "webp"
+
+    });
+
+
   const extension =
-    file.name
-      .split(".")
-      .pop()
-      ?.toLowerCase() ||
-    "bin";
+    extensionMap[
+      file.type
+    ];
+
+
+  if (!extension) {
+
+    throw new Error(
+      "Formato de imagem não suportado."
+    );
+
+  }
 
 
   const path =
@@ -1274,7 +1461,7 @@ async function uploadCover(
           "uploadCover",
 
         table:
-          "storage",
+          "storage.objects",
 
         operation:
           "upload"
@@ -1294,12 +1481,159 @@ async function uploadCover(
    CRIAR CAMPANHA
    ============================================================ */
 
-async function createCampaign() {
+async function createCampaign(
+  event
+) {
 
   if (
-    state.isCreating ||
+    event
+  ) {
+
+    event.preventDefault();
+
+  }
+
+
+  if (
+    state.isCreating
+  ) {
+
+    return;
+  }
+
+
+  if (
     !state.user
   ) {
+
+    showToast(
+      "Sua sessão expirou. Entre novamente.",
+      "error"
+    );
+
+    return;
+  }
+
+
+  const nameInput =
+    $("campaign-name");
+
+  const descriptionInput =
+    $("campaign-description");
+
+  const coverInput =
+    $("campaign-cover");
+
+
+  const name =
+    String(
+      nameInput?.value ??
+      ""
+    ).trim();
+
+
+  const description =
+    String(
+      descriptionInput?.value ??
+      ""
+    ).trim();
+
+
+  const coverFile =
+    coverInput?.files?.[0] ||
+    null;
+
+
+  const nameError =
+    $("campaign-name-error");
+
+  const descriptionError =
+    $("campaign-description-error");
+
+  const coverError =
+    $("campaign-cover-error");
+
+
+  [
+    nameError,
+    descriptionError,
+    coverError
+  ]
+    .forEach(
+      (element) => {
+
+        if (element) {
+
+          element.textContent =
+            "";
+
+        }
+
+      }
+    );
+
+
+  if (!name) {
+
+    if (nameError) {
+
+      nameError.textContent =
+        "Digite o nome da campanha.";
+
+    }
+
+    nameInput?.focus();
+
+    return;
+  }
+
+
+  if (
+    name.length >
+    CONFIG.MAX_NAME_LENGTH
+  ) {
+
+    if (nameError) {
+
+      nameError.textContent =
+        `O nome pode ter no máximo ${CONFIG.MAX_NAME_LENGTH} caracteres.`;
+
+    }
+
+    return;
+  }
+
+
+  if (
+    description.length >
+    CONFIG.MAX_DESCRIPTION_LENGTH
+  ) {
+
+    if (descriptionError) {
+
+      descriptionError.textContent =
+        `A descrição pode ter no máximo ${CONFIG.MAX_DESCRIPTION_LENGTH} caracteres.`;
+
+    }
+
+    return;
+  }
+
+
+  try {
+
+    validateCover(
+      coverFile
+    );
+
+  } catch (error) {
+
+    if (coverError) {
+
+      coverError.textContent =
+        error.message;
+
+    }
 
     return;
   }
@@ -1309,48 +1643,30 @@ async function createCampaign() {
     true;
 
 
-  const button =
-    $("create-campaign-submit") ||
-    $("create-campaign-button") ||
-    $("campaign-create-submit");
-
-
-  if (button) {
-
-    button.disabled =
-      true;
-  }
+  setCreateLoading(
+    true
+  );
 
 
   try {
 
-    const values =
-      getFormValues();
-
-
-    const validated =
-      validateCampaignForm(
-        values.name,
-        values.description
-      );
-
-
-    validateCover(
-      values.coverFile
-    );
-
-
     /*
-     * Primeiro criamos a campanha
-     * através da RPC segura.
+     * ========================================================
+     * CRIAÇÃO TRANSAcional
+     * ========================================================
      *
-     * O banco usa auth.uid().
+     * O banco recebe apenas:
      *
-     * Não enviamos created_by.
+     * - nome
+     * - descrição
+     * - cover_path
+     *
+     * created_by vem de auth.uid().
      */
 
     const {
-      data,
+      data:
+        createdCampaign,
       error
     } =
       await state.supabase.rpc(
@@ -1358,10 +1674,11 @@ async function createCampaign() {
         {
 
           p_name:
-            validated.name,
+            name,
 
           p_description:
-            validated.description,
+            description ||
+            null,
 
           p_cover_path:
             null
@@ -1395,70 +1712,71 @@ async function createCampaign() {
 
 
     const campaign =
-      Array.isArray(data)
-        ? data[0]
-        : data;
+      Array.isArray(
+        createdCampaign
+      )
+        ? createdCampaign[0]
+        : createdCampaign;
 
 
-    if (!campaign?.id) {
+    if (
+      !campaign?.id
+    ) {
 
       throw new Error(
-        "O banco criou a campanha, mas não retornou o identificador."
+        "O banco não retornou o ID da campanha criada."
       );
 
     }
 
 
     /*
-     * A capa é opcional.
+     * Upload da capa depois da criação,
+     * utilizando o ID real da campanha.
      */
 
     if (
-      values.coverFile
+      coverFile
     ) {
 
-      const coverPath =
-        await uploadCover(
-          values.coverFile,
-          campaign.id
-        );
+      try {
 
-
-      const {
-        error:
-          updateError
-      } =
-        await state.supabase
-
-          .from(
-            "campaigns"
-          )
-
-          .update(
-            {
-
-              cover_path:
-                coverPath,
-
-              cover_url:
-                null
-
-            }
-          )
-
-          .eq(
-            "id",
+        const coverPath =
+          await uploadCover(
+            coverFile,
             campaign.id
           );
 
 
-      if (updateError) {
+        const {
+          error:
+            coverUpdateError
+        } =
+          await state.supabase
 
-        log(
-          "error",
-          "Campanha criada, mas a capa não pôde ser associada.",
-          normalizeError(
-            updateError,
+            .from(
+              "campaigns"
+            )
+
+            .update({
+
+              cover_path:
+                coverPath
+
+            })
+
+            .eq(
+              "id",
+              campaign.id
+            );
+
+
+        if (
+          coverUpdateError
+        ) {
+
+          throw normalizeError(
+            coverUpdateError,
             {
 
               file:
@@ -1474,24 +1792,34 @@ async function createCampaign() {
                 "update:cover_path"
 
             }
-          )
+          );
+
+        }
+
+      } catch (coverError) {
+
+        /*
+         * A campanha já existe.
+         *
+         * Não apagamos automaticamente porque
+         * a criação principal foi bem-sucedida.
+         */
+
+        log(
+          "error",
+          "Campanha criada, mas falha ao enviar a capa.",
+          coverError
         );
 
 
         showToast(
-          "Campanha criada, mas a capa não foi aplicada.",
-          "warning"
+          "Campanha criada, mas a capa não pôde ser enviada.",
+          "error"
         );
 
       }
 
     }
-
-
-    showToast(
-      "Campanha criada com sucesso!",
-      "success"
-    );
 
 
     closeCreateCampaignModal();
@@ -1500,23 +1828,10 @@ async function createCampaign() {
     await loadCampaigns();
 
 
-    const created =
-      state.campaigns.find(
-        (item) =>
-          item.id ===
-          String(
-            campaign.id
-          )
-      );
-
-
-    if (created) {
-
-      openCampaign(
-        created.id
-      );
-
-    }
+    showToast(
+      "Campanha criada com sucesso!",
+      "success"
+    );
 
 
   } catch (error) {
@@ -1528,12 +1843,33 @@ async function createCampaign() {
     );
 
 
-    showToast(
+    const message =
       error?.message ||
-      "Não foi possível criar a campanha.",
+      "Não foi possível criar a campanha.";
+
+
+    const formMessage =
+      $("campaign-create-message");
+
+
+    if (formMessage) {
+
+      formMessage.hidden =
+        false;
+
+      formMessage.dataset.type =
+        "error";
+
+      formMessage.textContent =
+        message;
+
+    }
+
+
+    showToast(
+      message,
       "error"
     );
-
 
   } finally {
 
@@ -1541,11 +1877,9 @@ async function createCampaign() {
       false;
 
 
-    if (button) {
-
-      button.disabled =
-        false;
-    }
+    setCreateLoading(
+      false
+    );
 
   }
 
@@ -1553,73 +1887,55 @@ async function createCampaign() {
 
 
 /* ============================================================
-   MODAL DE CRIAÇÃO
+   LOADING CRIAÇÃO
    ============================================================ */
 
-function openCreateCampaignModal() {
+function setCreateLoading(
+  loading
+) {
 
-  const modal =
-    $("create-campaign-modal") ||
-    $("campaign-create-modal");
+  const button =
+    $("campaign-create-submit");
 
-
-  if (!modal) {
-
+  if (!button) {
     return;
   }
 
 
-  modal.hidden =
-    false;
-
-
-  modal.setAttribute(
-    "aria-hidden",
-    "false"
-  );
-
-
-  const first =
-    modal.querySelector(
-      "input, textarea, button"
+  button.disabled =
+    Boolean(
+      loading
     );
 
 
-  first?.focus();
-
-}
-
-
-function closeCreateCampaignModal() {
-
-  const modal =
-    $("create-campaign-modal") ||
-    $("campaign-create-modal");
+  const label =
+    button.querySelector(
+      ".button__label"
+    );
 
 
-  if (!modal) {
+  const loadingElement =
+    button.querySelector(
+      ".button__loading"
+    );
 
-    return;
+
+  if (label) {
+
+    label.hidden =
+      Boolean(
+        loading
+      );
+
   }
 
 
-  modal.hidden =
-    true;
+  if (loadingElement) {
 
+    loadingElement.hidden =
+      !loading;
 
-  modal.setAttribute(
-    "aria-hidden",
-    "true"
-  );
-
-
-  const form =
-    modal.querySelector(
-      "form"
-    );
-
-
-  form?.reset();
+  }
 
 }
 
@@ -1633,12 +1949,24 @@ async function generateInvite(
 ) {
 
   if (
+    state.isGeneratingInvite
+  ) {
+
+    return null;
+  }
+
+
+  if (
     !state.user ||
     !campaignId
   ) {
 
     return null;
   }
+
+
+  state.isGeneratingInvite =
+    true;
 
 
   try {
@@ -1654,8 +1982,8 @@ async function generateInvite(
           p_campaign_id:
             campaignId,
 
-          p_expires_in_minutes:
-            CONFIG.INVITE_DURATION_MINUTES
+          p_max_uses:
+            10
 
         }
       );
@@ -1691,14 +2019,25 @@ async function generateInvite(
         : data;
 
 
+    if (!invite) {
+
+      throw new Error(
+        "O banco não retornou o convite."
+      );
+
+    }
+
+
     state.selectedInvite =
-      invite ||
-      null;
+      invite;
 
 
     renderInvite(
       invite
     );
+
+
+    openInviteModal();
 
 
     return invite;
@@ -1722,13 +2061,18 @@ async function generateInvite(
 
     return null;
 
+  } finally {
+
+    state.isGeneratingInvite =
+      false;
+
   }
 
 }
 
 
 /* ============================================================
-   RENDER CONVITE
+   RENDER INVITE
    ============================================================ */
 
 function renderInvite(
@@ -1736,21 +2080,19 @@ function renderInvite(
 ) {
 
   if (!invite) {
-
     return;
   }
 
 
   const code =
+    invite.invite_code ||
     invite.code ||
     invite.token ||
-    invite.invite_code ||
     "";
 
 
   const codeElement =
-    $("campaign-invite-code") ||
-    $("invite-code");
+    $("campaign-invite-code");
 
 
   if (codeElement) {
@@ -1763,20 +2105,47 @@ function renderInvite(
   }
 
 
-  const expiresElement =
-    $("campaign-invite-expires") ||
-    $("invite-expires");
+  const expiration =
+    $("campaign-invite-expiration");
 
 
   if (
-    expiresElement &&
+    expiration &&
     invite.expires_at
   ) {
 
-    expiresElement.textContent =
-      `Válido até ${formatDate(
+    expiration.textContent =
+      `Expira em ${formatDate(
         invite.expires_at
       )}`;
+
+  }
+
+
+  const linkInput =
+    $("campaign-invite-link");
+
+
+  if (
+    linkInput &&
+    code
+  ) {
+
+    const url =
+      new URL(
+        "./entrar.html",
+        window.location.href
+      );
+
+
+    url.searchParams.set(
+      "code",
+      code
+    );
+
+
+    linkInput.value =
+      url.toString();
 
   }
 
@@ -1784,18 +2153,76 @@ function renderInvite(
 
 
 /* ============================================================
-   COPIAR CONVITE
+   MODAL INVITE
    ============================================================ */
 
-async function copyInviteCode() {
+function openInviteModal() {
 
-  const code =
-    state.selectedInvite?.code ||
-    state.selectedInvite?.token ||
-    state.selectedInvite?.invite_code;
+  const modal =
+    $("campaign-invite-modal");
+
+  if (!modal) {
+    return;
+  }
 
 
-  if (!code) {
+  modal.hidden =
+    false;
+
+  modal.setAttribute(
+    "aria-hidden",
+    "false"
+  );
+
+
+  state.modal =
+    "invite";
+
+}
+
+
+function closeInviteModal() {
+
+  const modal =
+    $("campaign-invite-modal");
+
+  if (modal) {
+
+    modal.hidden =
+      true;
+
+    modal.setAttribute(
+      "aria-hidden",
+      "true"
+    );
+
+  }
+
+
+  state.modal =
+    null;
+
+  state.selectedInvite =
+    null;
+
+}
+
+
+/* ============================================================
+   COPIAR TEXTO
+   ============================================================ */
+
+async function copyText(
+  value,
+  successMessage
+) {
+
+  if (!value) {
+
+    showToast(
+      "Não há conteúdo para copiar.",
+      "error"
+    );
 
     return;
   }
@@ -1804,24 +2231,215 @@ async function copyInviteCode() {
   try {
 
     await navigator.clipboard.writeText(
-      String(
-        code
-      )
+      String(value)
     );
 
 
     showToast(
-      "Código copiado.",
+      successMessage,
       "success"
     );
 
 
   } catch {
 
+    /*
+     * Fallback para navegadores sem Clipboard API.
+     */
+
+    const textarea =
+      document.createElement(
+        "textarea"
+      );
+
+
+    textarea.value =
+      String(value);
+
+
+    textarea.setAttribute(
+      "readonly",
+      ""
+    );
+
+
+    textarea.style.position =
+      "fixed";
+
+    textarea.style.opacity =
+      "0";
+
+
+    document.body.appendChild(
+      textarea
+    );
+
+
+    textarea.select();
+
+
+    try {
+
+      document.execCommand(
+        "copy"
+      );
+
+
+      showToast(
+        successMessage,
+        "success"
+      );
+
+    } catch {
+
+      showToast(
+        "Não foi possível copiar automaticamente.",
+        "error"
+      );
+
+    } finally {
+
+      textarea.remove();
+
+    }
+
+  }
+
+}
+
+
+/* ============================================================
+   COPIAR CÓDIGO
+   ============================================================ */
+
+async function copyInviteCode() {
+
+  const codeElement =
+    $("campaign-invite-code");
+
+
+  const code =
+    codeElement
+      ?.textContent
+      ?.trim();
+
+
+  await copyText(
+    code,
+    "Código copiado."
+  );
+
+}
+
+
+/* ============================================================
+   COPIAR LINK
+   ============================================================ */
+
+async function copyInviteLink() {
+
+  const input =
+    $("campaign-invite-link");
+
+
+  const link =
+    input
+      ?.value
+      ?.trim();
+
+
+  await copyText(
+    link,
+    "Link do convite copiado."
+  );
+
+}
+
+
+/* ============================================================
+   COMPARTILHAR
+   ============================================================ */
+
+async function shareInvite() {
+
+  const link =
+    $("campaign-invite-link")
+      ?.value
+      ?.trim();
+
+
+  const code =
+    $("campaign-invite-code")
+      ?.textContent
+      ?.trim();
+
+
+  if (!link) {
+
     showToast(
-      "Não foi possível copiar automaticamente.",
+      "Convite indisponível.",
       "error"
     );
+
+    return;
+  }
+
+
+  const title =
+    state.selectedCampaign?.name
+      ? `Convite para ${state.selectedCampaign.name}`
+      : "Convite AERIOM";
+
+
+  const text =
+    code
+      ? `Entre na minha campanha AERIOM usando o código ${code}.`
+      : "Você foi convidado para uma campanha no AERIOM.";
+
+
+  try {
+
+    if (
+      typeof navigator.share ===
+      "function"
+    ) {
+
+      await navigator.share({
+
+        title,
+
+        text,
+
+        url:
+          link
+
+      });
+
+      return;
+    }
+
+
+    await copyInviteLink();
+
+  } catch (error) {
+
+    if (
+      error?.name ===
+      "AbortError"
+    ) {
+
+      return;
+    }
+
+
+    log(
+      "warn",
+      "Falha ao compartilhar convite.",
+      error
+    );
+
+
+    await copyInviteLink();
 
   }
 
@@ -1834,91 +2452,225 @@ async function copyInviteCode() {
 
 function bindEvents() {
 
-  [
-    "create-campaign-button",
-    "create-campaign",
-    "empty-create-campaign"
-  ].forEach(
-    (id) => {
-
-      $(id)?.addEventListener(
-        "click",
-        openCreateCampaignModal
-      );
-
-    }
-  );
-
-
-  [
-    "create-campaign-close",
-    "create-campaign-cancel",
-    "campaign-create-cancel"
-  ].forEach(
-    (id) => {
-
-      $(id)?.addEventListener(
-        "click",
-        closeCreateCampaignModal
-      );
-
-    }
-  );
-
-
-  [
-    "create-campaign-submit",
-    "create-campaign-button-submit",
-    "campaign-create-submit"
-  ].forEach(
-    (id) => {
-
-      $(id)?.addEventListener(
-        "click",
-        createCampaign
-      );
-
-    }
-  );
-
-
-  [
-    "campaign-invite-copy",
-    "invite-copy"
-  ].forEach(
-    (id) => {
-
-      $(id)?.addEventListener(
-        "click",
-        copyInviteCode
-      );
-
-    }
-  );
-
-
-  $("campaigns-retry")
+  $("campaigns-create-button")
     ?.addEventListener(
       "click",
-      loadCampaigns
+      openCreateCampaignModal
     );
 
 
-  const form =
-    $("create-campaign-form") ||
-    $("campaign-create-form");
+  $("campaigns-empty-create-button")
+    ?.addEventListener(
+      "click",
+      openCreateCampaignModal
+    );
 
 
-  form?.addEventListener(
-    "submit",
-    (event) => {
+  $("campaign-create-close")
+    ?.addEventListener(
+      "click",
+      closeCreateCampaignModal
+    );
 
-      event.preventDefault();
 
-      createCampaign();
+  $("campaign-create-cancel")
+    ?.addEventListener(
+      "click",
+      closeCreateCampaignModal
+    );
 
-    }
-  );
+
+  $("campaign-create-form")
+    ?.addEventListener(
+      "submit",
+      createCampaign
+    );
+
+
+  $("campaign-cover")
+    ?.addEventListener(
+      "change",
+      (event) => {
+
+        const file =
+          event.currentTarget
+            ?.files
+            ?.[0] ||
+          null;
+
+
+        const error =
+          $("campaign-cover-error");
+
+
+        if (error) {
+
+          error.textContent =
+            "";
+
+        }
+
+
+        if (!file) {
+
+          clearCoverPreview();
+
+          return;
+        }
+
+
+        try {
+
+          validateCover(
+            file
+          );
+
+
+          previewCover(
+            file
+          );
+
+        } catch (validationError) {
+
+          if (error) {
+
+            error.textContent =
+              validationError.message;
+
+          }
+
+
+          event.currentTarget.value =
+            "";
+
+
+          clearCoverPreview();
+
+        }
+
+      }
+    );
+
+
+  $("campaign-invite-close")
+    ?.addEventListener(
+      "click",
+      closeInviteModal
+    );
+
+
+  $("campaign-invite-copy-code")
+    ?.addEventListener(
+      "click",
+      copyInviteCode
+    );
+
+
+  $("campaign-invite-copy-link")
+    ?.addEventListener(
+      "click",
+      copyInviteLink
+    );
+
+
+  $("campaign-invite-link-copy")
+    ?.addEventListener(
+      "click",
+      copyInviteLink
+    );
+
+
+  $("campaign-invite-share")
+    ?.addEventListener(
+      "click",
+      shareInvite
+    );
+
+
+  $("campaigns-retry-button")
+    ?.addEventListener(
+      "click",
+      () => {
+
+        if (
+          !state.isLoading
+        ) {
+
+          loadCampaigns();
+
+        }
+
+      }
+    );
+
+
+  $("campaigns-join-button")
+    ?.addEventListener(
+      "click",
+      () => {
+
+        window.location.href =
+          "./entrar.html";
+
+      }
+    );
+
+
+  $("campaign- create-modal")
+    ?.addEventListener(
+      "click",
+      () => {}
+    );
+
+
+  $("campaign-create-modal")
+    ?.addEventListener(
+      "click",
+      (event) => {
+
+        const target =
+          event.target instanceof
+          Element
+            ? event.target
+            : null;
+
+
+        if (
+          target?.dataset.modalClose ===
+          "true"
+        ) {
+
+          closeCreateCampaignModal();
+
+        }
+
+      }
+    );
+
+
+  $("campaign-invite-modal")
+    ?.addEventListener(
+      "click",
+      (event) => {
+
+        const target =
+          event.target instanceof
+          Element
+            ? event.target
+            : null;
+
+
+        if (
+          target?.dataset.inviteModalClose ===
+          "true"
+        ) {
+
+          closeInviteModal();
+
+        }
+
+      }
+    );
 
 
   document.addEventListener(
@@ -1926,15 +2678,187 @@ function bindEvents() {
     (event) => {
 
       if (
-        event.key === "Escape"
+        event.key !==
+        "Escape"
+      ) {
+
+        return;
+      }
+
+
+      if (
+        state.modal ===
+        "create"
       ) {
 
         closeCreateCampaignModal();
+
+        return;
+      }
+
+
+      if (
+        state.modal ===
+        "invite"
+      ) {
+
+        closeInviteModal();
 
       }
 
     }
   );
+
+
+  $("campaigns-mobile-menu-button")
+    ?.addEventListener(
+      "click",
+      () => {
+
+        const sidebar =
+          $("campaigns-sidebar");
+
+
+        const button =
+          $("campaigns-mobile-menu-button");
+
+
+        if (
+          !sidebar ||
+          !button
+        ) {
+
+          return;
+        }
+
+
+        const open =
+          sidebar.classList.toggle(
+            "is-open"
+          );
+
+
+        button.setAttribute(
+          "aria-expanded",
+          String(open)
+        );
+
+      }
+    );
+
+
+  $("campaigns-logout-button")
+    ?.addEventListener(
+      "click",
+      handleLogout
+    );
+
+
+  document
+    .querySelectorAll(
+      "[data-coming-soon=\"true\"]"
+    )
+    .forEach(
+      (element) => {
+
+        element.addEventListener(
+          "click",
+          (event) => {
+
+            event.preventDefault();
+
+
+            showToast(
+              "Essa área será liberada em uma próxima etapa do AERIOM.",
+              "info"
+            );
+
+          }
+        );
+
+      }
+    );
+
+}
+
+
+/* ============================================================
+   LOGOUT
+   ============================================================ */
+
+async function handleLogout() {
+
+  const button =
+    $("campaigns-logout-button");
+
+
+  if (button) {
+
+    button.disabled =
+      true;
+
+  }
+
+
+  try {
+
+    const {
+      error
+    } =
+      await state.supabase.auth.signOut();
+
+
+    if (error) {
+
+      throw normalizeError(
+        error,
+        {
+
+          file:
+            "js/core/campanhas.js",
+
+          function:
+            "handleLogout",
+
+          table:
+            "auth",
+
+          operation:
+            "signOut"
+
+        }
+      );
+
+    }
+
+
+    window.location.replace(
+      CONFIG.LOGIN_PAGE
+    );
+
+  } catch (error) {
+
+    log(
+      "error",
+      "Erro ao sair.",
+      error
+    );
+
+
+    showToast(
+      "Não foi possível sair agora.",
+      "error"
+    );
+
+
+    if (button) {
+
+      button.disabled =
+        false;
+
+    }
+
+  }
 
 }
 
@@ -1945,10 +2869,22 @@ function bindEvents() {
 
 async function init() {
 
+  log(
+    "info",
+    "Inicializando página de campanhas..."
+  );
+
+
   try {
 
+    /*
+     * IMPORTANTE:
+     *
+     * getSupabase() é async.
+     */
+
     state.supabase =
-      getSupabase();
+      await getSupabase();
 
 
     if (!state.supabase) {
@@ -1958,6 +2894,12 @@ async function init() {
       );
 
     }
+
+
+    log(
+      "info",
+      "Cliente Supabase obtido."
+    );
 
 
     bindEvents();
@@ -1974,6 +2916,12 @@ async function init() {
 
 
     await loadCampaigns();
+
+
+    log(
+      "info",
+      "Página de campanhas inicializada com sucesso."
+    );
 
 
   } catch (error) {
@@ -1996,7 +2944,7 @@ async function init() {
 
 
 /* ============================================================
-   API PÚBLICA
+   API GLOBAL
    ============================================================ */
 
 window.AeriomCampaigns =
@@ -2006,13 +2954,17 @@ window.AeriomCampaigns =
 
     createCampaign,
 
+    openCampaign,
+
+    generateInvite,
+
     openCreateCampaignModal,
 
     closeCreateCampaignModal,
 
-    generateInvite,
+    openInviteModal,
 
-    openCampaign
+    closeInviteModal
 
   });
 
