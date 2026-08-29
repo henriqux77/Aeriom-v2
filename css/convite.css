@@ -1,0 +1,687 @@
+/* ============================================================
+   AERIOM v2
+   css/convite.css
+   Interface visual do convite da campanha
+   ============================================================ */
+
+
+/* ============================================================
+   VARIÁVEIS
+   ============================================================ */
+
+:root {
+
+  --invite-gold:
+    #d8b65f;
+
+  --invite-gold-soft:
+    rgba(216, 182, 95, 0.12);
+
+  --invite-border:
+    rgba(220, 185, 105, 0.22);
+
+  --invite-border-strong:
+    rgba(220, 185, 105, 0.34);
+
+  --invite-text:
+    #eee9df;
+
+  --invite-text-soft:
+    rgba(238, 233, 223, 0.68);
+
+  --invite-text-muted:
+    rgba(238, 233, 223, 0.42);
+
+  --invite-surface:
+    #11100e;
+
+  --invite-surface-2:
+    #171512;
+
+}
+
+
+/* ============================================================
+   MODAL
+   ============================================================ */
+
+.campaign-modal {
+
+  isolation: isolate;
+
+}
+
+
+/* ============================================================
+   DIALOG
+   ============================================================ */
+
+.campaign-modal
+.campaign-modal__dialog {
+
+  box-sizing: border-box;
+
+}
+
+
+/* ============================================================
+   CONTEÚDO DO CONVITE
+   ============================================================ */
+
+.campaign-modal
+.campaign-invite {
+
+  width: 100%;
+
+  box-sizing: border-box;
+
+  padding:
+    24px;
+
+  text-align: center;
+
+}
+
+
+/* ============================================================
+   TEXTO DE INSTRUÇÃO
+   ============================================================ */
+
+.campaign-modal
+.campaign-invite > p {
+
+  margin:
+    0;
+
+  color:
+    var(--invite-text-soft);
+
+  font-size:
+    12px;
+
+  line-height:
+    1.55;
+
+}
+
+
+/* ============================================================
+   CÓDIGO
+   ============================================================ */
+
+.campaign-modal
+.campaign-invite__code {
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  width: 100%;
+
+  min-height:
+    86px;
+
+  margin:
+    18px 0 8px;
+
+  box-sizing:
+    border-box;
+
+  padding:
+    12px 18px;
+
+  border:
+    1px solid
+    var(--invite-border-strong);
+
+  border-radius:
+    16px;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(216, 182, 95, 0.07),
+      rgba(216, 182, 95, 0.025)
+    );
+
+}
+
+
+.campaign-modal
+.campaign-invite__code span {
+
+  display:
+    block;
+
+  color:
+    var(--invite-gold);
+
+  font-family:
+    "Cinzel",
+    serif;
+
+  font-size:
+    clamp(
+      30px,
+      7vw,
+      38px
+    );
+
+  font-weight:
+    700;
+
+  line-height:
+    1;
+
+  letter-spacing:
+    0.18em;
+
+  word-break:
+    break-word;
+
+}
+
+
+/* ============================================================
+   VALIDADE
+   ============================================================ */
+
+.campaign-modal
+.campaign-invite__expiration {
+
+  display:
+    block;
+
+  min-height:
+    16px;
+
+  margin:
+    0;
+
+  color:
+    var(--invite-text-muted) !important;
+
+  font-size:
+    10px !important;
+
+  line-height:
+    1.4;
+
+}
+
+
+/* ============================================================
+   QR CODE
+   ============================================================ */
+
+/*
+ * CORREÇÃO PRINCIPAL
+ *
+ * O campanha.css original usava:
+ *
+ * 180 × 180
+ * overflow: hidden
+ *
+ * Isso podia cortar o QR.
+ *
+ * Aqui o container é maior e não corta absolutamente nada.
+ */
+
+.campaign-modal
+.campaign-invite__qr {
+
+  display:
+    flex !important;
+
+  align-items:
+    center !important;
+
+  justify-content:
+    center !important;
+
+  flex:
+    0 0 auto !important;
+
+  width:
+    min(280px, calc(100vw - 72px)) !important;
+
+  height:
+    min(280px, calc(100vw - 72px)) !important;
+
+  min-width:
+    0 !important;
+
+  min-height:
+    0 !important;
+
+  box-sizing:
+    border-box !important;
+
+  margin:
+    20px auto !important;
+
+  padding:
+    10px !important;
+
+  border:
+    1px solid
+    rgba(255, 255, 255, 0.18) !important;
+
+  border-radius:
+    18px !important;
+
+  background:
+    #ffffff !important;
+
+  /*
+   * ESSENCIAL:
+   * nunca cortar o QR.
+   */
+
+  overflow:
+    visible !important;
+
+  /*
+   * Impede alterações do flex parent
+   * de comprimir o quadro.
+   */
+
+  align-self:
+    center;
+
+}
+
+
+/* ============================================================
+   IMAGEM DO QR
+   ============================================================ */
+
+.campaign-modal
+.campaign-invite__qr img {
+
+  display:
+    block !important;
+
+  flex:
+    0 0 auto !important;
+
+  width:
+    100% !important;
+
+  height:
+    100% !important;
+
+  max-width:
+    none !important;
+
+  max-height:
+    none !important;
+
+  min-width:
+    0 !important;
+
+  min-height:
+    0 !important;
+
+  box-sizing:
+    border-box !important;
+
+  object-fit:
+    contain !important;
+
+  margin:
+    0 !important;
+
+  padding:
+    0 !important;
+
+  border:
+    0 !important;
+
+  border-radius:
+    8px !important;
+
+}
+
+
+/* ============================================================
+   CANVAS
+   ============================================================ */
+
+.campaign-modal
+.campaign-invite__qr canvas {
+
+  display:
+    block !important;
+
+  flex:
+    0 0 auto !important;
+
+  width:
+    100% !important;
+
+  height:
+    100% !important;
+
+  max-width:
+    none !important;
+
+  max-height:
+    none !important;
+
+  min-width:
+    0 !important;
+
+  min-height:
+    0 !important;
+
+  box-sizing:
+    border-box !important;
+
+  margin:
+    0 !important;
+
+  padding:
+    0 !important;
+
+  border:
+    0 !important;
+
+}
+
+
+/* ============================================================
+   FALLBACK DO QR
+   ============================================================ */
+
+.campaign-modal
+.campaign-invite__qr-error {
+
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+  width:
+    100%;
+
+  height:
+    100%;
+
+  box-sizing:
+    border-box;
+
+  padding:
+    20px;
+
+  color:
+    #15120e;
+
+  font-size:
+    12px;
+
+  font-weight:
+    600;
+
+  line-height:
+    1.5;
+
+  text-align:
+    center;
+
+}
+
+
+/* ============================================================
+   LINK
+   ============================================================ */
+
+.campaign-modal
+.campaign-invite__link {
+
+  display:
+    grid;
+
+  gap:
+    7px;
+
+  width:
+    100%;
+
+  margin-top:
+    18px;
+
+  box-sizing:
+    border-box;
+
+  text-align:
+    left;
+
+}
+
+
+.campaign-modal
+.campaign-invite__link label {
+
+  color:
+    var(--invite-text-muted);
+
+  font-size:
+    9px;
+
+  font-weight:
+    700;
+
+  letter-spacing:
+    0.12em;
+
+  text-transform:
+    uppercase;
+
+}
+
+
+.campaign-modal
+.campaign-invite__link input {
+
+  width:
+    100%;
+
+  min-height:
+    42px;
+
+  box-sizing:
+    border-box;
+
+  padding:
+    0 11px;
+
+  border:
+    1px solid
+    var(--invite-border);
+
+  border-radius:
+    10px;
+
+  outline:
+    none;
+
+  background:
+    rgba(255, 255, 255, 0.025);
+
+  color:
+    var(--invite-text-soft);
+
+  font:
+    inherit;
+
+  font-size:
+    11px;
+
+}
+
+
+/* ============================================================
+   AÇÕES
+   ============================================================ */
+
+.campaign-modal
+.campaign-modal__actions {
+
+  display:
+    flex;
+
+  flex-wrap:
+    wrap;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+  gap:
+    8px;
+
+  width:
+    100%;
+
+  margin-top:
+    20px;
+
+}
+
+
+/* ============================================================
+   BOTÕES DO CONVITE
+   ============================================================ */
+
+.campaign-modal
+.campaign-modal__actions
+.campaign-button {
+
+  min-width:
+    120px;
+
+}
+
+
+/* ============================================================
+   MOBILE
+   ============================================================ */
+
+@media (max-width: 480px) {
+
+  .campaign-modal
+  .campaign-invite {
+
+    padding:
+      20px 16px 22px;
+
+  }
+
+
+  .campaign-modal
+  .campaign-invite__code {
+
+    min-height:
+      78px;
+
+    margin:
+      16px 0 7px;
+
+  }
+
+
+  .campaign-modal
+  .campaign-invite__qr {
+
+    width:
+      min(
+        280px,
+        calc(100vw - 56px)
+      ) !important;
+
+    height:
+      min(
+        280px,
+        calc(100vw - 56px)
+      ) !important;
+
+    padding:
+      10px !important;
+
+    margin:
+      18px auto !important;
+
+  }
+
+
+  .campaign-modal
+  .campaign-modal__actions
+  .campaign-button {
+
+    flex:
+      1 1 auto;
+
+    min-width:
+      0;
+
+  }
+
+}
+
+
+/* ============================================================
+   TELAS MUITO PEQUENAS
+   ============================================================ */
+
+@media (max-width: 360px) {
+
+  .campaign-modal
+  .campaign-invite__qr {
+
+    width:
+      calc(100vw - 48px) !important;
+
+    height:
+      calc(100vw - 48px) !important;
+
+  }
+
+
+  .campaign-modal
+  .campaign-invite__code span {
+
+    font-size:
+      28px;
+
+    letter-spacing:
+      0.12em;
+
+  }
+
+}
+
+
+/* ============================================================
+   ACESSIBILIDADE
+   ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+
+  .campaign-modal
+  .campaign-button {
+
+    transition:
+      none !important;
+
+  }
+
+}
