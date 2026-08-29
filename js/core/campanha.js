@@ -3907,4 +3907,840 @@ function handleCampaignRealtimeChange(
   payload
 ) {
 
- 
+  log(
+    "info",
+    "Campanha atualizada em tempo real.",
+    payload
+  );
+
+
+  refreshCampaignFromRealtime(
+    payload
+  );
+
+}
+
+
+async function refreshCampaignFromRealtime(
+  payload
+) {
+
+  if (
+    payload?.eventType ===
+    "DELETE"
+  ) {
+
+    showErrorState(
+      "Esta campanha não está mais disponível."
+    );
+
+    return;
+
+  }
+
+
+  const row =
+    payload?.new;
+
+
+  if (
+    row
+  ) {
+
+    state.campaign = {
+
+      ...state.campaign,
+
+      name:
+        row.name ??
+        state.campaign.name,
+
+      description:
+        row.description ??
+        state.campaign.description,
+
+      coverPath:
+        row.cover_path ??
+        state.campaign.coverPath,
+
+      coverUrl:
+        row.cover_url ??
+        state.campaign.coverUrl,
+
+      createdBy:
+        row.created_by ??
+        state.campaign.createdBy,
+
+      theme:
+        row.theme ??
+        state.campaign.theme,
+
+      backgroundPath:
+        row.background_path ??
+        state.campaign.backgroundPath,
+
+      updatedAt:
+        row.updated_at ??
+        state.campaign.updatedAt
+
+    };
+
+
+    renderCampaign();
+
+    return;
+
+  }
+
+
+  try {
+
+    await loadCampaign();
+
+    renderCampaign();
+
+  } catch (
+    error
+  ) {
+
+    log(
+      "warn",
+      "Falha ao atualizar campanha.",
+      error
+    );
+
+  }
+
+}
+
+
+/* ============================================================
+   REALTIME — MEMBROS
+   ============================================================ */
+
+async function handleMembersRealtimeChange(
+  payload
+) {
+
+  log(
+    "info",
+    "Membros da campanha alterados.",
+    payload
+  );
+
+
+  try {
+
+    await loadMembership();
+
+    await loadMembers();
+
+    renderMembers();
+
+    renderCampaign();
+
+    renderUser();
+
+    updateMasterInterface();
+
+  } catch (
+    error
+  ) {
+
+    const message =
+      String(
+        error?.message ||
+        ""
+      )
+        .toLowerCase();
+
+
+    if (
+      message.includes(
+        "não faz parte"
+      )
+    ) {
+
+      showErrorState(
+        "Seu acesso a esta campanha foi removido."
+      );
+
+
+      removeRealtimeChannel();
+
+      return;
+
+    }
+
+
+    log(
+      "warn",
+      "Falha ao atualizar membros.",
+      error
+    );
+
+  }
+
+}
+
+
+/* ============================================================
+   REALTIME — SESSÃO
+   ============================================================ */
+
+async function handleSessionRealtimeChange(
+  payload
+) {
+
+  log(
+    "info",
+    "Sessão da campanha alterada.",
+    payload
+  );
+
+
+  try {
+
+    await loadCampaignSession();
+
+    updateSessionUi();
+
+
+    window.dispatchEvent(
+      new CustomEvent(
+        "aeriom:campaignsessionchange",
+        {
+
+          detail:
+            Object.freeze({
+
+              campaignId:
+                state.campaignId,
+
+              session:
+                state.session
+
+            })
+
+        }
+      )
+    );
+
+  } catch (
+    error
+  ) {
+
+    log(
+      "warn",
+      "Falha ao atualizar sessão.",
+      error
+    );
+
+  }
+
+}
+
+
+/* ============================================================
+   REALTIME — PERSONAGENS
+   ============================================================ */
+
+async function handleCharactersRealtimeChange(
+  payload
+) {
+
+  log(
+    "info",
+    "Personagens da campanha alterados.",
+    payload
+  );
+
+
+  try {
+
+    await loadPresentCharacters();
+
+    renderPresentCharacters();
+
+
+    window.dispatchEvent(
+      new CustomEvent(
+        "aeriom:campaigncharacterschange",
+        {
+
+          detail:
+            Object.freeze({
+
+              campaignId:
+                state.campaignId,
+
+              characters:
+                state.presentCharacters
+
+            })
+
+        }
+      )
+    );
+
+  } catch (
+    error
+  ) {
+
+    log(
+      "warn",
+      "Falha ao atualizar personagens.",
+      error
+    );
+
+  }
+
+}
+
+
+/* ============================================================
+   REALTIME — PRESENÇA
+   ============================================================ */
+
+function handlePresenceSync() {
+
+  updatePresenceUi();
+
+}
+
+
+function handlePresenceChange() {
+
+  updatePresenceUi();
+
+}
+
+
+function updatePresenceUi() {
+
+  updateSessionConnectionUi();
+
+}
+
+
+/* ============================================================
+   INICIALIZAÇÃO DA CAMPANHA
+   ============================================================ */
+
+async function initializeCampaign(
+  force = false
+) {
+
+  if (
+    state.initializing
+  ) {
+
+    return;
+
+  }
+
+
+  if (
+    state.initialized &&
+    !force
+  ) {
+
+    return;
+
+  }
+
+
+  state.initializing =
+    true;
+
+
+  showLoadingState();
+
+
+  try {
+
+    /*
+     * --------------------------------------------------------
+     * 1. ID DA CAMPANHA
+     * --------------------------------------------------------
+     */
+
+    state.campaignId =
+      getCampaignIdFromUrl();
+
+
+    if (
+      !state.campaignId
+    ) {
+
+      throw new Error(
+        "Nenhuma campanha foi especificada na URL."
+      );
+
+    }
+
+
+    /*
+     * --------------------------------------------------------
+     * 2. SUPABASE
+     * --------------------------------------------------------
+     */
+
+    state.supabase =
+      await getSupabase();
+
+
+    if (
+      !state.supabase
+    ) {
+
+      throw new Error(
+        "Não foi possível obter o cliente Supabase."
+      );
+
+    }
+
+
+    /*
+     * --------------------------------------------------------
+     * 3. SESSÃO AUTH
+     * --------------------------------------------------------
+     */
+
+    const session =
+      await loadAuthSession();
+
+
+    if (
+      !session
+    ) {
+
+      return;
+
+    }
+
+
+    /*
+     * --------------------------------------------------------
+     * 4. CAMPANHA
+     * --------------------------------------------------------
+     */
+
+    await loadCampaign();
+
+
+    /*
+     * --------------------------------------------------------
+     * 5. MEMBERSHIP
+     * --------------------------------------------------------
+     */
+
+    await loadMembership();
+
+
+    /*
+     * --------------------------------------------------------
+     * 6. MEMBROS
+     * --------------------------------------------------------
+     */
+
+    await loadMembers();
+
+
+    /*
+     * --------------------------------------------------------
+     * 7. SESSÃO DA MESA
+     * --------------------------------------------------------
+     */
+
+    await loadCampaignSession();
+
+
+    /*
+     * --------------------------------------------------------
+     * 8. PERSONAGENS PRESENTES
+     * --------------------------------------------------------
+     */
+
+    await loadPresentCharacters();
+
+
+    /*
+     * --------------------------------------------------------
+     * 9. RENDERIZAÇÃO
+     * --------------------------------------------------------
+     */
+
+    renderUser();
+
+    renderCampaign();
+
+    renderMembers();
+
+    renderPresentCharacters();
+
+    updateMasterInterface();
+
+    updateSessionUi();
+
+    updateSessionConnectionUi();
+
+
+    /*
+     * --------------------------------------------------------
+     * 10. EVENTOS UI
+     * --------------------------------------------------------
+     */
+
+    bindUiEvents();
+
+
+    /*
+     * --------------------------------------------------------
+     * 11. ABA INICIAL
+     * --------------------------------------------------------
+     */
+
+    showTab(
+      state.activeTab
+    );
+
+
+    /*
+     * --------------------------------------------------------
+     * 12. API PARA OUTROS MÓDULOS
+     * --------------------------------------------------------
+     */
+
+    exposeCampaignApi();
+
+
+    /*
+     * --------------------------------------------------------
+     * 13. REALTIME
+     * --------------------------------------------------------
+     */
+
+    subscribeRealtime();
+
+
+    /*
+     * --------------------------------------------------------
+     * 14. PRONTO
+     * --------------------------------------------------------
+     */
+
+    state.initialized =
+      true;
+
+    state.initializing =
+      false;
+
+
+    showWorkspace();
+
+
+    window.dispatchEvent(
+      new CustomEvent(
+        "aeriom:campaignready",
+        {
+
+          detail:
+            getContext()
+
+        }
+      )
+    );
+
+
+    window.dispatchEvent(
+      new CustomEvent(
+        "aeriom:ready",
+        {
+
+          detail:
+            Object.freeze({
+
+              page:
+                "campaign",
+
+              campaignId:
+                state.campaignId
+
+            })
+
+        }
+      )
+    );
+
+
+    log(
+      "info",
+      "Mesa carregada com sucesso.",
+      {
+
+        campaignId:
+          state.campaignId,
+
+        campaign:
+          state.campaign?.name,
+
+        role:
+          state.membership?.role
+
+      }
+    );
+
+  } catch (
+    error
+  ) {
+
+    state.initialized =
+      false;
+
+    state.initializing =
+      false;
+
+
+    const normalized =
+      getNormalizedError(
+        error,
+        {
+
+          file:
+            "js/core/campanha.js",
+
+          function:
+            "initializeCampaign",
+
+          table:
+            "campaigns",
+
+          operation:
+            "initialize"
+
+        }
+      );
+
+
+    log(
+      "error",
+      "Falha ao inicializar a mesa.",
+      normalized
+    );
+
+
+    showErrorState(
+      normalized.message ||
+      "Não foi possível carregar a mesa."
+    );
+
+
+    window.dispatchEvent(
+      new CustomEvent(
+        "aeriom:campaignerror",
+        {
+
+          detail:
+            Object.freeze(
+              normalized
+            )
+
+        }
+      )
+    );
+
+  } finally {
+
+    state.initializing =
+      false;
+
+  }
+
+}
+
+
+/* ============================================================
+   DESTRUIÇÃO
+   ============================================================ */
+
+function destroyCampaign() {
+
+  removeRealtimeChannel();
+
+
+  state.initialized =
+    false;
+
+  state.initializing =
+    false;
+
+  state.supabase =
+    null;
+
+  state.user =
+    null;
+
+  state.profile =
+    null;
+
+  state.campaign =
+    null;
+
+  state.membership =
+    null;
+
+  state.members =
+    [];
+
+  state.session =
+    null;
+
+  state.presentCharacters =
+    [];
+
+}
+
+
+/* ============================================================
+   API GLOBAL
+   ============================================================ */
+
+window.AERIOM_CAMPAIGN =
+  Object.freeze({
+
+    getContext,
+
+    getCampaign:
+      () =>
+        state.campaign,
+
+    getCampaignId:
+      () =>
+        state.campaignId,
+
+    getUser:
+      () =>
+        state.user,
+
+    getMembership:
+      () =>
+        state.membership,
+
+    getSession:
+      () =>
+        state.session,
+
+    getMembers:
+      () =>
+        state.members,
+
+    getPresentCharacters:
+      () =>
+        state.presentCharacters,
+
+    isMaster,
+
+    isPlayer,
+
+    showTab,
+
+    refresh:
+      () =>
+        initializeCampaign(
+          true
+        ),
+
+    destroy:
+      destroyCampaign
+
+  });
+
+
+/* ============================================================
+   INICIALIZAÇÃO AUTOMÁTICA
+   ============================================================ */
+
+function startCampaignModule() {
+
+  /*
+   * Só inicia quando estamos realmente na página
+   * da campanha.
+   */
+
+  const isCampaignPage =
+    Boolean(
+      getElement(
+        "campaign-app"
+      ) ||
+      getElement(
+        "campaign-loading"
+      ) ||
+      getElement(
+        "campaign-workspace"
+      )
+    );
+
+
+  if (
+    !isCampaignPage
+  ) {
+
+    return;
+
+  }
+
+
+  if (
+    document.readyState ===
+    "loading"
+  ) {
+
+    document.addEventListener(
+      "DOMContentLoaded",
+      () => {
+
+        initializeCampaign();
+
+      },
+      {
+        once:
+          true
+      }
+    );
+
+
+    return;
+
+  }
+
+
+  initializeCampaign();
+
+}
+
+
+startCampaignModule();
+
+
+/* ============================================================
+   EXPORTS
+   ============================================================ */
+
+export {
+
+  initializeCampaign,
+
+  getContext,
+
+  getCampaignIdFromUrl,
+
+  isMaster,
+
+  isPlayer,
+
+  showTab,
+
+  destroyCampaign
+
+};
