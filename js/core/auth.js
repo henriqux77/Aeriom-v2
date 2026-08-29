@@ -22,7 +22,6 @@
  * - autorizar campanhas;
  * - definir Mestre/Jogador;
  * - proteger dados do banco;
- * - validar permissões de personagens;
  * - controlar RLS.
  *
  * Segurança real:
@@ -48,7 +47,7 @@ import {
 const AUTH_CONFIG = Object.freeze({
 
   /*
-   * Página principal depois da autenticação.
+   * Página principal depois do login.
    */
 
   authenticatedPage:
@@ -56,7 +55,7 @@ const AUTH_CONFIG = Object.freeze({
 
 
   /*
-   * Página que contém o login.
+   * Página de autenticação.
    */
 
   loginPage:
@@ -64,17 +63,10 @@ const AUTH_CONFIG = Object.freeze({
 
 
   /*
-   * URL de retorno do OAuth.
+   * URL que receberá o retorno do OAuth.
    *
-   * Em produção:
-   *
-   * https://henriqux77.github.io/Aeriom-v2/index.html
-   *
-   * Em localhost:
-   *
-   * http://localhost:3000/index.html
-   *
-   * Usamos URL relativa + origin para funcionar nos dois.
+   * Como estamos usando GitHub Pages e também podemos
+   * testar localmente, montamos a URL dinamicamente.
    */
 
   oauthRedirectPath:
@@ -82,7 +74,7 @@ const AUTH_CONFIG = Object.freeze({
 
 
   /*
-   * Tempo mínimo visual do loading.
+   * Tempo mínimo visual do estado de loading.
    */
 
   minimumLoadingTime:
@@ -98,7 +90,7 @@ const AUTH_CONFIG = Object.freeze({
 let authInitialized =
   false;
 
-let authListener =
+let authSubscription =
   null;
 
 let isSubmitting =
@@ -152,26 +144,26 @@ function getFormValue(
 
 function clearAuthMessage() {
 
-  const message =
+  const element =
     getElement(
       "auth-message"
     );
 
 
-  if (!message) {
+  if (!element) {
     return;
   }
 
 
-  message.hidden =
+  element.hidden =
     true;
 
-
-  message.textContent =
+  element.textContent =
     "";
 
-
-  delete message.dataset.type;
+  element.removeAttribute(
+    "data-type"
+  );
 }
 
 
@@ -192,10 +184,9 @@ function showAuthMessage(
 
 
   /*
-   * textContent é intencional.
+   * Sempre textContent.
    *
-   * Nunca usamos innerHTML para mensagens vindas
-   * de erros ou serviços externos.
+   * Nunca usamos HTML vindo de erro externo.
    */
 
   element.textContent =
@@ -214,28 +205,26 @@ function showAuthMessage(
 
 
 /* ============================================================
-   TRADUÇÃO DE ERROS
+   ERROS DE AUTENTICAÇÃO
    ============================================================ */
 
 function translateAuthError(
   error
 ) {
 
-  const message =
+  const rawMessage =
     String(
       error?.message ?? ""
-    ).toLowerCase();
+    );
 
 
-  const code =
-    String(
-      error?.code ?? ""
-    ).toLowerCase();
+  const message =
+    rawMessage.toLowerCase();
 
 
-  /* ----------------------------------------------------------
-     LOGIN
-     ---------------------------------------------------------- */
+  /*
+   * Credenciais inválidas.
+   */
 
   if (
     message.includes(
@@ -252,9 +241,9 @@ function translateAuthError(
   }
 
 
-  /* ----------------------------------------------------------
-     E-MAIL NÃO CONFIRMADO
-     ---------------------------------------------------------- */
+  /*
+   * E-mail não confirmado.
+   */
 
   if (
     message.includes(
@@ -271,9 +260,9 @@ function translateAuthError(
   }
 
 
-  /* ----------------------------------------------------------
-     USUÁRIO EXISTENTE
-     ---------------------------------------------------------- */
+  /*
+   * Usuário já cadastrado.
+   */
 
   if (
     message.includes(
@@ -290,9 +279,9 @@ function translateAuthError(
   }
 
 
-  /* ----------------------------------------------------------
-     E-MAIL INVÁLIDO
-     ---------------------------------------------------------- */
+  /*
+   * E-mail inválido.
+   */
 
   if (
     message.includes(
@@ -306,19 +295,19 @@ function translateAuthError(
   }
 
 
-  /* ----------------------------------------------------------
-     SENHA FRACA
-     ---------------------------------------------------------- */
+  /*
+   * Senha fraca.
+   */
 
   if (
     message.includes(
       "password should be at least"
     ) ||
     message.includes(
-      "weak password"
+      "password is too short"
     ) ||
     message.includes(
-      "password is too short"
+      "weak password"
     )
   ) {
 
@@ -328,9 +317,9 @@ function translateAuthError(
   }
 
 
-  /* ----------------------------------------------------------
-     RATE LIMIT
-     ---------------------------------------------------------- */
+  /*
+   * Muitas requisições.
+   */
 
   if (
     message.includes(
@@ -347,9 +336,9 @@ function translateAuthError(
   }
 
 
-  /* ----------------------------------------------------------
-     OAUTH
-     ---------------------------------------------------------- */
+  /*
+   * Provedor OAuth desativado.
+   */
 
   if (
     message.includes(
@@ -366,16 +355,13 @@ function translateAuthError(
   }
 
 
-  /* ----------------------------------------------------------
-     REDIRECT
-     ---------------------------------------------------------- */
+  /*
+   * Redirect OAuth.
+   */
 
   if (
     message.includes(
       "redirect"
-    ) &&
-    message.includes(
-      "not allowed"
     )
   ) {
 
@@ -385,9 +371,9 @@ function translateAuthError(
   }
 
 
-  /* ----------------------------------------------------------
-     REDE
-     ---------------------------------------------------------- */
+  /*
+   * Falha de rede.
+   */
 
   if (
     message.includes(
@@ -404,28 +390,19 @@ function translateAuthError(
   }
 
 
-  /* ----------------------------------------------------------
-     ERRO GENÉRICO
-     ---------------------------------------------------------- */
-
-  if (
-    error?.message
-  ) {
-
-    return String(
-      error.message
-    );
-  }
-
+  /*
+   * Erro genérico.
+   */
 
   return (
+    error?.message ||
     "Não foi possível concluir a autenticação."
   );
 }
 
 
 /* ============================================================
-   VALIDAÇÃO
+   VALIDAÇÃO DE E-MAIL
    ============================================================ */
 
 function isValidEmail(
@@ -441,18 +418,15 @@ function isValidEmail(
   }
 
 
-  /*
-   * Validação somente para feedback imediato.
-   *
-   * A validação definitiva continua sendo realizada
-   * pelo Supabase Auth.
-   */
-
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
     email
   );
 }
 
+
+/* ============================================================
+   VALIDAÇÃO DE SENHA
+   ============================================================ */
 
 function validatePassword(
   password
@@ -517,10 +491,6 @@ function setFieldError(
 
   if (error) {
 
-    /*
-     * textContent evita XSS.
-     */
-
     error.textContent =
       message || "";
   }
@@ -541,7 +511,7 @@ function clearFieldError(
 
 
 /* ============================================================
-   LIMPAR ERROS DE LOGIN
+   LIMPAR ERROS LOGIN
    ============================================================ */
 
 function clearLoginErrors() {
@@ -560,7 +530,7 @@ function clearLoginErrors() {
 
 
 /* ============================================================
-   LIMPAR ERROS DE CADASTRO
+   LIMPAR ERROS CADASTRO
    ============================================================ */
 
 function clearRegisterErrors() {
@@ -591,7 +561,7 @@ function clearRegisterErrors() {
 
 
 /* ============================================================
-   VALIDAÇÃO LOGIN
+   VALIDAR LOGIN
    ============================================================ */
 
 function validateLoginForm() {
@@ -603,6 +573,11 @@ function validateLoginForm() {
 
 
   if (!form) {
+
+    console.error(
+      "[AERIOM][AUTH] login-form não encontrado."
+    );
+
     return false;
   }
 
@@ -626,8 +601,6 @@ function validateLoginForm() {
       form.elements?.password?.value ?? ""
     );
 
-
-  /* ---------- E-mail ---------- */
 
   if (!email) {
 
@@ -657,8 +630,6 @@ function validateLoginForm() {
   }
 
 
-  /* ---------- Senha ---------- */
-
   if (!password) {
 
     setFieldError(
@@ -678,7 +649,7 @@ function validateLoginForm() {
 
 
 /* ============================================================
-   VALIDAÇÃO CADASTRO
+   VALIDAR CADASTRO
    ============================================================ */
 
 function validateRegisterForm() {
@@ -690,6 +661,11 @@ function validateRegisterForm() {
 
 
   if (!form) {
+
+    console.error(
+      "[AERIOM][AUTH] register-form não encontrado."
+    );
+
     return false;
   }
 
@@ -701,7 +677,7 @@ function validateRegisterForm() {
     true;
 
 
-  const name =
+  const displayName =
     getFormValue(
       form,
       "displayName"
@@ -727,9 +703,7 @@ function validateRegisterForm() {
     );
 
 
-  /* ---------- Nome ---------- */
-
-  if (!name) {
+  if (!displayName) {
 
     setFieldError(
       "register-name",
@@ -742,7 +716,7 @@ function validateRegisterForm() {
       false;
 
   } else if (
-    name.length < 2
+    displayName.length < 2
   ) {
 
     setFieldError(
@@ -756,8 +730,6 @@ function validateRegisterForm() {
       false;
   }
 
-
-  /* ---------- E-mail ---------- */
 
   if (!email) {
 
@@ -787,8 +759,6 @@ function validateRegisterForm() {
   }
 
 
-  /* ---------- Senha ---------- */
-
   const passwordError =
     validatePassword(
       password
@@ -808,8 +778,6 @@ function validateRegisterForm() {
       false;
   }
 
-
-  /* ---------- Confirmação ---------- */
 
   if (!confirmation) {
 
@@ -844,13 +812,13 @@ function validateRegisterForm() {
 
 
 /* ============================================================
-   LOADING
+   LOADING DOS BOTÕES
    ============================================================ */
 
 function setButtonLoading(
   button,
   loading,
-  loadingText = "Carregando..."
+  loadingText
 ) {
 
   if (!button) {
@@ -884,23 +852,26 @@ function setButtonLoading(
   );
 
 
-  if (loadingElement) {
-
-    loadingElement.textContent =
-      loadingText;
-
-
-    loadingElement.hidden =
-      !loading;
-  }
-
-
   if (label) {
 
     label.hidden =
       Boolean(
         loading
       );
+  }
+
+
+  if (loadingElement) {
+
+    if (loadingText) {
+
+      loadingElement.textContent =
+        loadingText;
+    }
+
+
+    loadingElement.hidden =
+      !loading;
   }
 }
 
@@ -945,6 +916,28 @@ async function waitMinimumLoadingTime(
 
 
 /* ============================================================
+   PÁGINA DE LOGIN
+   ============================================================ */
+
+function isAuthenticationPage() {
+
+  const pathname =
+    window.location.pathname
+      .toLowerCase();
+
+
+  return (
+    pathname.endsWith(
+      "/index.html"
+    ) ||
+    pathname.endsWith(
+      "/"
+    )
+  );
+}
+
+
+/* ============================================================
    REDIRECIONAMENTO
    ============================================================ */
 
@@ -957,45 +950,30 @@ function redirectToAuthenticatedPage() {
 
 
 /* ============================================================
-   URL DE CALLBACK
+   URL DE CALLBACK OAUTH
    ============================================================ */
 
 function getOAuthRedirectUrl() {
 
-  return new URL(
-    AUTH_CONFIG.oauthRedirectPath,
-    window.location.href
-  ).href;
-}
+  const url =
+    new URL(
+      AUTH_CONFIG.oauthRedirectPath,
+      window.location.href
+    );
 
 
-/* ============================================================
-   SESSÃO ATUAL
-   ============================================================ */
+  /*
+   * Mantemos somente origem + caminho.
+   *
+   * Não carregamos parâmetros externos.
+   */
 
-export async function getCurrentSession() {
+  url.search = "";
 
-  const supabase =
-    await getSupabase();
-
-
-  const {
-    data,
-    error
-  } =
-    await supabase.auth.getSession();
+  url.hash = "";
 
 
-  if (error) {
-
-    throw error;
-  }
-
-
-  return (
-    data?.session ??
-    null
-  );
+  return url.href;
 }
 
 
@@ -1021,9 +999,11 @@ async function handleLogin(
   clearAuthMessage();
 
 
-  if (
-    !validateLoginForm()
-  ) {
+  const valid =
+    validateLoginForm();
+
+
+  if (!valid) {
 
     return;
   }
@@ -1039,6 +1019,12 @@ async function handleLogin(
       "email"
     );
 
+
+  /*
+   * Não aplicamos trim na senha.
+   *
+   * Espaços podem fazer parte de uma senha válida.
+   */
 
   const password =
     String(
@@ -1073,6 +1059,14 @@ async function handleLogin(
       await getSupabase();
 
 
+    console.info(
+      "[AERIOM][AUTH] Tentando login por e-mail.",
+      {
+        email
+      }
+    );
+
+
     const {
       data,
       error
@@ -1097,9 +1091,14 @@ async function handleLogin(
     ) {
 
       throw new Error(
-        "A autenticação foi concluída, mas nenhuma sessão foi criada."
+        "Login concluído sem uma sessão válida."
       );
     }
+
+
+    console.info(
+      "[AERIOM][AUTH] Login realizado com sucesso."
+    );
 
 
     await waitMinimumLoadingTime(
@@ -1128,6 +1127,12 @@ async function handleLogin(
             "signInWithPassword"
         }
       );
+
+
+    console.error(
+      "[AERIOM][AUTH] Falha no login.",
+      normalized
+    );
 
 
     showAuthMessage(
@@ -1172,9 +1177,11 @@ async function handleRegister(
   clearAuthMessage();
 
 
-  if (
-    !validateRegisterForm()
-  ) {
+  const valid =
+    validateRegisterForm();
+
+
+  if (!valid) {
 
     return;
   }
@@ -1267,8 +1274,8 @@ async function handleRegister(
 
 
     /*
-     * Se o projeto exigir confirmação de e-mail,
-     * a sessão será nula neste momento.
+     * Quando a confirmação de e-mail está habilitada,
+     * o Supabase cria o usuário mas retorna session = null.
      */
 
     if (
@@ -1291,14 +1298,8 @@ async function handleRegister(
     }
 
 
-    showAuthMessage(
-      "Conta criada. Verifique seu e-mail para confirmar sua conta.",
-      "success"
-    );
-
-
     /*
-     * Limpamos as credenciais da memória do formulário.
+     * Limpa apenas credenciais.
      */
 
     if (
@@ -1317,6 +1318,12 @@ async function handleRegister(
       form.elements.passwordConfirm.value =
         "";
     }
+
+
+    showAuthMessage(
+      "Conta criada. Verifique seu e-mail para confirmar sua conta.",
+      "success"
+    );
 
   } catch (error) {
 
@@ -1337,6 +1344,12 @@ async function handleRegister(
             "signUp"
         }
       );
+
+
+    console.error(
+      "[AERIOM][AUTH] Falha no cadastro.",
+      normalized
+    );
 
 
     showAuthMessage(
@@ -1360,7 +1373,7 @@ async function handleRegister(
 
 
 /* ============================================================
-   DISCORD
+   LOGIN COM DISCORD
    ============================================================ */
 
 async function handleDiscordLogin() {
@@ -1403,6 +1416,14 @@ async function handleDiscordLogin() {
       getOAuthRedirectUrl();
 
 
+    console.info(
+      "[AERIOM][AUTH] Iniciando OAuth Discord.",
+      {
+        redirectTo
+      }
+    );
+
+
     const {
       data,
       error
@@ -1428,11 +1449,10 @@ async function handleDiscordLogin() {
 
 
     /*
-     * O supabase-js pode realizar o redirecionamento
+     * signInWithOAuth normalmente redireciona
      * automaticamente.
      *
-     * Caso a URL seja retornada e o navegador ainda
-     * não tenha navegado, usamos ela.
+     * Alguns ambientes retornam a URL explicitamente.
      */
 
     if (
@@ -1447,9 +1467,10 @@ async function handleDiscordLogin() {
     }
 
 
-    throw new Error(
-      "O Supabase não retornou a URL de autenticação do Discord."
-    );
+    /*
+     * Se não houve URL, o SDK pode já ter disparado
+     * a navegação.
+     */
 
   } catch (error) {
 
@@ -1470,6 +1491,12 @@ async function handleDiscordLogin() {
             "signInWithOAuth"
         }
       );
+
+
+    console.error(
+      "[AERIOM][AUTH] Falha no login Discord.",
+      normalized
+    );
 
 
     showAuthMessage(
@@ -1568,6 +1595,13 @@ async function handlePasswordRecovery() {
       await getSupabase();
 
 
+    /*
+     * O usuário será enviado de volta para a página de login.
+     *
+     * A etapa de atualização da senha será implementada
+     * na página própria de recuperação.
+     */
+
     const redirectTo =
       getOAuthRedirectUrl();
 
@@ -1590,10 +1624,7 @@ async function handlePasswordRecovery() {
 
 
     /*
-     * Mensagem propositalmente neutra.
-     *
-     * Não revelamos se um e-mail existe ou não
-     * no sistema.
+     * Não revelamos se a conta existe.
      */
 
     showAuthMessage(
@@ -1622,6 +1653,12 @@ async function handlePasswordRecovery() {
       );
 
 
+    console.error(
+      "[AERIOM][AUTH] Falha na recuperação.",
+      normalized
+    );
+
+
     showAuthMessage(
       translateAuthError(
         normalized
@@ -1633,53 +1670,6 @@ async function handlePasswordRecovery() {
     isSubmitting =
       false;
   }
-}
-
-
-/* ============================================================
-   LOGOUT
-   ============================================================ */
-
-export async function logout() {
-
-  const supabase =
-    await getSupabase();
-
-
-  const {
-    error
-  } =
-    await supabase.auth.signOut();
-
-
-  if (error) {
-
-    const normalized =
-      normalizeSupabaseError(
-        error,
-        {
-          file:
-            "auth.js",
-
-          function:
-            "logout",
-
-          table:
-            "auth.sessions",
-
-          operation:
-            "signOut"
-        }
-      );
-
-
-    throw normalized;
-  }
-
-
-  window.location.replace(
-    AUTH_CONFIG.loginPage
-  );
 }
 
 
@@ -1747,6 +1737,53 @@ export async function updatePassword(
 
 
 /* ============================================================
+   LOGOUT
+   ============================================================ */
+
+export async function logout() {
+
+  const supabase =
+    await getSupabase();
+
+
+  const {
+    error
+  } =
+    await supabase.auth.signOut();
+
+
+  if (error) {
+
+    const normalized =
+      normalizeSupabaseError(
+        error,
+        {
+          file:
+            "auth.js",
+
+          function:
+            "logout",
+
+          table:
+            "auth.sessions",
+
+          operation:
+            "signOut"
+        }
+      );
+
+
+    throw normalized;
+  }
+
+
+  window.location.replace(
+    AUTH_CONFIG.loginPage
+  );
+}
+
+
+/* ============================================================
    VISIBILIDADE DE SENHA
    ============================================================ */
 
@@ -1802,10 +1839,6 @@ function togglePasswordVisibility(
       : "Ocultar senha"
   );
 
-
-  /*
-   * O texto é controlado pelo código.
-   */
 
   button.textContent =
     showing
@@ -2025,7 +2058,7 @@ function showRegisterForm() {
 
 
 /* ============================================================
-   EVENTOS
+   BIND DOS EVENTOS
    ============================================================ */
 
 function bindAuthEvents() {
@@ -2042,14 +2075,28 @@ function bindAuthEvents() {
     );
 
 
+  /*
+   * Login.
+   */
+
   if (loginForm) {
 
     loginForm.addEventListener(
       "submit",
       handleLogin
     );
+
+  } else {
+
+    console.warn(
+      "[AERIOM][AUTH] login-form não encontrado."
+    );
   }
 
+
+  /*
+   * Cadastro.
+   */
 
   if (registerForm) {
 
@@ -2057,8 +2104,18 @@ function bindAuthEvents() {
       "submit",
       handleRegister
     );
+
+  } else {
+
+    console.warn(
+      "[AERIOM][AUTH] register-form não encontrado."
+    );
   }
 
+
+  /*
+   * Discord.
+   */
 
   const discordButton =
     getElement(
@@ -2075,6 +2132,10 @@ function bindAuthEvents() {
   }
 
 
+  /*
+   * Recuperação.
+   */
+
   const forgotButton =
     getElement(
       "forgot-password-button"
@@ -2090,6 +2151,10 @@ function bindAuthEvents() {
   }
 
 
+  /*
+   * Mostrar cadastro.
+   */
+
   const registerButton =
     getElement(
       "show-register-button"
@@ -2104,6 +2169,10 @@ function bindAuthEvents() {
     );
   }
 
+
+  /*
+   * Voltar para login.
+   */
 
   const loginButton =
     getElement(
@@ -2121,18 +2190,18 @@ function bindAuthEvents() {
 
 
   /* ----------------------------------------------------------
-     SENHAS
+     SENHA DE LOGIN
      ---------------------------------------------------------- */
 
-  const loginToggle =
+  const loginPasswordToggle =
     getElement(
       "toggle-login-password"
     );
 
 
-  if (loginToggle) {
+  if (loginPasswordToggle) {
 
-    loginToggle.addEventListener(
+    loginPasswordToggle.addEventListener(
       "click",
       () => {
 
@@ -2146,15 +2215,19 @@ function bindAuthEvents() {
   }
 
 
-  const registerToggle =
+  /* ----------------------------------------------------------
+     SENHA DE CADASTRO
+     ---------------------------------------------------------- */
+
+  const registerPasswordToggle =
     getElement(
       "toggle-register-password"
     );
 
 
-  if (registerToggle) {
+  if (registerPasswordToggle) {
 
-    registerToggle.addEventListener(
+    registerPasswordToggle.addEventListener(
       "click",
       () => {
 
@@ -2168,15 +2241,19 @@ function bindAuthEvents() {
   }
 
 
-  const confirmationToggle =
+  /* ----------------------------------------------------------
+     CONFIRMAÇÃO
+     ---------------------------------------------------------- */
+
+  const registerConfirmationToggle =
     getElement(
       "toggle-register-password-confirm"
     );
 
 
-  if (confirmationToggle) {
+  if (registerConfirmationToggle) {
 
-    confirmationToggle.addEventListener(
+    registerConfirmationToggle.addEventListener(
       "click",
       () => {
 
@@ -2191,7 +2268,7 @@ function bindAuthEvents() {
 
 
   /* ----------------------------------------------------------
-     LIMPAR ERROS
+     E-MAIL LOGIN
      ---------------------------------------------------------- */
 
   const loginEmail =
@@ -2216,6 +2293,10 @@ function bindAuthEvents() {
   }
 
 
+  /* ----------------------------------------------------------
+     SENHA LOGIN
+     ---------------------------------------------------------- */
+
   const loginPassword =
     getElement(
       "login-password"
@@ -2237,6 +2318,10 @@ function bindAuthEvents() {
     );
   }
 
+
+  /* ----------------------------------------------------------
+     NOME CADASTRO
+     ---------------------------------------------------------- */
 
   const registerName =
     getElement(
@@ -2260,6 +2345,10 @@ function bindAuthEvents() {
   }
 
 
+  /* ----------------------------------------------------------
+     E-MAIL CADASTRO
+     ---------------------------------------------------------- */
+
   const registerEmail =
     getElement(
       "register-email"
@@ -2282,6 +2371,10 @@ function bindAuthEvents() {
   }
 
 
+  /* ----------------------------------------------------------
+     SENHA CADASTRO
+     ---------------------------------------------------------- */
+
   const registerPassword =
     getElement(
       "register-password"
@@ -2303,6 +2396,10 @@ function bindAuthEvents() {
     );
   }
 
+
+  /* ----------------------------------------------------------
+     CONFIRMAÇÃO CADASTRO
+     ---------------------------------------------------------- */
 
   const registerConfirmation =
     getElement(
@@ -2328,7 +2425,7 @@ function bindAuthEvents() {
 
 
 /* ============================================================
-   AUTH STATE
+   LISTENER AUTH
    ============================================================ */
 
 async function initializeAuthListener() {
@@ -2337,12 +2434,8 @@ async function initializeAuthListener() {
     await getSupabase();
 
 
-  /*
-   * Impede listeners duplicados.
-   */
-
   if (
-    authListener
+    authSubscription
   ) {
 
     return;
@@ -2358,10 +2451,15 @@ async function initializeAuthListener() {
         session
       ) => {
 
+        console.info(
+          "[AERIOM][AUTH] Evento de autenticação:",
+          event
+        );
+
+
         /*
-         * Só redirecionamos automaticamente quando
-         * existe uma sessão válida e estamos na tela
-         * de autenticação.
+         * Só redirecionamos automaticamente
+         * quando estamos no index.
          */
 
         if (
@@ -2378,31 +2476,9 @@ async function initializeAuthListener() {
     );
 
 
-  authListener =
+  authSubscription =
     data?.subscription ??
     null;
-}
-
-
-/* ============================================================
-   VERIFICAR PÁGINA ATUAL
-   ============================================================ */
-
-function isAuthenticationPage() {
-
-  const pathname =
-    window.location.pathname
-      .toLowerCase();
-
-
-  return (
-    pathname.endsWith(
-      "/index.html"
-    ) ||
-    pathname.endsWith(
-      "/"
-    )
-  );
 }
 
 
@@ -2440,6 +2516,11 @@ export async function initializeAuth() {
   }
 
 
+  /*
+   * O main.js só chama este método quando a página
+   * já está carregada.
+   */
+
   authInitialized =
     true;
 
@@ -2453,6 +2534,11 @@ export async function initializeAuth() {
 
 
     await handleInitialSession();
+
+
+    console.info(
+      "[AERIOM][AUTH] Autenticação inicializada."
+    );
 
   } catch (error) {
 
@@ -2479,6 +2565,12 @@ export async function initializeAuth() {
       );
 
 
+    console.error(
+      "[AERIOM][AUTH] Falha ao inicializar autenticação.",
+      normalized
+    );
+
+
     showAuthMessage(
       translateAuthError(
         normalized
@@ -2495,14 +2587,14 @@ export async function initializeAuth() {
 export function destroyAuth() {
 
   if (
-    authListener &&
-    typeof authListener.unsubscribe ===
+    authSubscription &&
+    typeof authSubscription.unsubscribe ===
       "function"
   ) {
 
-    authListener.unsubscribe();
+    authSubscription.unsubscribe();
 
-    authListener =
+    authSubscription =
       null;
   }
 
@@ -2517,7 +2609,7 @@ export function destroyAuth() {
 
 
 /* ============================================================
-   EXPORTS
+   API PÚBLICA
    ============================================================ */
 
 export {
