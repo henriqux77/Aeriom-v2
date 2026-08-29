@@ -3,28 +3,29 @@
 * ============================================================
 * AERIOM v2
 * js/core/main.js
-* Ponto de entrada da aplicação
+* Núcleo / ponto de entrada da aplicação
 * ============================================================
 * 
 * Responsabilidades:
 * 
-* - Inicializar os módulos principais.
+* - Inicializar o Supabase.
 * - Detectar a página atual.
-* - Inicializar autenticação quando necessário.
-* - Inicializar o sistema de tema.
-* - Inicializar o sistema de navegação.
-* - Centralizar erros de inicialização.
+* - Inicializar os módulos CORE.
+* - Coordenar a ordem de inicialização.
+* - Emitir o evento global "aeriom:ready".
+* - Centralizar erros críticos de inicialização.
 * 
-* Este arquivo NÃO deve:
+* NÃO é responsabilidade deste arquivo:
 * 
-* - implementar login;
-* - implementar campanhas;
-* - implementar fichas;
-* - executar queries específicas de módulos;
-* - controlar RLS;
-* - manipular canais Realtime de módulos externos.
+* - executar queries de campanhas;
+* - controlar fichas;
+* - controlar combate;
+* - controlar mapas;
+* - controlar Realtime de módulos;
+* - decidir permissões;
+* - implementar login.
 * 
-* Ele apenas coordena o núcleo da aplicação.
+* Cada responsabilidade pertence ao seu respectivo módulo.
 * ============================================================
   */
 
@@ -40,33 +41,42 @@ import {
 initializeAuth
 } from "./auth.js";
 
+import {
+initializeTheme
+} from "./theme.js";
+
+import {
+initializeMenu
+} from "./menu.js";
+
 /* ============================================================
 CONFIGURAÇÃO
 ============================================================ */
 
 const AERIOM_APP = Object.freeze({
 
-name: "AERIOM",
+name:
+"AERIOM",
 
-version: "2.0.0",
+version:
+"2.0.0",
 
-/*
+pages: Object.freeze({
 
-* Páginas que fazem parte da aplicação.
-* 
-* Isso será expandido conforme as fases forem implementadas.
-  */
-  pages: Object.freeze({
+index:
+  "index.html",
 
-index: "index.html",
+campaigns:
+  "campanhas.html",
 
-campaigns: "campanhas.html",
+campaign:
+  "campanha.html",
 
-campaign: "campanha.html",
+characters:
+  "fichas.html",
 
-characters: "fichas.html",
-
-character: "ficha.html"
+character:
+  "ficha.html"
 
 })
 
@@ -76,7 +86,8 @@ character: "ficha.html"
 ESTADO
 ============================================================ */
 
-let applicationInitialized = false;
+let applicationInitialized =
+false;
 
 /* ============================================================
 LOG
@@ -91,7 +102,9 @@ details = null
 const prefix =
 "[AERIOM][APP]";
 
-if (level === "error") {
+if (
+level === "error"
+) {
 
 console.error(
   prefix,
@@ -103,7 +116,9 @@ return;
 
 }
 
-if (level === "warn") {
+if (
+level === "warn"
+) {
 
 console.warn(
   prefix,
@@ -126,7 +141,7 @@ details ?? ""
 DETECTAR PÁGINA
 ============================================================ */
 
-function getCurrentPage() {
+export function getCurrentPage() {
 
 const pathname =
 window.location.pathname;
@@ -137,62 +152,73 @@ pathname
 .pop()
 ?.toLowerCase();
 
-if (!filename) {
+/*
+
+* Quando a aplicação é aberta pela raiz:
+* 
+* /
+* 
+* consideramos index.html.
+  */
+
+if (
+!filename
+) {
+
 return "index";
+
 }
 
 if (
 filename ===
 AERIOM_APP.pages.index
 ) {
+
 return "index";
+
 }
 
 if (
 filename ===
 AERIOM_APP.pages.campaigns
 ) {
+
 return "campaigns";
+
 }
 
 if (
 filename ===
 AERIOM_APP.pages.campaign
 ) {
+
 return "campaign";
+
 }
 
 if (
 filename ===
 AERIOM_APP.pages.characters
 ) {
+
 return "characters";
+
 }
 
 if (
 filename ===
 AERIOM_APP.pages.character
 ) {
+
 return "character";
+
 }
-
-/*
-
-* Durante desenvolvimento local,
-* o arquivo pode ser aberto sem nome explícito.
-  */
-  if (
-  filename ===
-  ""
-  ) {
-  return "index";
-  }
 
 return "unknown";
 }
 
 /* ============================================================
-VERIFICAR SE É PÁGINA DE AUTENTICAÇÃO
+TIPO DE PÁGINA
 ============================================================ */
 
 function isAuthenticationPage() {
@@ -204,20 +230,28 @@ getCurrentPage() ===
 }
 
 /* ============================================================
-BOOTSTRAP
+INICIALIZAÇÃO DO NÚCLEO
 ============================================================ */
 
 async function initializeApplication() {
 
-if (applicationInitialized) {
+if (
+applicationInitialized
+) {
+
 return;
+
 }
 
-applicationInitialized = true;
+/*
+
+* Marcamos como inicializado somente depois que todos
+* os módulos CORE terminarem corretamente.
+  */
 
 logApplication(
 "info",
-"Inicializando ${AERIOM_APP.name} v${AERIOM_APP.version}."
+"Iniciando ${AERIOM_APP.name} v${AERIOM_APP.version}."
 );
 
 const currentPage =
@@ -227,21 +261,20 @@ logApplication(
 "info",
 "Página detectada.",
 {
-page: currentPage,
-pathname: window.location.pathname
+page:
+currentPage,
+
+  pathname:
+    window.location.pathname
 }
+
 );
 
 try {
 
-/*
- * --------------------------------------------------------
- * 1. SUPABASE
- * --------------------------------------------------------
- *
- * O cliente precisa estar disponível antes dos módulos
- * que dependem dele.
- */
+/* ======================================================
+   1. SUPABASE
+   ====================================================== */
 
 await initializeSupabase();
 
@@ -252,51 +285,101 @@ logApplication(
 );
 
 
-/*
- * --------------------------------------------------------
- * 2. AUTH
- * --------------------------------------------------------
- *
- * Durante a Fase 2, o index.html é a página de
- * autenticação.
- *
- * Nas próximas fases, páginas protegidas terão seu
- * próprio guard de sessão.
- */
+/* ======================================================
+   2. TEMA
+   ======================================================
+   
+   O tema é inicializado antes do evento global.
+   
+   Assim, quando outros módulos receberem
+   "aeriom:ready", a base visual já estará pronta.
+   ====================================================== */
 
-if (isAuthenticationPage()) {
+initializeTheme();
+
+
+logApplication(
+  "info",
+  "Tema inicializado."
+);
+
+
+/* ======================================================
+   3. MENU
+   ====================================================== */
+
+initializeMenu();
+
+
+logApplication(
+  "info",
+  "Menu inicializado."
+);
+
+
+/* ======================================================
+   4. AUTH
+   ======================================================
+   
+   Na tela index:
+   
+   - verifica sessão;
+   - registra listener;
+   - prepara login;
+   - prepara cadastro;
+   - prepara Discord.
+   
+   Nas páginas futuras, o sistema de proteção de sessão
+   será expandido sem colocar essa lógica nos módulos
+   individuais.
+   ====================================================== */
+
+if (
+  isAuthenticationPage()
+) {
 
   await initializeAuth();
 
 
   logApplication(
     "info",
-    "Módulo de autenticação inicializado."
+    "Autenticação inicializada."
   );
 }
 
 
-/*
- * --------------------------------------------------------
- * 3. EVENTO GLOBAL
- * --------------------------------------------------------
- *
- * Permite que outros módulos saibam que o núcleo
- * terminou sua inicialização.
- *
- * Não carregamos dados de campanhas aqui.
- */
+/* ======================================================
+   5. ESTADO FINAL
+   ====================================================== */
+
+applicationInitialized =
+  true;
+
+
+/* ======================================================
+   6. EVENTO GLOBAL
+   ====================================================== */
 
 window.dispatchEvent(
+
   new CustomEvent(
     "aeriom:ready",
     {
       detail: Object.freeze({
-        page: currentPage,
-        version: AERIOM_APP.version
+
+        page:
+          currentPage,
+
+        version:
+          AERIOM_APP.version,
+
+        app:
+          AERIOM_APP.name
+
       })
     }
   )
+
 );
 
 
@@ -307,12 +390,18 @@ logApplication(
 
 } catch (error) {
 
-applicationInitialized = false;
+/*
+ * Se qualquer módulo crítico falhar,
+ * a aplicação não fica marcada como pronta.
+ */
+
+applicationInitialized =
+  false;
 
 
 logApplication(
   "error",
-  "Falha durante a inicialização da aplicação.",
+  "Falha crítica durante a inicialização.",
   error
 );
 
@@ -325,33 +414,41 @@ showApplicationError(
 }
 
 /* ============================================================
-ERRO GLOBAL DE INICIALIZAÇÃO
+ERRO DE INICIALIZAÇÃO
 ============================================================ */
 
 function showApplicationError(
 error
 ) {
 
-const existingMessage =
+/*
+
+* Nunca mostramos diretamente mensagens provenientes
+* de erros externos através de innerHTML.
+  */
+
+const authMessage =
 document.getElementById(
 "auth-message"
 );
 
 /*
 
-* Se estamos na tela de login,
-* usamos o componente de mensagem existente.
+* Caso estejamos no login,
+* usamos o componente já existente.
   */
 
-if (existingMessage) {
+if (
+authMessage
+) {
 
-existingMessage.textContent =
+authMessage.textContent =
   "Não foi possível inicializar o AERIOM. Recarregue a página e tente novamente.";
 
-existingMessage.dataset.type =
+authMessage.dataset.type =
   "error";
 
-existingMessage.hidden =
+authMessage.hidden =
   false;
 
 return;
@@ -360,11 +457,17 @@ return;
 
 /*
 
-* Para páginas futuras,
-* criamos uma mensagem DOM segura.
-* 
-* Nunca usamos innerHTML com dados do erro.
+* Caso seja outra página,
+* criamos um aviso seguro.
   */
+
+if (
+!document.body
+) {
+
+return;
+
+}
 
 const container =
 document.createElement(
@@ -376,58 +479,108 @@ container.setAttribute(
 "alert"
 );
 
-container.style.position =
-"fixed";
+container.className =
+"aeriom-critical-error";
 
-container.style.left =
-"1rem";
+const title =
+document.createElement(
+"strong"
+);
 
-container.style.right =
-"1rem";
+title.textContent =
+"AERIOM não conseguiu iniciar";
 
-container.style.bottom =
-"1rem";
+const message =
+document.createElement(
+"p"
+);
 
-container.style.zIndex =
-"9999";
+message.textContent =
+"Recarregue a página e tente novamente. Se o problema continuar, verifique a configuração do Supabase.";
 
-container.style.padding =
-"1rem";
-
-container.style.border =
-"1px solid rgba(168, 59, 59, .5)";
-
-container.style.borderRadius =
-"10px";
-
-container.style.background =
-"#17110f";
-
-container.style.color =
-"#f0a4a4";
+container.append(
+title,
+message
+);
 
 /*
 
-* Conteúdo totalmente controlado pelo código.
+* Estilos mínimos de emergência.
+* 
+* Não dependemos do CSS para mostrar um erro crítico.
   */
-  container.textContent =
-  "Não foi possível inicializar o AERIOM. Recarregue a página e tente novamente.";
+
+Object.assign(
+container.style,
+{
+
+  position:
+    "fixed",
+
+  left:
+    "1rem",
+
+  right:
+    "1rem",
+
+  bottom:
+    "1rem",
+
+  zIndex:
+    "99999",
+
+  padding:
+    "1rem",
+
+  border:
+    "1px solid rgba(168, 59, 59, .55)",
+
+  borderRadius:
+    "10px",
+
+  background:
+    "#17110f",
+
+  color:
+    "#f0a4a4",
+
+  boxShadow:
+    "0 15px 40px rgba(0,0,0,.45)"
+
+}
+
+);
 
 document.body.appendChild(
 container
 );
-}
-
-/* ============================================================
-EVENTOS GLOBAIS
-============================================================ */
-
-function registerGlobalEvents() {
 
 /*
 
-* Evita comportamento inesperado ao tentar enviar
-* formulários enquanto a aplicação ainda está inicializando.
+* O parâmetro error é utilizado somente para logging.
+  */
+
+if (
+error
+) {
+
+console.error(
+  "[AERIOM][APP] Detalhes do erro:",
+  error
+);
+
+}
+}
+
+/* ============================================================
+ERROS JAVASCRIPT GLOBAIS
+============================================================ */
+
+function registerGlobalErrorHandlers() {
+
+/*
+
+* Erros síncronos não tratados.
   */
 
 window.addEventListener(
@@ -438,6 +591,7 @@ window.addEventListener(
     "error",
     "Erro JavaScript não tratado.",
     {
+
       message:
         event.message,
 
@@ -449,6 +603,7 @@ window.addEventListener(
 
       column:
         event.colno
+
     }
   );
 }
@@ -457,7 +612,7 @@ window.addEventListener(
 
 /*
 
-* Captura promises rejeitadas que não foram tratadas.
+* Promises rejeitadas sem catch.
   */
 
 window.addEventListener(
@@ -475,12 +630,57 @@ window.addEventListener(
 }
 
 /* ============================================================
-INICIALIZAÇÃO DOM
+EVENTO DE NAVEGAÇÃO
+============================================================ */
+
+function registerNavigationEvents() {
+
+/*
+
+* Quando a aplicação navega por páginas tradicionais,
+* o navegador recarrega o documento e o main.js é
+* inicializado novamente.
+* 
+* Este evento existe para módulos que eventualmente
+* precisem reagir a mudanças internas de navegação.
+  */
+
+window.addEventListener(
+"popstate",
+() => {
+
+  document.dispatchEvent(
+
+    new CustomEvent(
+      "aeriom:navigationchange",
+      {
+        detail: Object.freeze({
+
+          page:
+            getCurrentPage(),
+
+          pathname:
+            window.location.pathname
+
+        })
+      }
+    )
+
+  );
+}
+
+);
+}
+
+/* ============================================================
+INICIALIZAÇÃO QUANDO DOM ESTIVER PRONTO
 ============================================================ */
 
 function startWhenReady() {
 
-registerGlobalEvents();
+registerGlobalErrorHandlers();
+
+registerNavigationEvents();
 
 if (
 document.readyState ===
@@ -503,18 +703,23 @@ initializeApplication();
 }
 
 /* ============================================================
-API GLOBAL CONTROLADA
+API GLOBAL
 ============================================================ */
 
-window.AERIOM = Object.freeze({
+window.AERIOM =
+Object.freeze({
+
+name:
+  AERIOM_APP.name,
 
 version:
-AERIOM_APP.version,
+  AERIOM_APP.version,
 
 getCurrentPage,
 
 isInitialized:
-() => applicationInitialized
+  () =>
+    applicationInitialized
 
 });
 
