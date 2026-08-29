@@ -2,7 +2,7 @@
  * ============================================================
  * AERIOM v2
  * js/core/convite.js
- * Convites da campanha
+ * Sistema de convites da campanha
  * ============================================================
  */
 
@@ -23,11 +23,11 @@ const CONFIG = Object.freeze({
   INVITE_MINUTES:
     5,
 
-  QR_API:
-    "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=",
-
   QR_SIZE:
-    220
+    220,
+
+  QR_API:
+    "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data="
 
 });
 
@@ -53,11 +53,8 @@ const state = {
   expiresAt:
     null,
 
-  timer:
-    null,
-
-  bound:
-    false
+  countdown:
+    null
 
 };
 
@@ -77,8 +74,7 @@ function log(
 
 
   if (
-    level ===
-    "error"
+    level === "error"
   ) {
 
     console.error(
@@ -93,8 +89,7 @@ function log(
 
 
   if (
-    level ===
-    "warn"
+    level === "warn"
   ) {
 
     console.warn(
@@ -137,20 +132,164 @@ function get(
    ============================================================ */
 
 function clean(
-  value
+  value,
+  fallback = ""
 ) {
 
+  return typeof value === "string"
+    ? value.trim()
+    : fallback;
+
+}
+
+
+/* ============================================================
+   CONTEXTO DA CAMPANHA
+   ============================================================ */
+
+function getCampaignApi() {
+
+  return window.AERIOM_CAMPAIGN ||
+    null;
+
+}
+
+
+function getCampaignContext() {
+
+  const api =
+    getCampaignApi();
+
+
   if (
-    typeof value !==
-    "string"
+    !api ||
+    typeof api.getContext !== "function"
   ) {
 
-    return "";
+    return null;
 
   }
 
 
-  return value.trim();
+  try {
+
+    return api.getContext();
+
+  } catch (
+    error
+  ) {
+
+    log(
+      "error",
+      "Falha ao obter contexto da campanha.",
+      error
+    );
+
+
+    return null;
+
+  }
+
+}
+
+
+function getCampaignId() {
+
+  const context =
+    getCampaignContext();
+
+
+  return (
+    clean(
+      context?.campaignId
+    ) ||
+
+    clean(
+      context?.campaign?.id
+    )
+  );
+
+}
+
+
+/* ============================================================
+   PERMISSÃO
+   ============================================================ */
+
+function isMaster() {
+
+  const api =
+    getCampaignApi();
+
+
+  if (
+    api &&
+    typeof api.isMaster === "function"
+  ) {
+
+    try {
+
+      return Boolean(
+        api.isMaster()
+      );
+
+    } catch {
+      // fallback
+    }
+
+  }
+
+
+  const context =
+    getCampaignContext();
+
+
+  return (
+    context?.membership?.role ===
+    "master"
+  );
+
+}
+
+
+/* ============================================================
+   CLIENTE SUPABASE
+   ============================================================ */
+
+async function getClient() {
+
+  const context =
+    getCampaignContext();
+
+
+  /*
+   * O campanha.js normalmente já fornece o cliente.
+   */
+
+  if (
+    context?.supabase
+  ) {
+
+    state.supabase =
+      context.supabase;
+
+
+    return state.supabase;
+
+  }
+
+
+  /*
+   * IMPORTANTÍSSIMO:
+   *
+   * getSupabase() é async.
+   */
+
+  state.supabase =
+    await getSupabase();
+
+
+  return state.supabase;
 
 }
 
@@ -163,10 +302,6 @@ function showToast(
   message,
   type = "info"
 ) {
-
-  /*
-   * Primeiro tenta a região global existente.
-   */
 
   const region =
     get(
@@ -222,179 +357,12 @@ function showToast(
   }
 
 
-  /*
-   * Fallback: feedback pelo console + alert apenas
-   * quando não existe nenhuma região de toast.
-   */
-
-  if (
-    type ===
-    "error"
-  ) {
-
-    console.error(
-      "[AERIOM][INVITE]",
-      message
-    );
-
-  }
-
-
-}
-
-
-/* ============================================================
-   CONTEXTO DA CAMPANHA
-   ============================================================ */
-
-function getCampaignContext() {
-
-  const api =
-    window.AERIOM_CAMPAIGN;
-
-
-  if (
-    !api ||
-    typeof api.getContext !==
-      "function"
-  ) {
-
-    return null;
-
-  }
-
-
-  try {
-
-    return api.getContext();
-
-  } catch (
-    error
-  ) {
-
-    log(
-      "error",
-      "Não foi possível obter o contexto da campanha.",
-      error
-    );
-
-
-    return null;
-
-  }
-
-}
-
-
-/* ============================================================
-   CAMPANHA
-   ============================================================ */
-
-function getCampaignId() {
-
-  const context =
-    getCampaignContext();
-
-
-  return (
-
-    clean(
-      context?.campaignId
-    ) ||
-
-    clean(
-      context?.campaign?.id
-    )
-
+  log(
+    type === "error"
+      ? "error"
+      : "info",
+    message
   );
-
-}
-
-
-/* ============================================================
-   ROLE
-   ============================================================ */
-
-function isMaster() {
-
-  const api =
-    window.AERIOM_CAMPAIGN;
-
-
-  if (
-    api &&
-    typeof api.isMaster ===
-      "function"
-  ) {
-
-    try {
-
-      return Boolean(
-        api.isMaster()
-      );
-
-    } catch {
-
-      // usa fallback
-
-    }
-
-  }
-
-
-  const context =
-    getCampaignContext();
-
-
-  return (
-    context?.membership?.role ===
-    "master"
-  );
-
-}
-
-
-/* ============================================================
-   CLIENTE SUPABASE
-   ============================================================ */
-
-async function getClient() {
-
-  /*
-   * Primeiro aproveitamos o cliente já criado pelo
-   * campanha.js, caso exista.
-   */
-
-  const context =
-    getCampaignContext();
-
-
-  if (
-    context?.supabase
-  ) {
-
-    state.supabase =
-      context.supabase;
-
-
-    return state.supabase;
-
-  }
-
-
-  /*
-   * IMPORTANTE:
-   *
-   * getSupabase() é async no projeto AERIOM.
-   *
-   * Portanto precisamos usar await.
-   */
-
-  state.supabase =
-    await getSupabase();
-
-
-  return state.supabase;
 
 }
 
@@ -424,7 +392,7 @@ function openModal() {
 
     log(
       "error",
-      "campaign-invite-modal não encontrado."
+      "Modal de convite não encontrado."
     );
 
 
@@ -476,20 +444,21 @@ function closeModal() {
 
 
 /* ============================================================
-   LIMPAR
+   LIMPAR VISUAL
    ============================================================ */
 
-function stopTimer() {
+function stopCountdown() {
 
   if (
-    state.timer
+    state.countdown
   ) {
 
     clearInterval(
-      state.timer
+      state.countdown
     );
 
-    state.timer =
+
+    state.countdown =
       null;
 
   }
@@ -499,7 +468,7 @@ function stopTimer() {
 
 function clearInviteDisplay() {
 
-  stopTimer();
+  stopCountdown();
 
 
   state.invite =
@@ -576,26 +545,24 @@ function clearInviteDisplay() {
 
   }
 
-
 }
 
 
 /* ============================================================
-   NORMALIZAR RPC
+   RPC
    ============================================================ */
 
-function normalizeInvite(
+function normalizeInviteResponse(
   data
 ) {
-
-  /*
-   * PostgREST pode devolver uma linha como objeto
-   * ou como array.
-   */
 
   let row =
     data;
 
+
+  /*
+   * TABLE retorna normalmente um array.
+   */
 
   if (
     Array.isArray(
@@ -612,8 +579,7 @@ function normalizeInvite(
 
   if (
     !row ||
-    typeof row !==
-      "object"
+    typeof row !== "object"
   ) {
 
     return null;
@@ -632,10 +598,16 @@ function normalizeInvite(
 
     clean(
       row.inviteCode
+    );
+
+
+  const inviteId =
+    clean(
+      row.invite_id
     ) ||
 
     clean(
-      row.token
+      row.id
     );
 
 
@@ -649,13 +621,9 @@ function normalizeInvite(
     );
 
 
-  const inviteId =
-    clean(
-      row.invite_id
-    ) ||
-
-    clean(
-      row.id
+  const maxUses =
+    Number(
+      row.max_uses
     );
 
 
@@ -681,10 +649,11 @@ function normalizeInvite(
       null,
 
     maxUses:
-      Number(
-        row.max_uses ||
-        1
+      Number.isFinite(
+        maxUses
       )
+        ? maxUses
+        : 1
 
   };
 
@@ -735,12 +704,6 @@ async function generateInvite() {
     );
 
 
-    log(
-      "error",
-      "Campaign ID ausente."
-    );
-
-
     return null;
 
   }
@@ -748,9 +711,6 @@ async function generateInvite() {
 
   state.generating =
     true;
-
-
-  clearInviteDisplay();
 
 
   try {
@@ -761,7 +721,8 @@ async function generateInvite() {
 
     if (
       !supabase ||
-      !supabase.rpc
+      typeof supabase.rpc !==
+        "function"
     ) {
 
       throw new Error(
@@ -773,7 +734,7 @@ async function generateInvite() {
 
     log(
       "info",
-      "Gerando convite...",
+      "Solicitando novo convite.",
       {
         campaignId
       }
@@ -781,10 +742,19 @@ async function generateInvite() {
 
 
     /*
-     * Passamos p_max_uses explicitamente.
+     * Função real existente no Supabase:
      *
-     * Isso deixa a chamada independente do DEFAULT
-     * da função PostgreSQL.
+     * generate_campaign_invite(
+     *   uuid,
+     *   integer
+     * )
+     *
+     * O banco gera:
+     *
+     * - 5 caracteres;
+     * - SHA-256;
+     * - 5 minutos;
+     * - limite de uso.
      */
 
     const {
@@ -815,7 +785,7 @@ async function generateInvite() {
 
 
     const invite =
-      normalizeInvite(
+      normalizeInviteResponse(
         data
       );
 
@@ -824,15 +794,8 @@ async function generateInvite() {
       !invite
     ) {
 
-      log(
-        "error",
-        "RPC retornou dados inesperados.",
-        data
-      );
-
-
       throw new Error(
-        "O banco não retornou um código de convite válido."
+        "O Supabase não retornou um convite válido."
       );
 
     }
@@ -842,40 +805,34 @@ async function generateInvite() {
       invite;
 
 
-    let expiresAt;
+    /*
+     * O banco é a fonte principal da validade.
+     */
 
-
-    if (
+    const databaseExpiration =
       invite.expiresAt
-    ) {
+        ? new Date(
+            invite.expiresAt
+          ).getTime()
 
-      expiresAt =
-        new Date(
-          invite.expiresAt
-        ).getTime();
-
-    }
-
-
-    if (
-      !Number.isFinite(
-        expiresAt
-      )
-    ) {
-
-      expiresAt =
-        Date.now() +
-        (
-          CONFIG.INVITE_MINUTES *
-          60 *
-          1000
-        );
-
-    }
+        : NaN;
 
 
     state.expiresAt =
-      expiresAt;
+      Number.isFinite(
+        databaseExpiration
+      )
+
+        ? databaseExpiration
+
+        : (
+            Date.now() +
+            (
+              CONFIG.INVITE_MINUTES *
+              60 *
+              1000
+            )
+          );
 
 
     renderInvite();
@@ -892,7 +849,7 @@ async function generateInvite() {
 
     log(
       "info",
-      "Convite gerado.",
+      "Convite criado.",
       {
 
         inviteId:
@@ -901,7 +858,8 @@ async function generateInvite() {
         code:
           invite.code,
 
-        expiresAt
+        expiresAt:
+          state.expiresAt
 
       }
     );
@@ -920,16 +878,16 @@ async function generateInvite() {
     );
 
 
+    renderGenerationError(
+      error
+    );
+
+
     showToast(
       getFriendlyError(
         error
       ),
       "error"
-    );
-
-
-    renderGenerationError(
-      error
     );
 
 
@@ -946,7 +904,7 @@ async function generateInvite() {
 
 
 /* ============================================================
-   ERRO AMIGÁVEL
+   ERROS
    ============================================================ */
 
 function getFriendlyError(
@@ -966,8 +924,7 @@ function getFriendlyError(
 
 
   if (
-    code ===
-    "42501"
+    code === "42501"
   ) {
 
     return (
@@ -997,7 +954,20 @@ function getFriendlyError(
   ) {
 
     return (
-      "Sua sessão expirou. Entre novamente no AERIOM."
+      "Sua sessão expirou. Faça login novamente."
+    );
+
+  }
+
+
+  if (
+    message.includes(
+      "invite_generation_failed"
+    )
+  ) {
+
+    return (
+      "Não foi possível gerar um convite agora. Tente novamente."
     );
 
   }
@@ -1055,7 +1025,7 @@ function getInviteLink() {
 
     log(
       "error",
-      "Não foi possível criar o link do convite.",
+      "Falha ao criar link do convite.",
       error
     );
 
@@ -1104,12 +1074,6 @@ function renderQRCode() {
   }
 
 
-  /*
-   * Usa um endpoint simples de QR.
-   *
-   * O conteúdo do QR é apenas o link do convite.
-   */
-
   const image =
     document.createElement(
       "img"
@@ -1125,7 +1089,7 @@ function renderQRCode() {
 
 
   image.alt =
-    "QR Code do convite";
+    "QR Code do convite da campanha";
 
 
   image.loading =
@@ -1152,7 +1116,7 @@ function renderQRCode() {
 
       const fallback =
         document.createElement(
-          "p"
+          "div"
         );
 
 
@@ -1161,8 +1125,7 @@ function renderQRCode() {
 
 
       fallback.textContent =
-        "QR Code indisponível. Use o código ou o link.";
-
+        "Não foi possível carregar o QR Code. Use o código ou o link.";
 
       container.appendChild(
         fallback
@@ -1189,55 +1152,59 @@ function renderQRCode() {
 
 function renderInvite() {
 
-  const code =
+  const codeElement =
     get(
       "campaign-invite-code"
     );
 
 
-  const expiration =
+  const expirationElement =
     get(
       "campaign-invite-expiration"
     );
 
 
-  const link =
+  const linkElement =
     get(
       "campaign-invite-link"
     );
 
 
   if (
-    code
+    codeElement
   ) {
 
-    code.textContent =
+    codeElement.textContent =
       state.invite?.code ||
       "-----";
 
   }
 
 
-  const inviteLink =
+  const link =
     getInviteLink();
 
 
   if (
-    link
+    linkElement
   ) {
 
-    link.value =
-      inviteLink;
+    linkElement.value =
+      link;
 
   }
 
 
   if (
-    expiration
+    expirationElement
   ) {
 
-    expiration.textContent =
+    expirationElement.textContent =
       "Válido por 05:00";
+
+
+    expirationElement.dataset.expired =
+      "false";
 
   }
 
@@ -1248,7 +1215,7 @@ function renderInvite() {
 
 
 /* ============================================================
-   ERRO DE GERAÇÃO
+   ERRO VISUAL
    ============================================================ */
 
 function renderGenerationError(
@@ -1332,7 +1299,7 @@ function renderGenerationError(
 
 function startCountdown() {
 
-  stopTimer();
+  stopCountdown();
 
 
   const expiration =
@@ -1363,7 +1330,7 @@ function startCountdown() {
         0
       ) {
 
-        stopTimer();
+        stopCountdown();
 
 
         if (
@@ -1385,7 +1352,7 @@ function startCountdown() {
       }
 
 
-      const seconds =
+      const totalSeconds =
         Math.ceil(
           remaining /
           1000
@@ -1394,13 +1361,13 @@ function startCountdown() {
 
       const minutes =
         Math.floor(
-          seconds /
+          totalSeconds /
           60
         );
 
 
-      const rest =
-        seconds %
+      const seconds =
+        totalSeconds %
         60;
 
 
@@ -1415,7 +1382,7 @@ function startCountdown() {
             2,
             "0"
           )}:${String(
-            rest
+            seconds
           ).padStart(
             2,
             "0"
@@ -1433,7 +1400,7 @@ function startCountdown() {
   update();
 
 
-  state.timer =
+  state.countdown =
     setInterval(
       update,
       1000
@@ -1448,17 +1415,17 @@ function startCountdown() {
 
 async function copyText(
   value,
-  message
+  successMessage
 ) {
 
-  const valueToCopy =
+  const textValue =
     clean(
       value
     );
 
 
   if (
-    !valueToCopy
+    !textValue
   ) {
 
     showToast(
@@ -1481,7 +1448,7 @@ async function copyText(
     ) {
 
       await navigator.clipboard.writeText(
-        valueToCopy
+        textValue
       );
 
     } else {
@@ -1493,7 +1460,7 @@ async function copyText(
 
 
       textarea.value =
-        valueToCopy;
+        textValue;
 
 
       textarea.style.position =
@@ -1515,7 +1482,7 @@ async function copyText(
       textarea.select();
 
 
-      const copied =
+      const success =
         document.execCommand(
           "copy"
         );
@@ -1525,11 +1492,11 @@ async function copyText(
 
 
       if (
-        !copied
+        !success
       ) {
 
         throw new Error(
-          "Falha ao copiar."
+          "Não foi possível copiar."
         );
 
       }
@@ -1538,7 +1505,7 @@ async function copyText(
 
 
     showToast(
-      message,
+      successMessage,
       "success"
     );
 
@@ -1569,6 +1536,10 @@ async function copyText(
 }
 
 
+/* ============================================================
+   COPIAR CÓDIGO
+   ============================================================ */
+
 function copyCode() {
 
   return copyText(
@@ -1578,6 +1549,10 @@ function copyCode() {
 
 }
 
+
+/* ============================================================
+   COPIAR LINK
+   ============================================================ */
 
 function copyLink() {
 
@@ -1595,19 +1570,19 @@ function copyLink() {
 
 async function shareInvite() {
 
-  const link =
-    getInviteLink();
-
-
   const code =
     clean(
       state.invite?.code
     );
 
 
+  const link =
+    getInviteLink();
+
+
   if (
-    !link ||
-    !code
+    !code ||
+    !link
   ) {
 
     showToast(
@@ -1621,30 +1596,40 @@ async function shareInvite() {
   }
 
 
-  const context =
-    getCampaignContext();
+  const campaign =
+    getCampaignContext()
+      ?.campaign;
 
 
   const campaignName =
     clean(
-      context?.campaign?.name
+      campaign?.name
     ) ||
     "campanha AERION";
 
 
-  const data = {
+  const shareData = {
 
     title:
       `Convite — ${campaignName}`,
 
     text:
-      `Você foi convidado para a campanha "${campaignName}" no AERION. Código: ${code}`,
+      `Você foi convidado para participar da campanha "${campaignName}" no AERION. Código: ${code}`,
 
     url:
       link
 
   };
 
+
+  /*
+   * No celular, isso abre o menu nativo:
+   *
+   * WhatsApp
+   * Discord
+   * Telegram
+   * etc.
+   */
 
   if (
     typeof navigator.share ===
@@ -1654,7 +1639,7 @@ async function shareInvite() {
     try {
 
       await navigator.share(
-        data
+        shareData
       );
 
 
@@ -1676,7 +1661,7 @@ async function shareInvite() {
 
       log(
         "warn",
-        "Compartilhamento falhou.",
+        "Compartilhamento não concluído.",
         error
       );
 
@@ -1684,6 +1669,10 @@ async function shareInvite() {
 
   }
 
+
+  /*
+   * Fallback.
+   */
 
   return copyLink();
 
@@ -1714,7 +1703,7 @@ async function openInvite() {
 
 
 /* ============================================================
-   REABRIR / GERAR NOVO
+   REGENERAR
    ============================================================ */
 
 async function regenerateInvite() {
@@ -1742,19 +1731,6 @@ async function regenerateInvite() {
 
 function bindEvents() {
 
-  if (
-    state.bound
-  ) {
-
-    return;
-
-  }
-
-
-  state.bound =
-    true;
-
-
   /*
    * Fechar.
    */
@@ -1764,13 +1740,7 @@ function bindEvents() {
   )
     ?.addEventListener(
       "click",
-      event => {
-
-        event.preventDefault();
-
-        closeModal();
-
-      }
+      closeModal
     );
 
 
@@ -1834,19 +1804,12 @@ function bindEvents() {
 
 
   /*
-   * Botão da sidebar.
-   *
-   * IMPORTANTE:
-   * campanha.js já dispara esse evento.
+   * Evento disparado pelo campanha.js.
    */
 
   window.addEventListener(
     "aeriom:campaigninvite",
-    () => {
-
-      openInvite();
-
-    }
+    openInvite
   );
 
 
@@ -1934,32 +1897,23 @@ function exposeAPI() {
 
 function destroy() {
 
-  stopTimer();
+  stopCountdown();
 
 
   state.initialized =
     false;
 
-
   state.generating =
     false;
-
 
   state.supabase =
     null;
 
-
   state.invite =
     null;
 
-
   state.expiresAt =
     null;
-
-
-  state.bound =
-    false;
-
 
 }
 
@@ -1995,6 +1949,10 @@ function init() {
 
 }
 
+
+/* ============================================================
+   START
+   ============================================================ */
 
 if (
   document.readyState ===
