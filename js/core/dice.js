@@ -86,9 +86,6 @@ const state = {
   initialized:
     false,
 
-  initializing:
-    false,
-
   supabase:
     null,
 
@@ -296,7 +293,7 @@ function normalizeContext(
 
 
 /* ============================================================
-   VALIDAÇÃO DE DADOS
+   VALIDAÇÃO
    ============================================================ */
 
 function isValidDie(
@@ -324,11 +321,18 @@ function normalizeDie(
     );
 
 
-  return isValidDie(
-    value
-  )
-    ? value
-    : DICE_CONFIG.defaultDie;
+  if (
+    isValidDie(
+      value
+    )
+  ) {
+
+    return value;
+
+  }
+
+
+  return DICE_CONFIG.defaultDie;
 
 }
 
@@ -383,13 +387,13 @@ function normalizeVisibility(
 
 function readCampaignContext() {
 
-  const api =
+  const campaignApi =
     window.AERIOM_CAMPAIGN;
 
 
   if (
-    !api ||
-    typeof api.getContext !==
+    !campaignApi ||
+    typeof campaignApi.getContext !==
       "function"
   ) {
 
@@ -399,7 +403,7 @@ function readCampaignContext() {
 
 
   const context =
-    api.getContext();
+    campaignApi.getContext();
 
 
   if (
@@ -480,12 +484,9 @@ function setCharacter(
 ) {
 
   const value =
-    characterId ===
-      null ||
-    characterId ===
-      undefined ||
-    characterId ===
-      ""
+    characterId === null ||
+    characterId === undefined ||
+    characterId === ""
 
       ? null
 
@@ -504,10 +505,8 @@ function setCharacter(
   dispatchDiceEvent(
     "characterchange",
     {
-
       characterId:
         value
-
     }
   );
 
@@ -531,7 +530,7 @@ function getSelectedCharacterId() {
 
 
 /* ============================================================
-   SELEÇÃO DE DADO
+   SELEÇÃO DO DADO
    ============================================================ */
 
 function setDie(
@@ -554,10 +553,8 @@ function setDie(
   dispatchDiceEvent(
     "dieselectionchange",
     {
-
       die:
         normalized
-
     }
   );
 
@@ -591,10 +588,8 @@ function setModifier(
   dispatchDiceEvent(
     "modifierchange",
     {
-
       modifier:
         normalized
-
     }
   );
 
@@ -628,10 +623,8 @@ function setVisibility(
   dispatchDiceEvent(
     "visibilitychange",
     {
-
       visibility:
         normalized
-
     }
   );
 
@@ -668,7 +661,7 @@ function setContext(
 
 
 /* ============================================================
-   RANDOM
+   ALEATÓRIO
    ============================================================ */
 
 function randomInteger(
@@ -680,6 +673,7 @@ function randomInteger(
     Math.trunc(
       min
     );
+
 
   const high =
     Math.trunc(
@@ -707,9 +701,6 @@ function randomInteger(
 
   /*
    * Usa Web Crypto quando disponível.
-   *
-   * Isso evita depender de Math.random()
-   * em navegadores modernos.
    */
 
   if (
@@ -769,7 +760,7 @@ function randomInteger(
 
 
   /*
-   * Fallback para ambientes sem Web Crypto.
+   * Fallback.
    */
 
   return (
@@ -862,15 +853,6 @@ function classifyRoll(
     );
 
 
-  /*
-   * Regra provisória:
-   *
-   * somente d20 possui crítico/falha crítica.
-   *
-   * Isso poderá ser alterado quando o sistema oficial
-   * do AERION for implementado.
-   */
-
   if (
     die ===
       20 &&
@@ -932,8 +914,7 @@ function formatDiceNotation(
 
 
   if (
-    normalizedModifier >
-    0
+    normalizedModifier > 0
   ) {
 
     return (
@@ -949,6 +930,10 @@ function formatDiceNotation(
 
 }
 
+
+/* ============================================================
+   FORMATA RESULTADO
+   ============================================================ */
 
 function formatRollResult(
   roll
@@ -974,7 +959,7 @@ function formatRollResult(
 
 
 /* ============================================================
-   VALIDAR PERSONAGEM
+   VALIDAÇÃO DO PERSONAGEM
    ============================================================ */
 
 async function validateCharacterOwnership(
@@ -1057,7 +1042,7 @@ async function validateCharacterOwnership(
 
 
 /* ============================================================
-   BANCO
+   NORMALIZA ROLAGEM DO BANCO
    ============================================================ */
 
 function normalizeSavedRoll(
@@ -1141,6 +1126,10 @@ function normalizeSavedRoll(
 
 }
 
+
+/* ============================================================
+   SALVAR ROLAGEM
+   ============================================================ */
 
 async function saveRoll(
   roll
@@ -1273,8 +1262,8 @@ async function roll(
 
 
   /*
-   * Garante que a seleção atual seja lida
-   * da campanha caso o módulo tenha carregado antes.
+   * Tenta recuperar o contexto da campanha caso o módulo
+   * tenha sido carregado antes do campaign.js.
    */
 
   if (
@@ -1310,33 +1299,58 @@ async function roll(
 
     /*
      * ========================================================
-     * CORREÇÃO PRINCIPAL
+     * DADO
      * ========================================================
      *
-     * A ordem é:
+     * Ordem:
      *
-     * 1. options.die, se explicitamente informado;
-     * 2. state.selectedDie, caso contrário.
+     * 1. options.die quando realmente enviado;
+     * 2. caso contrário, state.selectedDie.
      *
-     * Não existe mais d20 fixo.
+     * Assim o dado escolhido na interface é preservado.
      */
 
-    const die =
+    let die;
+
+
+    if (
+      Object.prototype.hasOwnProperty.call(
+        options,
+        "die"
+      ) &&
       options.die !==
-        undefined
+        undefined &&
+      options.die !==
+        null &&
+      options.die !==
+        ""
+    ) {
 
-        ? normalizeDie(
-            options.die
-          )
+      die =
+        normalizeDie(
+          options.die
+        );
 
-        : normalizeDie(
-            state.selectedDie
-          );
+    }
+    else {
 
+      die =
+        normalizeDie(
+          state.selectedDie
+        );
+
+    }
+
+
+    /*
+     * Modificador.
+     */
 
     const modifier =
-      options.modifier !==
-        undefined
+      Object.prototype.hasOwnProperty.call(
+        options,
+        "modifier"
+      )
 
         ? normalizeModifier(
             options.modifier
@@ -1347,9 +1361,15 @@ async function roll(
           );
 
 
+    /*
+     * Visibilidade.
+     */
+
     const visibility =
-      options.visibility !==
-        undefined
+      Object.prototype.hasOwnProperty.call(
+        options,
+        "visibility"
+      )
 
         ? normalizeVisibility(
             options.visibility
@@ -1360,9 +1380,15 @@ async function roll(
           );
 
 
+    /*
+     * Contexto.
+     */
+
     const context =
-      options.context !==
-        undefined
+      Object.prototype.hasOwnProperty.call(
+        options,
+        "context"
+      )
 
         ? normalizeContext(
             options.context
@@ -1373,9 +1399,15 @@ async function roll(
           );
 
 
+    /*
+     * Personagem.
+     */
+
     const characterId =
-      options.characterId !==
-        undefined
+      Object.prototype.hasOwnProperty.call(
+        options,
+        "characterId"
+      )
 
         ? (
             options.characterId
@@ -1389,24 +1421,23 @@ async function roll(
 
 
     /*
-     * Se o usuário explicitou um dado no options,
-     * atualizamos a seleção visual também.
+     * Mantém a interface sincronizada.
      */
 
     state.selectedDie =
       die;
 
-
     state.modifier =
       modifier;
-
 
     state.visibility =
       visibility;
 
-
     state.context =
       context;
+
+    state.selectedCharacterId =
+      characterId;
 
 
     renderDiceSelection();
@@ -1417,6 +1448,12 @@ async function roll(
 
     renderContext();
 
+    renderCharacterSelection();
+
+
+    /*
+     * Validação do personagem.
+     */
 
     if (
       characterId
@@ -1430,7 +1467,9 @@ async function roll(
 
 
     /*
+     * ========================================================
      * ROLAGEM REAL
+     * ========================================================
      */
 
     const local =
@@ -1490,8 +1529,7 @@ async function roll(
 
 
     /*
-     * Persiste.
-
+     * Salva no banco.
      */
 
     const saved =
@@ -1687,7 +1725,7 @@ function arrayFrom(
    REALTIME
    ============================================================ */
 
-function realtimeChannelName() {
+function getRealtimeChannelName() {
 
   return (
     `${DICE_CONFIG.realtimeChannelPrefix}:${state.campaignId}`
@@ -1757,7 +1795,7 @@ function setupRealtime() {
 
     const channel =
       state.supabase.channel(
-        realtimeChannelName()
+        getRealtimeChannelName()
       );
 
 
@@ -1858,7 +1896,7 @@ function handleRemoteRoll(
 
 
   /*
-   * Nossa própria rolagem já foi renderizada localmente.
+   * Não duplica a própria rolagem.
    */
 
   if (
@@ -1886,7 +1924,7 @@ function handleRemoteRoll(
 
 
 /* ============================================================
-   UI — SELEÇÃO
+   UI — SELEÇÃO DE DADOS
    ============================================================ */
 
 function renderDiceSelection() {
@@ -2010,11 +2048,11 @@ function renderVisibility() {
     "[data-dice-visibility]"
   )
     .forEach(
-      element => {
+      button => {
 
         const value =
           normalizeVisibility(
-            element.dataset.diceVisibility
+            button.dataset.diceVisibility
           );
 
 
@@ -2023,13 +2061,13 @@ function renderVisibility() {
           state.visibility;
 
 
-        element.classList.toggle(
+        button.classList.toggle(
           "is-active",
           active
         );
 
 
-        element.setAttribute(
+        button.setAttribute(
           "aria-pressed",
           String(
             active
@@ -2145,7 +2183,6 @@ function updateNotationUi() {
 
   }
 
-
 }
 
 
@@ -2171,6 +2208,11 @@ function renderLastRoll(
       "dice-result"
     );
 
+  const empty =
+    getElement(
+      "dice-result-empty"
+    );
+
   const number =
     getElement(
       "dice-result-number"
@@ -2184,11 +2226,6 @@ function renderLastRoll(
   const classification =
     getElement(
       "dice-result-classification"
-    );
-
-  const empty =
-    getElement(
-      "dice-result-empty"
     );
 
 
@@ -2206,7 +2243,8 @@ function renderLastRoll(
 
 
     /*
-     * Permite que o CSS saiba qual dado foi lançado.
+     * IMPORTANTE:
+     * agora o CSS pode identificar o dado real.
      */
 
     result.dataset.die =
@@ -2265,7 +2303,6 @@ function renderLastRoll(
         "CRÍTICO!";
 
     }
-
     else if (
       roll.classification ===
       "critical-failure"
@@ -2275,7 +2312,6 @@ function renderLastRoll(
         "FALHA CRÍTICA";
 
     }
-
     else {
 
       classification.textContent =
@@ -2314,10 +2350,6 @@ function animateResult(
     "dice-result--rolling"
   );
 
-
-  /*
-   * Reinicia a animação.
-   */
 
   void element.offsetWidth;
 
@@ -2488,7 +2520,7 @@ function showDiceError(
 
 
 /* ============================================================
-   ERRO AMIGÁVEL
+   ERROS AMIGÁVEIS
    ============================================================ */
 
 function getFriendlyError(
@@ -2541,9 +2573,6 @@ function getFriendlyError(
   if (
     lower.includes(
       "contexto"
-    ) ||
-    lower.includes(
-      "mesa ainda"
     )
   ) {
 
@@ -2585,20 +2614,32 @@ function renderRemoteRoll(
   }
 
 
-  /*
-   * Evita duplicação caso o evento seja recebido
-   * novamente por alguma condição de reconexão.
-   */
-
   if (
     roll.id
   ) {
 
+    const escapedId =
+      typeof CSS !==
+        "undefined" &&
+      typeof CSS.escape ===
+        "function"
+
+        ? CSS.escape(
+            roll.id
+          )
+
+        : String(
+            roll.id
+          )
+            .replace(
+              /"/g,
+              '\\"'
+            );
+
+
     const existing =
       history.querySelector(
-        `[data-roll-id="${CSS.escape(
-          roll.id
-        )}"]`
+        `[data-roll-id="${escapedId}"]`
       );
 
 
@@ -2713,7 +2754,7 @@ function renderRemoteRoll(
 
 
 /* ============================================================
-   HISTÓRICO — RENDER
+   HISTÓRICO
    ============================================================ */
 
 async function renderHistory() {
@@ -2744,12 +2785,6 @@ async function renderHistory() {
       );
 
 
-    /*
-     * Banco entrega do mais novo para o mais antigo.
-     * Para inserir corretamente no DOM usamos do mais antigo
-     * para o mais novo com prepend().
-     */
-
     rolls
       .reverse()
       .forEach(
@@ -2768,7 +2803,7 @@ async function renderHistory() {
 
     log(
       "warn",
-      "Falha ao carregar histórico de dados.",
+      "Falha ao carregar histórico.",
       error
     );
 
@@ -2812,7 +2847,10 @@ function bindDiceButtons() {
 
         button.addEventListener(
           "click",
-          () => {
+          event => {
+
+            event.preventDefault();
+
 
             setDie(
               button.dataset.die
@@ -2851,11 +2889,6 @@ function bindModifier() {
   input.addEventListener(
     "input",
     () => {
-
-      /*
-       * Não sobrescrevemos o campo enquanto o usuário
-       * ainda está digitando.
-       */
 
       const number =
         Number(
@@ -2923,7 +2956,10 @@ function bindVisibility() {
 
         button.addEventListener(
           "click",
-          () => {
+          event => {
+
+            event.preventDefault();
+
 
             setVisibility(
               button.dataset.diceVisibility
@@ -3047,75 +3083,95 @@ function bindContext() {
 
 
 /* ============================================================
-   BIND — BOTÃO ROLAR
+   BIND — ROLAR
    ============================================================ */
 
 function bindRollButtons() {
 
-  getElements(
-    "[data-dice-roll]"
-  )
-    .forEach(
-      button => {
+  const buttons =
+    getElements(
+      "[data-dice-roll]"
+    );
 
-        button.addEventListener(
-          "click",
-          async () => {
+
+  buttons.forEach(
+    button => {
+
+      button.addEventListener(
+        "click",
+        async event => {
+
+          event.preventDefault();
+
+
+          /*
+           * ==================================================
+           * CORREÇÃO DEFINITIVA DO DADO FIXO
+           * ==================================================
+           *
+           * O botão principal não deve ter um dado fixado.
+           *
+           * Caso o atributo possua um valor real:
+           *
+           * data-dice-roll="6"
+           *
+           * ele será usado como rolagem específica.
+           *
+           * Caso o atributo esteja vazio:
+           *
+           * data-dice-roll
+           *
+           * usamos state.selectedDie.
+           */
+
+          const explicitValue =
+            button.getAttribute(
+              "data-dice-roll"
+            );
+
+
+          const hasExplicitDie =
+            explicitValue !==
+              null &&
+            explicitValue.trim() !==
+              "";
+
+
+          const options =
+            hasExplicitDie
+
+              ? {
+                  die:
+                    normalizeDie(
+                      explicitValue
+                    )
+                }
+
+              : {
+                  die:
+                    state.selectedDie
+                };
+
+
+          try {
+
+            await roll(
+              options
+            );
+
+          } catch {
 
             /*
-             * ==================================================
-             * CORREÇÃO DEFINITIVA
-             * ==================================================
-             *
-             * Se o botão tiver data-dice-roll explícito,
-             * usamos esse valor.
-             *
-             * Caso contrário, usamos state.selectedDie.
-             *
-             * Portanto:
-             *
-             * D100 selecionado → rola D100.
-             * D6 selecionado   → rola D6.
-             * D20 selecionado  → rola D20.
+             * O erro já foi mostrado na interface.
              */
 
-            const explicitDie =
-              button.dataset.diceRoll;
-
-
-            const options =
-              explicitDie
-                ? {
-                    die:
-                      normalizeDie(
-                        explicitDie
-                      )
-                  }
-                : {
-                    die:
-                      state.selectedDie
-                  };
-
-
-            try {
-
-              await roll(
-                options
-              );
-
-            } catch {
-
-              /*
-               * O erro já foi mostrado na interface.
-               */
-
-            }
-
           }
-        );
 
-      }
-    );
+        }
+      );
+
+    }
+  );
 
 }
 
@@ -3166,7 +3222,7 @@ function bindCampaignEvents() {
 
 
 /* ============================================================
-   POPULAR PERSONAGENS
+   PERSONAGENS
    ============================================================ */
 
 function populateCharacterSelect() {
@@ -3197,7 +3253,7 @@ function populateCharacterSelect() {
     );
 
 
-  const previous =
+  const current =
     state.selectedCharacterId;
 
 
@@ -3239,12 +3295,6 @@ function populateCharacterSelect() {
       }
 
 
-      /*
-       * Jogador só enxerga seus personagens.
-       * Mestre pode selecionar os personagens presentes
-       * da campanha.
-       */
-
       if (
         !isMaster() &&
         character.userId !==
@@ -3284,22 +3334,21 @@ function populateCharacterSelect() {
 
 
   if (
-    previous &&
+    current &&
     Array.from(
       select.options
     )
       .some(
         option =>
           option.value ===
-          previous
+          current
       )
   ) {
 
     select.value =
-      previous;
+      current;
 
-  }
-  else {
+  } else {
 
     select.value =
       "";
@@ -3314,7 +3363,86 @@ function populateCharacterSelect() {
 
 
 /* ============================================================
-   API
+   INICIALIZAÇÃO A PARTIR DA CAMPANHA
+   ============================================================ */
+
+function initializeFromCampaign() {
+
+  if (
+    !readCampaignContext()
+  ) {
+
+    return false;
+
+  }
+
+
+  renderDiceSelection();
+
+  renderModifier();
+
+  renderVisibility();
+
+  renderContext();
+
+  renderCharacterSelection();
+
+  populateCharacterSelect();
+
+  updateNotationUi();
+
+  updateRealtimeUi();
+
+
+  if (
+    !state.realtimeChannel
+  ) {
+
+    setupRealtime();
+
+  }
+
+
+  renderHistory();
+
+  exposeApi();
+
+
+  state.initialized =
+    true;
+
+
+  dispatchDiceEvent(
+    "ready",
+    getContext()
+  );
+
+
+  log(
+    "info",
+    "Sistema de dados inicializado.",
+    {
+
+      campaignId:
+        state.campaignId,
+
+      selectedDie:
+        state.selectedDie,
+
+      role:
+        state.membership?.role
+
+    }
+  );
+
+
+  return true;
+
+}
+
+
+/* ============================================================
+   CONTEXTO
    ============================================================ */
 
 function getContext() {
@@ -3355,93 +3483,6 @@ function getContext() {
       state.realtimeConnected
 
   };
-
-}
-
-
-/* ============================================================
-   INIT FROM CAMPAIGN
-   ============================================================ */
-
-function initializeFromCampaign() {
-
-  if (
-    !readCampaignContext()
-  ) {
-
-    return false;
-
-  }
-
-
-  if (
-    state.initialized
-  ) {
-
-    /*
-     * Mesmo já inicializado, atualizamos a seleção
-     * dos personagens porque a campanha pode ter mudado.
-     */
-
-    populateCharacterSelect();
-
-    return true;
-
-  }
-
-
-  state.initialized =
-    true;
-
-
-  renderDiceSelection();
-
-  renderModifier();
-
-  renderVisibility();
-
-  renderContext();
-
-  renderCharacterSelection();
-
-  populateCharacterSelect();
-
-  updateNotationUi();
-
-  updateRealtimeUi();
-
-  setupRealtime();
-
-  renderHistory();
-
-  exposeApi();
-
-
-  dispatchDiceEvent(
-    "ready",
-    getContext()
-  );
-
-
-  log(
-    "info",
-    "Sistema de dados inicializado.",
-    {
-
-      campaignId:
-        state.campaignId,
-
-      role:
-        state.membership?.role,
-
-      selectedDie:
-        state.selectedDie
-
-    }
-  );
-
-
-  return true;
 
 }
 
@@ -3516,9 +3557,6 @@ function destroyDice() {
   state.initialized =
     false;
 
-  state.initializing =
-    false;
-
   state.supabase =
     null;
 
@@ -3574,7 +3612,7 @@ function destroyDice() {
 
 
 /* ============================================================
-   ATALHO DE TECLADO
+   TECLADO
    ============================================================ */
 
 function bindKeyboard() {
@@ -3674,7 +3712,15 @@ function start() {
 
   bindKeyboard();
 
+
   exposeApi();
+
+
+  /*
+   * O campaign.js pode ainda não ter terminado.
+   * Nesse caso o evento aeriom:campaignready cuidará
+   * da inicialização do sistema.
+   */
 
   initializeFromCampaign();
 
@@ -3699,8 +3745,7 @@ if (
     }
   );
 
-}
-else {
+} else {
 
   start();
 
