@@ -5,7 +5,7 @@
  * Sistema de rolagem de dados
  * ============================================================
  *
- * Suporta:
+ * Dados suportados:
  *
  * d4
  * d6
@@ -15,28 +15,19 @@
  * d20
  * d100
  *
- * Modificadores positivos e negativos.
+ * Recursos:
  *
- * Modos:
- * - public
- * - private
- *
- * Integração com:
- * - campaigns
- * - campaign_members
- * - characters
- * - dice_rolls
- *
- * O resultado salvo no banco contém:
- * - campaign_id
- * - user_id
- * - character_id
- * - die_type
- * - roll_result
- * - modifier
- * - total_result
- * - visibility
- * - context
+ * - seleção de dado;
+ * - modificador;
+ * - personagem;
+ * - visibilidade;
+ * - contexto da rolagem;
+ * - rolagem segura no cliente;
+ * - persistência em dice_rolls;
+ * - histórico;
+ * - Realtime;
+ * - crítico/falha crítica para d20;
+ * - integração com campanha.js.
  *
  * ============================================================
  */
@@ -68,14 +59,17 @@ const DICE_CONFIG = Object.freeze({
   defaultVisibility:
     "public",
 
-  maxModifier:
-    999,
-
   minModifier:
     -999,
 
+  maxModifier:
+    999,
+
   maxContextLength:
     500,
+
+  maxHistory:
+    50,
 
   realtimeChannelPrefix:
     "campaign-dice"
@@ -90,6 +84,9 @@ const DICE_CONFIG = Object.freeze({
 const state = {
 
   initialized:
+    false,
+
+  initializing:
     false,
 
   supabase:
@@ -129,6 +126,9 @@ const state = {
     null,
 
   realtimeConnected:
+    false,
+
+  eventsBound:
     false
 
 };
@@ -228,7 +228,7 @@ function getElements(
 
 
 /* ============================================================
-   NORMALIZAÇÃO
+   HELPERS
    ============================================================ */
 
 function safeString(
@@ -236,12 +236,17 @@ function safeString(
   fallback = ""
 ) {
 
-  return typeof value ===
+  if (
+    typeof value !==
     "string"
+  ) {
 
-    ? value
+    return fallback;
 
-    : fallback;
+  }
+
+
+  return value.trim();
 
 }
 
@@ -275,19 +280,35 @@ function safeInteger(
 }
 
 
+function normalizeContext(
+  value
+) {
+
+  return safeString(
+    value
+  )
+    .slice(
+      0,
+      DICE_CONFIG.maxContextLength
+    );
+
+}
+
+
 /* ============================================================
-   VALIDAÇÃO
+   VALIDAÇÃO DE DADOS
    ============================================================ */
 
 function isValidDie(
   die
 ) {
 
-  return DICE_CONFIG.allowedDice.includes(
-    safeInteger(
-      die
-    )
-  );
+  return DICE_CONFIG.allowedDice
+    .includes(
+      safeInteger(
+        die
+      )
+    );
 
 }
 
@@ -296,25 +317,18 @@ function normalizeDie(
   die
 ) {
 
-  const normalized =
+  const value =
     safeInteger(
       die,
       DICE_CONFIG.defaultDie
     );
 
 
-  if (
-    isValidDie(
-      normalized
-    )
-  ) {
-
-    return normalized;
-
-  }
-
-
-  return DICE_CONFIG.defaultDie;
+  return isValidDie(
+    value
+  )
+    ? value
+    : DICE_CONFIG.defaultDie;
 
 }
 
@@ -363,86 +377,8 @@ function normalizeVisibility(
 }
 
 
-function normalizeContext(
-  context
-) {
-
-  const value =
-    safeString(
-      context
-    )
-      .trim();
-
-
-  return value.slice(
-    0,
-    DICE_CONFIG.maxContextLength
-  );
-
-}
-
-
 /* ============================================================
-   ERRO
-   ============================================================ */
-
-function createDiceError(
-  message,
-  details = null
-) {
-
-  const error =
-    new Error(
-      message
-    );
-
-
-  error.details =
-    details;
-
-
-  return error;
-
-}
-
-
-/* ============================================================
-   ACESSO
-   ============================================================ */
-
-function hasCampaignContext() {
-
-  return Boolean(
-    state.supabase &&
-    state.campaignId &&
-    state.user
-  );
-
-}
-
-
-function isMaster() {
-
-  return (
-    state.membership?.role ===
-    "master"
-  );
-
-}
-
-
-function isPlayer() {
-
-  return (
-    state.membership?.role ===
-    "player"
-  );
-
-}
-
-
-/* ============================================================
-   OBTÉM CONTEXTO DO CAMPAIGN.JS
+   CONTEXTO DA CAMPANHA
    ============================================================ */
 
 function readCampaignContext() {
@@ -504,37 +440,62 @@ function readCampaignContext() {
 }
 
 
+function hasCampaignContext() {
+
+  return Boolean(
+    state.supabase &&
+    state.campaignId &&
+    state.user
+  );
+
+}
+
+
+function isMaster() {
+
+  return (
+    state.membership?.role ===
+    "master"
+  );
+
+}
+
+
+function isPlayer() {
+
+  return (
+    state.membership?.role ===
+    "player"
+  );
+
+}
+
+
 /* ============================================================
-   SELEÇÃO DE PERSONAGEM
+   PERSONAGEM
    ============================================================ */
 
 function setCharacter(
   characterId
 ) {
 
-  if (
+  const value =
     characterId ===
       null ||
     characterId ===
       undefined ||
     characterId ===
       ""
-  ) {
 
-    state.selectedCharacterId =
-      null;
+      ? null
 
-    renderCharacterSelection();
-
-    return null;
-
-  }
+      : String(
+          characterId
+        );
 
 
   state.selectedCharacterId =
-    String(
-      characterId
-    );
+    value;
 
 
   renderCharacterSelection();
@@ -545,13 +506,13 @@ function setCharacter(
     {
 
       characterId:
-        state.selectedCharacterId
+        value
 
     }
   );
 
 
-  return state.selectedCharacterId;
+  return value;
 
 }
 
@@ -570,7 +531,7 @@ function getSelectedCharacterId() {
 
 
 /* ============================================================
-   DADOS
+   SELEÇÃO DE DADO
    ============================================================ */
 
 function setDie(
@@ -657,15 +618,6 @@ function setVisibility(
     );
 
 
-  /*
-   * Jogador não pode usar "private" para esconder
-   * uma rolagem do Mestre se o projeto futuramente
-   * determinar que o Mestre precisa receber todas.
-   *
-   * Por enquanto a visibilidade é exatamente a opção
-   * existente no schema.
-   */
-
   state.visibility =
     normalized;
 
@@ -690,7 +642,7 @@ function setVisibility(
 
 
 /* ============================================================
-   CONTEXTO DA ROLAGEM
+   CONTEXTO
    ============================================================ */
 
 function setContext(
@@ -716,7 +668,7 @@ function setContext(
 
 
 /* ============================================================
-   ROLAGEM LOCAL
+   RANDOM
    ============================================================ */
 
 function randomInteger(
@@ -724,20 +676,46 @@ function randomInteger(
   max
 ) {
 
+  const low =
+    Math.trunc(
+      min
+    );
+
+  const high =
+    Math.trunc(
+      max
+    );
+
+
+  if (
+    high <
+    low
+  ) {
+
+    throw new Error(
+      "Intervalo inválido para rolagem."
+    );
+
+  }
+
+
   const range =
-    max -
-    min +
+    high -
+    low +
     1;
 
 
   /*
-   * crypto.getRandomValues é preferível ao Math.random
-   * para dados do RPG.
+   * Usa Web Crypto quando disponível.
+   *
+   * Isso evita depender de Math.random()
+   * em navegadores modernos.
    */
 
   if (
-    window.crypto &&
-    typeof window.crypto.getRandomValues ===
+    typeof crypto !==
+      "undefined" &&
+    typeof crypto.getRandomValues ===
       "function"
   ) {
 
@@ -764,7 +742,7 @@ function randomInteger(
 
     do {
 
-      window.crypto.getRandomValues(
+      crypto.getRandomValues(
         buffer
       );
 
@@ -780,7 +758,7 @@ function randomInteger(
 
 
     return (
-      min +
+      low +
       (
         value %
         range
@@ -790,20 +768,28 @@ function randomInteger(
   }
 
 
+  /*
+   * Fallback para ambientes sem Web Crypto.
+   */
+
   return (
     Math.floor(
       Math.random() *
       range
     ) +
-    min
+    low
   );
 
 }
 
 
+/* ============================================================
+   ROLAGEM LOCAL
+   ============================================================ */
+
 function rollLocal(
   die,
-  modifier
+  modifier = 0
 ) {
 
   const normalizedDie =
@@ -818,15 +804,15 @@ function rollLocal(
     );
 
 
-  const result =
+  const rollResult =
     randomInteger(
       1,
       normalizedDie
     );
 
 
-  const total =
-    result +
+  const totalResult =
+    rollResult +
     normalizedModifier;
 
 
@@ -835,14 +821,12 @@ function rollLocal(
     dieType:
       normalizedDie,
 
-    rollResult:
-      result,
+    rollResult,
 
     modifier:
       normalizedModifier,
 
-    totalResult:
-      total
+    totalResult
 
   };
 
@@ -867,7 +851,7 @@ function classifyRoll(
 
 
   const die =
-    safeInteger(
+    normalizeDie(
       roll.dieType
     );
 
@@ -877,6 +861,15 @@ function classifyRoll(
       roll.rollResult
     );
 
+
+  /*
+   * Regra provisória:
+   *
+   * somente d20 possui crítico/falha crítica.
+   *
+   * Isso poderá ser alterado quando o sistema oficial
+   * do AERION for implementado.
+   */
 
   if (
     die ===
@@ -908,12 +901,12 @@ function classifyRoll(
 
 
 /* ============================================================
-   FORMATAÇÃO
+   NOTAÇÃO
    ============================================================ */
 
 function formatDiceNotation(
   die,
-  modifier
+  modifier = 0
 ) {
 
   const normalizedDie =
@@ -970,70 +963,42 @@ function formatRollResult(
   }
 
 
-  const notation =
-    formatDiceNotation(
+  return (
+    `${formatDiceNotation(
       roll.dieType,
       roll.modifier
-    );
-
-
-  return (
-    `${notation} → ${roll.totalResult}`
+    )} → ${roll.totalResult}`
   );
 
 }
 
 
 /* ============================================================
-   SALVAR NO SUPABASE
+   VALIDAR PERSONAGEM
    ============================================================ */
 
-async function saveRoll(
-  roll
+async function validateCharacterOwnership(
+  characterId
 ) {
+
+  if (
+    !characterId
+  ) {
+
+    return true;
+
+  }
+
 
   if (
     !hasCampaignContext()
   ) {
 
-    throw createDiceError(
-      "O contexto da campanha ainda não foi carregado."
+    throw new Error(
+      "Contexto da campanha não está disponível."
     );
 
   }
-
-
-  const payload = {
-
-    campaign_id:
-      state.campaignId,
-
-    user_id:
-      state.user.id,
-
-    character_id:
-      roll.characterId,
-
-    die_type:
-      roll.dieType,
-
-    roll_result:
-      roll.rollResult,
-
-    modifier:
-      roll.modifier,
-
-    total_result:
-      roll.totalResult,
-
-    visibility:
-      roll.visibility,
-
-    context:
-      roll.context ||
-      null
-
-  };
 
 
   const {
@@ -1042,54 +1007,57 @@ async function saveRoll(
   } =
     await state.supabase
       .from(
-        "dice_rolls"
-      )
-      .insert(
-        payload
+        "characters"
       )
       .select(
         `
           id,
-          campaign_id,
           user_id,
-          character_id,
-          die_type,
-          roll_result,
-          modifier,
-          total_result,
-          visibility,
-          context,
-          created_at
+          campaign_id
         `
       )
-      .single();
+      .eq(
+        "id",
+        characterId
+      )
+      .eq(
+        "user_id",
+        state.user.id
+      )
+      .eq(
+        "campaign_id",
+        state.campaignId
+      )
+      .maybeSingle();
 
 
   if (
     error
   ) {
 
-    log(
-      "error",
-      "Falha ao salvar rolagem.",
-      error
-    );
-
-
     throw error;
 
   }
 
 
-  return normalizeSavedRoll(
-    data
-  );
+  if (
+    !data
+  ) {
+
+    throw new Error(
+      "O personagem selecionado não pertence a você nesta campanha."
+    );
+
+  }
+
+
+  return true;
 
 }
 
 
 /* ============================================================
-   NORMALIZA ROLAGEM DO BANCO
+   BANCO
    ============================================================ */
 
 function normalizeSavedRoll(
@@ -1174,8 +1142,121 @@ function normalizeSavedRoll(
 }
 
 
+async function saveRoll(
+  roll
+) {
+
+  if (
+    !hasCampaignContext()
+  ) {
+
+    throw new Error(
+      "Não existe contexto de campanha para salvar a rolagem."
+    );
+
+  }
+
+
+  const payload = {
+
+    campaign_id:
+      state.campaignId,
+
+    user_id:
+      state.user.id,
+
+    character_id:
+      roll.characterId ||
+      null,
+
+    die_type:
+      normalizeDie(
+        roll.dieType
+      ),
+
+    roll_result:
+      safeInteger(
+        roll.rollResult
+      ),
+
+    modifier:
+      normalizeModifier(
+        roll.modifier
+      ),
+
+    total_result:
+      safeInteger(
+        roll.totalResult
+      ),
+
+    visibility:
+      normalizeVisibility(
+        roll.visibility
+      ),
+
+    context:
+      normalizeContext(
+        roll.context
+      ) ||
+      null
+
+  };
+
+
+  const {
+    data,
+    error
+  } =
+    await state.supabase
+      .from(
+        "dice_rolls"
+      )
+      .insert(
+        payload
+      )
+      .select(
+        `
+          id,
+          campaign_id,
+          user_id,
+          character_id,
+          die_type,
+          roll_result,
+          modifier,
+          total_result,
+          visibility,
+          context,
+          created_at
+        `
+      )
+      .single();
+
+
+  if (
+    error
+  ) {
+
+    log(
+      "error",
+      "Falha ao salvar rolagem.",
+      error
+    );
+
+
+    throw error;
+
+  }
+
+
+  return normalizeSavedRoll(
+    data
+  );
+
+}
+
+
 /* ============================================================
-   EXECUTA ROLAGEM
+   EXECUTAR ROLAGEM
    ============================================================ */
 
 async function roll(
@@ -1191,23 +1272,26 @@ async function roll(
   }
 
 
+  /*
+   * Garante que a seleção atual seja lida
+   * da campanha caso o módulo tenha carregado antes.
+   */
+
   if (
-    !readCampaignContext()
+    !hasCampaignContext()
   ) {
 
-    throw createDiceError(
-      "O contexto da campanha ainda não está disponível."
-    );
+    readCampaignContext();
 
   }
 
 
   if (
-    !state.membership
+    !hasCampaignContext()
   ) {
 
-    throw createDiceError(
-      "Você não possui uma função nesta campanha."
+    throw new Error(
+      "A mesa ainda não terminou de carregar."
     );
 
   }
@@ -1224,32 +1308,69 @@ async function roll(
 
   try {
 
+    /*
+     * ========================================================
+     * CORREÇÃO PRINCIPAL
+     * ========================================================
+     *
+     * A ordem é:
+     *
+     * 1. options.die, se explicitamente informado;
+     * 2. state.selectedDie, caso contrário.
+     *
+     * Não existe mais d20 fixo.
+     */
+
     const die =
-      normalizeDie(
-        options.die ??
-        state.selectedDie
-      );
+      options.die !==
+        undefined
+
+        ? normalizeDie(
+            options.die
+          )
+
+        : normalizeDie(
+            state.selectedDie
+          );
 
 
     const modifier =
-      normalizeModifier(
-        options.modifier ??
-        state.modifier
-      );
+      options.modifier !==
+        undefined
+
+        ? normalizeModifier(
+            options.modifier
+          )
+
+        : normalizeModifier(
+            state.modifier
+          );
 
 
     const visibility =
-      normalizeVisibility(
-        options.visibility ??
-        state.visibility
-      );
+      options.visibility !==
+        undefined
+
+        ? normalizeVisibility(
+            options.visibility
+          )
+
+        : normalizeVisibility(
+            state.visibility
+          );
 
 
     const context =
-      normalizeContext(
-        options.context ??
-        state.context
-      );
+      options.context !==
+        undefined
+
+        ? normalizeContext(
+            options.context
+          )
+
+        : normalizeContext(
+            state.context
+          );
 
 
     const characterId =
@@ -1268,11 +1389,34 @@ async function roll(
 
 
     /*
-     * Não permitimos um character_id arbitrário.
-     *
-     * O personagem precisa pertencer ao próprio usuário
-     * e à campanha atual.
+     * Se o usuário explicitou um dado no options,
+     * atualizamos a seleção visual também.
      */
+
+    state.selectedDie =
+      die;
+
+
+    state.modifier =
+      modifier;
+
+
+    state.visibility =
+      visibility;
+
+
+    state.context =
+      context;
+
+
+    renderDiceSelection();
+
+    renderModifier();
+
+    renderVisibility();
+
+    renderContext();
+
 
     if (
       characterId
@@ -1284,6 +1428,10 @@ async function roll(
 
     }
 
+
+    /*
+     * ROLAGEM REAL
+     */
 
     const local =
       rollLocal(
@@ -1316,27 +1464,14 @@ async function roll(
 
       classification:
         classifyRoll(
-          {
-
-            dieType:
-              die,
-
-            rollResult:
-              local.rollResult,
-
-            modifier,
-
-            totalResult:
-              local.totalResult
-
-          }
+          local
         )
 
     };
 
 
     /*
-     * O resultado local é mostrado imediatamente.
+     * Mostra imediatamente.
      */
 
     state.lastRoll =
@@ -1355,7 +1490,8 @@ async function roll(
 
 
     /*
-     * Depois persistimos no banco.
+     * Persiste.
+
      */
 
     const saved =
@@ -1402,13 +1538,13 @@ async function roll(
 
     log(
       "error",
-      "Erro durante a rolagem.",
+      "Erro ao realizar rolagem.",
       error
     );
 
 
     showDiceError(
-      getDiceErrorMessage(
+      getFriendlyError(
         error
       )
     );
@@ -1417,9 +1553,7 @@ async function roll(
     dispatchDiceEvent(
       "rollerror",
       {
-
         error
-
       }
     );
 
@@ -1442,83 +1576,7 @@ async function roll(
 
 
 /* ============================================================
-   VALIDAÇÃO DO PERSONAGEM
-   ============================================================ */
-
-async function validateCharacterOwnership(
-  characterId
-) {
-
-  if (
-    !state.supabase ||
-    !state.user ||
-    !state.campaignId
-  ) {
-
-    throw createDiceError(
-      "Contexto insuficiente para validar personagem."
-    );
-
-  }
-
-
-  const {
-    data,
-    error
-  } =
-    await state.supabase
-      .from(
-        "characters"
-      )
-      .select(
-        `
-          id,
-          user_id,
-          campaign_id
-        `
-      )
-      .eq(
-        "id",
-        characterId
-      )
-      .eq(
-        "user_id",
-        state.user.id
-      )
-      .eq(
-        "campaign_id",
-        state.campaignId
-      )
-      .maybeSingle();
-
-
-  if (
-    error
-  ) {
-
-    throw error;
-
-  }
-
-
-  if (
-    !data
-  ) {
-
-    throw createDiceError(
-      "Este personagem não pertence a você nesta campanha."
-    );
-
-  }
-
-
-  return true;
-
-}
-
-
-/* ============================================================
-   BUSCAR ROLAGENS
+   HISTÓRICO
    ============================================================ */
 
 async function loadRecentRolls(
@@ -1534,24 +1592,16 @@ async function loadRecentRolls(
   }
 
 
-  let safeLimit =
-    safeInteger(
-      limit,
-      30
-    );
-
-
-  safeLimit =
+  const safeLimit =
     Math.max(
       1,
-      safeLimit
-    );
-
-
-  safeLimit =
-    Math.min(
-      100,
-      safeLimit
+      Math.min(
+        100,
+        safeInteger(
+          limit,
+          30
+        )
+      )
     );
 
 
@@ -1598,30 +1648,36 @@ async function loadRecentRolls(
     error
   ) {
 
-    log(
-      "error",
-      "Falha ao carregar histórico de dados.",
-      error
-    );
-
-
     throw error;
 
   }
 
 
-  return Array.isArray(
+  return arrayFrom(
     data
   )
+    .map(
+      normalizeSavedRoll
+    )
+    .filter(
+      Boolean
+    );
 
-    ? data
-        .map(
-          normalizeSavedRoll
-        )
-        .filter(
-          Boolean
-        )
+}
 
+
+/* ============================================================
+   ARRAY
+   ============================================================ */
+
+function arrayFrom(
+  value
+) {
+
+  return Array.isArray(
+    value
+  )
+    ? value
     : [];
 
 }
@@ -1631,20 +1687,16 @@ async function loadRecentRolls(
    REALTIME
    ============================================================ */
 
-function getRealtimeChannelName() {
+function realtimeChannelName() {
 
-  return [
-    DICE_CONFIG.realtimeChannelPrefix,
-    state.campaignId
-  ]
-    .join(
-      "-"
-    );
+  return (
+    `${DICE_CONFIG.realtimeChannelPrefix}:${state.campaignId}`
+  );
 
 }
 
 
-function removeRealtimeChannel() {
+function removeRealtime() {
 
   if (
     state.realtimeChannel &&
@@ -1664,7 +1716,7 @@ function removeRealtimeChannel() {
 
       log(
         "warn",
-        "Falha ao remover canal de dados.",
+        "Falha ao remover canal Realtime dos dados.",
         error
       );
 
@@ -1686,7 +1738,7 @@ function removeRealtimeChannel() {
 }
 
 
-function subscribeRealtime() {
+function setupRealtime() {
 
   if (
     !state.supabase ||
@@ -1698,60 +1750,73 @@ function subscribeRealtime() {
   }
 
 
-  removeRealtimeChannel();
+  removeRealtime();
 
 
-  const channel =
-    state.supabase.channel(
-      getRealtimeChannelName()
-    );
+  try {
 
-
-  channel.on(
-    "postgres_changes",
-    {
-
-      event:
-        "INSERT",
-
-      schema:
-        "public",
-
-      table:
-        "dice_rolls",
-
-      filter:
-        `campaign_id=eq.${state.campaignId}`
-
-    },
-    handleRemoteRoll
-  );
-
-
-  state.realtimeChannel =
-    channel;
-
-
-  channel.subscribe(
-    (
-      status
-    ) => {
-
-      log(
-        "info",
-        `Realtime de dados: ${status}`
+    const channel =
+      state.supabase.channel(
+        realtimeChannelName()
       );
 
 
-      state.realtimeConnected =
-        status ===
-        "SUBSCRIBED";
+    channel.on(
+      "postgres_changes",
+      {
+
+        event:
+          "INSERT",
+
+        schema:
+          "public",
+
+        table:
+          "dice_rolls",
+
+        filter:
+          `campaign_id=eq.${state.campaignId}`
+
+      },
+
+      handleRemoteRoll
+    );
 
 
-      updateRealtimeUi();
+    state.realtimeChannel =
+      channel;
 
-    }
-  );
+
+    channel.subscribe(
+      status => {
+
+        state.realtimeConnected =
+          status ===
+          "SUBSCRIBED";
+
+
+        updateRealtimeUi();
+
+
+        log(
+          "info",
+          `Realtime dos dados: ${status}`
+        );
+
+      }
+    );
+
+  } catch (
+    error
+  ) {
+
+    log(
+      "warn",
+      "Falha ao iniciar Realtime dos dados.",
+      error
+    );
+
+  }
 
 }
 
@@ -1793,9 +1858,7 @@ function handleRemoteRoll(
 
 
   /*
-   * Não adicionamos a própria rolagem novamente.
-   *
-   * A rolagem local já foi renderizada.
+   * Nossa própria rolagem já foi renderizada localmente.
    */
 
   if (
@@ -1808,13 +1871,6 @@ function handleRemoteRoll(
 
   }
 
-
-  /*
-   * Rolagens privadas só podem aparecer para o próprio
-   * autor ou para quem o RLS permitir que leia.
-   *
-   * O Realtime respeita a configuração do Supabase.
-   */
 
   renderRemoteRoll(
     roll
@@ -1830,7 +1886,7 @@ function handleRemoteRoll(
 
 
 /* ============================================================
-   UI — DADOS
+   UI — SELEÇÃO
    ============================================================ */
 
 function renderDiceSelection() {
@@ -1839,9 +1895,7 @@ function renderDiceSelection() {
     "[data-die]"
   )
     .forEach(
-      (
-        button
-      ) => {
+      button => {
 
         const die =
           normalizeDie(
@@ -1956,9 +2010,7 @@ function renderVisibility() {
     "[data-dice-visibility]"
   )
     .forEach(
-      (
-        element
-      ) => {
+      element => {
 
         const value =
           normalizeVisibility(
@@ -2031,7 +2083,6 @@ function renderContext() {
 
   }
 
-
 }
 
 
@@ -2048,7 +2099,15 @@ function renderCharacterSelection() {
 
 
   if (
-    select &&
+    !select
+  ) {
+
+    return;
+
+  }
+
+
+  if (
     document.activeElement !==
       select
   ) {
@@ -2086,11 +2145,12 @@ function updateNotationUi() {
 
   }
 
+
 }
 
 
 /* ============================================================
-   UI — ÚLTIMA ROLAGEM
+   UI — RESULTADO
    ============================================================ */
 
 function renderLastRoll(
@@ -2111,22 +2171,24 @@ function renderLastRoll(
       "dice-result"
     );
 
-
   const number =
     getElement(
       "dice-result-number"
     );
-
 
   const notation =
     getElement(
       "dice-result-notation"
     );
 
-
   const classification =
     getElement(
       "dice-result-classification"
+    );
+
+  const empty =
+    getElement(
+      "dice-result-empty"
     );
 
 
@@ -2141,6 +2203,26 @@ function renderLastRoll(
     result.dataset.result =
       roll.classification ||
       "normal";
+
+
+    /*
+     * Permite que o CSS saiba qual dado foi lançado.
+     */
+
+    result.dataset.die =
+      `d${normalizeDie(
+        roll.dieType
+      )}`;
+
+  }
+
+
+  if (
+    empty
+  ) {
+
+    empty.hidden =
+      true;
 
   }
 
@@ -2183,6 +2265,7 @@ function renderLastRoll(
         "CRÍTICO!";
 
     }
+
     else if (
       roll.classification ===
       "critical-failure"
@@ -2192,6 +2275,7 @@ function renderLastRoll(
         "FALHA CRÍTICA";
 
     }
+
     else {
 
       classification.textContent =
@@ -2202,7 +2286,7 @@ function renderLastRoll(
   }
 
 
-  animateDiceResult(
+  animateResult(
     result
   );
 
@@ -2213,7 +2297,7 @@ function renderLastRoll(
    ANIMAÇÃO
    ============================================================ */
 
-function animateDiceResult(
+function animateResult(
   element
 ) {
 
@@ -2232,7 +2316,7 @@ function animateDiceResult(
 
 
   /*
-   * Força reflow para permitir repetir a animação.
+   * Reinicia a animação.
    */
 
   void element.offsetWidth;
@@ -2269,9 +2353,7 @@ function setRollingUi(
     "[data-dice-roll]"
   )
     .forEach(
-      (
-        button
-      ) => {
+      button => {
 
         button.disabled =
           rolling;
@@ -2312,14 +2394,14 @@ function setRollingUi(
 
 function updateRealtimeUi() {
 
-  const indicator =
+  const status =
     getElement(
       "dice-realtime-status"
     );
 
 
   if (
-    !indicator
+    !status
   ) {
 
     return;
@@ -2327,23 +2409,23 @@ function updateRealtimeUi() {
   }
 
 
-  indicator.dataset.connected =
+  status.dataset.connected =
     String(
       state.realtimeConnected
     );
 
 
-  const text =
-    indicator.querySelector(
+  const textElement =
+    status.querySelector(
       "[data-dice-realtime-text]"
     );
 
 
   if (
-    text
+    textElement
   ) {
 
-    text.textContent =
+    textElement.textContent =
       state.realtimeConnected
 
         ? "Dados sincronizados"
@@ -2386,59 +2468,67 @@ function showDiceError(
     false;
 
 
-  window.setTimeout(
-    () => {
-
-      element.hidden =
-        true;
-
-    },
-    5000
+  window.clearTimeout(
+    showDiceError.timeout
   );
+
+
+  showDiceError.timeout =
+    window.setTimeout(
+      () => {
+
+        element.hidden =
+          true;
+
+      },
+      5000
+    );
 
 }
 
 
 /* ============================================================
-   ERROS AMIGÁVEIS
+   ERRO AMIGÁVEL
    ============================================================ */
 
-function getDiceErrorMessage(
+function getFriendlyError(
   error
 ) {
 
   const message =
-    String(
-      error?.message ||
-      ""
+    safeString(
+      error?.message
     );
 
 
-  const normalized =
+  const lower =
     message.toLowerCase();
 
 
   if (
-    normalized.includes(
+    lower.includes(
       "row-level security"
     ) ||
-    normalized.includes(
+    lower.includes(
       "permission"
     ) ||
-    normalized.includes(
+    lower.includes(
       "forbidden"
+    ) ||
+    lower.includes(
+      "42501"
     )
   ) {
 
     return (
-      "O banco recusou esta rolagem. Verifique as políticas RLS de dice_rolls."
+      "O banco recusou essa rolagem. Verifique as permissões da mesa."
     );
 
   }
 
 
   if (
-    normalized.includes(
+    lower.includes(
       "personagem"
     )
   ) {
@@ -2449,13 +2539,16 @@ function getDiceErrorMessage(
 
 
   if (
-    normalized.includes(
+    lower.includes(
       "contexto"
+    ) ||
+    lower.includes(
+      "mesa ainda"
     )
   ) {
 
     return (
-      "A mesa ainda está carregando. Tente novamente em alguns segundos."
+      "A mesa ainda está carregando. Tente novamente."
     );
 
   }
@@ -2470,7 +2563,7 @@ function getDiceErrorMessage(
 
 
 /* ============================================================
-   RENDER REMOTO
+   ROLAGEM REMOTA — UI
    ============================================================ */
 
 function renderRemoteRoll(
@@ -2492,6 +2585,34 @@ function renderRemoteRoll(
   }
 
 
+  /*
+   * Evita duplicação caso o evento seja recebido
+   * novamente por alguma condição de reconexão.
+   */
+
+  if (
+    roll.id
+  ) {
+
+    const existing =
+      history.querySelector(
+        `[data-roll-id="${CSS.escape(
+          roll.id
+        )}"]`
+      );
+
+
+    if (
+      existing
+    ) {
+
+      return;
+
+    }
+
+  }
+
+
   const item =
     document.createElement(
       "article"
@@ -2502,9 +2623,20 @@ function renderRemoteRoll(
     "dice-history__item";
 
 
-  item.dataset.rollId =
-    roll.id ||
-    "";
+  if (
+    roll.id
+  ) {
+
+    item.dataset.rollId =
+      roll.id;
+
+  }
+
+
+  item.dataset.die =
+    `d${normalizeDie(
+      roll.dieType
+    )}`;
 
 
   const notation =
@@ -2569,7 +2701,7 @@ function renderRemoteRoll(
 
   while (
     history.children.length >
-    50
+    DICE_CONFIG.maxHistory
   ) {
 
     history.lastElementChild
@@ -2581,7 +2713,7 @@ function renderRemoteRoll(
 
 
 /* ============================================================
-   HISTÓRICO
+   HISTÓRICO — RENDER
    ============================================================ */
 
 async function renderHistory() {
@@ -2612,12 +2744,16 @@ async function renderHistory() {
       );
 
 
+    /*
+     * Banco entrega do mais novo para o mais antigo.
+     * Para inserir corretamente no DOM usamos do mais antigo
+     * para o mais novo com prepend().
+     */
+
     rolls
       .reverse()
       .forEach(
-        (
-          roll
-        ) => {
+        roll => {
 
           renderRemoteRoll(
             roll
@@ -2632,7 +2768,7 @@ async function renderHistory() {
 
     log(
       "warn",
-      "Não foi possível renderizar o histórico.",
+      "Falha ao carregar histórico de dados.",
       error
     );
 
@@ -2646,17 +2782,15 @@ async function renderHistory() {
    ============================================================ */
 
 function dispatchDiceEvent(
-  eventName,
+  name,
   detail
 ) {
 
   window.dispatchEvent(
     new CustomEvent(
-      `aeriom:dice:${eventName}`,
+      `aeriom:dice:${name}`,
       {
-
         detail
-
       }
     )
   );
@@ -2665,18 +2799,16 @@ function dispatchDiceEvent(
 
 
 /* ============================================================
-   BIND DOS DADOS
+   BIND — DADOS
    ============================================================ */
 
-function bindDiceSelection() {
+function bindDiceButtons() {
 
   getElements(
     "[data-die]"
   )
     .forEach(
-      (
-        button
-      ) => {
+      button => {
 
         button.addEventListener(
           "click",
@@ -2696,7 +2828,7 @@ function bindDiceSelection() {
 
 
 /* ============================================================
-   BIND MODIFICADOR
+   BIND — MODIFICADOR
    ============================================================ */
 
 function bindModifier() {
@@ -2720,6 +2852,41 @@ function bindModifier() {
     "input",
     () => {
 
+      /*
+       * Não sobrescrevemos o campo enquanto o usuário
+       * ainda está digitando.
+       */
+
+      const number =
+        Number(
+          input.value
+        );
+
+
+      if (
+        Number.isFinite(
+          number
+        )
+      ) {
+
+        state.modifier =
+          normalizeModifier(
+            number
+          );
+
+
+        updateNotationUi();
+
+      }
+
+    }
+  );
+
+
+  input.addEventListener(
+    "change",
+    () => {
+
       setModifier(
         input.value
       );
@@ -2732,10 +2899,9 @@ function bindModifier() {
     "blur",
     () => {
 
-      input.value =
-        String(
-          state.modifier
-        );
+      setModifier(
+        input.value
+      );
 
     }
   );
@@ -2744,7 +2910,7 @@ function bindModifier() {
 
 
 /* ============================================================
-   BIND VISIBILIDADE
+   BIND — VISIBILIDADE
    ============================================================ */
 
 function bindVisibility() {
@@ -2753,16 +2919,14 @@ function bindVisibility() {
     "[data-dice-visibility]"
   )
     .forEach(
-      (
-        element
-      ) => {
+      button => {
 
-        element.addEventListener(
+        button.addEventListener(
           "click",
           () => {
 
             setVisibility(
-              element.dataset.diceVisibility
+              button.dataset.diceVisibility
             );
 
           }
@@ -2778,22 +2942,28 @@ function bindVisibility() {
     );
 
 
-  select?.addEventListener(
-    "change",
-    () => {
+  if (
+    select
+  ) {
 
-      setVisibility(
-        select.value
-      );
+    select.addEventListener(
+      "change",
+      () => {
 
-    }
-  );
+        setVisibility(
+          select.value
+        );
+
+      }
+    );
+
+  }
 
 }
 
 
 /* ============================================================
-   BIND PERSONAGEM
+   BIND — PERSONAGEM
    ============================================================ */
 
 function bindCharacter() {
@@ -2829,7 +2999,7 @@ function bindCharacter() {
 
 
 /* ============================================================
-   BIND CONTEXTO
+   BIND — CONTEXTO
    ============================================================ */
 
 function bindContext() {
@@ -2853,6 +3023,19 @@ function bindContext() {
     "input",
     () => {
 
+      state.context =
+        normalizeContext(
+          input.value
+        );
+
+    }
+  );
+
+
+  input.addEventListener(
+    "change",
+    () => {
+
       setContext(
         input.value
       );
@@ -2864,7 +3047,7 @@ function bindContext() {
 
 
 /* ============================================================
-   BIND ROLAR
+   BIND — BOTÃO ROLAR
    ============================================================ */
 
 function bindRollButtons() {
@@ -2873,32 +3056,57 @@ function bindRollButtons() {
     "[data-dice-roll]"
   )
     .forEach(
-      (
-        button
-      ) => {
+      button => {
 
         button.addEventListener(
           "click",
           async () => {
 
-            const die =
+            /*
+             * ==================================================
+             * CORREÇÃO DEFINITIVA
+             * ==================================================
+             *
+             * Se o botão tiver data-dice-roll explícito,
+             * usamos esse valor.
+             *
+             * Caso contrário, usamos state.selectedDie.
+             *
+             * Portanto:
+             *
+             * D100 selecionado → rola D100.
+             * D6 selecionado   → rola D6.
+             * D20 selecionado  → rola D20.
+             */
+
+            const explicitDie =
               button.dataset.diceRoll;
+
+
+            const options =
+              explicitDie
+                ? {
+                    die:
+                      normalizeDie(
+                        explicitDie
+                      )
+                  }
+                : {
+                    die:
+                      state.selectedDie
+                  };
 
 
             try {
 
-              await roll({
-
-                die:
-                  die ||
-                  state.selectedDie
-
-              });
+              await roll(
+                options
+              );
 
             } catch {
 
               /*
-               * O erro já foi apresentado na UI.
+               * O erro já foi mostrado na interface.
                */
 
             }
@@ -2909,20 +3117,12 @@ function bindRollButtons() {
       }
     );
 
-
-  /*
-   * Atalho:
-   *
-   * Espaço / Enter quando o foco está no botão.
-   * O clique nativo já resolve isso.
-   */
-
 }
 
 
 /* ============================================================
-   BIND EVENTOS DA CAMPANHA
-   * ============================================================ */
+   BIND — CAMPANHA
+   ============================================================ */
 
 function bindCampaignEvents() {
 
@@ -2948,9 +3148,7 @@ function bindCampaignEvents() {
 
   window.addEventListener(
     "aeriom:campaigntabchange",
-    (
-      event
-    ) => {
+    event => {
 
       if (
         event.detail?.tab ===
@@ -2994,16 +3192,12 @@ function populateCharacterSelect() {
 
 
   const characters =
-    Array.isArray(
+    arrayFrom(
       context?.presentCharacters
-    )
-
-      ? context.presentCharacters
-
-      : [];
+    );
 
 
-  const current =
+  const previous =
     state.selectedCharacterId;
 
 
@@ -3029,91 +3223,87 @@ function populateCharacterSelect() {
   );
 
 
-  characters
-    .forEach(
-      (
-        entry
-      ) => {
+  characters.forEach(
+    entry => {
 
-        const character =
-          entry?.character;
+      const character =
+        entry?.character;
 
 
-        if (
-          !character?.id
-        ) {
+      if (
+        !character?.id
+      ) {
 
-          return;
-
-        }
-
-
-        /*
-         * Jogador somente pode selecionar seus próprios
-         * personagens.
-         *
-         * O Mestre pode selecionar qualquer personagem
-         * presente.
-         */
-
-        if (
-          !isMaster() &&
-          character.userId !==
-            state.user?.id
-        ) {
-
-          return;
-
-        }
-
-
-        const option =
-          document.createElement(
-            "option"
-          );
-
-
-        option.value =
-          String(
-            character.id
-          );
-
-
-        option.textContent =
-          character.name ||
-          "Personagem";
-
-
-        select.appendChild(
-          option
-        );
+        return;
 
       }
-    );
+
+
+      /*
+       * Jogador só enxerga seus personagens.
+       * Mestre pode selecionar os personagens presentes
+       * da campanha.
+       */
+
+      if (
+        !isMaster() &&
+        character.userId !==
+          state.user?.id
+      ) {
+
+        return;
+
+      }
+
+
+      const option =
+        document.createElement(
+          "option"
+        );
+
+
+      option.value =
+        String(
+          character.id
+        );
+
+
+      option.textContent =
+        safeString(
+          character.name,
+          "Personagem"
+        );
+
+
+      select.appendChild(
+        option
+      );
+
+    }
+  );
 
 
   if (
-    current &&
+    previous &&
     Array.from(
       select.options
     )
       .some(
-        (
-          option
-        ) =>
+        option =>
           option.value ===
-          current
+          previous
       )
   ) {
 
     select.value =
-      current;
+      previous;
 
   }
   else {
 
     select.value =
       "";
+
 
     state.selectedCharacterId =
       null;
@@ -3124,82 +3314,12 @@ function populateCharacterSelect() {
 
 
 /* ============================================================
-   INICIALIZAÇÃO A PARTIR DA CAMPANHA
+   API
    ============================================================ */
 
-function initializeFromCampaign() {
+function getContext() {
 
-  if (
-    !readCampaignContext()
-  ) {
-
-    return false;
-
-  }
-
-
-  state.initialized =
-    true;
-
-
-  populateCharacterSelect();
-
-  renderDiceSelection();
-
-  renderModifier();
-
-  renderVisibility();
-
-  renderCharacterSelection();
-
-  renderContext();
-
-  updateNotationUi();
-
-  updateRealtimeUi();
-
-  subscribeRealtime();
-
-
-  exposeGlobalApi();
-
-
-  dispatchDiceEvent(
-    "ready",
-    getDiceContext()
-  );
-
-
-  log(
-    "info",
-    "Sistema de dados inicializado.",
-    {
-
-      campaignId:
-        state.campaignId,
-
-      userId:
-        state.user?.id,
-
-      role:
-        state.membership?.role
-
-    }
-  );
-
-
-  return true;
-
-}
-
-
-/* ============================================================
-   CONTEXTO
-   ============================================================ */
-
-function getDiceContext() {
-
-  return Object.freeze({
+  return {
 
     campaignId:
       state.campaignId,
@@ -3234,7 +3354,94 @@ function getDiceContext() {
     realtimeConnected:
       state.realtimeConnected
 
-  });
+  };
+
+}
+
+
+/* ============================================================
+   INIT FROM CAMPAIGN
+   ============================================================ */
+
+function initializeFromCampaign() {
+
+  if (
+    !readCampaignContext()
+  ) {
+
+    return false;
+
+  }
+
+
+  if (
+    state.initialized
+  ) {
+
+    /*
+     * Mesmo já inicializado, atualizamos a seleção
+     * dos personagens porque a campanha pode ter mudado.
+     */
+
+    populateCharacterSelect();
+
+    return true;
+
+  }
+
+
+  state.initialized =
+    true;
+
+
+  renderDiceSelection();
+
+  renderModifier();
+
+  renderVisibility();
+
+  renderContext();
+
+  renderCharacterSelection();
+
+  populateCharacterSelect();
+
+  updateNotationUi();
+
+  updateRealtimeUi();
+
+  setupRealtime();
+
+  renderHistory();
+
+  exposeApi();
+
+
+  dispatchDiceEvent(
+    "ready",
+    getContext()
+  );
+
+
+  log(
+    "info",
+    "Sistema de dados inicializado.",
+    {
+
+      campaignId:
+        state.campaignId,
+
+      role:
+        state.membership?.role,
+
+      selectedDie:
+        state.selectedDie
+
+    }
+  );
+
+
+  return true;
 
 }
 
@@ -3243,7 +3450,7 @@ function getDiceContext() {
    API GLOBAL
    ============================================================ */
 
-function exposeGlobalApi() {
+function exposeApi() {
 
   window.AERIOM_DICE =
     Object.freeze({
@@ -3266,8 +3473,7 @@ function exposeGlobalApi() {
 
       loadRecentRolls,
 
-      getContext:
-        getDiceContext,
+      getContext,
 
       isMaster,
 
@@ -3304,10 +3510,13 @@ function exposeGlobalApi() {
 
 function destroyDice() {
 
-  removeRealtimeChannel();
+  removeRealtime();
 
 
   state.initialized =
+    false;
+
+  state.initializing =
     false;
 
   state.supabase =
@@ -3344,15 +3553,6 @@ function destroyDice() {
     null;
 
 
-  /*
-   * Não usamos delete global:
-   *
-   * delete window.AERIOM_DICE
-   *
-   * porque outros módulos podem estar segurando
-   * uma referência. Apenas substituímos por undefined.
-   */
-
   try {
 
     delete window.AERIOM_DICE;
@@ -3374,20 +3574,14 @@ function destroyDice() {
 
 
 /* ============================================================
-   TECLADO GLOBAL
+   ATALHO DE TECLADO
    ============================================================ */
 
-function bindKeyboardShortcuts() {
+function bindKeyboard() {
 
   document.addEventListener(
     "keydown",
-    (
-      event
-    ) => {
-
-      /*
-       * Não interceptar teclado enquanto usuário escreve.
-       */
+    event => {
 
       const target =
         event.target;
@@ -3408,7 +3602,7 @@ function bindKeyboardShortcuts() {
 
 
       /*
-       * D = rolar d20.
+       * D = rolar o dado atualmente selecionado.
        */
 
       if (
@@ -3449,9 +3643,22 @@ function bindKeyboardShortcuts() {
    START
    ============================================================ */
 
-function startDice() {
+function start() {
 
-  bindDiceSelection();
+  if (
+    state.eventsBound
+  ) {
+
+    return;
+
+  }
+
+
+  state.eventsBound =
+    true;
+
+
+  bindDiceButtons();
 
   bindModifier();
 
@@ -3465,20 +3672,18 @@ function startDice() {
 
   bindCampaignEvents();
 
-  bindKeyboardShortcuts();
+  bindKeyboard();
 
-  exposeGlobalApi();
-
-
-  /*
-   * Se campanha.js já estiver pronto quando este módulo
-   * carregar, inicializamos imediatamente.
-   */
+  exposeApi();
 
   initializeFromCampaign();
 
 }
 
+
+/* ============================================================
+   AUTO START
+   ============================================================ */
 
 if (
   document.readyState ===
@@ -3487,7 +3692,7 @@ if (
 
   document.addEventListener(
     "DOMContentLoaded",
-    startDice,
+    start,
     {
       once:
         true
@@ -3497,7 +3702,7 @@ if (
 }
 else {
 
-  startDice();
+  start();
 
 }
 
@@ -3540,7 +3745,7 @@ export {
 
   loadRecentRolls,
 
-  getDiceContext,
+  getContext,
 
   isMaster,
 
