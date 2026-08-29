@@ -58,7 +58,7 @@ url: "https://kitlpowgcugvlxwhwhqv.supabase.co",
 * 
 * A chave publishable pode ficar no frontend.
   */
-  publishableKey: "",
+  publishableKey: "sb_publishable_WDlPiR0b8T6mlQfYMbwjGg_BGvQPZDW",
   });
 
 /* ============================================================
