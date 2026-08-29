@@ -4,44 +4,13 @@
  * js/core/menu.js
  * Navegação e menus globais
  * ============================================================
- *
- * Responsabilidades:
- *
- * - Navegação principal.
- * - Sidebar desktop.
- * - Navegação mobile.
- * - Menu de usuário.
- * - Menus expansíveis.
- * - Fechamento ao clicar fora.
- * - Fechamento pelo teclado.
- *
- * NÃO é responsabilidade deste arquivo:
- *
- * - autenticação;
- * - autorização;
- * - dados de campanhas;
- * - fichas;
- * - mapas;
- * - Realtime.
- *
- * Este módulo trabalha somente com interface/navegação.
- * ============================================================
  */
-
-
-/* ============================================================
-   CONFIGURAÇÃO
-   ============================================================ */
 
 const MENU_CONFIG = Object.freeze({
 
   sidebarStorageKey:
     "aeriom_sidebar_collapsed",
 
-  /*
-   * Breakpoint usado somente para decisões do JavaScript.
-   * O layout continua sendo responsabilidade do CSS.
-   */
   mobileBreakpoint:
     980,
 
@@ -86,21 +55,20 @@ const MENU_CONFIG = Object.freeze({
    ESTADO
    ============================================================ */
 
-let menuInitialized = false;
+let menuInitialized =
+  false;
 
-let userMenuOpen = false;
+let userMenuOpen =
+  false;
 
-let openExpandableMenu = null;
+let openExpandableMenu =
+  null;
 
+let globalListeners =
+  [];
 
-/*
- * Guardamos referências dos listeners globais.
- *
- * Isso permite destruir corretamente o módulo caso
- * futuramente o AERIOM passe a utilizar navegação SPA.
- */
-
-let globalListeners = [];
+let boundElements =
+  [];
 
 
 /* ============================================================
@@ -117,7 +85,9 @@ function logMenu(
     "[AERIOM][MENU]";
 
 
-  if (level === "error") {
+  if (
+    level === "error"
+  ) {
 
     console.error(
       prefix,
@@ -126,10 +96,13 @@ function logMenu(
     );
 
     return;
+
   }
 
 
-  if (level === "warn") {
+  if (
+    level === "warn"
+  ) {
 
     console.warn(
       prefix,
@@ -138,6 +111,7 @@ function logMenu(
     );
 
     return;
+
   }
 
 
@@ -146,20 +120,32 @@ function logMenu(
     message,
     details ?? ""
   );
+
 }
 
 
 /* ============================================================
-   HELPERS DOM
+   DOM
    ============================================================ */
 
 function getElement(
   selector
 ) {
 
+  if (
+    typeof selector !==
+    "string"
+  ) {
+
+    return null;
+
+  }
+
+
   return document.querySelector(
     selector
   );
+
 }
 
 
@@ -167,11 +153,22 @@ function getElements(
   selector
 ) {
 
+  if (
+    typeof selector !==
+    "string"
+  ) {
+
+    return [];
+
+  }
+
+
   return Array.from(
     document.querySelectorAll(
       selector
     )
   );
+
 }
 
 
@@ -181,9 +178,21 @@ function getElements(
 
 function isMobile() {
 
+  if (
+    typeof window.matchMedia !==
+    "function"
+  ) {
+
+    return window.innerWidth <=
+      MENU_CONFIG.mobileBreakpoint;
+
+  }
+
+
   return window.matchMedia(
     `(max-width: ${MENU_CONFIG.mobileBreakpoint}px)`
   ).matches;
+
 }
 
 
@@ -196,6 +205,7 @@ function getSidebar() {
   return getElement(
     MENU_CONFIG.selectors.sidebar
   );
+
 }
 
 
@@ -213,32 +223,41 @@ function setSidebarCollapsed(
     getSidebar();
 
 
-  /*
-   * Se a página atual não possui sidebar,
-   * simplesmente não fazemos nada.
-   */
+  if (
+    !sidebar
+  ) {
 
-  if (!sidebar) {
     return;
+
   }
 
 
   const isCollapsed =
-    Boolean(collapsed);
+    Boolean(
+      collapsed
+    );
 
 
   /*
-   * No mobile não aplicamos o estado colapsado
-   * da sidebar desktop.
+   * No mobile, a sidebar desktop não utiliza
+   * o estado collapsed.
    */
 
-  if (isMobile()) {
+  if (
+    isMobile()
+  ) {
 
     document.documentElement.classList.remove(
       "aeriom-sidebar-collapsed"
     );
 
+    sidebar.setAttribute(
+      "aria-expanded",
+      "true"
+    );
+
     return;
+
   }
 
 
@@ -250,11 +269,15 @@ function setSidebarCollapsed(
 
   sidebar.setAttribute(
     "aria-expanded",
-    String(!isCollapsed)
+    String(
+      !isCollapsed
+    )
   );
 
 
-  if (persist) {
+  if (
+    persist
+  ) {
 
     try {
 
@@ -265,14 +288,18 @@ function setSidebarCollapsed(
           : "false"
       );
 
-    } catch (error) {
+    } catch (
+      error
+    ) {
 
       logMenu(
         "warn",
         "Não foi possível salvar o estado da sidebar.",
         error
       );
+
     }
+
   }
 
 
@@ -280,20 +307,29 @@ function setSidebarCollapsed(
     new CustomEvent(
       "aeriom:sidebarchange",
       {
+
         detail: {
+
           collapsed:
             isCollapsed
+
         }
+
       }
     )
   );
+
 }
 
 
 function toggleSidebar() {
 
-  if (isMobile()) {
+  if (
+    isMobile()
+  ) {
+
     return;
+
   }
 
 
@@ -306,6 +342,7 @@ function toggleSidebar() {
   setSidebarCollapsed(
     !collapsed
   );
+
 }
 
 
@@ -315,22 +352,35 @@ function restoreSidebarState() {
     getSidebar();
 
 
-  if (!sidebar) {
+  if (
+    !sidebar
+  ) {
+
     return;
+
   }
 
 
-  if (isMobile()) {
+  if (
+    isMobile()
+  ) {
 
     document.documentElement.classList.remove(
       "aeriom-sidebar-collapsed"
     );
 
+    sidebar.setAttribute(
+      "aria-expanded",
+      "true"
+    );
+
     return;
+
   }
 
 
-  let collapsed = false;
+  let collapsed =
+    false;
 
 
   try {
@@ -340,24 +390,27 @@ function restoreSidebarState() {
         MENU_CONFIG.sidebarStorageKey
       ) === "true";
 
-  } catch (error) {
-
-    collapsed = false;
+  } catch (
+    error
+  ) {
 
     logMenu(
       "warn",
       "Não foi possível ler o estado da sidebar.",
       error
     );
+
   }
 
 
   setSidebarCollapsed(
     collapsed,
     {
-      persist: false
+      persist:
+        false
     }
   );
+
 }
 
 
@@ -370,6 +423,7 @@ function getUserMenu() {
   return getElement(
     MENU_CONFIG.selectors.userMenu
   );
+
 }
 
 
@@ -378,6 +432,7 @@ function getUserMenuToggle() {
   return getElement(
     MENU_CONFIG.selectors.userMenuToggle
   );
+
 }
 
 
@@ -390,28 +445,39 @@ function openUserMenu() {
     getUserMenuToggle();
 
 
-  if (!menu) {
+  if (
+    !menu
+  ) {
+
     return;
+
   }
 
 
-  menu.hidden = false;
+  menu.hidden =
+    false;
+
 
   menu.classList.add(
     "is-open"
   );
 
 
-  if (toggle) {
+  if (
+    toggle
+  ) {
 
     toggle.setAttribute(
       "aria-expanded",
       "true"
     );
+
   }
 
 
-  userMenuOpen = true;
+  userMenuOpen =
+    true;
+
 }
 
 
@@ -424,40 +490,53 @@ function closeUserMenu() {
     getUserMenuToggle();
 
 
-  if (menu) {
+  if (
+    menu
+  ) {
 
-    menu.hidden = true;
+    menu.hidden =
+      true;
 
     menu.classList.remove(
       "is-open"
     );
+
   }
 
 
-  if (toggle) {
+  if (
+    toggle
+  ) {
 
     toggle.setAttribute(
       "aria-expanded",
       "false"
     );
+
   }
 
 
-  userMenuOpen = false;
+  userMenuOpen =
+    false;
+
 }
 
 
 function toggleUserMenu() {
 
-  if (userMenuOpen) {
+  if (
+    userMenuOpen
+  ) {
 
     closeUserMenu();
 
     return;
+
   }
 
 
   openUserMenu();
+
 }
 
 
@@ -469,9 +548,10 @@ function getExpandableTrigger(
   item
 ) {
 
-  return item.querySelector(
+  return item?.querySelector(
     MENU_CONFIG.selectors.expandableTrigger
-  );
+  ) || null;
+
 }
 
 
@@ -479,9 +559,10 @@ function getExpandableContent(
   item
 ) {
 
-  return item.querySelector(
+  return item?.querySelector(
     MENU_CONFIG.selectors.expandableContent
-  );
+  ) || null;
+
 }
 
 
@@ -489,8 +570,12 @@ function closeExpandableMenu(
   item
 ) {
 
-  if (!item) {
+  if (
+    !item
+  ) {
+
     return;
+
   }
 
 
@@ -506,19 +591,25 @@ function closeExpandableMenu(
     );
 
 
-  if (content) {
+  if (
+    content
+  ) {
 
     content.hidden =
       true;
+
   }
 
 
-  if (trigger) {
+  if (
+    trigger
+  ) {
 
     trigger.setAttribute(
       "aria-expanded",
       "false"
     );
+
   }
 
 
@@ -528,12 +619,15 @@ function closeExpandableMenu(
 
 
   if (
-    openExpandableMenu === item
+    openExpandableMenu ===
+    item
   ) {
 
     openExpandableMenu =
       null;
+
   }
+
 }
 
 
@@ -541,26 +635,25 @@ function openExpandableMenuItem(
   item
 ) {
 
-  if (!item) {
+  if (
+    !item
+  ) {
+
     return;
+
   }
 
 
-  /*
-   * Fecha o menu expansível anterior.
-   *
-   * Isso impede vários submenus de ficarem abertos
-   * simultaneamente.
-   */
-
   if (
     openExpandableMenu &&
-    openExpandableMenu !== item
+    openExpandableMenu !==
+      item
   ) {
 
     closeExpandableMenu(
       openExpandableMenu
     );
+
   }
 
 
@@ -576,19 +669,25 @@ function openExpandableMenuItem(
     );
 
 
-  if (content) {
+  if (
+    content
+  ) {
 
     content.hidden =
       false;
+
   }
 
 
-  if (trigger) {
+  if (
+    trigger
+  ) {
 
     trigger.setAttribute(
       "aria-expanded",
       "true"
     );
+
   }
 
 
@@ -599,6 +698,7 @@ function openExpandableMenuItem(
 
   openExpandableMenu =
     item;
+
 }
 
 
@@ -606,8 +706,12 @@ function toggleExpandableMenu(
   item
 ) {
 
-  if (!item) {
+  if (
+    !item
+  ) {
+
     return;
+
   }
 
 
@@ -617,19 +721,23 @@ function toggleExpandableMenu(
     );
 
 
-  if (isOpen) {
+  if (
+    isOpen
+  ) {
 
     closeExpandableMenu(
       item
     );
 
     return;
+
   }
 
 
   openExpandableMenuItem(
     item
   );
+
 }
 
 
@@ -645,7 +753,9 @@ function navigateTo(
     typeof destination !==
     "string"
   ) {
+
     return;
+
   }
 
 
@@ -653,20 +763,24 @@ function navigateTo(
     destination.trim();
 
 
-  if (!target) {
+  if (
+    !target
+  ) {
+
     return;
+
   }
 
 
   /*
-   * O destino vem do próprio HTML.
-   *
-   * Não construímos URLs usando dados do banco.
+   * O destino é definido pelo próprio HTML.
+   * Não recebe dados do banco.
    */
 
   window.location.assign(
     target
   );
+
 }
 
 
@@ -678,8 +792,12 @@ function handleNavigationClick(
     event.currentTarget;
 
 
-  if (!item) {
+  if (
+    !item
+  ) {
+
     return;
+
   }
 
 
@@ -687,14 +805,18 @@ function handleNavigationClick(
     item.dataset.navigationItem;
 
 
-  if (!destination) {
+  if (
+    !destination
+  ) {
+
     return;
+
   }
 
 
   /*
-   * Mantemos o comportamento padrão do navegador
-   * para Ctrl/Cmd + clique e outras combinações.
+   * Não interceptamos combinações usadas para
+   * abrir links em nova aba/janela.
    */
 
   if (
@@ -705,14 +827,41 @@ function handleNavigationClick(
   ) {
 
     return;
+
   }
 
 
   /*
-   * Se for um botão, impedimos o comportamento padrão.
-   * Se for um link, também controlamos a navegação para
-   * manter o comportamento consistente.
+   * Links <a> normais devem continuar funcionando
+   * pelo comportamento nativo do navegador.
+   *
+   * Só controlamos a navegação quando o elemento
+   * explicitamente pede comportamento via
+   * data-navigation-item.
    */
+
+  if (
+    item.tagName ===
+    "A"
+  ) {
+
+    const href =
+      item.getAttribute(
+        "href"
+      );
+
+
+    if (
+      href &&
+      href.trim()
+    ) {
+
+      return;
+
+    }
+
+  }
+
 
   event.preventDefault();
 
@@ -720,6 +869,7 @@ function handleNavigationClick(
   navigateTo(
     destination
   );
+
 }
 
 
@@ -731,13 +881,19 @@ function normalizePath(
   path
 ) {
 
-  if (!path) {
+  if (
+    !path
+  ) {
+
     return "/";
+
   }
 
 
   let normalized =
-    String(path)
+    String(
+      path
+    )
       .split("?")[0]
       .split("#")[0]
       .replace(
@@ -746,10 +902,6 @@ function normalizePath(
       )
       .toLowerCase();
 
-
-  /*
-   * Remove a barra final, mas preserva "/".
-   */
 
   if (
     normalized.length > 1 &&
@@ -761,10 +913,12 @@ function normalizePath(
         0,
         -1
       );
+
   }
 
 
   return normalized;
+
 }
 
 
@@ -789,8 +943,12 @@ function updateActiveNavigation() {
         item.dataset.navigationItem;
 
 
-      if (!destination) {
+      if (
+        !destination
+      ) {
+
         return;
+
       }
 
 
@@ -806,7 +964,9 @@ function updateActiveNavigation() {
             window.location.href
           ).pathname;
 
-      } catch (error) {
+      } catch (
+        error
+      ) {
 
         logMenu(
           "warn",
@@ -816,13 +976,18 @@ function updateActiveNavigation() {
             error
           }
         );
+
+
+        return;
+
       }
 
 
       const active =
         normalizePath(
           destinationPath
-        ) === currentPath;
+        ) ===
+        currentPath;
 
 
       item.classList.toggle(
@@ -831,7 +996,9 @@ function updateActiveNavigation() {
       );
 
 
-      if (active) {
+      if (
+        active
+      ) {
 
         item.setAttribute(
           "aria-current",
@@ -843,14 +1010,17 @@ function updateActiveNavigation() {
         item.removeAttribute(
           "aria-current"
         );
+
       }
+
     }
   );
+
 }
 
 
 /* ============================================================
-   FECHAR TODOS OS MENUS
+   FECHAR MENUS
    ============================================================ */
 
 function closeAllMenus() {
@@ -858,12 +1028,16 @@ function closeAllMenus() {
   closeUserMenu();
 
 
-  if (openExpandableMenu) {
+  if (
+    openExpandableMenu
+  ) {
 
     closeExpandableMenu(
       openExpandableMenu
     );
+
   }
+
 }
 
 
@@ -882,66 +1056,71 @@ function handleDocumentPointerDown(
   if (
     !(target instanceof Node)
   ) {
+
     return;
+
   }
 
 
-  /*
-   * Menu do usuário.
-   */
+  if (
+    userMenuOpen
+  ) {
 
-  if (userMenuOpen) {
-
-    const userMenu =
+    const menu =
       getUserMenu();
 
-    const userMenuToggle =
+    const toggle =
       getUserMenuToggle();
 
 
-    const clickedInsideMenu =
-      userMenu &&
-      userMenu.contains(
-        target
+    const insideMenu =
+      Boolean(
+        menu &&
+        menu.contains(
+          target
+        )
       );
 
 
-    const clickedToggle =
-      userMenuToggle &&
-      userMenuToggle.contains(
-        target
+    const insideToggle =
+      Boolean(
+        toggle &&
+        toggle.contains(
+          target
+        )
       );
 
 
     if (
-      !clickedInsideMenu &&
-      !clickedToggle
+      !insideMenu &&
+      !insideToggle
     ) {
 
       closeUserMenu();
+
     }
+
   }
 
 
-  /*
-   * Menu expansível.
-   */
+  if (
+    openExpandableMenu
+  ) {
 
-  if (openExpandableMenu) {
-
-    const clickedInside =
-      openExpandableMenu.contains(
+    if (
+      !openExpandableMenu.contains(
         target
-      );
-
-
-    if (!clickedInside) {
+      )
+    ) {
 
       closeExpandableMenu(
         openExpandableMenu
       );
+
     }
+
   }
+
 }
 
 
@@ -953,10 +1132,6 @@ function handleKeyDown(
   event
 ) {
 
-  /*
-   * ESC fecha menus abertos.
-   */
-
   if (
     event.key ===
     "Escape"
@@ -965,25 +1140,29 @@ function handleKeyDown(
     closeAllMenus();
 
     return;
+
   }
 
 
-  /*
-   * Ctrl+B / Cmd+B alterna a sidebar no desktop.
-   */
-
   if (
-    event.key.toLowerCase() === "b" &&
-    (event.ctrlKey || event.metaKey)
+    event.key?.toLowerCase() ===
+      "b" &&
+    (event.ctrlKey ||
+      event.metaKey)
   ) {
 
-    if (!isMobile()) {
+    if (
+      !isMobile()
+    ) {
 
       event.preventDefault();
 
       toggleSidebar();
+
     }
+
   }
+
 }
 
 
@@ -993,17 +1172,32 @@ function handleKeyDown(
 
 function handleResize() {
 
-  if (isMobile()) {
+  if (
+    isMobile()
+  ) {
+
+    const sidebar =
+      getSidebar();
+
 
     document.documentElement.classList.remove(
       "aeriom-sidebar-collapsed"
     );
 
+
+    sidebar?.setAttribute(
+      "aria-expanded",
+      "true"
+    );
+
+
     return;
+
   }
 
 
   restoreSidebarState();
+
 }
 
 
@@ -1019,14 +1213,32 @@ function bindSidebar() {
     );
 
 
-  if (!toggle) {
+  if (
+    !toggle
+  ) {
+
     return;
+
   }
 
 
   toggle.addEventListener(
     "click",
     toggleSidebar
+  );
+
+
+  boundElements.push(
+    {
+      element:
+        toggle,
+
+      event:
+        "click",
+
+      handler:
+        toggleSidebar
+    }
   );
 
 
@@ -1038,11 +1250,12 @@ function bindSidebar() {
       )
     )
   );
+
 }
 
 
 /* ============================================================
-   BIND MENU DO USUÁRIO
+   BIND USER MENU
    ============================================================ */
 
 function bindUserMenu() {
@@ -1051,13 +1264,16 @@ function bindUserMenu() {
     getUserMenuToggle();
 
 
-  if (!toggle) {
+  if (
+    !toggle
+  ) {
+
     return;
+
   }
 
 
-  toggle.addEventListener(
-    "click",
+  const handler =
     (event) => {
 
       event.preventDefault();
@@ -1065,6 +1281,25 @@ function bindUserMenu() {
       event.stopPropagation();
 
       toggleUserMenu();
+
+    };
+
+
+  toggle.addEventListener(
+    "click",
+    handler
+  );
+
+
+  boundElements.push(
+    {
+      element:
+        toggle,
+
+      event:
+        "click",
+
+      handler
     }
   );
 
@@ -1073,11 +1308,12 @@ function bindUserMenu() {
     "aria-expanded",
     "false"
   );
+
 }
 
 
 /* ============================================================
-   BIND MENUS EXPANSÍVEIS
+   BIND EXPANDABLE
    ============================================================ */
 
 function bindExpandableMenus() {
@@ -1097,13 +1333,16 @@ function bindExpandableMenus() {
         );
 
 
-      if (!trigger) {
+      if (
+        !trigger
+      ) {
+
         return;
+
       }
 
 
-      trigger.addEventListener(
-        "click",
+      const handler =
         (event) => {
 
           event.preventDefault();
@@ -1113,6 +1352,25 @@ function bindExpandableMenus() {
           toggleExpandableMenu(
             item
           );
+
+        };
+
+
+      trigger.addEventListener(
+        "click",
+        handler
+      );
+
+
+      boundElements.push(
+        {
+          element:
+            trigger,
+
+          event:
+            "click",
+
+          handler
         }
       );
 
@@ -1129,13 +1387,18 @@ function bindExpandableMenus() {
         );
 
 
-      if (content) {
+      if (
+        content
+      ) {
 
         content.hidden =
           true;
+
       }
+
     }
   );
+
 }
 
 
@@ -1154,15 +1417,34 @@ function bindNavigation() {
   items.forEach(
     (item) => {
 
+      const handler =
+        handleNavigationClick;
+
+
       item.addEventListener(
         "click",
-        handleNavigationClick
+        handler
       );
+
+
+      boundElements.push(
+        {
+          element:
+            item,
+
+          event:
+            "click",
+
+          handler
+        }
+      );
+
     }
   );
 
 
   updateActiveNavigation();
+
 }
 
 
@@ -1203,22 +1485,42 @@ function bindGlobalEvents() {
 
 
   globalListeners = [
+
     {
-      target: document,
-      event: "pointerdown",
-      handler: pointerHandler
+      target:
+        document,
+
+      event:
+        "pointerdown",
+
+      handler:
+        pointerHandler
     },
+
     {
-      target: document,
-      event: "keydown",
-      handler: keyboardHandler
+      target:
+        document,
+
+      event:
+        "keydown",
+
+      handler:
+        keyboardHandler
     },
+
     {
-      target: window,
-      event: "resize",
-      handler: resizeHandler
+      target:
+        window,
+
+      event:
+        "resize",
+
+      handler:
+        resizeHandler
     }
+
   ];
+
 }
 
 
@@ -1228,33 +1530,55 @@ function bindGlobalEvents() {
 
 export function initializeMenu() {
 
-  if (menuInitialized) {
+  if (
+    menuInitialized
+  ) {
 
     return;
+
   }
 
 
-  menuInitialized =
-    true;
+  try {
+
+    bindSidebar();
+
+    bindUserMenu();
+
+    bindExpandableMenus();
+
+    bindNavigation();
+
+    bindGlobalEvents();
+
+    restoreSidebarState();
 
 
-  bindSidebar();
-
-  bindUserMenu();
-
-  bindExpandableMenus();
-
-  bindNavigation();
-
-  bindGlobalEvents();
-
-  restoreSidebarState();
+    menuInitialized =
+      true;
 
 
-  logMenu(
-    "info",
-    "Sistema de navegação inicializado."
-  );
+    logMenu(
+      "info",
+      "Sistema de navegação inicializado."
+    );
+
+  } catch (
+    error
+  ) {
+
+    menuInitialized =
+      false;
+
+
+    logMenu(
+      "error",
+      "Falha ao inicializar o sistema de navegação.",
+      error
+    );
+
+  }
+
 }
 
 
@@ -1264,17 +1588,37 @@ export function initializeMenu() {
 
 export function destroyMenu() {
 
-  if (!menuInitialized) {
+  if (
+    !menuInitialized
+  ) {
+
     return;
+
   }
 
 
   closeAllMenus();
 
 
-  /*
-   * Remove somente os listeners pertencentes a este módulo.
-   */
+  boundElements.forEach(
+    ({
+      element,
+      event,
+      handler
+    }) => {
+
+      element.removeEventListener(
+        event,
+        handler
+      );
+
+    }
+  );
+
+
+  boundElements =
+    [];
+
 
   globalListeners.forEach(
     ({
@@ -1287,21 +1631,32 @@ export function destroyMenu() {
         event,
         handler
       );
+
     }
   );
 
 
-  globalListeners = [];
+  globalListeners =
+    [];
 
 
   menuInitialized =
     false;
 
 
+  userMenuOpen =
+    false;
+
+
+  openExpandableMenu =
+    null;
+
+
   logMenu(
     "info",
     "Sistema de navegação destruído."
   );
+
 }
 
 
@@ -1310,10 +1665,42 @@ export function destroyMenu() {
    ============================================================ */
 
 export {
+
   toggleSidebar,
+
   openUserMenu,
+
   closeUserMenu,
+
   closeAllMenus,
+
   navigateTo,
+
   updateActiveNavigation
+
 };
+
+
+/* ============================================================
+   AUTO INIT
+   ============================================================ */
+
+if (
+  document.readyState ===
+  "loading"
+) {
+
+  document.addEventListener(
+    "DOMContentLoaded",
+    initializeMenu,
+    {
+      once:
+        true
+    }
+  );
+
+} else {
+
+  initializeMenu();
+
+}
