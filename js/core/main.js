@@ -9,48 +9,20 @@
  *
  * - Inicializar o Supabase.
  * - Detectar a página atual.
- * - Inicializar os módulos CORE.
+ * - Inicializar a autenticação.
+ * - Inicializar módulos visuais.
  * - Coordenar a ordem de inicialização.
- * - Emitir o evento global "aeriom:ready".
+ * - Emitir eventos globais.
  * - Centralizar erros críticos.
  *
- * NÃO é responsabilidade deste arquivo:
+ * IMPORTANTE:
  *
- * - queries de campanhas;
- * - fichas;
- * - combate;
- * - mapas;
- * - Realtime de módulos;
- * - autorização;
- * - implementação interna de login.
+ * A autenticação possui prioridade sobre módulos opcionais.
  *
- * Cada responsabilidade pertence ao seu respectivo módulo.
+ * theme.js e menu.js não podem impedir o Auth de iniciar.
+ *
  * ============================================================
  */
-
-
-/* ============================================================
-   IMPORTS
-   ============================================================ */
-
-import {
-  initializeSupabase
-} from "./supabase.js";
-
-
-import {
-  initializeAuth
-} from "./auth.js";
-
-
-import {
-  initializeTheme
-} from "./theme.js";
-
-
-import {
-  initializeMenu
-} from "./menu.js";
 
 
 /* ============================================================
@@ -95,6 +67,18 @@ let applicationInitialized =
   false;
 
 let applicationStarting =
+  false;
+
+let supabaseReady =
+  false;
+
+let authReady =
+  false;
+
+let themeReady =
+  false;
+
+let menuReady =
   false;
 
 
@@ -158,7 +142,7 @@ export function getCurrentPage() {
     window.location.pathname;
 
 
-  const filename =
+  let filename =
     pathname
       .split("/")
       .pop()
@@ -166,74 +150,100 @@ export function getCurrentPage() {
 
 
   /*
-   * GitHub Pages pode entregar a aplicação pela raiz
-   * dependendo da URL utilizada.
+   * URL terminando em "/".
    */
 
-  if (!filename) {
-
-    return "index";
-  }
-
-
   if (
-    filename ===
-    AERIOM_APP.pages.index
+    !filename
   ) {
 
     return "index";
   }
 
 
-  if (
-    filename ===
-    AERIOM_APP.pages.campaigns
-  ) {
-
-    return "campaigns";
-  }
-
+  /*
+   * GitHub Pages pode apresentar index
+   * implicitamente na raiz.
+   */
 
   if (
     filename ===
-    AERIOM_APP.pages.campaign
+    ""
   ) {
 
-    return "campaign";
+    return "index";
   }
 
 
-  if (
-    filename ===
-    AERIOM_APP.pages.characters
+  /*
+   * Remove query/hash caso apareçam no pathname
+   * em algum ambiente.
+   */
+
+  filename =
+    filename
+      .split("?")[0]
+      .split("#")[0];
+
+
+  switch (
+    filename
   ) {
 
-    return "characters";
+    case "index.html":
+      return "index";
+
+
+    case "campanhas.html":
+      return "campaigns";
+
+
+    case "campanha.html":
+      return "campaign";
+
+
+    case "fichas.html":
+      return "characters";
+
+
+    case "ficha.html":
+      return "character";
+
+
+    default:
+      return "unknown";
   }
-
-
-  if (
-    filename ===
-    AERIOM_APP.pages.character
-  ) {
-
-    return "character";
-  }
-
-
-  return "unknown";
 }
 
 
 /* ============================================================
-   VERIFICAR PÁGINA DE AUTENTICAÇÃO
+   PÁGINA DE AUTENTICAÇÃO
    ============================================================ */
 
-function isAuthenticationPage() {
+export function isAuthenticationPage() {
 
   return (
     getCurrentPage() ===
     "index"
+  );
+}
+
+
+/* ============================================================
+   PÁGINA PROTEGIDA
+   ============================================================ */
+
+export function isProtectedPage() {
+
+  const page =
+    getCurrentPage();
+
+
+  return (
+    page === "campaigns" ||
+    page === "campaign" ||
+    page === "characters" ||
+    page === "character"
   );
 }
 
@@ -246,9 +256,16 @@ function showApplicationError(
   error
 ) {
 
+  logApplication(
+    "error",
+    "Erro crítico durante a inicialização.",
+    error
+  );
+
+
   /*
-   * Nunca colocamos a mensagem do erro diretamente
-   * em innerHTML.
+   * Se estamos na tela de autenticação,
+   * aproveitamos o elemento existente.
    */
 
   const authMessage =
@@ -257,17 +274,12 @@ function showApplicationError(
     );
 
 
-  /*
-   * Se estamos na tela de autenticação,
-   * utilizamos o componente existente.
-   */
-
   if (
     authMessage
   ) {
 
     authMessage.textContent =
-      "Não foi possível inicializar o AERIOM. Recarregue a página e tente novamente.";
+      "Não foi possível iniciar o AERIOM. Recarregue a página e tente novamente.";
 
 
     authMessage.dataset.type =
@@ -283,20 +295,7 @@ function showApplicationError(
 
 
   /*
-   * Para páginas futuras, criamos um aviso de emergência.
-   */
-
-  if (
-    !document.body
-  ) {
-
-    return;
-  }
-
-
-  /*
-   * Evita criar vários avisos caso aconteça mais
-   * de um erro crítico.
+   * Não duplica mensagens.
    */
 
   const existing =
@@ -312,6 +311,18 @@ function showApplicationError(
     return;
   }
 
+
+  if (
+    !document.body
+  ) {
+
+    return;
+  }
+
+
+  /*
+   * Criamos tudo com DOM seguro.
+   */
 
   const container =
     document.createElement(
@@ -346,20 +357,39 @@ function showApplicationError(
 
 
   message.textContent =
-    "Recarregue a página e tente novamente. Se o problema continuar, verifique a configuração do Supabase.";
+    "Recarregue a página. Se o problema continuar, verifique a conexão com o Supabase.";
+
+
+  const button =
+    document.createElement(
+      "button"
+    );
+
+
+  button.type =
+    "button";
+
+
+  button.textContent =
+    "Recarregar";
+
+
+  button.addEventListener(
+    "click",
+    () => {
+
+      window.location.reload();
+
+    }
+  );
 
 
   container.append(
     title,
-    message
+    message,
+    button
   );
 
-
-  /*
-   * Estilo mínimo de emergência.
-   *
-   * Não dependemos do CSS para informar um erro crítico.
-   */
 
   Object.assign(
     container.style,
@@ -384,7 +414,7 @@ function showApplicationError(
         "1rem",
 
       border:
-        "1px solid rgba(168, 59, 59, .55)",
+        "1px solid rgba(168,59,59,.55)",
 
       borderRadius:
         "10px",
@@ -405,25 +435,430 @@ function showApplicationError(
   document.body.appendChild(
     container
   );
+}
 
 
-  /*
-   * Detalhes completos ficam apenas no console.
-   */
+/* ============================================================
+   SUPABASE
+   ============================================================ */
+
+async function initializeSupabaseCore() {
 
   logApplication(
-    "error",
-    "Detalhes do erro crítico.",
-    error
+    "info",
+    "Carregando núcleo Supabase..."
+  );
+
+
+  try {
+
+    /*
+     * Import dinâmico.
+     *
+     * Se algum outro módulo tiver problema,
+     * isso não impede o Supabase de iniciar.
+     */
+
+    const supabaseModule =
+      await import(
+        "./supabase.js"
+      );
+
+
+    if (
+      typeof supabaseModule.initializeSupabase !==
+      "function"
+    ) {
+
+      throw new Error(
+        "initializeSupabase não foi encontrado em supabase.js."
+      );
+    }
+
+
+    await supabaseModule.initializeSupabase();
+
+
+    supabaseReady =
+      true;
+
+
+    logApplication(
+      "info",
+      "Supabase inicializado com sucesso."
+    );
+
+
+    return supabaseModule;
+
+  } catch (error) {
+
+    supabaseReady =
+      false;
+
+
+    logApplication(
+      "error",
+      "Falha ao inicializar o Supabase.",
+      error
+    );
+
+
+    throw error;
+  }
+}
+
+
+/* ============================================================
+   AUTENTICAÇÃO
+   ============================================================ */
+
+async function initializeAuthentication() {
+
+  logApplication(
+    "info",
+    "Carregando módulo de autenticação..."
+  );
+
+
+  try {
+
+    /*
+     * Auth é carregado separadamente.
+     *
+     * Isso facilita descobrir exatamente se o problema
+     * está no auth.js.
+     */
+
+    const authModule =
+      await import(
+        "./auth.js"
+      );
+
+
+    if (
+      typeof authModule.initializeAuth !==
+      "function"
+    ) {
+
+      throw new Error(
+        "initializeAuth não foi encontrado em auth.js."
+      );
+    }
+
+
+    await authModule.initializeAuth();
+
+
+    authReady =
+      true;
+
+
+    logApplication(
+      "info",
+      "Autenticação inicializada com sucesso."
+    );
+
+
+    return authModule;
+
+  } catch (error) {
+
+    authReady =
+      false;
+
+
+    logApplication(
+      "error",
+      "Falha ao inicializar o módulo de autenticação.",
+      error
+    );
+
+
+    throw error;
+  }
+}
+
+
+/* ============================================================
+   TEMA
+   ============================================================ */
+
+async function initializeThemeModule() {
+
+  try {
+
+    const themeModule =
+      await import(
+        "./theme.js"
+      );
+
+
+    if (
+      typeof themeModule.initializeTheme !==
+      "function"
+    ) {
+
+      logApplication(
+        "warn",
+        "theme.js carregado, mas initializeTheme não foi encontrado."
+      );
+
+
+      return;
+    }
+
+
+    await themeModule.initializeTheme();
+
+
+    themeReady =
+      true;
+
+
+    logApplication(
+      "info",
+      "Tema inicializado."
+    );
+
+  } catch (error) {
+
+    themeReady =
+      false;
+
+
+    /*
+     * Tema é módulo visual.
+     *
+     * Nunca deve derrubar o login.
+     */
+
+    logApplication(
+      "warn",
+      "Não foi possível inicializar o tema. O restante da aplicação continuará.",
+      error
+    );
+  }
+}
+
+
+/* ============================================================
+   MENU
+   ============================================================ */
+
+async function initializeMenuModule() {
+
+  try {
+
+    const menuModule =
+      await import(
+        "./menu.js"
+      );
+
+
+    if (
+      typeof menuModule.initializeMenu !==
+      "function"
+    ) {
+
+      logApplication(
+        "warn",
+        "menu.js carregado, mas initializeMenu não foi encontrado."
+      );
+
+
+      return;
+    }
+
+
+    await menuModule.initializeMenu();
+
+
+    menuReady =
+      true;
+
+
+    logApplication(
+      "info",
+      "Menu inicializado."
+    );
+
+  } catch (error) {
+
+    menuReady =
+      false;
+
+
+    /*
+     * Menu também é módulo visual.
+     *
+     * Um erro nele não pode bloquear Auth.
+     */
+
+    logApplication(
+      "warn",
+      "Não foi possível inicializar o menu. O restante da aplicação continuará.",
+      error
+    );
+  }
+}
+
+
+/* ============================================================
+   EVENTO GLOBAL DE READY
+   ============================================================ */
+
+function dispatchReadyEvent(
+  currentPage
+) {
+
+  window.dispatchEvent(
+    new CustomEvent(
+      "aeriom:ready",
+      {
+
+        detail:
+          Object.freeze({
+
+            app:
+              AERIOM_APP.name,
+
+            version:
+              AERIOM_APP.version,
+
+            page:
+              currentPage,
+
+            supabase:
+              supabaseReady,
+
+            auth:
+              authReady,
+
+            theme:
+              themeReady,
+
+            menu:
+              menuReady
+
+          })
+
+      }
+    )
   );
 }
 
 
 /* ============================================================
-   INICIALIZAÇÃO DA APLICAÇÃO
+   EVENTO DE NAVEGAÇÃO
+   ============================================================ */
+
+function dispatchNavigationEvent() {
+
+  const page =
+    getCurrentPage();
+
+
+  document.dispatchEvent(
+    new CustomEvent(
+      "aeriom:navigationchange",
+      {
+
+        detail:
+          Object.freeze({
+
+            page,
+
+            pathname:
+              window.location.pathname
+
+          })
+
+      }
+    )
+  );
+}
+
+
+/* ============================================================
+   NAVEGAÇÃO
+   ============================================================ */
+
+function registerNavigationEvents() {
+
+  window.addEventListener(
+    "popstate",
+    dispatchNavigationEvent
+  );
+}
+
+
+/* ============================================================
+   ERROS GLOBAIS
+   ============================================================ */
+
+function registerGlobalErrorHandlers() {
+
+  window.addEventListener(
+    "error",
+    (event) => {
+
+      /*
+       * Não exibir erro interno ao usuário.
+       *
+       * O console recebe os detalhes.
+       */
+
+      logApplication(
+        "error",
+        "Erro JavaScript não tratado.",
+        {
+
+          message:
+            event.message ||
+            "Erro desconhecido.",
+
+          source:
+            event.filename ||
+            null,
+
+          line:
+            event.lineno ||
+            null,
+
+          column:
+            event.colno ||
+            null
+
+        }
+      );
+    }
+  );
+
+
+  window.addEventListener(
+    "unhandledrejection",
+    (event) => {
+
+      logApplication(
+        "error",
+        "Promise rejeitada sem tratamento.",
+        event.reason
+      );
+    }
+  );
+}
+
+
+/* ============================================================
+   INICIALIZAÇÃO PRINCIPAL
    ============================================================ */
 
 async function initializeApplication() {
+
+  /*
+   * Impede duas inicializações simultâneas.
+   */
 
   if (
     applicationInitialized ||
@@ -450,91 +885,63 @@ async function initializeApplication() {
 
   logApplication(
     "info",
-    "Página detectada.",
-    {
-      page:
-        currentPage,
-
-      pathname:
-        window.location.pathname
-    }
+    "Página atual:",
+    currentPage
   );
 
 
   try {
 
-    /* ======================================================
-       1. SUPABASE
-       ====================================================== */
+    /* ========================================================
+       ETAPA 1
+       SUPABASE
+       ======================================================== */
 
-    await initializeSupabase();
-
-
-    logApplication(
-      "info",
-      "Supabase inicializado."
-    );
+    await initializeSupabaseCore();
 
 
-    /* ======================================================
-       2. TEMA
-       ====================================================== */
+    /* ========================================================
+       ETAPA 2
+       AUTH
+       ======================================================== */
 
     /*
-     * Tema não precisa ser assíncrono neste estágio.
-     */
-
-    initializeTheme();
-
-
-    logApplication(
-      "info",
-      "Tema inicializado."
-    );
-
-
-    /* ======================================================
-       3. MENU
-       ====================================================== */
-
-    initializeMenu();
-
-
-    logApplication(
-      "info",
-      "Menu inicializado."
-    );
-
-
-    /* ======================================================
-       4. AUTENTICAÇÃO
-       ====================================================== */
-
-    /*
-     * Neste momento a página index é a tela de autenticação.
+     * Auth é inicializado imediatamente depois do Supabase.
      *
-     * Quando criarmos campanhas.html, campanha.html etc.,
-     * o controle de sessão dessas páginas será expandido
-     * de forma própria, sem duplicar a lógica do auth.js.
+     * Isso é proposital.
      */
 
-    if (
-      isAuthenticationPage()
-    ) {
-
-      await initializeAuth();
+    await initializeAuthentication();
 
 
-      logApplication(
-        "info",
-        "Autenticação inicializada."
-      );
-    }
+    /* ========================================================
+       ETAPA 3
+       TEMA
+       ======================================================== */
+
+    /*
+     * Tema não pode quebrar Auth.
+     */
+
+    await initializeThemeModule();
 
 
-    /* ======================================================
-       5. ESTADO FINAL
-       ====================================================== */
+    /* ========================================================
+       ETAPA 4
+       MENU
+       ======================================================== */
+
+    /*
+     * Menu não pode quebrar Auth.
+     */
+
+    await initializeMenuModule();
+
+
+    /* ========================================================
+       ETAPA 5
+       FINAL
+       ======================================================== */
 
     applicationInitialized =
       true;
@@ -543,34 +950,35 @@ async function initializeApplication() {
       false;
 
 
-    /* ======================================================
-       6. EVENTO GLOBAL
-       ====================================================== */
-
-    window.dispatchEvent(
-      new CustomEvent(
-        "aeriom:ready",
-        {
-          detail: Object.freeze({
-
-            app:
-              AERIOM_APP.name,
-
-            version:
-              AERIOM_APP.version,
-
-            page:
-              currentPage
-
-          })
-        }
-      )
+    dispatchReadyEvent(
+      currentPage
     );
 
 
     logApplication(
       "info",
       "AERIOM inicializado com sucesso."
+    );
+
+
+    logApplication(
+      "info",
+      "Estado dos módulos:",
+      {
+
+        supabase:
+          supabaseReady,
+
+        auth:
+          authReady,
+
+        theme:
+          themeReady,
+
+        menu:
+          menuReady
+
+      }
     );
 
   } catch (error) {
@@ -582,12 +990,14 @@ async function initializeApplication() {
       false;
 
 
-    logApplication(
-      "error",
-      "Falha crítica durante a inicialização.",
-      error
-    );
-
+    /*
+     * Neste ponto, somente falhas críticas chegam aqui.
+     *
+     * Principalmente:
+     *
+     * - Supabase;
+     * - Auth.
+     */
 
     showApplicationError(
       error
@@ -597,111 +1007,44 @@ async function initializeApplication() {
 
 
 /* ============================================================
-   ERROS JAVASCRIPT GLOBAIS
+   API PÚBLICA AERIOM
    ============================================================ */
 
-function registerGlobalErrorHandlers() {
+window.AERIOM =
+  Object.freeze({
 
-  /*
-   * Erros JavaScript não tratados.
-   */
+    name:
+      AERIOM_APP.name,
 
-  window.addEventListener(
-    "error",
-    (event) => {
+    version:
+      AERIOM_APP.version,
 
-      /*
-       * Erros disparados por recursos externos podem
-       * não possuir uma mensagem útil.
-       */
+    getCurrentPage,
 
-      logApplication(
-        "error",
-        "Erro JavaScript não tratado.",
-        {
+    isAuthenticationPage,
 
-          message:
-            event.message || "Erro desconhecido.",
+    isProtectedPage,
 
-          source:
-            event.filename || null,
+    isInitialized:
+      () =>
+        applicationInitialized,
 
-          line:
-            event.lineno || null,
+    isSupabaseReady:
+      () =>
+        supabaseReady,
 
-          column:
-            event.colno || null
+    isAuthReady:
+      () =>
+        authReady
 
-        }
-      );
-    }
-  );
-
-
-  /*
-   * Promises rejeitadas sem catch.
-   */
-
-  window.addEventListener(
-    "unhandledrejection",
-    (event) => {
-
-      logApplication(
-        "error",
-        "Promise rejeitada sem tratamento.",
-        event.reason
-      );
-    }
-  );
-}
+  });
 
 
 /* ============================================================
-   EVENTOS DE NAVEGAÇÃO
+   START
    ============================================================ */
 
-function registerNavigationEvents() {
-
-  /*
-   * O AERIOM atualmente utiliza páginas HTML tradicionais.
-   *
-   * Mesmo assim, registramos popstate para deixar o núcleo
-   * preparado para futuras mudanças de navegação.
-   */
-
-  window.addEventListener(
-    "popstate",
-    () => {
-
-      const page =
-        getCurrentPage();
-
-
-      document.dispatchEvent(
-        new CustomEvent(
-          "aeriom:navigationchange",
-          {
-            detail: Object.freeze({
-
-              page,
-
-              pathname:
-                window.location.pathname
-
-            })
-          }
-        )
-      );
-    }
-  );
-}
-
-
-/* ============================================================
-   INICIALIZAÇÃO QUANDO DOM ESTIVER PRONTO
-   ============================================================ */
-
-function startWhenReady() {
+function startAeriom() {
 
   registerGlobalErrorHandlers();
 
@@ -717,9 +1060,11 @@ function startWhenReady() {
       "DOMContentLoaded",
       initializeApplication,
       {
-        once: true
+        once:
+          true
       }
     );
+
 
     return;
   }
@@ -729,30 +1074,4 @@ function startWhenReady() {
 }
 
 
-/* ============================================================
-   API GLOBAL
-   ============================================================ */
-
-window.AERIOM =
-  Object.freeze({
-
-    name:
-      AERIOM_APP.name,
-
-    version:
-      AERIOM_APP.version,
-
-    getCurrentPage,
-
-    isInitialized:
-      () =>
-        applicationInitialized
-
-  });
-
-
-/* ============================================================
-   START
-   ============================================================ */
-
-startWhenReady();
+startAeriom();
