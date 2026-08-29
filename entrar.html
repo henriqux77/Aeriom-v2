@@ -1,1 +1,356 @@
-.
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+  >
+
+  <meta
+    name="theme-color"
+    content="#090807"
+  >
+
+  <meta
+    name="description"
+    content="AERIOM — entre em uma campanha usando um código de convite."
+  >
+
+  <title>AERIOM — Entrar na campanha</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  >
+
+  <link
+    rel="stylesheet"
+    href="./css/aeriom.css"
+  >
+
+  <style>
+    .join-page {
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background:
+        radial-gradient(
+          circle at 50% 0%,
+          rgba(190, 150, 65, 0.10),
+          transparent 42%
+        ),
+        #090807;
+    }
+
+    .join-card {
+      width: min(100%, 520px);
+      padding: 36px;
+      border: 1px solid rgba(220, 185, 105, 0.16);
+      border-radius: 22px;
+      background: rgba(18, 16, 13, 0.96);
+      box-shadow:
+        0 24px 80px rgba(0, 0, 0, 0.45);
+    }
+
+    .join-brand {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 28px;
+    }
+
+    .join-brand img {
+      width: 72px;
+      height: 72px;
+      object-fit: contain;
+      border-radius: 16px;
+    }
+
+    .join-eyebrow {
+      margin: 0 0 8px;
+      text-align: center;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      opacity: 0.65;
+    }
+
+    .join-title {
+      margin: 0;
+      text-align: center;
+      font-family: "Cinzel", serif;
+      font-size: clamp(28px, 7vw, 42px);
+      line-height: 1.1;
+    }
+
+    .join-description {
+      margin: 14px auto 30px;
+      max-width: 420px;
+      text-align: center;
+      line-height: 1.6;
+      opacity: 0.65;
+    }
+
+    .join-form {
+      display: grid;
+      gap: 18px;
+    }
+
+    .join-label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      opacity: 0.7;
+    }
+
+    .join-code {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 18px;
+      border: 1px solid rgba(220, 185, 105, 0.18);
+      border-radius: 14px;
+      outline: none;
+      background: rgba(255, 255, 255, 0.025);
+      color: inherit;
+      font-family: "Inter", sans-serif;
+      font-size: 25px;
+      font-weight: 700;
+      letter-spacing: 0.28em;
+      text-align: center;
+      text-transform: uppercase;
+    }
+
+    .join-code:focus {
+      border-color: rgba(220, 185, 105, 0.55);
+      box-shadow: 0 0 0 3px rgba(220, 185, 105, 0.08);
+    }
+
+    .join-code::placeholder {
+      opacity: 0.25;
+    }
+
+    .join-button {
+      width: 100%;
+      min-height: 54px;
+      border: 0;
+      border-radius: 14px;
+      cursor: pointer;
+      background: linear-gradient(
+        135deg,
+        #e6c66f,
+        #b99542
+      );
+      color: #17130b;
+      font-size: 16px;
+      font-weight: 800;
+      transition:
+        transform 0.15s ease,
+        filter 0.15s ease;
+    }
+
+    .join-button:hover {
+      filter: brightness(1.06);
+    }
+
+    .join-button:active {
+      transform: translateY(1px);
+    }
+
+    .join-button:disabled {
+      cursor: wait;
+      opacity: 0.55;
+    }
+
+    .join-message {
+      min-height: 22px;
+      margin: 2px 0 0;
+      border-radius: 10px;
+      line-height: 1.45;
+      font-size: 14px;
+      text-align: center;
+    }
+
+    .join-message[data-type="error"] {
+      color: #e7a4a4;
+    }
+
+    .join-message[data-type="success"] {
+      color: #b9dca8;
+    }
+
+    .join-back {
+      display: block;
+      margin-top: 24px;
+      color: inherit;
+      opacity: 0.55;
+      text-align: center;
+      text-decoration: none;
+      font-size: 14px;
+    }
+
+    .join-back:hover {
+      opacity: 0.85;
+    }
+
+    .join-loading {
+      display: none;
+    }
+
+    .join-button.is-loading .join-label-text {
+      display: none;
+    }
+
+    .join-button.is-loading .join-loading {
+      display: inline;
+    }
+
+    @media (max-width: 600px) {
+      .join-page {
+        padding: 14px;
+      }
+
+      .join-card {
+        padding: 28px 20px;
+        border-radius: 18px;
+      }
+    }
+  </style>
+
+</head>
+
+
+<body class="aeriom-page">
+
+
+  <main class="join-page">
+
+    <section
+      class="join-card"
+      aria-labelledby="join-title"
+    >
+
+      <div class="join-brand">
+
+        <img
+          src="https://i.ibb.co/Cfd1zhc/52befe11-27fa-490b-a434-8afa6fd3f5c1-20260823-192033-0000.png"
+          alt="AERIOM"
+        >
+
+      </div>
+
+
+      <p class="join-eyebrow">
+        Convite de aventura
+      </p>
+
+
+      <h1
+        id="join-title"
+        class="join-title"
+      >
+        Entrar na campanha
+      </h1>
+
+
+      <p class="join-description">
+        Digite o código de convite recebido pelo mestre
+        para entrar na mesa.
+      </p>
+
+
+      <form
+        id="join-campaign-form"
+        class="join-form"
+        novalidate
+      >
+
+        <div>
+
+          <label
+            class="join-label"
+            for="campaign-invite-code-input"
+          >
+            Código do convite
+          </label>
+
+
+          <input
+            id="campaign-invite-code-input"
+            class="join-code"
+            name="code"
+            type="text"
+            inputmode="text"
+            autocomplete="one-time-code"
+            maxlength="5"
+            minlength="5"
+            pattern="[A-Za-z0-9]{5}"
+            placeholder="ABC12"
+            spellcheck="false"
+            autocapitalize="characters"
+            required
+          >
+
+        </div>
+
+
+        <p
+          id="join-message"
+          class="join-message"
+          role="status"
+          aria-live="polite"
+        ></p>
+
+
+        <button
+          id="join-submit"
+          class="join-button"
+          type="submit"
+        >
+
+          <span class="join-label-text">
+            Entrar na campanha
+          </span>
+
+          <span
+            class="join-loading"
+            aria-hidden="true"
+          >
+            Entrando...
+          </span>
+
+        </button>
+
+      </form>
+
+
+      <a
+        class="join-back"
+        href="./campanhas.html"
+      >
+        ← Voltar para campanhas
+      </a>
+
+    </section>
+
+  </main>
+
+
+  <script
+    type="module"
+    src="./js/core/entrar.js"
+  ></script>
+
+</body>
+
+</html>
