@@ -1,0 +1,3898 @@
+/* ============================================================
+   AERIOM — CAMPANHAS
+   css/campanhas.css
+
+   Responsabilidade:
+   - página de campanhas
+   - sidebar
+   - topbar
+   - cards
+   - estados
+   - modal de criação
+   - upload de capa
+   - convite
+   - QR Code
+   - toast
+   - responsividade
+
+   NÃO contém temas da mesa.
+   Temas ficarão em css/themes/*.css
+   ============================================================ */
+
+
+/* ============================================================
+   1. VARIÁVEIS LOCAIS
+   ============================================================ */
+
+:root {
+
+  --campaigns-bg:
+    #090807;
+
+  --campaigns-bg-soft:
+    #0e0c0a;
+
+  --campaigns-surface:
+    #12100d;
+
+  --campaigns-surface-2:
+    #171410;
+
+  --campaigns-surface-3:
+    #1d1914;
+
+  --campaigns-border:
+    rgba(207, 166, 82, 0.16);
+
+  --campaigns-border-strong:
+    rgba(207, 166, 82, 0.30);
+
+  --campaigns-gold:
+    #c9a45c;
+
+  --campaigns-gold-light:
+    #e3c77d;
+
+  --campaigns-gold-dark:
+    #8d6b32;
+
+  --campaigns-text:
+    #eee7d8;
+
+  --campaigns-text-soft:
+    #bdb5a5;
+
+  --campaigns-text-muted:
+    #7f786c;
+
+  --campaigns-danger:
+    #b84d46;
+
+  --campaigns-success:
+    #76945d;
+
+  --campaigns-sidebar-width:
+    260px;
+
+  --campaigns-topbar-height:
+    78px;
+
+  --campaigns-radius:
+    12px;
+
+  --campaigns-radius-small:
+    8px;
+
+  --campaigns-shadow:
+    0 18px 50px rgba(0, 0, 0, 0.38);
+
+  --campaigns-transition:
+    180ms ease;
+
+}
+
+
+/* ============================================================
+   2. BASE DA PÁGINA
+   ============================================================ */
+
+.aeriom-page--campaigns {
+
+  min-height:
+    100vh;
+
+  margin:
+    0;
+
+  background:
+    var(--campaigns-bg);
+
+  color:
+    var(--campaigns-text);
+
+  font-family:
+    "Inter",
+    sans-serif;
+
+}
+
+
+/*
+ * Pequeno efeito de textura.
+ * Não depende de imagem externa.
+ */
+
+.aeriom-page--campaigns::before {
+
+  content:
+    "";
+
+  position:
+    fixed;
+
+  inset:
+    0;
+
+  pointer-events:
+    none;
+
+  z-index:
+    0;
+
+  opacity:
+    0.025;
+
+  background-image:
+    radial-gradient(
+      rgba(255, 255, 255, 0.8)
+      0.5px,
+      transparent
+      0.5px
+    );
+
+  background-size:
+    5px 5px;
+
+}
+
+
+/* ============================================================
+   3. SHELL
+   ============================================================ */
+
+.campaigns-shell {
+
+  position:
+    relative;
+
+  z-index:
+    1;
+
+  display:
+    flex;
+
+  min-height:
+    100vh;
+
+}
+
+
+/* ============================================================
+   4. SIDEBAR
+   ============================================================ */
+
+.campaigns-sidebar {
+
+  position:
+    fixed;
+
+  top:
+    0;
+
+  left:
+    0;
+
+  bottom:
+    0;
+
+  z-index:
+    100;
+
+  width:
+    var(--campaigns-sidebar-width);
+
+  display:
+    flex;
+
+  flex-direction:
+    column;
+
+  background:
+    linear-gradient(
+      180deg,
+      #100e0b 0%,
+      #0b0908 100%
+    );
+
+  border-right:
+    1px solid var(--campaigns-border);
+
+  box-shadow:
+    14px 0 40px rgba(0, 0, 0, 0.20);
+
+}
+
+
+/* ------------------------------------------------------------
+   BRAND
+   ------------------------------------------------------------ */
+
+.campaigns-sidebar__brand {
+
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+  min-height:
+    120px;
+
+  padding:
+    20px;
+
+  border-bottom:
+    1px solid var(--campaigns-border);
+
+}
+
+
+.campaigns-brand {
+
+  display:
+    inline-flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+  width:
+    150px;
+
+  text-decoration:
+    none;
+
+}
+
+
+.campaigns-brand img {
+
+  display:
+    block;
+
+  width:
+    100%;
+
+  max-width:
+    150px;
+
+  height:
+    auto;
+
+  object-fit:
+    contain;
+
+  filter:
+    drop-shadow(
+      0 8px 20px
+      rgba(0, 0, 0, 0.35)
+    );
+
+}
+
+
+/* ------------------------------------------------------------
+   NAVEGAÇÃO
+   ------------------------------------------------------------ */
+
+.campaigns-sidebar__nav {
+
+  display:
+    flex;
+
+  flex-direction:
+    column;
+
+  gap:
+    6px;
+
+  padding:
+    22px 14px;
+
+  overflow-y:
+    auto;
+
+}
+
+
+.campaigns-nav-item {
+
+  position:
+    relative;
+
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  gap:
+    13px;
+
+  min-height:
+    46px;
+
+  padding:
+    0 14px;
+
+  color:
+    var(--campaigns-text-muted);
+
+  text-decoration:
+    none;
+
+  font-size:
+    0.88rem;
+
+  font-weight:
+    600;
+
+  letter-spacing:
+    0.01em;
+
+  border:
+    1px solid transparent;
+
+  border-radius:
+    var(--campaigns-radius-small);
+
+  transition:
+    background var(--campaigns-transition),
+    border-color var(--campaigns-transition),
+    color var(--campaigns-transition),
+    transform var(--campaigns-transition);
+
+}
+
+
+.campaigns-nav-item:hover {
+
+  color:
+    var(--campaigns-text);
+
+  background:
+    rgba(201, 164, 92, 0.055);
+
+  border-color:
+    rgba(201, 164, 92, 0.10);
+
+  transform:
+    translateX(2px);
+
+}
+
+
+.campaigns-nav-item.is-active {
+
+  color:
+    var(--campaigns-gold-light);
+
+  background:
+    linear-gradient(
+      90deg,
+      rgba(201, 164, 92, 0.13),
+      rgba(201, 164, 92, 0.035)
+    );
+
+  border-color:
+    rgba(201, 164, 92, 0.18);
+
+}
+
+
+.campaigns-nav-item.is-active::before {
+
+  content:
+    "";
+
+  position:
+    absolute;
+
+  left:
+    -1px;
+
+  top:
+    9px;
+
+  bottom:
+    9px;
+
+  width:
+    2px;
+
+  background:
+    var(--campaigns-gold);
+
+  border-radius:
+    999px;
+
+}
+
+
+.campaigns-nav-item__icon {
+
+  display:
+    inline-flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+  width:
+    22px;
+
+  min-width:
+    22px;
+
+  font-size:
+    1rem;
+
+  color:
+    currentColor;
+
+}
+
+
+/* ------------------------------------------------------------
+   FOOTER SIDEBAR
+   ------------------------------------------------------------ */
+
+.campaigns-sidebar__footer {
+
+  margin-top:
+    auto;
+
+  padding:
+    16px 14px;
+
+  border-top:
+    1px solid var(--campaigns-border);
+
+}
+
+
+.campaigns-logout {
+
+  width:
+    100%;
+
+  min-height:
+    44px;
+
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    flex-start;
+
+  gap:
+    12px;
+
+  padding:
+    0 14px;
+
+  color:
+    var(--campaigns-text-muted);
+
+  background:
+    transparent;
+
+  border:
+    1px solid transparent;
+
+  border-radius:
+    var(--campaigns-radius-small);
+
+  font:
+    inherit;
+
+  font-size:
+    0.86rem;
+
+  font-weight:
+    600;
+
+  cursor:
+    pointer;
+
+  transition:
+    color var(--campaigns-transition),
+    background var(--campaigns-transition),
+    border-color var(--campaigns-transition);
+
+}
+
+
+.campaigns-logout:hover {
+
+  color:
+    #d9867f;
+
+  background:
+    rgba(184, 77, 70, 0.08);
+
+  border-color:
+    rgba(184, 77, 70, 0.14);
+
+}
+
+
+.campaigns-logout:disabled {
+
+  opacity:
+    0.5;
+
+  cursor:
+    wait;
+
+}
+
+
+/* ============================================================
+   5. MAIN
+   ============================================================ */
+
+.campaigns-main {
+
+  min-width:
+    0;
+
+  width:
+    100%;
+
+  min-height:
+    100vh;
+
+  margin-left:
+    var(--campaigns-sidebar-width);
+
+}
+
+
+/* ============================================================
+   6. TOPBAR
+   ============================================================ */
+
+.campaigns-topbar {
+
+  position:
+    sticky;
+
+  top:
+    0;
+
+  z-index:
+    50;
+
+  min-height:
+    var(--campaigns-topbar-height);
+
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    space-between;
+
+  gap:
+    20px;
+
+  padding:
+    12px 34px;
+
+  background:
+    rgba(9, 8, 7, 0.91);
+
+  border-bottom:
+    1px solid var(--campaigns-border);
+
+  backdrop-filter:
+    blur(16px);
+
+}
+
+
+.campaigns-topbar__left {
+
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  gap:
+    14px;
+
+  min-width:
+    0;
+
+}
+
+
+.campaigns-topbar__eyebrow {
+
+  margin:
+    0 0 2px;
+
+  color:
+    var(--campaigns-gold);
+
+  font-size:
+    0.63rem;
+
+  font-weight:
+    700;
+
+  letter-spacing:
+    0.18em;
+
+  text-transform:
+    uppercase;
+
+}
+
+
+.campaigns-topbar__title {
+
+  margin:
+    0;
+
+  color:
+    var(--campaigns-text);
+
+  font-family:
+    "Cinzel",
+    serif;
+
+  font-size:
+    clamp(
+      1.05rem,
+      2vw,
+      1.35rem
+    );
+
+  font-weight:
+    600;
+
+  line-height:
+    1.2;
+
+}
+
+
+.campaigns-topbar__right {
+
+  display:
+    flex;
+
+  align-items:
+    center;
+
+}
+
+
+/* ------------------------------------------------------------
+   USER BADGE
+   ------------------------------------------------------------ */
+
+.campaigns-user-badge {
+
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  gap:
+    10px;
+
+  max-width:
+    280px;
+
+}
+
+
+.campaigns-user-badge__avatar {
+
+  display:
+    inline-flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+  width:
+    38px;
+
+  height:
+    38px;
+
+  flex:
+    0 0 38px;
+
+  color:
+    var(--campaigns-gold-light);
+
+  background:
+    radial-gradient(
+      circle at 35% 30%,
+      #322918,
+      #17120c 70%
+    );
+
+  border:
+    1px solid var(--campaigns-border-strong);
+
+  border-radius:
+    50%;
+
+  font-family:
+    "Cinzel",
+    serif;
+
+  font-size:
+    0.85rem;
+
+  font-weight:
+    700;
+
+}
+
+
+.campaigns-user-badge__content {
+
+  display:
+    flex;
+
+  flex-direction:
+    column;
+
+  min-width:
+    0;
+
+}
+
+
+.campaigns-user-badge__name {
+
+  overflow:
+    hidden;
+
+  color:
+    var(--campaigns-text);
+
+  font-size:
+    0.8rem;
+
+  font-weight:
+    600;
+
+  text-overflow:
+    ellipsis;
+
+  white-space:
+    nowrap;
+
+}
+
+
+.campaigns-user-badge__email {
+
+  overflow:
+    hidden;
+
+  color:
+    var(--campaigns-text-muted);
+
+  font-size:
+    0.7rem;
+
+  text-overflow:
+    ellipsis;
+
+  white-space:
+    nowrap;
+
+}
+
+
+/* ============================================================
+   7. BOTÃO ÍCONE
+   ============================================================ */
+
+.campaigns-icon-button {
+
+  display:
+    inline-flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+  width:
+    40px;
+
+  height:
+    40px;
+
+  padding:
+    0;
+
+  color:
+    var(--campaigns-text-soft);
+
+  background:
+    rgba(255, 255, 255, 0.025);
+
+  border:
+    1px solid var(--campaigns-border);
+
+  border-radius:
+    var(--campaigns-radius-small);
+
+  font:
+    inherit;
+
+  font-size:
+    1rem;
+
+  cursor:
+    pointer;
+
+  transition:
+    background var(--campaigns-transition),
+    border-color var(--campaigns-transition),
+    color var(--campaigns-transition),
+    transform var(--campaigns-transition);
+
+}
+
+
+.campaigns-icon-button:hover {
+
+  color:
+    var(--campaigns-gold-light);
+
+  background:
+    rgba(201, 164, 92, 0.08);
+
+  border-color:
+    var(--campaigns-border-strong);
+
+}
+
+
+.campaigns-icon-button:active {
+
+  transform:
+    scale(0.96);
+
+}
+
+
+#campaigns-mobile-menu-button {
+
+  display:
+    none;
+
+}
+
+
+/* ============================================================
+   8. CONTEÚDO
+   ============================================================ */
+
+.campaigns-content {
+
+  width:
+    min(
+      100%,
+      1500px
+    );
+
+  margin:
+    0 auto;
+
+  padding:
+    44px 42px 80px;
+
+}
+
+
+/* ============================================================
+   9. CABEÇALHO DA PÁGINA
+   ============================================================ */
+
+.campaigns-heading {
+
+  display:
+    flex;
+
+  align-items:
+    flex-end;
+
+  justify-content:
+    space-between;
+
+  gap:
+    28px;
+
+  margin-bottom:
+    34px;
+
+}
+
+
+.campaigns-heading__eyebrow {
+
+  margin:
+    0 0 7px;
+
+  color:
+    var(--campaigns-gold);
+
+  font-size:
+    0.68rem;
+
+  font-weight:
+    700;
+
+  letter-spacing:
+    0.18em;
+
+  text-transform:
+    uppercase;
+
+}
+
+
+.campaigns-heading__title {
+
+  margin:
+    0;
+
+  color:
+    var(--campaigns-text);
+
+  font-family:
+    "Cinzel",
+    serif;
+
+  font-size:
+    clamp(
+      1.75rem,
+      4vw,
+      2.5rem
+    );
+
+  font-weight:
+    600;
+
+  line-height:
+    1.15;
+
+}
+
+
+.campaigns-heading__description {
+
+  max-width:
+    680px;
+
+  margin:
+    10px 0 0;
+
+  color:
+    var(--campaigns-text-soft);
+
+  font-size:
+    0.92rem;
+
+  line-height:
+    1.7;
+
+}
+
+
+/* ============================================================
+   10. BOTÕES
+   ============================================================ */
+
+.button {
+
+  min-height:
+    44px;
+
+  display:
+    inline-flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+  gap:
+    9px;
+
+  padding:
+    0 18px;
+
+  border:
+    1px solid transparent;
+
+  border-radius:
+    var(--campaigns-radius-small);
+
+  font:
+    inherit;
+
+  font-size:
+    0.82rem;
+
+  font-weight:
+    700;
+
+  line-height:
+    1;
+
+  cursor:
+    pointer;
+
+  transition:
+    background var(--campaigns-transition),
+    border-color var(--campaigns-transition),
+    color var(--campaigns-transition),
+    box-shadow var(--campaigns-transition),
+    transform var(--campaigns-transition);
+
+}
+
+
+.button:active {
+
+  transform:
+    translateY(1px);
+
+}
+
+
+.button:disabled {
+
+  opacity:
+    0.5;
+
+  cursor:
+    not-allowed;
+
+  transform:
+    none;
+
+}
+
+
+.button--primary {
+
+  color:
+    #171108;
+
+  background:
+    linear-gradient(
+      135deg,
+      #d6b66d,
+      #b88d45
+    );
+
+  border-color:
+    #d6b66d;
+
+  box-shadow:
+    0 8px 24px rgba(
+      0,
+      0,
+      0,
+      0.25
+    );
+
+}
+
+
+.button--primary:hover {
+
+  background:
+    linear-gradient(
+      135deg,
+      #e2c67d,
+      #c59a50
+    );
+
+  box-shadow:
+    0 10px 30px rgba(
+      0,
+      0,
+      0,
+      0.32
+    );
+
+}
+
+
+.button--secondary {
+
+  color:
+    var(--campaigns-text-soft);
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.025
+    );
+
+  border-color:
+    var(--campaigns-border);
+
+}
+
+
+.button--secondary:hover {
+
+  color:
+    var(--campaigns-text);
+
+  background:
+    rgba(
+      201,
+      164,
+      92,
+      0.07
+    );
+
+  border-color:
+    var(--campaigns-border-strong);
+
+}
+
+
+/* ============================================================
+   11. GRID DE CAMPANHAS
+   ============================================================ */
+
+.campaigns-grid {
+
+  display:
+    grid;
+
+  grid-template-columns:
+    repeat(
+      auto-fill,
+      minmax(
+        280px,
+        1fr
+      )
+    );
+
+  gap:
+    22px;
+
+}
+
+
+/* ============================================================
+   12. CARD
+   ============================================================ */
+
+.campaign-card {
+
+  position:
+    relative;
+
+  min-width:
+    0;
+
+  overflow:
+    hidden;
+
+  display:
+    flex;
+
+  flex-direction:
+    column;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(25, 21, 17, 0.96),
+      rgba(15, 13, 11, 0.98)
+    );
+
+  border:
+    1px solid var(--campaigns-border);
+
+  border-radius:
+    var(--campaigns-radius);
+
+  box-shadow:
+    0 12px 36px rgba(
+      0,
+      0,
+      0,
+      0.25
+    );
+
+  transition:
+    transform 220ms ease,
+    border-color 220ms ease,
+    box-shadow 220ms ease;
+
+}
+
+
+.campaign-card:hover {
+
+  transform:
+    translateY(-4px);
+
+  border-color:
+    var(--campaigns-border-strong);
+
+  box-shadow:
+    0 20px 48px rgba(
+      0,
+      0,
+      0,
+      0.38
+    );
+
+}
+
+
+/* ------------------------------------------------------------
+   CAPA
+   ------------------------------------------------------------ */
+
+.campaign-card__cover {
+
+  position:
+    relative;
+
+  aspect-ratio:
+    16 / 8;
+
+  overflow:
+    hidden;
+
+  background:
+    radial-gradient(
+      circle at center,
+      #2a241b,
+      #100e0b 72%
+    );
+
+}
+
+
+.campaign-card__cover::after {
+
+  content:
+    "";
+
+  position:
+    absolute;
+
+  inset:
+    0;
+
+  background:
+    linear-gradient(
+      180deg,
+      transparent 45%,
+      rgba(0, 0, 0, 0.35)
+    );
+
+  pointer-events:
+    none;
+
+}
+
+
+.campaign-card__image {
+
+  display:
+    block;
+
+  width:
+    100%;
+
+  height:
+    100%;
+
+  object-fit:
+    cover;
+
+  transition:
+    transform 500ms ease;
+
+}
+
+
+.campaign-card:hover
+.campaign-card__image {
+
+  transform:
+    scale(1.035);
+
+}
+
+
+.campaign-card__cover--empty {
+
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+}
+
+
+.campaign-card__cover-symbol {
+
+  display:
+    inline-flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+  width:
+    60px;
+
+  height:
+    60px;
+
+  color:
+    var(--campaigns-gold);
+
+  border:
+    1px solid var(--campaigns-border);
+
+  border-radius:
+    50%;
+
+  font-size:
+    1.35rem;
+
+  box-shadow:
+    0 0 30px rgba(
+      201,
+      164,
+      92,
+      0.08
+    );
+
+}
+
+
+/* ------------------------------------------------------------
+   CONTEÚDO
+   ------------------------------------------------------------ */
+
+.campaign-card__content {
+
+  display:
+    flex;
+
+  flex-direction:
+    column;
+
+  flex:
+    1;
+
+  padding:
+    20px;
+
+}
+
+
+.campaign-card__role {
+
+  align-self:
+    flex-start;
+
+  margin-bottom:
+    10px;
+
+  padding:
+    5px 8px;
+
+  color:
+    var(--campaigns-gold-light);
+
+  background:
+    rgba(
+      201,
+      164,
+      92,
+      0.07
+    );
+
+  border:
+    1px solid rgba(
+      201,
+      164,
+      92,
+      0.14
+    );
+
+  border-radius:
+    999px;
+
+  font-size:
+    0.61rem;
+
+  font-weight:
+    700;
+
+  letter-spacing:
+    0.09em;
+
+  text-transform:
+    uppercase;
+
+}
+
+
+.campaign-card__role[data-role="player"] {
+
+  color:
+    #aaa69d;
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.035
+    );
+
+  border-color:
+    rgba(
+      255,
+      255,
+      255,
+      0.08
+    );
+
+}
+
+
+.campaign-card__title {
+
+  margin:
+    0;
+
+  color:
+    var(--campaigns-text);
+
+  font-family:
+    "Cinzel",
+    serif;
+
+  font-size:
+    1.13rem;
+
+  font-weight:
+    600;
+
+  line-height:
+    1.35;
+
+}
+
+
+.campaign-card__description {
+
+  display:
+    -webkit-box;
+
+  overflow:
+    hidden;
+
+  min-height:
+    48px;
+
+  margin:
+    10px 0 20px;
+
+  color:
+    var(--campaigns-text-muted);
+
+  font-size:
+    0.78rem;
+
+  line-height:
+    1.65;
+
+  -webkit-box-orient:
+    vertical;
+
+  -webkit-line-clamp:
+    3;
+
+}
+
+
+/* ------------------------------------------------------------
+   FOOTER CARD
+   ------------------------------------------------------------ */
+
+.campaign-card__footer {
+
+  display:
+    flex;
+
+  align-items:
+    flex-end;
+
+  justify-content:
+    space-between;
+
+  gap:
+    14px;
+
+  margin-top:
+    auto;
+
+  padding-top:
+    15px;
+
+  border-top:
+    1px solid rgba(
+      255,
+      255,
+      255,
+      0.05
+    );
+
+}
+
+
+.campaign-card__date {
+
+  color:
+    var(--campaigns-text-muted);
+
+  font-size:
+    0.64rem;
+
+  line-height:
+    1.4;
+
+}
+
+
+.campaign-card__actions {
+
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    flex-end;
+
+  gap:
+    7px;
+
+}
+
+
+.campaign-card__open,
+.campaign-card__invite {
+
+  min-height:
+    34px;
+
+  padding:
+    0 10px;
+
+  color:
+    var(--campaigns-text-soft);
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.025
+    );
+
+  border:
+    1px solid var(--campaigns-border);
+
+  border-radius:
+    6px;
+
+  font:
+    inherit;
+
+  font-size:
+    0.68rem;
+
+  font-weight:
+    700;
+
+  cursor:
+    pointer;
+
+  transition:
+    background var(--campaigns-transition),
+    border-color var(--campaigns-transition),
+    color var(--campaigns-transition);
+
+}
+
+
+.campaign-card__open:hover,
+.campaign-card__invite:hover {
+
+  color:
+    var(--campaigns-gold-light);
+
+  background:
+    rgba(
+      201,
+      164,
+      92,
+      0.08
+    );
+
+  border-color:
+    var(--campaigns-border-strong);
+
+}
+
+
+.campaign-card__invite {
+
+  color:
+    var(--campaigns-gold-light);
+
+}
+
+
+/* ============================================================
+   13. ESTADOS
+   ============================================================ */
+
+.campaigns-state {
+
+  min-height:
+    360px;
+
+  display:
+    flex;
+
+  flex-direction:
+    column;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+  padding:
+    48px 24px;
+
+  text-align:
+    center;
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.012
+    );
+
+  border:
+    1px dashed var(--campaigns-border);
+
+  border-radius:
+    var(--campaigns-radius);
+
+}
+
+
+.campaigns-state h3 {
+
+  margin:
+    10px 0 7px;
+
+  color:
+    var(--campaigns-text);
+
+  font-family:
+    "Cinzel",
+    serif;
+
+  font-size:
+    1.2rem;
+
+  font-weight:
+    600;
+
+}
+
+
+.campaigns-state p {
+
+  max-width:
+    500px;
+
+  margin:
+    0;
+
+  color:
+    var(--campaigns-text-muted);
+
+  font-size:
+    0.8rem;
+
+  line-height:
+    1.65;
+
+}
+
+
+.campaigns-state__eyebrow {
+
+  color:
+    var(--campaigns-gold) !important;
+
+  font-size:
+    0.63rem !important;
+
+  font-weight:
+    700;
+
+  letter-spacing:
+    0.15em;
+
+  text-transform:
+    uppercase;
+
+}
+
+
+.campaigns-state__ornament {
+
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+  width:
+    56px;
+
+  height:
+    56px;
+
+  color:
+    var(--campaigns-gold);
+
+  background:
+    rgba(
+      201,
+      164,
+      92,
+      0.045
+    );
+
+  border:
+    1px solid var(--campaigns-border);
+
+  border-radius:
+    50%;
+
+  font-family:
+    "Cinzel",
+    serif;
+
+  font-size:
+    1.2rem;
+
+}
+
+
+/* ------------------------------------------------------------
+   LOADING
+   ------------------------------------------------------------ */
+
+.campaigns-state--loading {
+
+  border-style:
+    solid;
+
+}
+
+
+.campaigns-loading-mark {
+
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+  width:
+    50px;
+
+  height:
+    50px;
+
+  margin-bottom:
+    10px;
+
+  color:
+    var(--campaigns-gold);
+
+  border:
+    1px solid var(--campaigns-border);
+
+  border-radius:
+    50%;
+
+  animation:
+    campaigns-loading-spin
+    1.7s linear infinite;
+
+}
+
+
+@keyframes campaigns-loading-spin {
+
+  from {
+    transform:
+      rotate(0deg);
+  }
+
+  to {
+    transform:
+      rotate(360deg);
+  }
+
+}
+
+
+/* ------------------------------------------------------------
+   EMPTY ACTIONS
+   ------------------------------------------------------------ */
+
+.campaigns-empty-actions {
+
+  display:
+    flex;
+
+  flex-wrap:
+    wrap;
+
+  justify-content:
+    center;
+
+  gap:
+    10px;
+
+  margin-top:
+    24px;
+
+}
+
+
+/* ------------------------------------------------------------
+   ERROR
+   ------------------------------------------------------------ */
+
+.campaigns-state--error {
+
+  border-color:
+    rgba(
+      184,
+      77,
+      70,
+      0.25
+    );
+
+}
+
+
+.campaigns-state--error
+.campaigns-state__ornament {
+
+  color:
+    #cf756d;
+
+  border-color:
+    rgba(
+      184,
+      77,
+      70,
+      0.25
+    );
+
+  background:
+    rgba(
+      184,
+      77,
+      70,
+      0.05
+    );
+
+}
+
+
+/* ============================================================
+   14. MODAIS
+   ============================================================ */
+
+.campaign-modal {
+
+  position:
+    fixed;
+
+  inset:
+    0;
+
+  z-index:
+    500;
+
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+  padding:
+    24px;
+
+}
+
+
+.campaign-modal[hidden] {
+
+  display:
+    none;
+
+}
+
+
+.campaign-modal__backdrop {
+
+  position:
+    absolute;
+
+  inset:
+    0;
+
+  background:
+    rgba(
+      0,
+      0,
+      0,
+      0.72
+    );
+
+  backdrop-filter:
+    blur(5px);
+
+}
+
+
+.campaign-modal__dialog {
+
+  position:
+    relative;
+
+  z-index:
+    1;
+
+  width:
+    min(
+      100%,
+      620px
+    );
+
+  max-height:
+    calc(
+      100vh - 48px
+    );
+
+  overflow-y:
+    auto;
+
+  background:
+    linear-gradient(
+      180deg,
+      #181410,
+      #0e0c0a
+    );
+
+  border:
+    1px solid var(--campaigns-border-strong);
+
+  border-radius:
+    14px;
+
+  box-shadow:
+    var(--campaigns-shadow);
+
+  scrollbar-width:
+    thin;
+
+}
+
+
+.campaign-modal__dialog::-webkit-scrollbar {
+
+  width:
+    7px;
+
+}
+
+
+.campaign-modal__dialog::-webkit-scrollbar-thumb {
+
+  background:
+    rgba(
+      201,
+      164,
+      92,
+      0.22
+    );
+
+  border-radius:
+    999px;
+
+}
+
+
+/* ------------------------------------------------------------
+   HEADER MODAL
+   ------------------------------------------------------------ */
+
+.campaign-modal__header {
+
+  display:
+    flex;
+
+  align-items:
+    flex-start;
+
+  justify-content:
+    space-between;
+
+  gap:
+    20px;
+
+  padding:
+    25px 26px 20px;
+
+  border-bottom:
+    1px solid var(--campaigns-border);
+
+}
+
+
+.campaign-modal__eyebrow {
+
+  margin:
+    0 0 5px;
+
+  color:
+    var(--campaigns-gold);
+
+  font-size:
+    0.61rem;
+
+  font-weight:
+    700;
+
+  letter-spacing:
+    0.16em;
+
+  text-transform:
+    uppercase;
+
+}
+
+
+.campaign-modal__header h2 {
+
+  margin:
+    0;
+
+  color:
+    var(--campaigns-text);
+
+  font-family:
+    "Cinzel",
+    serif;
+
+  font-size:
+    1.3rem;
+
+  font-weight:
+    600;
+
+  line-height:
+    1.3;
+
+}
+
+
+/* ============================================================
+   15. FORMULÁRIO
+   ============================================================ */
+
+.campaign-form {
+
+  padding:
+    24px 26px 26px;
+
+}
+
+
+.form-field {
+
+  display:
+    flex;
+
+  flex-direction:
+    column;
+
+  gap:
+    8px;
+
+  margin-bottom:
+    18px;
+
+}
+
+
+.form-field__label {
+
+  color:
+    var(--campaigns-text-soft);
+
+  font-size:
+    0.73rem;
+
+  font-weight:
+    700;
+
+}
+
+
+.form-field__input {
+
+  width:
+    100%;
+
+  min-height:
+    44px;
+
+  box-sizing:
+    border-box;
+
+  padding:
+    0 13px;
+
+  color:
+    var(--campaigns-text);
+
+  background:
+    rgba(
+      0,
+      0,
+      0,
+      0.20
+    );
+
+  border:
+    1px solid rgba(
+      255,
+      255,
+      255,
+      0.09
+    );
+
+  border-radius:
+    var(--campaigns-radius-small);
+
+  outline:
+    none;
+
+  font:
+    inherit;
+
+  font-size:
+    0.8rem;
+
+  transition:
+    border-color var(--campaigns-transition),
+    background var(--campaigns-transition),
+    box-shadow var(--campaigns-transition);
+
+}
+
+
+.form-field__input::placeholder {
+
+  color:
+    #615d55;
+
+}
+
+
+.form-field__input:focus {
+
+  background:
+    rgba(
+      0,
+      0,
+      0,
+      0.28
+    );
+
+  border-color:
+    rgba(
+      201,
+      164,
+      92,
+      0.45
+    );
+
+  box-shadow:
+    0 0 0 3px rgba(
+      201,
+      164,
+      92,
+      0.07
+    );
+
+}
+
+
+.campaign-form__textarea {
+
+  min-height:
+    120px;
+
+  padding:
+    12px 13px;
+
+  resize:
+    vertical;
+
+  line-height:
+    1.6;
+
+}
+
+
+.form-field__error {
+
+  min-height:
+    14px;
+
+  color:
+    #d77b72;
+
+  font-size:
+    0.66rem;
+
+  line-height:
+    1.4;
+
+}
+
+
+/* ============================================================
+   16. UPLOAD DE CAPA
+   ============================================================ */
+
+.campaign-form__cover-field {
+
+  margin-bottom:
+    22px;
+
+}
+
+
+.campaign-cover-upload {
+
+  position:
+    relative;
+
+  display:
+    grid;
+
+  grid-template-columns:
+    96px 1fr auto;
+
+  align-items:
+    center;
+
+  gap:
+    15px;
+
+  min-height:
+    112px;
+
+  padding:
+    10px;
+
+  background:
+    rgba(
+      0,
+      0,
+      0,
+      0.18
+    );
+
+  border:
+    1px dashed var(--campaigns-border);
+
+  border-radius:
+    var(--campaigns-radius-small);
+
+  cursor:
+    pointer;
+
+  transition:
+    border-color var(--campaigns-transition),
+    background var(--campaigns-transition);
+
+}
+
+
+.campaign-cover-upload:hover {
+
+  background:
+    rgba(
+      201,
+      164,
+      92,
+      0.035
+    );
+
+  border-color:
+    var(--campaigns-border-strong);
+
+}
+
+
+.campaign-cover-upload__preview {
+
+  width:
+    96px;
+
+  height:
+    82px;
+
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+  overflow:
+    hidden;
+
+  background:
+    radial-gradient(
+      circle,
+      #2b2418,
+      #0f0d0b
+    );
+
+  border:
+    1px solid var(--campaigns-border);
+
+  border-radius:
+    7px;
+
+}
+
+
+.campaign-cover-upload__image {
+
+  width:
+    100%;
+
+  height:
+    100%;
+
+  object-fit:
+    cover;
+
+}
+
+
+.campaign-cover-upload__placeholder {
+
+  color:
+    var(--campaigns-gold);
+
+  font-size:
+    1.25rem;
+
+}
+
+
+.campaign-cover-upload__content {
+
+  display:
+    flex;
+
+  flex-direction:
+    column;
+
+  gap:
+    5px;
+
+  min-width:
+    0;
+
+}
+
+
+.campaign-cover-upload__content strong {
+
+  color:
+    var(--campaigns-text);
+
+  font-size:
+    0.78rem;
+
+}
+
+
+.campaign-cover-upload__content span {
+
+  color:
+    var(--campaigns-text-muted);
+
+  font-size:
+    0.7rem;
+
+  line-height:
+    1.45;
+
+}
+
+
+.campaign-cover-upload__content small {
+
+  color:
+    #625e56;
+
+  font-size:
+    0.59rem;
+
+}
+
+
+.campaign-cover-upload__button {
+
+  min-height:
+    34px;
+
+  display:
+    inline-flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+  padding:
+    0 11px;
+
+  color:
+    var(--campaigns-gold-light);
+
+  background:
+    rgba(
+      201,
+      164,
+      92,
+      0.06
+    );
+
+  border:
+    1px solid var(--campaigns-border);
+
+  border-radius:
+    6px;
+
+  font-size:
+    0.65rem;
+
+  font-weight:
+    700;
+
+  white-space:
+    nowrap;
+
+}
+
+
+/* ============================================================
+   17. SEÇÃO DO FORM
+   ============================================================ */
+
+.campaign-form__section {
+
+  padding:
+    17px;
+
+  margin:
+    8px 0 20px;
+
+  background:
+    rgba(
+      201,
+      164,
+      92,
+      0.025
+    );
+
+  border:
+    1px solid rgba(
+      201,
+      164,
+      92,
+      0.09
+    );
+
+  border-radius:
+    var(--campaigns-radius-small);
+
+}
+
+
+.campaign-form__section-heading h3 {
+
+  margin:
+    0;
+
+  color:
+    var(--campaigns-text);
+
+  font-family:
+    "Cinzel",
+    serif;
+
+  font-size:
+    0.9rem;
+
+  font-weight:
+    600;
+
+}
+
+
+.campaign-form__hint {
+
+  margin:
+    8px 0 0;
+
+  color:
+    var(--campaigns-text-muted);
+
+  font-size:
+    0.67rem;
+
+  line-height:
+    1.55;
+
+}
+
+
+/* ============================================================
+   18. MENSAGEM
+   ============================================================ */
+
+.auth-message {
+
+  padding:
+    10px 12px;
+
+  margin-bottom:
+    16px;
+
+  color:
+    var(--campaigns-text-soft);
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.025
+    );
+
+  border:
+    1px solid var(--campaigns-border);
+
+  border-radius:
+    7px;
+
+  font-size:
+    0.7rem;
+
+  line-height:
+    1.5;
+
+}
+
+
+.auth-message[data-type="success"] {
+
+  color:
+    #b7cba3;
+
+  background:
+    rgba(
+      118,
+      148,
+      93,
+      0.07
+    );
+
+  border-color:
+    rgba(
+      118,
+      148,
+      93,
+      0.20
+    );
+
+}
+
+
+.auth-message[data-type="error"] {
+
+  color:
+    #d79891;
+
+  background:
+    rgba(
+      184,
+      77,
+      70,
+      0.07
+    );
+
+  border-color:
+    rgba(
+      184,
+      77,
+      70,
+      0.20
+    );
+
+}
+
+
+/* ============================================================
+   19. AÇÕES DO MODAL
+   ============================================================ */
+
+.campaign-modal__actions {
+
+  display:
+    flex;
+
+  justify-content:
+    flex-end;
+
+  gap:
+    10px;
+
+  padding-top:
+    5px;
+
+}
+
+
+.button__loading {
+
+  display:
+    inline-flex;
+
+  align-items:
+    center;
+
+}
+
+
+/* ============================================================
+   20. CONVITE
+   ============================================================ */
+
+.campaign-modal--invite
+.campaign-modal__dialog {
+
+  width:
+    min(
+      100%,
+      560px
+    );
+
+}
+
+
+.campaign-invite__campaign-name {
+
+  padding:
+    17px 26px;
+
+  color:
+    var(--campaigns-gold-light);
+
+  background:
+    rgba(
+      201,
+      164,
+      92,
+      0.035
+    );
+
+  border-bottom:
+    1px solid var(--campaigns-border);
+
+  font-family:
+    "Cinzel",
+    serif;
+
+  font-size:
+    0.88rem;
+
+  font-weight:
+    600;
+
+}
+
+
+/* ------------------------------------------------------------
+   CÓDIGO
+   ------------------------------------------------------------ */
+
+.campaign-invite__code-section {
+
+  padding:
+    25px 26px 20px;
+
+  text-align:
+    center;
+
+}
+
+
+.campaign-invite__code {
+
+  margin:
+    5px 0 8px;
+
+  color:
+    var(--campaigns-gold-light);
+
+  font-family:
+    "Cinzel",
+    serif;
+
+  font-size:
+    clamp(
+      2rem,
+      8vw,
+      2.7rem
+    );
+
+  font-weight:
+    700;
+
+  letter-spacing:
+    0.18em;
+
+  text-indent:
+    0.18em;
+
+}
+
+
+.campaign-invite__expiration {
+
+  margin:
+    0;
+
+  color:
+    var(--campaigns-text-muted);
+
+  font-size:
+    0.67rem;
+
+}
+
+
+.campaign-invite__expiration[data-expired="true"] {
+
+  color:
+    #d4776e;
+
+}
+
+
+.campaign-invite__actions {
+
+  display:
+    flex;
+
+  flex-wrap:
+    wrap;
+
+  justify-content:
+    center;
+
+  gap:
+    8px;
+
+  margin-top:
+    19px;
+
+}
+
+
+.campaign-invite__actions .button {
+
+  min-height:
+    38px;
+
+  font-size:
+    0.69rem;
+
+}
+
+
+/* ============================================================
+   21. QR CODE
+   ============================================================ */
+
+.campaign-invite__qr-section {
+
+  display:
+    flex;
+
+  flex-direction:
+    column;
+
+  align-items:
+    center;
+
+  padding:
+    22px 26px 27px;
+
+  background:
+    rgba(
+      0,
+      0,
+      0,
+      0.16
+    );
+
+  border-top:
+    1px solid var(--campaigns-border);
+
+  border-bottom:
+    1px solid var(--campaigns-border);
+
+  text-align:
+    center;
+
+}
+
+
+.campaign-invite__qr-header h3 {
+
+  margin:
+    0;
+
+  color:
+    var(--campaigns-text);
+
+  font-family:
+    "Cinzel",
+    serif;
+
+  font-size:
+    0.98rem;
+
+  font-weight:
+    600;
+
+}
+
+
+.campaign-invite__qr-header p:not(.campaign-modal__eyebrow) {
+
+  max-width:
+    370px;
+
+  margin:
+    7px auto 18px;
+
+  color:
+    var(--campaigns-text-muted);
+
+  font-size:
+    0.67rem;
+
+  line-height:
+    1.5;
+
+}
+
+
+.campaign-invite__qr {
+
+  width:
+    190px;
+
+  height:
+    190px;
+
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+  padding:
+    12px;
+
+  box-sizing:
+    border-box;
+
+  background:
+    #f1eadb;
+
+  border:
+    5px solid #f1eadb;
+
+  border-radius:
+    6px;
+
+  box-shadow:
+    0 15px 35px rgba(
+      0,
+      0,
+      0,
+      0.35
+    );
+
+}
+
+
+.campaign-invite__qr-code {
+
+  width:
+    100%;
+
+  height:
+    100%;
+
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+  color:
+    #17130e;
+
+  background:
+    repeating-conic-gradient(
+      #17130e 0deg 25deg,
+      #f1eadb 25deg 50deg
+    );
+
+}
+
+
+.campaign-invite__qr-code span {
+
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+  width:
+    54px;
+
+  height:
+    54px;
+
+  color:
+    #f1eadb;
+
+  background:
+    #17130e;
+
+  border:
+    4px solid #f1eadb;
+
+  font-family:
+    "Cinzel",
+    serif;
+
+  font-size:
+    0.75rem;
+
+  font-weight:
+    700;
+
+}
+
+
+.campaign-invite__qr-placeholder {
+
+  color:
+    #17130e;
+
+  font-family:
+    "Cinzel",
+    serif;
+
+  font-size:
+    0.9rem;
+
+  font-weight:
+    700;
+
+}
+
+
+/* ============================================================
+   22. LINK DO CONVITE
+   ============================================================ */
+
+.campaign-invite__link-section {
+
+  padding:
+    22px 26px 26px;
+
+}
+
+
+.campaign-invite__link-row {
+
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  gap:
+    7px;
+
+  margin-top:
+    8px;
+
+}
+
+
+.campaign-invite__link-row .form-field__input {
+
+  min-width:
+    0;
+
+  flex:
+    1;
+
+  overflow:
+    hidden;
+
+  text-overflow:
+    ellipsis;
+
+  white-space:
+    nowrap;
+
+}
+
+
+.campaign-invite__link-row
+.campaigns-icon-button {
+
+  flex:
+    0 0 40px;
+
+}
+
+
+/* ============================================================
+   23. TOAST
+   ============================================================ */
+
+.aeriom-toast-region {
+
+  position:
+    fixed;
+
+  right:
+    20px;
+
+  bottom:
+    20px;
+
+  z-index:
+    1000;
+
+  display:
+    flex;
+
+  flex-direction:
+    column;
+
+  align-items:
+    flex-end;
+
+  gap:
+    9px;
+
+  width:
+    min(
+      calc(100vw - 40px),
+      360px
+    );
+
+  pointer-events:
+    none;
+
+}
+
+
+.aeriom-toast {
+
+  width:
+    100%;
+
+  box-sizing:
+    border-box;
+
+  padding:
+    12px 14px;
+
+  color:
+    var(--campaigns-text);
+
+  background:
+    rgba(
+      20,
+      17,
+      13,
+      0.96
+    );
+
+  border:
+    1px solid var(--campaigns-border-strong);
+
+  border-radius:
+    8px;
+
+  box-shadow:
+    0 12px 35px rgba(
+      0,
+      0,
+      0,
+      0.35
+    );
+
+  font-size:
+    0.72rem;
+
+  line-height:
+    1.45;
+
+  pointer-events:
+    auto;
+
+  animation:
+    campaigns-toast-in
+    220ms ease
+    both;
+
+}
+
+
+.aeriom-toast[data-type="success"] {
+
+  border-color:
+    rgba(
+      118,
+      148,
+      93,
+      0.35
+    );
+
+}
+
+
+.aeriom-toast[data-type="error"] {
+
+  border-color:
+    rgba(
+      184,
+      77,
+      70,
+      0.35
+    );
+
+}
+
+
+@keyframes campaigns-toast-in {
+
+  from {
+
+    opacity:
+      0;
+
+    transform:
+      translateY(
+        10px
+      );
+
+  }
+
+  to {
+
+    opacity:
+      1;
+
+    transform:
+      translateY(
+        0
+      );
+
+  }
+
+}
+
+
+/* ============================================================
+   24. FOCUS / ACESSIBILIDADE
+   ============================================================ */
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+
+  outline:
+    2px solid var(--campaigns-gold);
+
+  outline-offset:
+    3px;
+
+}
+
+
+/* ============================================================
+   25. RESPONSIVIDADE — TABLET
+   ============================================================ */
+
+@media (
+  max-width: 1100px
+) {
+
+  :root {
+
+    --campaigns-sidebar-width:
+      220px;
+
+  }
+
+
+  .campaigns-content {
+
+    padding:
+      36px 28px 60px;
+
+  }
+
+
+  .campaigns-topbar {
+
+    padding:
+      12px 28px;
+
+  }
+
+
+  .campaigns-grid {
+
+    grid-template-columns:
+      repeat(
+        auto-fill,
+        minmax(
+          250px,
+          1fr
+        )
+      );
+
+  }
+
+}
+
+
+/* ============================================================
+   26. RESPONSIVIDADE — MOBILE
+   ============================================================ */
+
+@media (
+  max-width: 900px
+) {
+
+  .campaigns-sidebar {
+
+    transform:
+      translateX(-100%);
+
+    transition:
+      transform 220ms ease;
+
+    box-shadow:
+      18px 0 50px rgba(
+        0,
+        0,
+        0,
+        0.45
+      );
+
+  }
+
+
+  .campaigns-sidebar.is-open {
+
+    transform:
+      translateX(0);
+
+  }
+
+
+  .campaigns-main {
+
+    margin-left:
+      0;
+
+  }
+
+
+  #campaigns-mobile-menu-button {
+
+    display:
+      inline-flex;
+
+  }
+
+
+  .campaigns-topbar {
+
+    min-height:
+      68px;
+
+    padding:
+      10px 18px;
+
+  }
+
+
+  .campaigns-content {
+
+    padding:
+      30px 18px 50px;
+
+  }
+
+
+  .campaigns-heading {
+
+    align-items:
+      flex-start;
+
+    flex-direction:
+      column;
+
+    gap:
+      18px;
+
+  }
+
+
+  .campaigns-heading .button {
+
+    width:
+      100%;
+
+  }
+
+
+  .campaigns-user-badge__content {
+
+    display:
+      none;
+
+  }
+
+
+  .campaigns-user-badge__avatar {
+
+    width:
+      36px;
+
+    height:
+      36px;
+
+    flex-basis:
+      36px;
+
+  }
+
+
+  .campaigns-grid {
+
+    grid-template-columns:
+      repeat(
+        2,
+        minmax(
+          0,
+          1fr
+        )
+      );
+
+    gap:
+      14px;
+
+  }
+
+
+  .campaign-card__content {
+
+    padding:
+      15px;
+
+  }
+
+
+  .campaign-card__footer {
+
+    align-items:
+      stretch;
+
+    flex-direction:
+      column;
+
+  }
+
+
+  .campaign-card__actions {
+
+    justify-content:
+      stretch;
+
+  }
+
+
+  .campaign-card__open,
+  .campaign-card__invite {
+
+    flex:
+      1;
+
+  }
+
+}
+
+
+/* ============================================================
+   27. RESPONSIVIDADE — CELULAR
+   ============================================================ */
+
+@media (
+  max-width: 600px
+) {
+
+  .campaigns-content {
+
+    padding:
+      24px 13px 40px;
+
+  }
+
+
+  .campaigns-topbar {
+
+    padding:
+      9px 13px;
+
+  }
+
+
+  .campaigns-heading {
+
+    margin-bottom:
+      24px;
+
+  }
+
+
+  .campaigns-heading__title {
+
+    font-size:
+      1.65rem;
+
+  }
+
+
+  .campaigns-heading__description {
+
+    font-size:
+      0.78rem;
+
+  }
+
+
+  .campaigns-grid {
+
+    grid-template-columns:
+      1fr;
+
+  }
+
+
+  .campaign-card__cover {
+
+    aspect-ratio:
+      16 / 7;
+
+  }
+
+
+  .campaign-card__footer {
+
+    flex-direction:
+      row;
+
+    align-items:
+      flex-end;
+
+  }
+
+
+  .campaign-card__actions {
+
+    flex-direction:
+      column;
+
+    align-items:
+      stretch;
+
+  }
+
+
+  .campaign-card__open,
+  .campaign-card__invite {
+
+    width:
+      100%;
+
+  }
+
+
+  .campaign-modal {
+
+    align-items:
+      flex-end;
+
+    padding:
+      0;
+
+  }
+
+
+  .campaign-modal__dialog {
+
+    width:
+      100%;
+
+    max-height:
+      92vh;
+
+    border-radius:
+      15px 15px 0 0;
+
+  }
+
+
+  .campaign-modal__header {
+
+    padding:
+      20px 18px 16px;
+
+  }
+
+
+  .campaign-form {
+
+    padding:
+      20px 18px 22px;
+
+  }
+
+
+  .campaign-cover-upload {
+
+    grid-template-columns:
+      72px 1fr;
+
+  }
+
+
+  .campaign-cover-upload__preview {
+
+    width:
+      72px;
+
+    height:
+      68px;
+
+  }
+
+
+  .campaign-cover-upload__button {
+
+    grid-column:
+      2;
+
+    justify-self:
+      start;
+
+  }
+
+
+  .campaign-modal__actions {
+
+    flex-direction:
+      column-reverse;
+
+  }
+
+
+  .campaign-modal__actions .button {
+
+    width:
+      100%;
+
+  }
+
+
+  .campaign-invite__campaign-name {
+
+    padding:
+      14px 18px;
+
+  }
+
+
+  .campaign-invite__code-section {
+
+    padding:
+      22px 18px 18px;
+
+  }
+
+
+  .campaign-invite__qr-section {
+
+    padding:
+      20px 18px 23px;
+
+  }
+
+
+  .campaign-invite__qr {
+
+    width:
+      170px;
+
+    height:
+      170px;
+
+  }
+
+
+  .campaign-invite__link-section {
+
+    padding:
+      18px;
+
+  }
+
+
+  .campaign-invite__actions {
+
+    flex-direction:
+      column;
+
+  }
+
+
+  .campaign-invite__actions .button {
+
+    width:
+      100%;
+
+  }
+
+
+  .aeriom-toast-region {
+
+    right:
+      12px;
+
+    bottom:
+      12px;
+
+    width:
+      calc(
+        100vw - 24px
+      );
+
+  }
+
+}
+
+
+/* ============================================================
+   28. TOUCH
+   ============================================================ */
+
+@media (
+  hover: none
+) {
+
+  .campaign-card:hover {
+
+    transform:
+      none;
+
+  }
+
+
+  .campaign-card:hover
+  .campaign-card__image {
+
+    transform:
+      none;
+
+  }
+
+
+  .campaigns-nav-item:hover {
+
+    transform:
+      none;
+
+  }
+
+}
+
+
+/* ============================================================
+   29. REDUÇÃO DE MOVIMENTO
+   ============================================================ */
+
+@media (
+  prefers-reduced-motion: reduce
+) {
+
+  *,
+  *::before,
+  *::after {
+
+    scroll-behavior:
+      auto !important;
+
+    animation-duration:
+      0.01ms !important;
+
+    animation-iteration-count:
+      1 !important;
+
+    transition-duration:
+      0.01ms !important;
+
+  }
+
+}
