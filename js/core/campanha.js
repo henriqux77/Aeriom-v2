@@ -5,36 +5,22 @@
  * Núcleo da mesa virtual
  * ============================================================
  *
- * Responsabilidades:
+ * Este arquivo é responsável por:
  *
- * - Obter o campaignId da URL.
- * - Inicializar o Supabase.
- * - Verificar sessão.
- * - Validar pertencimento à campanha.
- * - Descobrir role real no banco.
- * - Carregar campanha.
- * - Carregar membros.
- * - Carregar sessão da campanha.
- * - Carregar personagens presentes.
- * - Controlar abas da mesa.
- * - Controlar visibilidade Mestre/Jogador.
- * - Controlar menu mobile.
- * - Preparar contexto para módulos da mesa.
- * - Gerenciar o canal Realtime principal da campanha.
- * - Limpar somente o próprio canal ao destruir.
+ * - obter o ID da campanha pela URL;
+ * - obter a sessão autenticada;
+ * - carregar a campanha;
+ * - validar a participação do usuário;
+ * - descobrir se é Mestre ou Jogador;
+ * - carregar membros;
+ * - carregar sessão da mesa;
+ * - carregar personagens presentes;
+ * - renderizar a interface;
+ * - controlar abas;
+ * - controlar menu mobile;
+ * - fornecer contexto para outros módulos;
+ * - manter Realtime da campanha;
  *
- * NÃO é responsabilidade deste arquivo:
- *
- * - rolagem de dados;
- * - combate completo;
- * - mural completo;
- * - mapas;
- * - segredos;
- * - cozinha;
- * - timeline;
- * - regras específicas de cada módulo.
- *
- * Esses sistemas receberão o contexto da campanha.
  * ============================================================
  */
 
@@ -92,6 +78,9 @@ const state = {
   profile:
     null,
 
+  campaignId:
+    null,
+
   campaign:
     null,
 
@@ -117,6 +106,9 @@ const state = {
     false,
 
   mobileMenuOpen:
+    false,
+
+  uiBound:
     false
 
 };
@@ -341,99 +333,6 @@ function getNormalizedError(
 
 
 /* ============================================================
-   MENSAGEM GLOBAL
-   ============================================================ */
-
-function showErrorState(
-  message
-) {
-
-  const loading =
-    getElement(
-      "campaign-loading"
-    );
-
-  const workspace =
-    getElement(
-      "campaign-workspace"
-    );
-
-  const errorState =
-    getElement(
-      "campaign-error"
-    );
-
-  const errorMessage =
-    getElement(
-      "campaign-error-message"
-    );
-
-
-  if (
-    loading
-  ) {
-
-    loading.hidden =
-      true;
-
-  }
-
-
-  if (
-    workspace
-  ) {
-
-    workspace.hidden =
-      true;
-
-  }
-
-
-  if (
-    errorMessage
-  ) {
-
-    errorMessage.textContent =
-      message ||
-
-      "Não foi possível abrir a campanha.";
-
-  }
-
-
-  if (
-    errorState
-  ) {
-
-    errorState.hidden =
-      false;
-
-  }
-
-}
-
-
-function hideErrorState() {
-
-  const errorState =
-    getElement(
-      "campaign-error"
-    );
-
-
-  if (
-    errorState
-  ) {
-
-    errorState.hidden =
-      true;
-
-  }
-
-}
-
-
-/* ============================================================
    LOADING
    ============================================================ */
 
@@ -499,6 +398,11 @@ function showWorkspace() {
       "campaign-workspace"
     );
 
+  const errorState =
+    getElement(
+      "campaign-error"
+    );
+
 
   if (
     loading
@@ -515,6 +419,88 @@ function showWorkspace() {
   ) {
 
     workspace.hidden =
+      false;
+
+  }
+
+
+  if (
+    errorState
+  ) {
+
+    errorState.hidden =
+      true;
+
+  }
+
+}
+
+
+/* ============================================================
+   ERRO VISUAL
+   ============================================================ */
+
+function showErrorState(
+  message
+) {
+
+  const loading =
+    getElement(
+      "campaign-loading"
+    );
+
+  const workspace =
+    getElement(
+      "campaign-workspace"
+    );
+
+  const errorState =
+    getElement(
+      "campaign-error"
+    );
+
+  const errorMessage =
+    getElement(
+      "campaign-error-message"
+    );
+
+
+  if (
+    loading
+  ) {
+
+    loading.hidden =
+      true;
+
+  }
+
+
+  if (
+    workspace
+  ) {
+
+    workspace.hidden =
+      true;
+
+  }
+
+
+  if (
+    errorMessage
+  ) {
+
+    errorMessage.textContent =
+      message ||
+      "Não foi possível abrir a campanha.";
+
+  }
+
+
+  if (
+    errorState
+  ) {
+
+    errorState.hidden =
       false;
 
   }
@@ -554,6 +540,15 @@ function getCampaignIdFromUrl() {
 
 
   if (
+    !campaignId
+  ) {
+
+    return null;
+
+  }
+
+
+  if (
     campaignId.length >
     CAMPAIGN_CONFIG.maxCampaignIdLength
   ) {
@@ -562,12 +557,6 @@ function getCampaignIdFromUrl() {
 
   }
 
-
-  /*
-   * O ID é tratado somente como identificador.
-   *
-   * A autorização real será feita pelo banco.
-   */
 
   return campaignId;
 
@@ -694,7 +683,7 @@ async function loadProfile() {
 
 
 /* ============================================================
-   SESSÃO DO AUTH
+   SESSÃO AUTH
    ============================================================ */
 
 async function loadAuthSession() {
@@ -767,9 +756,6 @@ async function loadAuthSession() {
   await loadProfile();
 
 
-  renderUser();
-
-
   return session;
 
 }
@@ -782,12 +768,22 @@ async function loadAuthSession() {
 async function loadCampaign() {
 
   if (
-    !state.supabase ||
+    !state.supabase
+  ) {
+
+    throw new Error(
+      "Supabase não inicializado."
+    );
+
+  }
+
+
+  if (
     !state.campaignId
   ) {
 
     throw new Error(
-      "Campaign ID não disponível."
+      "ID da campanha não foi encontrado na URL."
     );
 
   }
@@ -848,13 +844,6 @@ async function loadCampaign() {
   }
 
 
-  /*
-   * NÃO consideramos o ID da URL como autorização.
-   *
-   * A existência da campanha não significa que o usuário
-   * possui acesso. A membership será verificada separadamente.
-   */
-
   if (
     !data
   ) {
@@ -895,9 +884,11 @@ async function loadCampaign() {
       ),
 
     createdBy:
-      safeString(
-        data.created_by
-      ),
+      data.created_by
+        ? String(
+            data.created_by
+          )
+        : null,
 
     theme:
       safeString(
@@ -939,7 +930,7 @@ async function loadMembership() {
   ) {
 
     throw new Error(
-      "Contexto de membership incompleto."
+      "Contexto da membership incompleto."
     );
 
   }
@@ -1125,63 +1116,46 @@ async function loadMembers() {
   }
 
 
-  const members =
+  state.members =
     normalizeArray(
       data
-    );
+    )
+      .map(
+        member => ({
 
+          id:
+            String(
+              member.id
+            ),
 
-  /*
-   * Não fazemos join de profiles aqui.
-   *
-   * O perfil está protegido por RLS e o desenho atual
-   * não deve enfraquecer essa proteção apenas para mostrar
-   * nomes de outros jogadores.
-   *
-   * Os membros serão apresentados por ID/role enquanto
-   * o módulo de participantes não possuir uma fonte pública
-   * apropriada para esses dados.
-   */
+          campaignId:
+            String(
+              member.campaign_id
+            ),
 
-  state.members =
-    members.map(
-      (
-        member
-      ) => ({
+          userId:
+            String(
+              member.user_id
+            ),
 
-        id:
-          String(
-            member.id
-          ),
+          role:
+            member.role ===
+              "master"
 
-        campaignId:
-          String(
-            member.campaign_id
-          ),
+              ? "master"
 
-        userId:
-          String(
-            member.user_id
-          ),
+              : "player",
 
-        role:
-          member.role ===
-            "master"
+          createdAt:
+            member.created_at ||
+            null,
 
-            ? "master"
+          updatedAt:
+            member.updated_at ||
+            null
 
-            : "player",
-
-        createdAt:
-          member.created_at ||
-          null,
-
-        updatedAt:
-          member.updated_at ||
-          null
-
-      })
-    );
+        })
+      );
 
 
   return state.members;
@@ -1199,6 +1173,9 @@ async function loadCampaignSession() {
     !state.supabase ||
     !state.campaignId
   ) {
+
+    state.session =
+      null;
 
     return null;
 
@@ -1259,6 +1236,7 @@ async function loadCampaignSession() {
 
   state.session =
     data
+
       ? {
 
           campaignId:
@@ -1319,6 +1297,9 @@ async function loadPresentCharacters() {
     !state.supabase ||
     !state.campaignId
   ) {
+
+    state.presentCharacters =
+      [];
 
     return [];
 
@@ -1519,7 +1500,9 @@ function normalizePresentCharacter(
           null ||
         character.age ===
           undefined
+
           ? null
+
           : safeNumber(
               character.age
             ),
@@ -1630,7 +1613,31 @@ function normalizePresentCharacter(
 
 
 /* ============================================================
-   UI — USUÁRIO
+   ROLE
+   ============================================================ */
+
+function isMaster() {
+
+  return (
+    state.membership?.role ===
+    "master"
+  );
+
+}
+
+
+function isPlayer() {
+
+  return (
+    state.membership?.role ===
+    "player"
+  );
+
+}
+
+
+/* ============================================================
+   NOME DO USUÁRIO
    ============================================================ */
 
 function getDisplayName() {
@@ -1646,6 +1653,7 @@ function getDisplayName() {
 
 
   return (
+
     safeString(
       profile.display_name
     ) ||
@@ -1670,10 +1678,15 @@ function getDisplayName() {
     ) ||
 
     "Aventureiro"
+
   );
 
 }
 
+
+/* ============================================================
+   UI — USUÁRIO
+   ============================================================ */
 
 function renderUser() {
 
@@ -1775,7 +1788,8 @@ function renderCampaign() {
     state.campaign;
 
 
-  [
+  const values = [
+
     [
       "campaign-sidebar-name",
       campaign.name
@@ -1799,35 +1813,37 @@ function renderCampaign() {
     [
       "campaign-overview-description",
       campaign.description ||
-        "Aventure pela campanha com seu grupo."
+      "Aventure pela campanha com seu grupo."
     ]
 
-  ]
-    .forEach(
-      (
-        [
-          id,
-          value
-        ]
-      ) => {
-
-        const element =
-          getElement(
-            id
-          );
+  ];
 
 
-        if (
-          element
-        ) {
+  values.forEach(
+    (
+      [
+        id,
+        value
+      ]
+    ) => {
 
-          element.textContent =
-            value;
+      const element =
+        getElement(
+          id
+        );
 
-        }
+
+      if (
+        element
+      ) {
+
+        element.textContent =
+          value;
 
       }
-    );
+
+    }
+  );
 
 
   const roleBadge =
@@ -1899,7 +1915,7 @@ function renderCampaign() {
 
 
 /* ============================================================
-   HERO IMAGE
+   HERO
    ============================================================ */
 
 function applyHeroImage(
@@ -1970,7 +1986,7 @@ function applyHeroImage(
 
     log(
       "warn",
-      "URL de capa inválida.",
+      "URL da capa inválida.",
       error
     );
 
@@ -2020,13 +2036,6 @@ function applyThemeMetadata() {
 
   }
 
-
-  /*
-   * O theme.js é responsável pela aplicação real
-   * das variáveis e dos backgrounds.
-   *
-   * Aqui somente emitimos um evento para ele.
-   */
 
   window.dispatchEvent(
     new CustomEvent(
@@ -2105,9 +2114,7 @@ function renderMembers() {
 
 
   members.forEach(
-    (
-      member
-    ) => {
+    member => {
 
       container.appendChild(
         createMemberCard(
@@ -2118,18 +2125,8 @@ function renderMembers() {
     }
   );
 
-
-  /*
-   * Se não houver membros, deixamos a área sem
-   * conteúdo em vez de inventar jogadores.
-   */
-
 }
 
-
-/* ============================================================
-   MEMBER CARD
-   ============================================================ */
 
 function createMemberCard(
   member
@@ -2168,15 +2165,6 @@ function createMemberCard(
       "span"
     );
 
-
-  /*
-   * Não temos autorização para assumir o display_name
-   * de outro perfil aqui.
-   *
-   * Para o próprio usuário temos o perfil carregado.
-   * Para os demais mostramos uma identificação neutra
-   * até existir uma fonte segura de nomes públicos.
-   */
 
   if (
     state.user &&
@@ -2300,6 +2288,9 @@ function renderPresentCharacters() {
   const container =
     getElement(
       "campaign-character-summary"
+    ) ||
+    getElement(
+      "campaign-character-summary-grid"
     );
 
 
@@ -2323,7 +2314,7 @@ function renderPresentCharacters() {
 
   if (
     characters.length ===
-      0
+    0
   ) {
 
     const empty =
@@ -2401,9 +2392,7 @@ function renderPresentCharacters() {
 
 
   characters.forEach(
-    (
-      entry
-    ) => {
+    entry => {
 
       container.appendChild(
         createCharacterSummaryCard(
@@ -2447,14 +2436,16 @@ function createCharacterSummaryCard(
     );
 
 
-  const parts =
-    [
-      character.race,
-      character.class
-    ]
-      .filter(
-        Boolean
-      );
+  const parts = [
+
+    character.race,
+
+    character.class
+
+  ]
+    .filter(
+      Boolean
+    );
 
 
   meta.textContent =
@@ -2507,18 +2498,15 @@ function updateMasterInterface() {
       "master-navigation"
     );
 
-
   const masterCard =
     getElement(
       "campaign-master-card"
     );
 
-
   const mapButton =
     getElement(
       "campaign-create-map-button"
     );
-
 
   const secretButton =
     getElement(
@@ -2573,25 +2561,132 @@ function updateMasterInterface() {
 
 
 /* ============================================================
-   ROLE
+   UI — SESSÃO
    ============================================================ */
 
-function isMaster() {
+function updateSessionUi() {
 
-  return (
-    state.membership?.role ===
-    "master"
-  );
+  const session =
+    state.session;
+
+
+  const statusElement =
+    getElement(
+      "campaign-session-status"
+    );
+
+
+  if (
+    statusElement
+  ) {
+
+    statusElement.textContent =
+      session?.sessionStatus ||
+      "idle";
+
+  }
+
+
+  const timerLabel =
+    getElement(
+      "campaign-timer-label"
+    );
+
+
+  if (
+    timerLabel
+  ) {
+
+    timerLabel.textContent =
+      session?.timerLabel ||
+      "";
+
+  }
+
+
+  const scene =
+    getElement(
+      "campaign-current-scene"
+    );
+
+
+  if (
+    scene
+  ) {
+
+    scene.textContent =
+      session?.currentSceneId ||
+      "Nenhuma cena ativa";
+
+  }
 
 }
 
 
-function isPlayer() {
+/* ============================================================
+   REALTIME UI
+   ============================================================ */
 
-  return (
-    state.membership?.role ===
-    "player"
-  );
+function updateSessionConnectionUi() {
+
+  const text =
+    getElement(
+      "campaign-session-status-text"
+    );
+
+
+  const dot =
+    document.querySelector(
+      ".campaign-session-status__dot"
+    );
+
+
+  if (
+    state.realtimeConnected
+  ) {
+
+    if (
+      text
+    ) {
+
+      text.textContent =
+        "Mesa conectada";
+
+    }
+
+
+    if (
+      dot
+    ) {
+
+      dot.dataset.status =
+        "connected";
+
+    }
+
+  }
+  else {
+
+    if (
+      text
+    ) {
+
+      text.textContent =
+        "Reconectando mesa...";
+
+    }
+
+
+    if (
+      dot
+    ) {
+
+      dot.dataset.status =
+        "disconnected";
+
+    }
+
+  }
 
 }
 
@@ -2604,19 +2699,27 @@ function isValidTab(
   tab
 ) {
 
-  const validTabs =
-    [
+  const validTabs = [
 
-      "overview",
-      "combat",
-      "mural",
-      "timeline",
-      "kitchen",
-      "maps",
-      "secrets",
-      "theme"
+    "overview",
 
-    ];
+    "dice",
+
+    "combat",
+
+    "mural",
+
+    "timeline",
+
+    "kitchen",
+
+    "maps",
+
+    "secrets",
+
+    "theme"
+
+  ];
 
 
   if (
@@ -2629,10 +2732,6 @@ function isValidTab(
 
   }
 
-
-  /*
-   * Segredos e tema são exclusivos do Mestre.
-   */
 
   if (
     (
@@ -2677,9 +2776,7 @@ function showTab(
     "[data-campaign-panel]"
   )
     .forEach(
-      (
-        panel
-      ) => {
+      panel => {
 
         const panelTab =
           panel.dataset.campaignPanel;
@@ -2707,9 +2804,7 @@ function showTab(
     "[data-campaign-tab]"
   )
     .forEach(
-      (
-        button
-      ) => {
+      button => {
 
         const buttonTab =
           button.dataset.campaignTab;
@@ -3032,18 +3127,134 @@ function dispatchMasterAction(
 
 
 /* ============================================================
-   EVENTOS UI
+   CONTEXTO PÚBLICO
+   ============================================================ */
+
+function getContext() {
+
+  return Object.freeze({
+
+    campaignId:
+      state.campaignId,
+
+    campaign:
+      state.campaign,
+
+    user:
+      state.user,
+
+    profile:
+      state.profile,
+
+    membership:
+      state.membership,
+
+    members:
+      state.members,
+
+    session:
+      state.session,
+
+    presentCharacters:
+      state.presentCharacters,
+
+    activeTab:
+      state.activeTab,
+
+    realtimeConnected:
+      state.realtimeConnected,
+
+    isMaster:
+      isMaster(),
+
+    isPlayer:
+      isPlayer()
+
+  });
+
+}
+
+
+/* ============================================================
+   API GLOBAL DA CAMPANHA
+   ============================================================ */
+
+function exposeCampaignApi() {
+
+  window.AERIOM_CAMPAIGN =
+    Object.freeze({
+
+      getContext,
+
+      getCampaign:
+        () =>
+          state.campaign,
+
+      getCampaignId:
+        () =>
+          state.campaignId,
+
+      getUser:
+        () =>
+          state.user,
+
+      getMembership:
+        () =>
+          state.membership,
+
+      getSession:
+        () =>
+          state.session,
+
+      getMembers:
+        () =>
+          state.members,
+
+      getPresentCharacters:
+        () =>
+          state.presentCharacters,
+
+      isMaster,
+
+      isPlayer,
+
+      showTab,
+
+      refresh:
+        () =>
+          initializeCampaign(
+            true
+          )
+
+    });
+
+}
+
+
+/* ============================================================
+   EVENTOS DA UI
    ============================================================ */
 
 function bindUiEvents() {
+
+  if (
+    state.uiBound
+  ) {
+
+    return;
+
+  }
+
+
+  state.uiBound =
+    true;
+
 
   getElements(
     "[data-campaign-tab]"
   )
     .forEach(
-      (
-        button
-      ) => {
+      button => {
 
         button.addEventListener(
           "click",
@@ -3136,15 +3347,9 @@ function bindUiEvents() {
       "click",
       () => {
 
-        if (
-          isMaster()
-        ) {
-
-          dispatchMasterAction(
-            "create-note"
-          );
-
-        }
+        dispatchMasterAction(
+          "create-note"
+        );
 
       }
     );
@@ -3157,15 +3362,9 @@ function bindUiEvents() {
       "click",
       () => {
 
-        if (
-          isMaster()
-        ) {
-
-          dispatchMasterAction(
-            "create-map"
-          );
-
-        }
+        dispatchMasterAction(
+          "create-map"
+        );
 
       }
     );
@@ -3178,15 +3377,9 @@ function bindUiEvents() {
       "click",
       () => {
 
-        if (
-          isMaster()
-        ) {
-
-          dispatchMasterAction(
-            "create-secret"
-          );
-
-        }
+        dispatchMasterAction(
+          "create-secret"
+        );
 
       }
     );
@@ -3196,9 +3389,7 @@ function bindUiEvents() {
     "[data-campaign-action]"
   )
     .forEach(
-      (
-        button
-      ) => {
+      button => {
 
         button.addEventListener(
           "click",
@@ -3318,6 +3509,9 @@ async function logout() {
 
   try {
 
+    removeRealtimeChannel();
+
+
     const {
       error
     } =
@@ -3364,11 +3558,6 @@ async function logout() {
     );
 
 
-    /*
-     * Mesmo em caso de problema no signOut,
-     * não mantemos o usuário preso na mesa.
-     */
-
     redirectToLogin();
 
   }
@@ -3383,8 +3572,11 @@ async function logout() {
 function getRealtimeChannelName() {
 
   return [
+
     CAMPAIGN_CONFIG.realtimeChannelPrefix,
+
     state.campaignId
+
   ]
     .join(
       "-"
@@ -3410,22 +3602,14 @@ function removeRealtimeChannel() {
     state.realtimeConnected =
       false;
 
+    updateSessionConnectionUi();
+
     return;
 
   }
 
 
   try {
-
-    /*
-     * IMPORTANTE:
-     *
-     * Removemos SOMENTE nosso canal.
-     *
-     * Nunca usamos:
-     *
-     * supabase.removeAllChannels()
-     */
 
     state.supabase
       .removeChannel(
@@ -3438,7 +3622,7 @@ function removeRealtimeChannel() {
 
     log(
       "warn",
-      "Falha ao remover canal Realtime da campanha.",
+      "Falha ao remover canal Realtime.",
       error
     );
 
@@ -3451,6 +3635,9 @@ function removeRealtimeChannel() {
   state.realtimeConnected =
     false;
 
+
+  updateSessionConnectionUi();
+
 }
 
 
@@ -3458,7 +3645,8 @@ function subscribeRealtime() {
 
   if (
     !state.supabase ||
-    !state.campaignId
+    !state.campaignId ||
+    !state.user
   ) {
 
     return;
@@ -3471,6 +3659,22 @@ function subscribeRealtime() {
 
   const channelName =
     getRealtimeChannelName();
+
+
+  const presenceKey =
+    state.user.id ||
+    (
+      typeof crypto !==
+        "undefined" &&
+      typeof crypto.randomUUID ===
+        "function"
+
+        ? crypto.randomUUID()
+
+        : String(
+            Date.now()
+          )
+    );
 
 
   const channel =
@@ -3490,11 +3694,7 @@ function subscribeRealtime() {
           presence: {
 
             key:
-              state.user?.id ||
-              crypto.randomUUID?.() ||
-              String(
-                Date.now()
-              )
+              presenceKey
 
           }
 
@@ -3503,10 +3703,6 @@ function subscribeRealtime() {
       }
     );
 
-
-  /*
-   * ALTERAÇÕES DA CAMPANHA
-   */
 
   channel.on(
     "postgres_changes",
@@ -3529,10 +3725,6 @@ function subscribeRealtime() {
   );
 
 
-  /*
-   * MEMBROS
-   */
-
   channel.on(
     "postgres_changes",
     {
@@ -3553,10 +3745,6 @@ function subscribeRealtime() {
     handleMembersRealtimeChange
   );
 
-
-  /*
-   * SESSÃO DA CAMPANHA
-   */
 
   channel.on(
     "postgres_changes",
@@ -3579,10 +3767,6 @@ function subscribeRealtime() {
   );
 
 
-  /*
-   * PERSONAGENS PRESENTES.
-   */
-
   channel.on(
     "postgres_changes",
     {
@@ -3603,10 +3787,6 @@ function subscribeRealtime() {
     handleCharactersRealtimeChange
   );
 
-
-  /*
-   * PRESENCE
-   */
 
   channel.on(
     "presence",
@@ -3643,9 +3823,7 @@ function subscribeRealtime() {
 
 
   channel.subscribe(
-    async (
-      status
-    ) => {
+    async status => {
 
       log(
         "info",
@@ -3667,8 +3845,7 @@ function subscribeRealtime() {
           await channel.track({
 
             user_id:
-              state.user?.id ||
-              null,
+              state.user.id,
 
             role:
               state.membership?.role ||
@@ -3723,372 +3900,11 @@ function subscribeRealtime() {
 
 
 /* ============================================================
-   REALTIME HANDLERS
+   REALTIME — CAMPANHA
    ============================================================ */
 
 function handleCampaignRealtimeChange(
   payload
 ) {
 
-  log(
-    "info",
-    "Campanha atualizada em tempo real.",
-    payload
-  );
-
-
-  refreshCampaignFromRealtime(
-    payload
-  );
-
-}
-
-
-async function refreshCampaignFromRealtime(
-  payload
-) {
-
-  const row =
-    payload?.new ||
-    payload?.old ||
-    null;
-
-
-  if (
-    payload?.eventType ===
-      "DELETE"
-  ) {
-
-    showErrorState(
-      "Esta campanha não está mais disponível."
-    );
-
-
-    return;
-
-  }
-
-
-  if (
-    row
-  ) {
-
-    state.campaign = {
-
-      ...state.campaign,
-
-      name:
-        row.name ??
-        state.campaign.name,
-
-      description:
-        row.description ??
-        state.campaign.description,
-
-      coverPath:
-        row.cover_path ??
-        state.campaign.coverPath,
-
-      coverUrl:
-        row.cover_url ??
-        state.campaign.coverUrl,
-
-      theme:
-        row.theme ??
-        state.campaign.theme,
-
-      backgroundPath:
-        row.background_path ??
-        state.campaign.backgroundPath,
-
-      updatedAt:
-        row.updated_at ??
-        state.campaign.updatedAt
-
-    };
-
-
-    renderCampaign();
-
-    return;
-
-  }
-
-
-  try {
-
-    await loadCampaign();
-
-    renderCampaign();
-
-  } catch (
-    error
-  ) {
-
-    log(
-      "warn",
-      "Falha ao atualizar campanha pelo Realtime.",
-      error
-    );
-
-  }
-
-}
-
-
-async function handleMembersRealtimeChange(
-  payload
-) {
-
-  log(
-    "info",
-    "Membros da campanha alterados em tempo real.",
-    payload
-  );
-
-
-  try {
-
-    await loadMembership();
-
-    await loadMembers();
-
-    renderMembers();
-
-    updateMasterInterface();
-
-    renderUser();
-
-  } catch (
-    error
-  ) {
-
-    /*
-     * Se a membership deixou de existir, o usuário
-     * perdeu acesso à campanha.
-     */
-
-    if (
-      String(
-        error?.message ||
-        ""
-      )
-        .toLowerCase()
-        .includes(
-          "não faz parte"
-        )
-    ) {
-
-      showErrorState(
-        "Seu acesso a esta campanha foi removido."
-      );
-
-
-      removeRealtimeChannel();
-
-
-      return;
-
-    }
-
-
-    log(
-      "warn",
-      "Falha ao atualizar membros em tempo real.",
-      error
-    );
-
-  }
-
-}
-
-
-async function handleSessionRealtimeChange(
-  payload
-) {
-
-  log(
-    "info",
-    "Sessão da campanha alterada em tempo real.",
-    payload
-  );
-
-
-  try {
-
-    await loadCampaignSession();
-
-    updateSessionUi();
-
-
-    window.dispatchEvent(
-      new CustomEvent(
-        "aeriom:campaignsessionchange",
-        {
-
-          detail:
-            Object.freeze({
-
-              campaignId:
-                state.campaignId,
-
-              session:
-                state.session
-
-            })
-
-        }
-      )
-    );
-
-  } catch (
-    error
-  ) {
-
-    log(
-      "warn",
-      "Falha ao atualizar sessão em tempo real.",
-      error
-    );
-
-  }
-
-}
-
-
-async function handleCharactersRealtimeChange(
-  payload
-) {
-
-  log(
-    "info",
-    "Personagens da campanha alterados em tempo real.",
-    payload
-  );
-
-
-  try {
-
-    await loadPresentCharacters();
-
-    renderPresentCharacters();
-
-
-    window.dispatchEvent(
-      new CustomEvent(
-        "aeriom:campaigncharacterschange",
-        {
-
-          detail:
-            Object.freeze({
-
-              campaignId:
-                state.campaignId,
-
-              characters:
-                state.presentCharacters
-
-            })
-
-        }
-      )
-    );
-
-  } catch (
-    error
-  ) {
-
-    log(
-      "warn",
-      "Falha ao atualizar personagens da campanha.",
-      error
-    );
-
-  }
-
-}
-
-
-function handlePresenceSync() {
-
-  updatePresenceUi();
-
-}
-
-
-function handlePresenceChange() {
-
-  updatePresenceUi();
-
-}
-
-
-function updatePresenceUi() {
-
-  /*
-   * O indicador visual da conexão é independente
-   * do número exato de jogadores online.
-   */
-
-  updateSessionConnectionUi();
-
-}
-
-
-/* ============================================================
-   UI — REALTIME
-   ============================================================ */
-
-function updateSessionConnectionUi() {
-
-  const text =
-    getElement(
-      "campaign-session-status-text"
-    );
-
-
-  const dot =
-    document.querySelector(
-      ".campaign-session-status__dot"
-    );
-
-
-  if (
-    state.realtimeConnected
-  ) {
-
-    if (
-      text
-    ) {
-
-      text.textContent =
-        "Mesa conectada";
-
-    }
-
-
-    if (
-      dot
-    ) {
-
-      dot.dataset.status =
-        "connected";
-
-    }
-
-  }
-  else {
-
-    if (
-      text
-    ) {
-
-      text.textContent =
-        "Reconectando mesa...";
-
-    }
-
-
-    if (
-      dot
-    )
+ 
