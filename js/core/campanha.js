@@ -5,21 +5,22 @@
  * Núcleo da mesa virtual
  * ============================================================
  *
- * Este arquivo é responsável por:
+ * Responsabilidades:
  *
- * - obter o ID da campanha pela URL;
- * - obter a sessão autenticada;
- * - carregar a campanha;
- * - validar a participação do usuário;
- * - descobrir se é Mestre ou Jogador;
+ * - restaurar sessão;
+ * - carregar campanha;
+ * - carregar membership;
  * - carregar membros;
- * - carregar sessão da mesa;
  * - carregar personagens presentes;
- * - renderizar a interface;
+ * - resolver capa pelo Supabase Storage;
+ * - identificar corretamente o usuário;
+ * - priorizar identidade do Discord;
+ * - renderizar a mesa;
  * - controlar abas;
  * - controlar menu mobile;
- * - fornecer contexto para outros módulos;
- * - manter Realtime da campanha;
+ * - aplicar tema;
+ * - fornecer contexto global;
+ * - preparar Realtime.
  *
  * ============================================================
  */
@@ -34,25 +35,34 @@ import {
    CONFIGURAÇÃO
    ============================================================ */
 
-const CAMPAIGN_CONFIG = Object.freeze({
+const CONFIG = Object.freeze({
 
-  loginPage:
+  LOGIN_PAGE:
     "./index.html",
 
-  campaignsPage:
+  CAMPAIGNS_PAGE:
     "./campanhas.html",
 
-  campaignPage:
+  CAMPAIGN_PAGE:
     "./campanha.html",
 
-  defaultTheme:
+  STORAGE_BUCKET:
+    "campaign-covers",
+
+  AVATAR_BUCKET:
+    "avatars",
+
+  DEFAULT_THEME:
     "default",
 
-  maxCampaignIdLength:
-    64,
+  MAX_CAMPAIGN_ID_LENGTH:
+    100,
 
-  realtimeChannelPrefix:
-    "campaign-core"
+  SIGNED_URL_SECONDS:
+    60 * 60,
+
+  REALTIME_PREFIX:
+    "aeriom-campaign"
 
 });
 
@@ -90,11 +100,14 @@ const state = {
   members:
     [],
 
-  session:
-    null,
+  memberProfiles:
+    new Map(),
 
   presentCharacters:
     [],
+
+  session:
+    null,
 
   activeTab:
     "overview",
@@ -108,7 +121,7 @@ const state = {
   mobileMenuOpen:
     false,
 
-  uiBound:
+  bound:
     false
 
 };
@@ -127,10 +140,8 @@ function log(
   const prefix =
     "[AERIOM][CAMPAIGN]";
 
-
   if (
-    level ===
-    "error"
+    level === "error"
   ) {
 
     console.error(
@@ -140,13 +151,10 @@ function log(
     );
 
     return;
-
   }
 
-
   if (
-    level ===
-    "warn"
+    level === "warn"
   ) {
 
     console.warn(
@@ -156,9 +164,7 @@ function log(
     );
 
     return;
-
   }
-
 
   console.info(
     prefix,
@@ -189,14 +195,12 @@ function getElements(
 ) {
 
   if (
-    typeof selector !==
-    "string"
+    typeof selector !== "string"
   ) {
 
     return [];
 
   }
-
 
   return Array.from(
     document.querySelectorAll(
@@ -208,7 +212,7 @@ function getElements(
 
 
 /* ============================================================
-   NORMALIZAÇÃO
+   HELPERS
    ============================================================ */
 
 function safeString(
@@ -216,12 +220,15 @@ function safeString(
   fallback = ""
 ) {
 
-  return typeof value ===
-    "string"
+  if (
+    typeof value === "string"
+  ) {
 
-    ? value
+    return value.trim();
 
-    : fallback;
+  }
+
+  return fallback;
 
 }
 
@@ -232,18 +239,24 @@ function safeNumber(
 ) {
 
   const number =
-    Number(
-      value
-    );
-
+    Number(value);
 
   return Number.isFinite(
     number
   )
-
     ? number
-
     : fallback;
+
+}
+
+
+function normalizeArray(
+  value
+) {
+
+  return Array.isArray(value)
+    ? value
+    : [];
 
 }
 
@@ -254,45 +267,22 @@ function normalizeObject(
 
   if (
     !value ||
-    typeof value !==
-      "object" ||
-    Array.isArray(
-      value
-    )
+    typeof value !== "object" ||
+    Array.isArray(value)
   ) {
 
     return {};
 
   }
 
-
   return value;
 
 }
 
 
-function normalizeArray(
-  value
-) {
-
-  return Array.isArray(
-    value
-  )
-
-    ? value
-
-    : [];
-
-}
-
-
-/* ============================================================
-   ERRO
-   ============================================================ */
-
-function getNormalizedError(
+function normalizeError(
   error,
-  context
+  context = {}
 ) {
 
   try {
@@ -348,37 +338,28 @@ function showLoadingState() {
       "campaign-workspace"
     );
 
-  const errorState =
+  const error =
     getElement(
       "campaign-error"
     );
 
-
-  if (
-    loading
-  ) {
+  if (loading) {
 
     loading.hidden =
       false;
 
   }
 
-
-  if (
-    workspace
-  ) {
+  if (workspace) {
 
     workspace.hidden =
       true;
 
   }
 
+  if (error) {
 
-  if (
-    errorState
-  ) {
-
-    errorState.hidden =
+    error.hidden =
       true;
 
   }
@@ -398,47 +379,34 @@ function showWorkspace() {
       "campaign-workspace"
     );
 
-  const errorState =
+  const error =
     getElement(
       "campaign-error"
     );
 
-
-  if (
-    loading
-  ) {
+  if (loading) {
 
     loading.hidden =
       true;
 
   }
 
-
-  if (
-    workspace
-  ) {
+  if (workspace) {
 
     workspace.hidden =
       false;
 
   }
 
+  if (error) {
 
-  if (
-    errorState
-  ) {
-
-    errorState.hidden =
+    error.hidden =
       true;
 
   }
 
 }
 
-
-/* ============================================================
-   ERRO VISUAL
-   ============================================================ */
 
 function showErrorState(
   message
@@ -454,7 +422,7 @@ function showErrorState(
       "campaign-workspace"
     );
 
-  const errorState =
+  const error =
     getElement(
       "campaign-error"
     );
@@ -464,43 +432,33 @@ function showErrorState(
       "campaign-error-message"
     );
 
-
-  if (
-    loading
-  ) {
+  if (loading) {
 
     loading.hidden =
       true;
 
   }
 
-
-  if (
-    workspace
-  ) {
+  if (workspace) {
 
     workspace.hidden =
       true;
 
   }
 
-
-  if (
-    errorMessage
-  ) {
+  if (errorMessage) {
 
     errorMessage.textContent =
-      message ||
-      "Não foi possível abrir a campanha.";
+      safeString(
+        message,
+        "Não foi possível abrir a campanha."
+      );
 
   }
 
+  if (error) {
 
-  if (
-    errorState
-  ) {
-
-    errorState.hidden =
+    error.hidden =
       false;
 
   }
@@ -519,46 +477,36 @@ function getCampaignIdFromUrl() {
       window.location.search
     );
 
-
   const raw =
     params.get(
       "campaign"
     );
 
-
-  if (
-    !raw
-  ) {
+  if (!raw) {
 
     return null;
 
   }
 
-
-  const campaignId =
+  const value =
     raw.trim();
 
+  if (!value) {
+
+    return null;
+
+  }
 
   if (
-    !campaignId
+    value.length >
+    CONFIG.MAX_CAMPAIGN_ID_LENGTH
   ) {
 
     return null;
 
   }
 
-
-  if (
-    campaignId.length >
-    CAMPAIGN_CONFIG.maxCampaignIdLength
-  ) {
-
-    return null;
-
-  }
-
-
-  return campaignId;
+  return value;
 
 }
 
@@ -570,7 +518,7 @@ function getCampaignIdFromUrl() {
 function redirectToLogin() {
 
   window.location.replace(
-    CAMPAIGN_CONFIG.loginPage
+    CONFIG.LOGIN_PAGE
   );
 
 }
@@ -579,8 +527,189 @@ function redirectToLogin() {
 function redirectToCampaigns() {
 
   window.location.replace(
-    CAMPAIGN_CONFIG.campaignsPage
+    CONFIG.CAMPAIGNS_PAGE
   );
+
+}
+
+
+/* ============================================================
+   IDENTIDADE
+   ============================================================ */
+
+/*
+ * O Discord pode entregar diferentes campos dependendo
+ * da versão/configuração do provider.
+ *
+ * Procuramos todos os campos comuns antes de tocar no e-mail.
+ */
+
+function getDiscordDisplayName(
+  user
+) {
+
+  const metadata =
+    normalizeObject(
+      user?.user_metadata
+    );
+
+  const identities =
+    normalizeArray(
+      user?.identities
+    );
+
+  const discordIdentity =
+    identities.find(
+      identity =>
+        String(
+          identity?.provider || ""
+        ).toLowerCase() === "discord"
+    );
+
+  const identityData =
+    normalizeObject(
+      discordIdentity?.identity_data
+    );
+
+  const discordName =
+    safeString(
+      metadata.global_name
+    ) ||
+
+    safeString(
+      metadata.username
+    ) ||
+
+    safeString(
+      metadata.user_name
+    ) ||
+
+    safeString(
+      metadata.preferred_username
+    ) ||
+
+    safeString(
+      metadata.discord_username
+    ) ||
+
+    safeString(
+      identityData.global_name
+    ) ||
+
+    safeString(
+      identityData.username
+    ) ||
+
+    safeString(
+      identityData.user_name
+    ) ||
+
+    safeString(
+      identityData.preferred_username
+    );
+
+  return discordName;
+
+}
+
+
+function getUserDisplayName(
+  user = state.user,
+  profile = state.profile
+) {
+
+  if (!user) {
+
+    return "Aventureiro";
+
+  }
+
+  /*
+   * PRIMEIRO:
+   * Discord.
+   *
+   * Isso impede que o e-mail vire o nome visual.
+   */
+
+  const discordName =
+    getDiscordDisplayName(
+      user
+    );
+
+  if (discordName) {
+
+    return discordName;
+
+  }
+
+
+  const metadata =
+    normalizeObject(
+      user.user_metadata
+    );
+
+
+  /*
+   * SEGUNDO:
+   * nome configurado no Auth.
+   */
+
+  const authName =
+    safeString(
+      metadata.display_name
+    ) ||
+
+    safeString(
+      metadata.full_name
+    ) ||
+
+    safeString(
+      metadata.name
+    );
+
+  if (authName) {
+
+    return authName;
+
+  }
+
+
+  /*
+   * TERCEIRO:
+   * perfil AERIOM.
+   */
+
+  const profileName =
+    safeString(
+      profile?.display_name
+    );
+
+  if (profileName) {
+
+    return profileName;
+
+  }
+
+
+  /*
+   * QUARTO:
+   * somente agora usamos o prefixo do e-mail
+   * como último recurso.
+   */
+
+  const emailPrefix =
+    safeString(
+      user.email
+        ?.split("@")[0]
+    );
+
+  if (emailPrefix) {
+
+    return emailPrefix;
+
+  }
+
+  return "Aventureiro";
 
 }
 
@@ -592,14 +721,13 @@ function redirectToCampaigns() {
 async function loadProfile() {
 
   if (
-    !state.user ||
-    !state.supabase
+    !state.supabase ||
+    !state.user
   ) {
 
     return null;
 
   }
-
 
   try {
 
@@ -626,54 +754,148 @@ async function loadProfile() {
         )
         .maybeSingle();
 
+    if (error) {
 
-    if (
-      error
-    ) {
-
-      throw getNormalizedError(
+      throw normalizeError(
         error,
         {
-
           file:
             "js/core/campanha.js",
-
           function:
             "loadProfile",
-
           table:
             "profiles",
-
           operation:
             "select"
-
         }
       );
 
     }
 
-
     state.profile =
-      data ||
-      null;
-
+      data || null;
 
     return state.profile;
 
-  } catch (
-    error
-  ) {
+  } catch (error) {
+
+    /*
+     * Perfil não pode impedir a mesa de abrir.
+     */
 
     log(
       "warn",
-      "Não foi possível carregar o perfil.",
+      "Perfil não pôde ser carregado; usando dados do Auth.",
       error
     );
-
 
     state.profile =
       null;
 
+    return null;
+
+  }
+
+}
+
+
+/* ============================================================
+   STORAGE
+   ============================================================ */
+
+function isSafeImageUrl(
+  value
+) {
+
+  if (
+    typeof value !== "string" ||
+    !value.trim()
+  ) {
+
+    return false;
+
+  }
+
+  try {
+
+    const url =
+      new URL(
+        value,
+        window.location.href
+      );
+
+    return (
+      url.protocol === "https:" ||
+      url.protocol === "http:"
+    );
+
+  } catch {
+
+    return false;
+
+  }
+
+}
+
+
+async function resolveStorageUrl(
+  bucket,
+  path
+) {
+
+  const cleanPath =
+    safeString(
+      path
+    );
+
+  if (
+    !cleanPath ||
+    !state.supabase
+  ) {
+
+    return null;
+
+  }
+
+  try {
+
+    const {
+      data,
+      error
+    } =
+      await state.supabase.storage
+        .from(
+          bucket
+        )
+        .createSignedUrl(
+          cleanPath,
+          CONFIG.SIGNED_URL_SECONDS
+        );
+
+    if (error) {
+
+      throw error;
+
+    }
+
+    const url =
+      safeString(
+        data?.signedUrl
+      );
+
+    return (
+      isSafeImageUrl(url)
+        ? url
+        : null
+    );
+
+  } catch (error) {
+
+    log(
+      "warn",
+      `Não foi possível resolver Storage: ${bucket}`,
+      error
+    );
 
     return null;
 
@@ -693,11 +915,10 @@ async function loadAuthSession() {
   ) {
 
     throw new Error(
-      "O cliente Supabase/Auth não está disponível."
+      "Cliente Supabase/Auth não está disponível."
     );
 
   }
-
 
   const {
     data,
@@ -706,37 +927,27 @@ async function loadAuthSession() {
     await state.supabase.auth
       .getSession();
 
+  if (error) {
 
-  if (
-    error
-  ) {
-
-    throw getNormalizedError(
+    throw normalizeError(
       error,
       {
-
         file:
           "js/core/campanha.js",
-
         function:
           "loadAuthSession",
-
         table:
           "auth",
-
         operation:
           "getSession"
-
       }
     );
 
   }
 
-
   const session =
     data?.session ||
     null;
-
 
   if (
     !session?.user
@@ -748,13 +959,10 @@ async function loadAuthSession() {
 
   }
 
-
   state.user =
     session.user;
 
-
   await loadProfile();
-
 
   return session;
 
@@ -777,7 +985,6 @@ async function loadCampaign() {
 
   }
 
-
   if (
     !state.campaignId
   ) {
@@ -787,7 +994,6 @@ async function loadCampaign() {
     );
 
   }
-
 
   const {
     data,
@@ -817,36 +1023,25 @@ async function loadCampaign() {
       )
       .maybeSingle();
 
+  if (error) {
 
-  if (
-    error
-  ) {
-
-    throw getNormalizedError(
+    throw normalizeError(
       error,
       {
-
         file:
           "js/core/campanha.js",
-
         function:
           "loadCampaign",
-
         table:
           "campaigns",
-
         operation:
           "select"
-
       }
     );
 
   }
 
-
-  if (
-    !data
-  ) {
+  if (!data) {
 
     throw new Error(
       "A campanha solicitada não foi encontrada."
@@ -893,7 +1088,7 @@ async function loadCampaign() {
     theme:
       safeString(
         data.theme,
-        CAMPAIGN_CONFIG.defaultTheme
+        CONFIG.DEFAULT_THEME
       ),
 
     backgroundPath:
@@ -910,6 +1105,27 @@ async function loadCampaign() {
       null
 
   };
+
+
+  /*
+   * CORREÇÃO PRINCIPAL DA CAPA:
+   *
+   * Se cover_url não existir, resolve cover_path
+   * diretamente no bucket campaign-covers.
+   */
+
+  if (
+    !state.campaign.coverUrl &&
+    state.campaign.coverPath
+  ) {
+
+    state.campaign.coverUrl =
+      await resolveStorageUrl(
+        CONFIG.STORAGE_BUCKET,
+        state.campaign.coverPath
+      );
+
+  }
 
 
   return state.campaign;
@@ -934,7 +1150,6 @@ async function loadMembership() {
     );
 
   }
-
 
   const {
     data,
@@ -964,43 +1179,31 @@ async function loadMembership() {
       )
       .maybeSingle();
 
+  if (error) {
 
-  if (
-    error
-  ) {
-
-    throw getNormalizedError(
+    throw normalizeError(
       error,
       {
-
         file:
           "js/core/campanha.js",
-
         function:
           "loadMembership",
-
         table:
           "campaign_members",
-
         operation:
           "select"
-
       }
     );
 
   }
 
-
-  if (
-    !data
-  ) {
+  if (!data) {
 
     throw new Error(
       "Você não faz parte desta campanha."
     );
 
   }
-
 
   state.membership = {
 
@@ -1020,11 +1223,11 @@ async function loadMembership() {
       ),
 
     role:
-      data.role ===
+      String(
+        data.role || ""
+      ).toLowerCase() ===
         "master"
-
         ? "master"
-
         : "player",
 
     createdAt:
@@ -1036,7 +1239,6 @@ async function loadMembership() {
       null
 
   };
-
 
   return state.membership;
 
@@ -1054,10 +1256,12 @@ async function loadMembers() {
     !state.campaignId
   ) {
 
+    state.members =
+      [];
+
     return [];
 
   }
-
 
   const {
     data,
@@ -1089,74 +1293,156 @@ async function loadMembers() {
         }
       );
 
+  if (error) {
 
-  if (
-    error
-  ) {
-
-    throw getNormalizedError(
+    throw normalizeError(
       error,
       {
-
         file:
           "js/core/campanha.js",
-
         function:
           "loadMembers",
-
         table:
           "campaign_members",
-
         operation:
           "select"
-
       }
     );
 
   }
 
-
   state.members =
     normalizeArray(
       data
-    )
+    ).map(
+      member => ({
+
+        id:
+          String(
+            member.id
+          ),
+
+        campaignId:
+          String(
+            member.campaign_id
+          ),
+
+        userId:
+          String(
+            member.user_id
+          ),
+
+        role:
+          String(
+            member.role || ""
+          ).toLowerCase() ===
+            "master"
+            ? "master"
+            : "player",
+
+        createdAt:
+          member.created_at ||
+          null,
+
+        updatedAt:
+          member.updated_at ||
+          null
+
+      })
+    );
+
+
+  /*
+   * Busca os perfis dos membros.
+   *
+   * Isso permite mostrar o nome real em vez de
+   * "Aventureiro".
+   */
+
+  const userIds =
+    state.members
       .map(
-        member => ({
-
-          id:
-            String(
-              member.id
-            ),
-
-          campaignId:
-            String(
-              member.campaign_id
-            ),
-
-          userId:
-            String(
-              member.user_id
-            ),
-
-          role:
-            member.role ===
-              "master"
-
-              ? "master"
-
-              : "player",
-
-          createdAt:
-            member.created_at ||
-            null,
-
-          updatedAt:
-            member.updated_at ||
-            null
-
-        })
+        member =>
+          member.userId
+      )
+      .filter(
+        Boolean
       );
 
+  if (
+    userIds.length
+  ) {
+
+    try {
+
+      const {
+        data:
+        profiles,
+        error:
+        profileError
+      } =
+        await state.supabase
+          .from(
+            "profiles"
+          )
+          .select(
+            `
+              id,
+              display_name,
+              avatar_path
+            `
+          )
+          .in(
+            "id",
+            userIds
+          );
+
+      if (
+        profileError
+      ) {
+
+        log(
+          "warn",
+          "Não foi possível carregar os perfis dos membros.",
+          profileError
+        );
+
+      } else {
+
+        normalizeArray(
+          profiles
+        ).forEach(
+          profile => {
+
+            if (
+              profile?.id
+            ) {
+
+              state.memberProfiles.set(
+                String(
+                  profile.id
+                ),
+                profile
+              );
+
+            }
+
+          }
+        );
+
+      }
+
+    } catch (error) {
+
+      log(
+        "warn",
+        "Falha ao carregar perfis dos membros.",
+        error
+      );
+
+    }
+
+  }
 
   return state.members;
 
@@ -1164,7 +1450,7 @@ async function loadMembers() {
 
 
 /* ============================================================
-   SESSÃO DA CAMPANHA
+   SESSÃO DA MESA
    ============================================================ */
 
 async function loadCampaignSession() {
@@ -1180,7 +1466,6 @@ async function loadCampaignSession() {
     return null;
 
   }
-
 
   const {
     data,
@@ -1207,36 +1492,41 @@ async function loadCampaignSession() {
       )
       .maybeSingle();
 
+  if (error) {
 
-  if (
-    error
-  ) {
+    /*
+     * A sessão da mesa é um recurso complementar.
+     *
+     * Não impedimos a campanha de abrir por causa dela.
+     */
 
-    throw getNormalizedError(
-      error,
-      {
-
-        file:
-          "js/core/campanha.js",
-
-        function:
-          "loadCampaignSession",
-
-        table:
-          "campaign_session",
-
-        operation:
-          "select"
-
-      }
+    log(
+      "warn",
+      "Sessão da mesa não pôde ser carregada.",
+      normalizeError(
+        error,
+        {
+          file:
+            "js/core/campanha.js",
+          function:
+            "loadCampaignSession",
+          table:
+            "campaign_session",
+          operation:
+            "select"
+        }
+      )
     );
+
+    state.session =
+      null;
+
+    return null;
 
   }
 
-
   state.session =
     data
-
       ? {
 
           campaignId:
@@ -1278,9 +1568,7 @@ async function loadCampaignSession() {
             null
 
         }
-
       : null;
-
 
   return state.session;
 
@@ -1288,7 +1576,7 @@ async function loadCampaignSession() {
 
 
 /* ============================================================
-   PERSONAGENS PRESENTES
+   PERSONAGENS
    ============================================================ */
 
 async function loadPresentCharacters() {
@@ -1305,107 +1593,103 @@ async function loadPresentCharacters() {
 
   }
 
+  try {
 
-  const {
-    data,
-    error
-  } =
-    await state.supabase
-      .from(
-        "campaign_characters"
-      )
-      .select(
-        `
-          id,
-          campaign_id,
-          character_id,
-          is_present,
-          display_order,
-          created_at,
-          updated_at,
-          characters (
+    const {
+      data,
+      error
+    } =
+      await state.supabase
+        .from(
+          "campaign_characters"
+        )
+        .select(
+          `
             id,
-            user_id,
             campaign_id,
-            name,
-            age,
-            race,
-            class,
-            power,
-            origin,
-            racial_ability,
-            class_bonus,
-            personality,
-            backstory,
-            hp_current,
-            hp_max,
-            mana_current,
-            mana_max,
-            conditions,
-            attributes,
-            techniques,
-            inventory,
-            equipment,
-            avatar_path,
+            character_id,
+            is_present,
+            display_order,
             created_at,
-            updated_at
-          )
-        `
+            updated_at,
+            characters (
+              id,
+              user_id,
+              campaign_id,
+              name,
+              age,
+              race,
+              class,
+              power,
+              origin,
+              racial_ability,
+              class_bonus,
+              personality,
+              backstory,
+              hp_current,
+              hp_max,
+              mana_current,
+              mana_max,
+              conditions,
+              attributes,
+              techniques,
+              inventory,
+              equipment,
+              avatar_path,
+              created_at,
+              updated_at
+            )
+          `
+        )
+        .eq(
+          "campaign_id",
+          state.campaignId
+        )
+        .eq(
+          "is_present",
+          true
+        )
+        .order(
+          "display_order",
+          {
+            ascending:
+              true
+          }
+        );
+
+    if (error) {
+
+      throw error;
+
+    }
+
+    state.presentCharacters =
+      normalizeArray(
+        data
       )
-      .eq(
-        "campaign_id",
-        state.campaignId
-      )
-      .eq(
-        "is_present",
-        true
-      )
-      .order(
-        "display_order",
-        {
-          ascending:
-            true
-        }
-      );
+        .map(
+          normalizePresentCharacter
+        )
+        .filter(
+          Boolean
+        );
 
+  } catch (error) {
 
-  if (
-    error
-  ) {
+    /*
+     * Personagem não pode impedir a mesa de abrir.
+     */
 
-    throw getNormalizedError(
-      error,
-      {
-
-        file:
-          "js/core/campanha.js",
-
-        function:
-          "loadPresentCharacters",
-
-        table:
-          "campaign_characters",
-
-        operation:
-          "select"
-
-      }
+    log(
+      "warn",
+      "Personagens presentes não puderam ser carregados.",
+      error
     );
 
+    state.presentCharacters =
+      [];
+
   }
-
-
-  state.presentCharacters =
-    normalizeArray(
-      data
-    )
-      .map(
-        normalizePresentCharacter
-      )
-      .filter(
-        Boolean
-      );
-
 
   return state.presentCharacters;
 
@@ -1425,12 +1709,10 @@ function normalizePresentCharacter(
 
   }
 
-
   const character =
     normalizeObject(
       row.characters
     );
-
 
   if (
     !character.id
@@ -1439,7 +1721,6 @@ function normalizePresentCharacter(
     return null;
 
   }
-
 
   return {
 
@@ -1496,13 +1777,8 @@ function normalizePresentCharacter(
         ),
 
       age:
-        character.age ===
-          null ||
-        character.age ===
-          undefined
-
+        character.age == null
           ? null
-
           : safeNumber(
               character.age
             ),
@@ -1637,62 +1913,16 @@ function isPlayer() {
 
 
 /* ============================================================
-   NOME DO USUÁRIO
-   ============================================================ */
-
-function getDisplayName() {
-
-  const profile =
-    state.profile ||
-    {};
-
-  const metadata =
-    normalizeObject(
-      state.user?.user_metadata
-    );
-
-
-  return (
-
-    safeString(
-      profile.display_name
-    ) ||
-
-    safeString(
-      metadata.display_name
-    ) ||
-
-    safeString(
-      metadata.full_name
-    ) ||
-
-    safeString(
-      metadata.name
-    ) ||
-
-    safeString(
-      state.user?.email
-        ?.split(
-          "@"
-        )[0]
-    ) ||
-
-    "Aventureiro"
-
-  );
-
-}
-
-
-/* ============================================================
    UI — USUÁRIO
    ============================================================ */
 
 function renderUser() {
 
   const name =
-    getDisplayName();
-
+    getUserDisplayName(
+      state.user,
+      state.profile
+    );
 
   const avatar =
     getElement(
@@ -1709,58 +1939,41 @@ function renderUser() {
       "campaign-user-role"
     );
 
-
-  if (
-    nameElement
-  ) {
+  if (nameElement) {
 
     nameElement.textContent =
       name;
 
   }
 
-
-  if (
-    roleElement
-  ) {
+  if (roleElement) {
 
     roleElement.textContent =
       isMaster()
-
         ? "Mestre"
-
         : "Aventureiro";
 
   }
 
-
-  if (
-    !avatar
-  ) {
+  if (!avatar) {
 
     return;
 
   }
 
-
   avatar.replaceChildren();
-
 
   const initial =
     document.createElement(
       "span"
     );
 
-
   initial.textContent =
     name
       .trim()
-      .charAt(
-        0
-      )
+      .charAt(0)
       .toUpperCase() ||
     "?";
-
 
   avatar.appendChild(
     initial
@@ -1782,7 +1995,6 @@ function renderCampaign() {
     return;
 
   }
-
 
   const campaign =
     state.campaign;
@@ -1832,10 +2044,7 @@ function renderCampaign() {
           id
         );
 
-
-      if (
-        element
-      ) {
+      if (element) {
 
         element.textContent =
           value;
@@ -1851,10 +2060,7 @@ function renderCampaign() {
       "campaign-role-badge"
     );
 
-
-  if (
-    roleBadge
-  ) {
+  if (roleBadge) {
 
     roleBadge.textContent =
       isMaster()
@@ -1869,10 +2075,7 @@ function renderCampaign() {
       "campaign-sidebar-role"
     );
 
-
-  if (
-    sidebarRole
-  ) {
+  if (sidebarRole) {
 
     sidebarRole.textContent =
       isMaster()
@@ -1882,26 +2085,31 @@ function renderCampaign() {
   }
 
 
+  /*
+   * ==========================================================
+   * CAPA PRINCIPAL
+   * ==========================================================
+   */
+
   const hero =
     getElement(
       "campaign-hero-cover"
     );
 
-
-  if (
-    hero
-  ) {
+  if (hero) {
 
     hero.replaceChildren();
 
-
     if (
-      campaign.coverUrl
+      isSafeImageUrl(
+        campaign.coverUrl
+      )
     ) {
 
-      applyHeroImage(
+      applyImage(
         hero,
-        campaign.coverUrl
+        campaign.coverUrl,
+        `Capa da campanha ${campaign.name}`
       );
 
     }
@@ -1909,88 +2117,112 @@ function renderCampaign() {
   }
 
 
-  applyThemeMetadata();
+  /*
+   * ==========================================================
+   * CAPA DA SIDEBAR
+   * ==========================================================
+   */
+
+  const sidebarCover =
+    getElement(
+      "campaign-sidebar-cover"
+    );
+
+  if (sidebarCover) {
+
+    sidebarCover.replaceChildren();
+
+    if (
+      isSafeImageUrl(
+        campaign.coverUrl
+      )
+    ) {
+
+      applyImage(
+        sidebarCover,
+        campaign.coverUrl,
+        `Capa da campanha ${campaign.name}`
+      );
+
+    } else {
+
+      sidebarCover.textContent =
+        "✦";
+
+    }
+
+  }
+
+
+  applyTheme();
 
 }
 
 
 /* ============================================================
-   HERO
+   IMAGEM
    ============================================================ */
 
-function applyHeroImage(
+function applyImage(
   container,
-  url
+  url,
+  alt = ""
 ) {
 
-  try {
-
-    const parsed =
-      new URL(
-        url,
-        window.location.href
-      );
-
-
-    if (
-      parsed.protocol !==
-        "https:" &&
-      parsed.protocol !==
-        "http:"
-    ) {
-
-      return;
-
-    }
-
-
-    const image =
-      document.createElement(
-        "img"
-      );
-
-
-    image.src =
-      parsed.href;
-
-    image.alt =
-      "";
-
-    image.setAttribute(
-      "aria-hidden",
-      "true"
-    );
-
-
-    image.addEventListener(
-      "error",
-      () => {
-
-        image.remove();
-
-      },
-      {
-        once:
-          true
-      }
-    );
-
-
-    container.appendChild(
-      image
-    );
-
-  } catch (
-    error
+  if (
+    !container ||
+    !isSafeImageUrl(url)
   ) {
 
-    log(
-      "warn",
-      "URL da capa inválida.",
-      error
-    );
+    return;
 
   }
+
+  const image =
+    document.createElement(
+      "img"
+    );
+
+  image.src =
+    url;
+
+  image.alt =
+    alt;
+
+  image.loading =
+    "eager";
+
+  image.decoding =
+    "async";
+
+  image.referrerPolicy =
+    "no-referrer";
+
+  image.addEventListener(
+    "error",
+    () => {
+
+      image.remove();
+
+      if (
+        !container.children.length
+      ) {
+
+        container.textContent =
+          "✦";
+
+      }
+
+    },
+    {
+      once:
+        true
+    }
+  );
+
+  container.appendChild(
+    image
+  );
 
 }
 
@@ -1999,7 +2231,7 @@ function applyHeroImage(
    TEMA
    ============================================================ */
 
-function applyThemeMetadata() {
+function applyTheme() {
 
   if (
     !state.campaign
@@ -2009,39 +2241,50 @@ function applyThemeMetadata() {
 
   }
 
-
   const theme =
     safeString(
       state.campaign.theme,
-      CAMPAIGN_CONFIG.defaultTheme
+      CONFIG.DEFAULT_THEME
     );
-
 
   document.documentElement.dataset.theme =
     theme;
 
-
-  const campaignApp =
+  const app =
     getElement(
       "campaign-app"
     );
 
+  if (app) {
 
-  if (
-    campaignApp
-  ) {
-
-    campaignApp.dataset.theme =
+    app.dataset.theme =
       theme;
 
   }
 
+  /*
+   * O background_path fica disponível para o CSS/tema.
+   */
+
+  if (
+    state.campaign.backgroundPath
+  ) {
+
+    document.documentElement.dataset.backgroundPath =
+      state.campaign.backgroundPath;
+
+  } else {
+
+    document.documentElement.removeAttribute(
+      "data-background-path"
+    );
+
+  }
 
   window.dispatchEvent(
     new CustomEvent(
       "aeriom:campaigntheme",
       {
-
         detail:
           Object.freeze({
 
@@ -2074,44 +2317,32 @@ function renderMembers() {
       "campaign-members-grid"
     );
 
-
-  if (
-    !container
-  ) {
+  if (!container) {
 
     return;
 
   }
 
-
   container.replaceChildren();
-
 
   const members =
     normalizeArray(
       state.members
     );
 
-
   const count =
     getElement(
       "campaign-member-count"
     );
 
-
-  if (
-    count
-  ) {
+  if (count) {
 
     count.textContent =
       members.length === 1
-
         ? "1 integrante"
-
         : `${members.length} integrantes`;
 
   }
-
 
   members.forEach(
     member => {
@@ -2137,14 +2368,11 @@ function createMemberCard(
       "article"
     );
 
-
   article.className =
     "campaign-member-card";
 
-
   article.dataset.memberId =
     member.id;
-
 
   article.dataset.userId =
     member.userId;
@@ -2155,16 +2383,21 @@ function createMemberCard(
       "div"
     );
 
-
   avatar.className =
     "campaign-member-card__avatar";
 
 
-  const initial =
-    document.createElement(
-      "span"
-    );
+  const profile =
+    state.memberProfiles.get(
+      member.userId
+    ) || null;
 
+
+  let name;
+
+  /*
+   * Para o usuário atual, usamos o Discord/Auth.
+   */
 
   if (
     state.user &&
@@ -2172,31 +2405,46 @@ function createMemberCard(
       state.user.id
   ) {
 
-    initial.textContent =
-      getDisplayName()
-        .trim()
-        .charAt(
-          0
-        )
-        .toUpperCase() ||
-      "?";
+    name =
+      getUserDisplayName(
+        state.user,
+        state.profile
+      );
+
+  } else {
+
+    /*
+     * Para outros membros, usamos profiles.
+     */
+
+    name =
+      safeString(
+        profile?.display_name
+      ) ||
+
+      (
+        member.role === "master"
+          ? "Mestre da campanha"
+          : "Aventureiro"
+      );
 
   }
-  else {
 
-    initial.textContent =
-      member.role ===
-        "master"
 
-        ? "M"
+  const avatarInitial =
+    document.createElement(
+      "span"
+    );
 
-        : "A";
-
-  }
-
+  avatarInitial.textContent =
+    name
+      .trim()
+      .charAt(0)
+      .toUpperCase() ||
+    "?";
 
   avatar.appendChild(
-    initial
+    avatarInitial
   );
 
 
@@ -2205,42 +2453,26 @@ function createMemberCard(
       "div"
     );
 
-
   info.className =
     "campaign-member-card__info";
 
 
-  const name =
+  const nameElement =
     document.createElement(
       "span"
     );
 
-
-  name.className =
+  nameElement.className =
     "campaign-member-card__name";
 
-
-  if (
+  nameElement.textContent =
     state.user &&
     member.userId ===
       state.user.id
-  ) {
 
-    name.textContent =
-      `${getDisplayName()} (você)`;
+      ? `${name} (você)`
 
-  }
-  else {
-
-    name.textContent =
-      member.role ===
-        "master"
-
-        ? "Mestre da campanha"
-
-        : "Aventureiro";
-
-  }
+      : name;
 
 
   const role =
@@ -2248,31 +2480,25 @@ function createMemberCard(
       "span"
     );
 
-
   role.className =
     "campaign-member-card__role";
-
 
   role.textContent =
     member.role ===
       "master"
-
       ? "Mestre"
-
       : "Jogador";
 
 
   info.append(
-    name,
+    nameElement,
     role
   );
-
 
   article.append(
     avatar,
     info
   );
-
 
   return article;
 
@@ -2280,7 +2506,7 @@ function createMemberCard(
 
 
 /* ============================================================
-   UI — PERSONAGENS
+   PERSONAGENS — UI
    ============================================================ */
 
 function renderPresentCharacters() {
@@ -2293,111 +2519,56 @@ function renderPresentCharacters() {
       "campaign-character-summary-grid"
     );
 
-
-  if (
-    !container
-  ) {
+  if (!container) {
 
     return;
 
   }
 
+  if (
+    !state.presentCharacters.length
+  ) {
+
+    return;
+
+  }
 
   container.replaceChildren();
 
-
-  const characters =
-    normalizeArray(
-      state.presentCharacters
-    );
-
-
-  if (
-    characters.length ===
-    0
-  ) {
-
-    const empty =
-      document.createElement(
-        "div"
-      );
-
-
-    empty.className =
-      "campaign-character-summary__empty";
-
-
-    const icon =
-      document.createElement(
-        "span"
-      );
-
-
-    icon.setAttribute(
-      "aria-hidden",
-      "true"
-    );
-
-
-    icon.textContent =
-      "♜";
-
-
-    const content =
-      document.createElement(
-        "div"
-      );
-
-
-    const title =
-      document.createElement(
-        "strong"
-      );
-
-
-    title.textContent =
-      "Nenhum personagem presente ainda.";
-
-
-    const description =
-      document.createElement(
-        "p"
-      );
-
-
-    description.textContent =
-      "Suas fichas poderão ser vinculadas à mesa em uma próxima etapa.";
-
-
-    content.append(
-      title,
-      description
-    );
-
-
-    empty.append(
-      icon,
-      content
-    );
-
-
-    container.appendChild(
-      empty
-    );
-
-
-    return;
-
-  }
-
-
-  characters.forEach(
+  state.presentCharacters.forEach(
     entry => {
 
+      const character =
+        entry?.character;
+
+      if (!character) {
+
+        return;
+
+      }
+
+      const card =
+        document.createElement(
+          "article"
+        );
+
+      card.className =
+        "campaign-character-card";
+
+      const name =
+        document.createElement(
+          "strong"
+        );
+
+      name.textContent =
+        character.name;
+
+      card.appendChild(
+        name
+      );
+
       container.appendChild(
-        createCharacterSummaryCard(
-          entry.character
-        )
+        card
       );
 
     }
@@ -2406,92 +2577,11 @@ function renderPresentCharacters() {
 }
 
 
-function createCharacterSummaryCard(
-  character
-) {
-
-  const article =
-    document.createElement(
-      "article"
-    );
-
-
-  article.className =
-    "campaign-character-summary__card";
-
-
-  const name =
-    document.createElement(
-      "strong"
-    );
-
-
-  name.textContent =
-    character.name;
-
-
-  const meta =
-    document.createElement(
-      "span"
-    );
-
-
-  const parts = [
-
-    character.race,
-
-    character.class
-
-  ]
-    .filter(
-      Boolean
-    );
-
-
-  meta.textContent =
-    parts.join(
-      " • "
-    );
-
-
-  const hp =
-    document.createElement(
-      "span"
-    );
-
-
-  hp.textContent =
-    `PV ${character.hpCurrent}/${character.hpMax}`;
-
-
-  const mana =
-    document.createElement(
-      "span"
-    );
-
-
-  mana.textContent =
-    `Mana ${character.manaCurrent}/${character.manaMax}`;
-
-
-  article.append(
-    name,
-    meta,
-    hp,
-    mana
-  );
-
-
-  return article;
-
-}
-
-
 /* ============================================================
-   UI — MESTRE
+   MASTER UI
    ============================================================ */
 
-function updateMasterInterface() {
+function renderMasterInterface() {
 
   const masterNavigation =
     getElement(
@@ -2503,186 +2593,35 @@ function updateMasterInterface() {
       "campaign-master-card"
     );
 
-  const mapButton =
-    getElement(
-      "campaign-create-map-button"
-    );
+  if (isMaster()) {
 
-  const secretButton =
-    getElement(
-      "campaign-create-secret-button"
-    );
+    if (masterNavigation) {
 
-
-  const role =
-    isMaster();
-
-
-  if (
-    masterNavigation
-  ) {
-
-    masterNavigation.hidden =
-      !role;
-
-  }
-
-
-  if (
-    masterCard
-  ) {
-
-    masterCard.hidden =
-      !role;
-
-  }
-
-
-  if (
-    mapButton
-  ) {
-
-    mapButton.hidden =
-      !role;
-
-  }
-
-
-  if (
-    secretButton
-  ) {
-
-    secretButton.hidden =
-      !role;
-
-  }
-
-}
-
-
-/* ============================================================
-   UI — SESSÃO
-   ============================================================ */
-
-function updateSessionUi() {
-
-  const session =
-    state.session;
-
-
-  const statusElement =
-    getElement(
-      "campaign-session-status"
-    );
-
-
-  if (
-    statusElement
-  ) {
-
-    statusElement.textContent =
-      session?.sessionStatus ||
-      "idle";
-
-  }
-
-
-  const timerLabel =
-    getElement(
-      "campaign-timer-label"
-    );
-
-
-  if (
-    timerLabel
-  ) {
-
-    timerLabel.textContent =
-      session?.timerLabel ||
-      "";
-
-  }
-
-
-  const scene =
-    getElement(
-      "campaign-current-scene"
-    );
-
-
-  if (
-    scene
-  ) {
-
-    scene.textContent =
-      session?.currentSceneId ||
-      "Nenhuma cena ativa";
-
-  }
-
-}
-
-
-/* ============================================================
-   REALTIME UI
-   ============================================================ */
-
-function updateSessionConnectionUi() {
-
-  const text =
-    getElement(
-      "campaign-session-status-text"
-    );
-
-
-  const dot =
-    document.querySelector(
-      ".campaign-session-status__dot"
-    );
-
-
-  if (
-    state.realtimeConnected
-  ) {
-
-    if (
-      text
-    ) {
-
-      text.textContent =
-        "Mesa conectada";
+      masterNavigation.hidden =
+        false;
 
     }
 
+    if (masterCard) {
 
-    if (
-      dot
-    ) {
-
-      dot.dataset.status =
-        "connected";
+      masterCard.hidden =
+        false;
 
     }
 
-  }
-  else {
+  } else {
 
-    if (
-      text
-    ) {
+    if (masterNavigation) {
 
-      text.textContent =
-        "Reconectando mesa...";
+      masterNavigation.hidden =
+        true;
 
     }
 
+    if (masterCard) {
 
-    if (
-      dot
-    ) {
-
-      dot.dataset.status =
-        "disconnected";
+      masterCard.hidden =
+        true;
 
     }
 
@@ -2695,172 +2634,120 @@ function updateSessionConnectionUi() {
    ABAS
    ============================================================ */
 
-function isValidTab(
+function setActiveTab(
   tab
 ) {
 
-  const validTabs = [
+  const requested =
+    safeString(
+      tab,
+      "overview"
+    );
 
-    "overview",
+  const button =
+    getElements(
+      "[data-campaign-tab]"
+    ).find(
+      element =>
+        element.dataset.campaignTab ===
+        requested
+    );
 
-    "dice",
-
-    "combat",
-
-    "mural",
-
-    "timeline",
-
-    "kitchen",
-
-    "maps",
-
-    "secrets",
-
-    "theme"
-
-  ];
-
-
-  if (
-    !validTabs.includes(
-      tab
-    )
-  ) {
-
-    return false;
-
-  }
-
+  /*
+   * Tabs exclusivas do mestre não podem ser abertas
+   * por jogador.
+   */
 
   if (
     (
-      tab ===
-        "secrets" ||
-      tab ===
-        "theme"
+      requested === "secrets" ||
+      requested === "theme"
     ) &&
     !isMaster()
-  ) {
-
-    return false;
-
-  }
-
-
-  return true;
-
-}
-
-
-function showTab(
-  tab
-) {
-
-  if (
-    !isValidTab(
-      tab
-    )
   ) {
 
     return;
 
   }
 
+  if (!button) {
+
+    return;
+
+  }
 
   state.activeTab =
-    tab;
-
-
-  getElements(
-    "[data-campaign-panel]"
-  )
-    .forEach(
-      panel => {
-
-        const panelTab =
-          panel.dataset.campaignPanel;
-
-
-        const active =
-          panelTab ===
-          tab;
-
-
-        panel.hidden =
-          !active;
-
-
-        panel.classList.toggle(
-          "is-active",
-          active
-        );
-
-      }
-    );
+    requested;
 
 
   getElements(
     "[data-campaign-tab]"
-  )
-    .forEach(
-      button => {
+  ).forEach(
+    element => {
 
-        const buttonTab =
-          button.dataset.campaignTab;
+      const active =
+        element.dataset.campaignTab ===
+        requested;
 
+      element.classList.toggle(
+        "is-active",
+        active
+      );
 
-        const active =
-          buttonTab ===
-          tab;
+      if (active) {
 
-
-        button.classList.toggle(
-          "is-active",
-          active
+        element.setAttribute(
+          "aria-current",
+          "page"
         );
 
+      } else {
 
-        if (
-          active
-        ) {
-
-          button.setAttribute(
-            "aria-current",
-            "page"
-          );
-
-        }
-        else {
-
-          button.removeAttribute(
-            "aria-current"
-          );
-
-        }
+        element.removeAttribute(
+          "aria-current"
+        );
 
       }
-    );
+
+    }
+  );
 
 
-  closeMobileMenus();
+  getElements(
+    "[data-campaign-panel]"
+  ).forEach(
+    panel => {
+
+      const active =
+        panel.dataset.campaignPanel ===
+        requested;
+
+      panel.hidden =
+        !active;
+
+      panel.classList.toggle(
+        "is-active",
+        active
+      );
+
+    }
+  );
+
+
+  closeMobileMenu();
 
 
   window.dispatchEvent(
     new CustomEvent(
       "aeriom:campaigntabchange",
       {
-
         detail:
           Object.freeze({
-
             campaignId:
               state.campaignId,
-
-            tab
-
+            tab:
+              requested
           })
-
       }
     )
   );
@@ -2868,11 +2755,37 @@ function showTab(
 }
 
 
+function bindTabs() {
+
+  getElements(
+    "[data-campaign-tab]"
+  ).forEach(
+    button => {
+
+      button.addEventListener(
+        "click",
+        event => {
+
+          event.preventDefault();
+
+          setActiveTab(
+            button.dataset.campaignTab
+          );
+
+        }
+      );
+
+    }
+  );
+
+}
+
+
 /* ============================================================
-   MENU MOBILE
+   MOBILE MENU
    ============================================================ */
 
-function toggleMobileSidebar() {
+function openMobileMenu() {
 
   const sidebar =
     getElement(
@@ -2884,35 +2797,24 @@ function toggleMobileSidebar() {
       "campaign-mobile-menu-button"
     );
 
-
-  if (
-    !sidebar
-  ) {
+  if (!sidebar) {
 
     return;
 
   }
-
 
   state.mobileMenuOpen =
-    !state.mobileMenuOpen;
+    true;
 
-
-  sidebar.classList.toggle(
-    "is-open",
-    state.mobileMenuOpen
+  sidebar.classList.add(
+    "is-mobile-open"
   );
 
-
-  if (
-    button
-  ) {
+  if (button) {
 
     button.setAttribute(
       "aria-expanded",
-      String(
-        state.mobileMenuOpen
-      )
+      "true"
     );
 
   }
@@ -2920,134 +2822,189 @@ function toggleMobileSidebar() {
 }
 
 
-function toggleMobileActions() {
-
-  const actions =
-    getElement(
-      "campaign-mobile-actions"
-    );
-
-  const button =
-    getElement(
-      "campaign-mobile-actions-button"
-    );
-
-
-  if (
-    !actions
-  ) {
-
-    return;
-
-  }
-
-
-  const open =
-    !actions.classList.contains(
-      "is-open"
-    );
-
-
-  actions.classList.toggle(
-    "is-open",
-    open
-  );
-
-
-  actions.hidden =
-    !open;
-
-
-  if (
-    button
-  ) {
-
-    button.setAttribute(
-      "aria-expanded",
-      String(
-        open
-      )
-    );
-
-  }
-
-}
-
-
-function closeMobileMenus() {
+function closeMobileMenu() {
 
   const sidebar =
     getElement(
       "campaign-sidebar"
     );
 
-  const actions =
-    getElement(
-      "campaign-mobile-actions"
-    );
-
-  const sidebarButton =
+  const button =
     getElement(
       "campaign-mobile-menu-button"
     );
+
+  state.mobileMenuOpen =
+    false;
+
+  if (sidebar) {
+
+    sidebar.classList.remove(
+      "is-mobile-open"
+    );
+
+  }
+
+  if (button) {
+
+    button.setAttribute(
+      "aria-expanded",
+      "false"
+    );
+
+  }
+
+}
+
+
+function toggleMobileMenu() {
+
+  if (
+    state.mobileMenuOpen
+  ) {
+
+    closeMobileMenu();
+
+  } else {
+
+    openMobileMenu();
+
+  }
+
+}
+
+
+function bindMobileMenu() {
+
+  const button =
+    getElement(
+      "campaign-mobile-menu-button"
+    );
+
+  if (button) {
+
+    button.addEventListener(
+      "click",
+      event => {
+
+        event.preventDefault();
+
+        event.stopPropagation();
+
+        toggleMobileMenu();
+
+      }
+    );
+
+  }
 
   const actionsButton =
     getElement(
       "campaign-mobile-actions-button"
     );
 
+  if (actionsButton) {
 
-  state.mobileMenuOpen =
-    false;
+    actionsButton.addEventListener(
+      "click",
+      event => {
 
+        event.preventDefault();
 
-  if (
-    sidebar
-  ) {
+        /*
+         * O menu de ações será conectado nos próximos módulos.
+         */
 
-    sidebar.classList.remove(
-      "is-open"
+        window.dispatchEvent(
+          new CustomEvent(
+            "aeriom:campaignactions",
+            {
+              detail: {
+                campaignId:
+                  state.campaignId
+              }
+            }
+          )
+        );
+
+      }
     );
 
   }
 
+}
+
+
+/* ============================================================
+   LOGOUT
+   ============================================================ */
+
+async function logout() {
 
   if (
-    actions
+    !state.supabase?.auth
   ) {
 
-    actions.classList.remove(
-      "is-open"
-    );
+    redirectToLogin();
 
-    actions.hidden =
-      true;
+    return;
 
   }
 
+  try {
 
-  if (
-    sidebarButton
-  ) {
+    const {
+      error
+    } =
+      await state.supabase.auth
+        .signOut();
 
-    sidebarButton.setAttribute(
-      "aria-expanded",
-      "false"
+    if (error) {
+
+      throw error;
+
+    }
+
+  } catch (error) {
+
+    log(
+      "error",
+      "Erro ao sair da conta.",
+      error
     );
+
+  } finally {
+
+    redirectToLogin();
 
   }
 
+}
 
-  if (
-    actionsButton
-  ) {
 
-    actionsButton.setAttribute(
-      "aria-expanded",
-      "false"
+function bindLogout() {
+
+  const button =
+    getElement(
+      "campaign-logout-button"
     );
 
+  if (!button) {
+
+    return;
+
   }
+
+  button.addEventListener(
+    "click",
+    event => {
+
+      event.preventDefault();
+
+      logout();
+
+    }
+  );
 
 }
 
@@ -3056,72 +3013,276 @@ function closeMobileMenus() {
    CONVITE
    ============================================================ */
 
-function openInviteModal() {
+function bindInviteButton() {
 
-  window.dispatchEvent(
-    new CustomEvent(
-      "aeriom:campaigninvite",
-      {
+  const button =
+    getElement(
+      "campaign-invite-sidebar-button"
+    );
 
-        detail:
-          Object.freeze({
+  if (!button) {
 
-            campaignId:
-              state.campaignId,
+    return;
 
-            campaign:
-              state.campaign
+  }
 
-          })
+  button.addEventListener(
+    "click",
+    event => {
 
-      }
-    )
+      event.preventDefault();
+
+      window.dispatchEvent(
+        new CustomEvent(
+          "aeriom:campaigninvite",
+          {
+            detail:
+              Object.freeze({
+                campaignId:
+                  state.campaignId,
+                campaign:
+                  state.campaign
+              })
+          }
+        )
+      );
+
+    }
   );
 
 }
 
 
 /* ============================================================
-   AÇÕES DO MESTRE
+   RETRY
    ============================================================ */
 
-function dispatchMasterAction(
-  action
-) {
+function bindRetry() {
+
+  const button =
+    getElement(
+      "campaign-retry-button"
+    );
+
+  if (!button) {
+
+    return;
+
+  }
+
+  button.addEventListener(
+    "click",
+    () => {
+
+      initializeCampaign(
+        true
+      );
+
+    }
+  );
+
+}
+
+
+/* ============================================================
+   REALTIME
+   ============================================================ */
+
+function removeRealtime() {
 
   if (
-    !isMaster()
+    state.realtimeChannel &&
+    state.supabase
+  ) {
+
+    try {
+
+      state.supabase.removeChannel(
+        state.realtimeChannel
+      );
+
+    } catch (error) {
+
+      log(
+        "warn",
+        "Não foi possível remover o canal Realtime.",
+        error
+      );
+
+    }
+
+  }
+
+  state.realtimeChannel =
+    null;
+
+  state.realtimeConnected =
+    false;
+
+}
+
+
+function setupRealtime() {
+
+  if (
+    !state.supabase ||
+    !state.campaignId
   ) {
 
     return;
 
   }
 
+  removeRealtime();
 
-  window.dispatchEvent(
-    new CustomEvent(
-      "aeriom:masteraction",
+  const channelName =
+    `${CONFIG.REALTIME_PREFIX}:${state.campaignId}`;
+
+  try {
+
+    const channel =
+      state.supabase.channel(
+        channelName
+      );
+
+    channel.on(
+      "postgres_changes",
       {
+        event:
+          "*",
+        schema:
+          "public",
+        table:
+          "campaign_session",
+        filter:
+          `campaign_id=eq.${state.campaignId}`
+      },
+      () => {
 
-        detail:
-          Object.freeze({
+        loadCampaignSession()
+          .then(
+            () => {
 
-            action,
+              renderSessionStatus();
 
-            campaignId:
-              state.campaignId,
+            }
+          )
+          .catch(
+            error => {
 
-            user:
-              state.user,
+              log(
+                "warn",
+                "Falha ao atualizar sessão em tempo real.",
+                error
+              );
 
-            membership:
-              state.membership
-
-          })
+            }
+          );
 
       }
-    )
-  );
+    );
+
+    channel.on(
+      "postgres_changes",
+      {
+        event:
+          "*",
+        schema:
+          "public",
+        table:
+          "campaign_members",
+        filter:
+          `campaign_id=eq.${state.campaignId}`
+      },
+      () => {
+
+        Promise.all([
+          loadMembers(),
+          loadPresentCharacters()
+        ])
+          .then(
+            () => {
+
+              renderMembers();
+              renderPresentCharacters();
+
+            }
+          )
+          .catch(
+            error => {
+
+              log(
+                "warn",
+                "Falha ao atualizar dados da campanha.",
+                error
+              );
+
+            }
+          );
+
+      }
+    );
+
+    channel.subscribe(
+      status => {
+
+        state.realtimeConnected =
+          status === "SUBSCRIBED";
+
+        renderSessionStatus();
+
+      }
+    );
+
+    state.realtimeChannel =
+      channel;
+
+  } catch (error) {
+
+    log(
+      "warn",
+      "Não foi possível iniciar o Realtime.",
+      error
+    );
+
+  }
+
+}
+
+
+/* ============================================================
+   STATUS DA SESSÃO
+   ============================================================ */
+
+function renderSessionStatus() {
+
+  const element =
+    getElement(
+      "campaign-session-status-text"
+    );
+
+  const indicator =
+    getElement(
+      "campaign-live-indicator"
+    );
+
+  if (element) {
+
+    element.textContent =
+      state.realtimeConnected
+        ? "Mesa conectada"
+        : "Mesa pronta";
+
+  }
+
+  if (indicator) {
+
+    indicator.dataset.connected =
+      state.realtimeConnected
+        ? "true"
+        : "false";
+
+  }
 
 }
 
@@ -3130,9 +3291,9 @@ function dispatchMasterAction(
    CONTEXTO PÚBLICO
    ============================================================ */
 
-function getContext() {
+function getCampaignContext() {
 
-  return Object.freeze({
+  return {
 
     campaignId:
       state.campaignId,
@@ -3158,73 +3319,39 @@ function getContext() {
     presentCharacters:
       state.presentCharacters,
 
-    activeTab:
-      state.activeTab,
-
-    realtimeConnected:
-      state.realtimeConnected,
-
     isMaster:
       isMaster(),
 
     isPlayer:
-      isPlayer()
+      isPlayer(),
 
-  });
+    activeTab:
+      state.activeTab
+
+  };
 
 }
 
 
-/* ============================================================
-   API GLOBAL DA CAMPANHA
-   ============================================================ */
+function exposeGlobalContext() {
 
-function exposeCampaignApi() {
+  window.AERIOM =
+    window.AERIOM ||
+    {};
 
-  window.AERIOM_CAMPAIGN =
+  window.AERIOM.campaign =
     Object.freeze({
+      getContext:
+        getCampaignContext,
 
-      getContext,
-
-      getCampaign:
-        () =>
-          state.campaign,
-
-      getCampaignId:
-        () =>
-          state.campaignId,
-
-      getUser:
-        () =>
-          state.user,
-
-      getMembership:
-        () =>
-          state.membership,
-
-      getSession:
-        () =>
-          state.session,
-
-      getMembers:
-        () =>
-          state.members,
-
-      getPresentCharacters:
-        () =>
-          state.presentCharacters,
+      getState:
+        getCampaignContext,
 
       isMaster,
 
       isPlayer,
 
-      showTab,
-
-      refresh:
-        () =>
-          initializeCampaign(
-            true
-          )
+      setActiveTab
 
     });
 
@@ -3232,999 +3359,66 @@ function exposeCampaignApi() {
 
 
 /* ============================================================
-   EVENTOS DA UI
+   EVENTOS
    ============================================================ */
 
-function bindUiEvents() {
+function bindGlobalEvents() {
 
-  if (
-    state.uiBound
-  ) {
+  if (state.bound) {
 
     return;
 
   }
-
-
-  state.uiBound =
-    true;
-
-
-  getElements(
-    "[data-campaign-tab]"
-  )
-    .forEach(
-      button => {
-
-        button.addEventListener(
-          "click",
-          () => {
-
-            showTab(
-              button.dataset.campaignTab
-            );
-
-          }
-        );
-
-      }
-    );
-
-
-  getElement(
-    "campaign-mobile-menu-button"
-  )
-    ?.addEventListener(
-      "click",
-      toggleMobileSidebar
-    );
-
-
-  getElement(
-    "campaign-mobile-actions-button"
-  )
-    ?.addEventListener(
-      "click",
-      toggleMobileActions
-    );
-
-
-  getElement(
-    "campaign-invite-sidebar-button"
-  )
-    ?.addEventListener(
-      "click",
-      openInviteModal
-    );
-
-
-  getElement(
-    "campaign-mobile-invite-button"
-  )
-    ?.addEventListener(
-      "click",
-      openInviteModal
-    );
-
-
-  getElement(
-    "campaign-logout-button"
-  )
-    ?.addEventListener(
-      "click",
-      logout
-    );
-
-
-  getElement(
-    "campaign-mobile-logout-button"
-  )
-    ?.addEventListener(
-      "click",
-      logout
-    );
-
-
-  getElement(
-    "campaign-retry-button"
-  )
-    ?.addEventListener(
-      "click",
-      () => {
-
-        initializeCampaign(
-          true
-        );
-
-      }
-    );
-
-
-  getElement(
-    "campaign-create-note-button"
-  )
-    ?.addEventListener(
-      "click",
-      () => {
-
-        dispatchMasterAction(
-          "create-note"
-        );
-
-      }
-    );
-
-
-  getElement(
-    "campaign-create-map-button"
-  )
-    ?.addEventListener(
-      "click",
-      () => {
-
-        dispatchMasterAction(
-          "create-map"
-        );
-
-      }
-    );
-
-
-  getElement(
-    "campaign-create-secret-button"
-  )
-    ?.addEventListener(
-      "click",
-      () => {
-
-        dispatchMasterAction(
-          "create-secret"
-        );
-
-      }
-    );
-
-
-  getElements(
-    "[data-campaign-action]"
-  )
-    .forEach(
-      button => {
-
-        button.addEventListener(
-          "click",
-          () => {
-
-            dispatchMasterAction(
-              button.dataset.campaignAction
-            );
-
-          }
-        );
-
-      }
-    );
-
 
   document.addEventListener(
     "keydown",
-    handleKeyboardNavigation
-  );
-
-
-  document.addEventListener(
-    "click",
-    handleOutsideMobileMenu
-  );
-
-}
-
-
-/* ============================================================
-   TECLADO
-   ============================================================ */
-
-function handleKeyboardNavigation(
-  event
-) {
-
-  if (
-    event.key ===
-      "Escape"
-  ) {
-
-    closeMobileMenus();
-
-  }
-
-}
-
-
-/* ============================================================
-   CLIQUE FORA
-   ============================================================ */
-
-function handleOutsideMobileMenu(
-  event
-) {
-
-  const target =
-    event.target;
-
-
-  if (
-    !(target instanceof Node)
-  ) {
-
-    return;
-
-  }
-
-
-  const sidebar =
-    getElement(
-      "campaign-sidebar"
-    );
-
-  const menuButton =
-    getElement(
-      "campaign-mobile-menu-button"
-    );
-
-
-  if (
-    state.mobileMenuOpen &&
-    sidebar &&
-    !sidebar.contains(
-      target
-    ) &&
-    !menuButton?.contains(
-      target
-    )
-  ) {
-
-    closeMobileMenus();
-
-  }
-
-}
-
-
-/* ============================================================
-   LOGOUT
-   ============================================================ */
-
-async function logout() {
-
-  if (
-    !state.supabase?.auth
-  ) {
-
-    redirectToLogin();
-
-    return;
-
-  }
-
-
-  try {
-
-    removeRealtimeChannel();
-
-
-    const {
-      error
-    } =
-      await state.supabase.auth
-        .signOut();
-
-
-    if (
-      error
-    ) {
-
-      throw getNormalizedError(
-        error,
-        {
-
-          file:
-            "js/core/campanha.js",
-
-          function:
-            "logout",
-
-          table:
-            "auth",
-
-          operation:
-            "signOut"
-
-        }
-      );
-
-    }
-
-
-    redirectToLogin();
-
-  } catch (
-    error
-  ) {
-
-    log(
-      "error",
-      "Falha ao sair da conta.",
-      error
-    );
-
-
-    redirectToLogin();
-
-  }
-
-}
-
-
-/* ============================================================
-   REALTIME
-   ============================================================ */
-
-function getRealtimeChannelName() {
-
-  return [
-
-    CAMPAIGN_CONFIG.realtimeChannelPrefix,
-
-    state.campaignId
-
-  ]
-    .join(
-      "-"
-    );
-
-}
-
-
-function removeRealtimeChannel() {
-
-  const channel =
-    state.realtimeChannel;
-
-
-  if (
-    !channel ||
-    !state.supabase
-  ) {
-
-    state.realtimeChannel =
-      null;
-
-    state.realtimeConnected =
-      false;
-
-    updateSessionConnectionUi();
-
-    return;
-
-  }
-
-
-  try {
-
-    state.supabase
-      .removeChannel(
-        channel
-      );
-
-  } catch (
-    error
-  ) {
-
-    log(
-      "warn",
-      "Falha ao remover canal Realtime.",
-      error
-    );
-
-  }
-
-
-  state.realtimeChannel =
-    null;
-
-  state.realtimeConnected =
-    false;
-
-
-  updateSessionConnectionUi();
-
-}
-
-
-function subscribeRealtime() {
-
-  if (
-    !state.supabase ||
-    !state.campaignId ||
-    !state.user
-  ) {
-
-    return;
-
-  }
-
-
-  removeRealtimeChannel();
-
-
-  const channelName =
-    getRealtimeChannelName();
-
-
-  const presenceKey =
-    state.user.id ||
-    (
-      typeof crypto !==
-        "undefined" &&
-      typeof crypto.randomUUID ===
-        "function"
-
-        ? crypto.randomUUID()
-
-        : String(
-            Date.now()
-          )
-    );
-
-
-  const channel =
-    state.supabase.channel(
-      channelName,
-      {
-
-        config: {
-
-          broadcast: {
-
-            self:
-              false
-
-          },
-
-          presence: {
-
-            key:
-              presenceKey
-
-          }
-
-        }
-
-      }
-    );
-
-
-  channel.on(
-    "postgres_changes",
-    {
-
-      event:
-        "*",
-
-      schema:
-        "public",
-
-      table:
-        "campaigns",
-
-      filter:
-        `id=eq.${state.campaignId}`
-
-    },
-    handleCampaignRealtimeChange
-  );
-
-
-  channel.on(
-    "postgres_changes",
-    {
-
-      event:
-        "*",
-
-      schema:
-        "public",
-
-      table:
-        "campaign_members",
-
-      filter:
-        `campaign_id=eq.${state.campaignId}`
-
-    },
-    handleMembersRealtimeChange
-  );
-
-
-  channel.on(
-    "postgres_changes",
-    {
-
-      event:
-        "*",
-
-      schema:
-        "public",
-
-      table:
-        "campaign_session",
-
-      filter:
-        `campaign_id=eq.${state.campaignId}`
-
-    },
-    handleSessionRealtimeChange
-  );
-
-
-  channel.on(
-    "postgres_changes",
-    {
-
-      event:
-        "*",
-
-      schema:
-        "public",
-
-      table:
-        "campaign_characters",
-
-      filter:
-        `campaign_id=eq.${state.campaignId}`
-
-    },
-    handleCharactersRealtimeChange
-  );
-
-
-  channel.on(
-    "presence",
-    {
-      event:
-        "sync"
-    },
-    handlePresenceSync
-  );
-
-
-  channel.on(
-    "presence",
-    {
-      event:
-        "join"
-    },
-    handlePresenceChange
-  );
-
-
-  channel.on(
-    "presence",
-    {
-      event:
-        "leave"
-    },
-    handlePresenceChange
-  );
-
-
-  state.realtimeChannel =
-    channel;
-
-
-  channel.subscribe(
-    async status => {
-
-      log(
-        "info",
-        `Realtime da campanha: ${status}`
-      );
-
+    event => {
 
       if (
-        status ===
-        "SUBSCRIBED"
+        event.key ===
+        "Escape"
       ) {
 
-        state.realtimeConnected =
-          true;
-
-
-        try {
-
-          await channel.track({
-
-            user_id:
-              state.user.id,
-
-            role:
-              state.membership?.role ||
-              null,
-
-            online_at:
-              new Date().toISOString()
-
-          });
-
-        } catch (
-          error
-        ) {
-
-          log(
-            "warn",
-            "Não foi possível registrar presença.",
-            error
-          );
-
-        }
-
-
-        updateSessionConnectionUi();
-
-        return;
-
-      }
-
-
-      if (
-        status ===
-          "CHANNEL_ERROR" ||
-        status ===
-          "TIMED_OUT" ||
-        status ===
-          "CLOSED"
-      ) {
-
-        state.realtimeConnected =
-          false;
-
-
-        updateSessionConnectionUi();
+        closeMobileMenu();
 
       }
 
     }
   );
 
+  state.bound =
+    true;
+
 }
 
 
 /* ============================================================
-   REALTIME — CAMPANHA
+   RENDER FINAL
    ============================================================ */
 
-function handleCampaignRealtimeChange(
-  payload
-) {
+function renderAll() {
 
-  log(
-    "info",
-    "Campanha atualizada em tempo real.",
-    payload
+  renderUser();
+
+  renderCampaign();
+
+  renderMembers();
+
+  renderPresentCharacters();
+
+  renderMasterInterface();
+
+  renderSessionStatus();
+
+  setActiveTab(
+    state.activeTab
   );
-
-
-  refreshCampaignFromRealtime(
-    payload
-  );
-
-}
-
-
-async function refreshCampaignFromRealtime(
-  payload
-) {
-
-  if (
-    payload?.eventType ===
-    "DELETE"
-  ) {
-
-    showErrorState(
-      "Esta campanha não está mais disponível."
-    );
-
-    return;
-
-  }
-
-
-  const row =
-    payload?.new;
-
-
-  if (
-    row
-  ) {
-
-    state.campaign = {
-
-      ...state.campaign,
-
-      name:
-        row.name ??
-        state.campaign.name,
-
-      description:
-        row.description ??
-        state.campaign.description,
-
-      coverPath:
-        row.cover_path ??
-        state.campaign.coverPath,
-
-      coverUrl:
-        row.cover_url ??
-        state.campaign.coverUrl,
-
-      createdBy:
-        row.created_by ??
-        state.campaign.createdBy,
-
-      theme:
-        row.theme ??
-        state.campaign.theme,
-
-      backgroundPath:
-        row.background_path ??
-        state.campaign.backgroundPath,
-
-      updatedAt:
-        row.updated_at ??
-        state.campaign.updatedAt
-
-    };
-
-
-    renderCampaign();
-
-    return;
-
-  }
-
-
-  try {
-
-    await loadCampaign();
-
-    renderCampaign();
-
-  } catch (
-    error
-  ) {
-
-    log(
-      "warn",
-      "Falha ao atualizar campanha.",
-      error
-    );
-
-  }
 
 }
 
 
 /* ============================================================
-   REALTIME — MEMBROS
-   ============================================================ */
-
-async function handleMembersRealtimeChange(
-  payload
-) {
-
-  log(
-    "info",
-    "Membros da campanha alterados.",
-    payload
-  );
-
-
-  try {
-
-    await loadMembership();
-
-    await loadMembers();
-
-    renderMembers();
-
-    renderCampaign();
-
-    renderUser();
-
-    updateMasterInterface();
-
-  } catch (
-    error
-  ) {
-
-    const message =
-      String(
-        error?.message ||
-        ""
-      )
-        .toLowerCase();
-
-
-    if (
-      message.includes(
-        "não faz parte"
-      )
-    ) {
-
-      showErrorState(
-        "Seu acesso a esta campanha foi removido."
-      );
-
-
-      removeRealtimeChannel();
-
-      return;
-
-    }
-
-
-    log(
-      "warn",
-      "Falha ao atualizar membros.",
-      error
-    );
-
-  }
-
-}
-
-
-/* ============================================================
-   REALTIME — SESSÃO
-   ============================================================ */
-
-async function handleSessionRealtimeChange(
-  payload
-) {
-
-  log(
-    "info",
-    "Sessão da campanha alterada.",
-    payload
-  );
-
-
-  try {
-
-    await loadCampaignSession();
-
-    updateSessionUi();
-
-
-    window.dispatchEvent(
-      new CustomEvent(
-        "aeriom:campaignsessionchange",
-        {
-
-          detail:
-            Object.freeze({
-
-              campaignId:
-                state.campaignId,
-
-              session:
-                state.session
-
-            })
-
-        }
-      )
-    );
-
-  } catch (
-    error
-  ) {
-
-    log(
-      "warn",
-      "Falha ao atualizar sessão.",
-      error
-    );
-
-  }
-
-}
-
-
-/* ============================================================
-   REALTIME — PERSONAGENS
-   ============================================================ */
-
-async function handleCharactersRealtimeChange(
-  payload
-) {
-
-  log(
-    "info",
-    "Personagens da campanha alterados.",
-    payload
-  );
-
-
-  try {
-
-    await loadPresentCharacters();
-
-    renderPresentCharacters();
-
-
-    window.dispatchEvent(
-      new CustomEvent(
-        "aeriom:campaigncharacterschange",
-        {
-
-          detail:
-            Object.freeze({
-
-              campaignId:
-                state.campaignId,
-
-              characters:
-                state.presentCharacters
-
-            })
-
-        }
-      )
-    );
-
-  } catch (
-    error
-  ) {
-
-    log(
-      "warn",
-      "Falha ao atualizar personagens.",
-      error
-    );
-
-  }
-
-}
-
-
-/* ============================================================
-   REALTIME — PRESENÇA
-   ============================================================ */
-
-function handlePresenceSync() {
-
-  updatePresenceUi();
-
-}
-
-
-function handlePresenceChange() {
-
-  updatePresenceUi();
-
-}
-
-
-function updatePresenceUi() {
-
-  updateSessionConnectionUi();
-
-}
-
-
-/* ============================================================
-   INICIALIZAÇÃO DA CAMPANHA
+   INICIALIZAÇÃO
    ============================================================ */
 
 async function initializeCampaign(
@@ -4239,7 +3433,6 @@ async function initializeCampaign(
 
   }
 
-
   if (
     state.initialized &&
     !force
@@ -4249,71 +3442,49 @@ async function initializeCampaign(
 
   }
 
-
   state.initializing =
     true;
 
-
   showLoadingState();
-
 
   try {
 
-    /*
-     * --------------------------------------------------------
-     * 1. ID DA CAMPANHA
-     * --------------------------------------------------------
-     */
-
-    state.campaignId =
-      getCampaignIdFromUrl();
-
-
-    if (
-      !state.campaignId
-    ) {
-
-      throw new Error(
-        "Nenhuma campanha foi especificada na URL."
-      );
-
-    }
-
-
-    /*
-     * --------------------------------------------------------
-     * 2. SUPABASE
-     * --------------------------------------------------------
-     */
-
     state.supabase =
-      await getSupabase();
-
+      getSupabase();
 
     if (
       !state.supabase
     ) {
 
       throw new Error(
-        "Não foi possível obter o cliente Supabase."
+        "Cliente Supabase não disponível."
+      );
+
+    }
+
+
+    state.campaignId =
+      getCampaignIdFromUrl();
+
+    if (
+      !state.campaignId
+    ) {
+
+      throw new Error(
+        "ID da campanha ausente na URL."
       );
 
     }
 
 
     /*
-     * --------------------------------------------------------
-     * 3. SESSÃO AUTH
-     * --------------------------------------------------------
+     * 1 — AUTENTICAÇÃO
      */
 
     const session =
       await loadAuthSession();
 
-
-    if (
-      !session
-    ) {
+    if (!session) {
 
       return;
 
@@ -4321,121 +3492,63 @@ async function initializeCampaign(
 
 
     /*
-     * --------------------------------------------------------
-     * 4. CAMPANHA
-     * --------------------------------------------------------
+     * 2 — CAMPANHA
      */
 
     await loadCampaign();
 
 
     /*
-     * --------------------------------------------------------
-     * 5. MEMBERSHIP
-     * --------------------------------------------------------
+     * 3 — MEMBERSHIP
+     *
+     * Isto confirma que o usuário realmente pertence
+     * à campanha.
      */
 
     await loadMembership();
 
 
     /*
-     * --------------------------------------------------------
-     * 6. MEMBROS
-     * --------------------------------------------------------
+     * 4 — DADOS COMPLEMENTARES
+     *
+     * Falhas nesses módulos não derrubam a campanha.
      */
 
-    await loadMembers();
+    await Promise.all([
+      loadMembers(),
+      loadCampaignSession(),
+      loadPresentCharacters()
+    ]);
 
 
     /*
-     * --------------------------------------------------------
-     * 7. SESSÃO DA MESA
-     * --------------------------------------------------------
+     * 5 — INTERFACE
      */
 
-    await loadCampaignSession();
+    renderAll();
 
 
     /*
-     * --------------------------------------------------------
-     * 8. PERSONAGENS PRESENTES
-     * --------------------------------------------------------
+     * 6 — REALTIME
      */
 
-    await loadPresentCharacters();
+    setupRealtime();
 
 
     /*
-     * --------------------------------------------------------
-     * 9. RENDERIZAÇÃO
-     * --------------------------------------------------------
+     * 7 — EXPOR CONTEXTO
      */
 
-    renderUser();
+    exposeGlobalContext();
 
-    renderCampaign();
-
-    renderMembers();
-
-    renderPresentCharacters();
-
-    updateMasterInterface();
-
-    updateSessionUi();
-
-    updateSessionConnectionUi();
-
-
-    /*
-     * --------------------------------------------------------
-     * 10. EVENTOS UI
-     * --------------------------------------------------------
-     */
-
-    bindUiEvents();
-
-
-    /*
-     * --------------------------------------------------------
-     * 11. ABA INICIAL
-     * --------------------------------------------------------
-     */
-
-    showTab(
-      state.activeTab
-    );
-
-
-    /*
-     * --------------------------------------------------------
-     * 12. API PARA OUTROS MÓDULOS
-     * --------------------------------------------------------
-     */
-
-    exposeCampaignApi();
-
-
-    /*
-     * --------------------------------------------------------
-     * 13. REALTIME
-     * --------------------------------------------------------
-     */
-
-    subscribeRealtime();
-
-
-    /*
-     * --------------------------------------------------------
-     * 14. PRONTO
-     * --------------------------------------------------------
-     */
 
     state.initialized =
       true;
 
-    state.initializing =
-      false;
 
+    /*
+     * 8 — MOSTRAR MESA
+     */
 
     showWorkspace();
 
@@ -4444,31 +3557,10 @@ async function initializeCampaign(
       new CustomEvent(
         "aeriom:campaignready",
         {
-
           detail:
-            getContext()
-
-        }
-      )
-    );
-
-
-    window.dispatchEvent(
-      new CustomEvent(
-        "aeriom:ready",
-        {
-
-          detail:
-            Object.freeze({
-
-              page:
-                "campaign",
-
-              campaignId:
-                state.campaignId
-
-            })
-
+            Object.freeze(
+              getCampaignContext()
+            )
         }
       )
     );
@@ -4478,7 +3570,6 @@ async function initializeCampaign(
       "info",
       "Mesa carregada com sucesso.",
       {
-
         campaignId:
           state.campaignId,
 
@@ -4486,68 +3577,45 @@ async function initializeCampaign(
           state.campaign?.name,
 
         role:
-          state.membership?.role
+          state.membership?.role,
 
+        cover:
+          Boolean(
+            state.campaign?.coverUrl
+          ),
+
+        user:
+          getUserDisplayName(
+            state.user,
+            state.profile
+          )
       }
     );
 
-  } catch (
-    error
-  ) {
-
-    state.initialized =
-      false;
-
-    state.initializing =
-      false;
-
+  } catch (error) {
 
     const normalized =
-      getNormalizedError(
+      normalizeError(
         error,
         {
-
           file:
             "js/core/campanha.js",
-
           function:
             "initializeCampaign",
-
-          table:
-            "campaigns",
-
-          operation:
-            "initialize"
-
+          campaignId:
+            state.campaignId
         }
       );
 
-
     log(
       "error",
-      "Falha ao inicializar a mesa.",
+      "Falha ao inicializar campanha.",
       normalized
     );
 
-
     showErrorState(
       normalized.message ||
-      "Não foi possível carregar a mesa."
-    );
-
-
-    window.dispatchEvent(
-      new CustomEvent(
-        "aeriom:campaignerror",
-        {
-
-          detail:
-            Object.freeze(
-              normalized
-            )
-
-        }
-      )
+      "Não foi possível abrir a campanha."
     );
 
   } finally {
@@ -4561,13 +3629,12 @@ async function initializeCampaign(
 
 
 /* ============================================================
-   DESTRUIÇÃO
+   DESTROY
    ============================================================ */
 
 function destroyCampaign() {
 
-  removeRealtimeChannel();
-
+  removeRealtime();
 
   state.initialized =
     false;
@@ -4584,6 +3651,9 @@ function destroyCampaign() {
   state.profile =
     null;
 
+  state.campaignId =
+    null;
+
   state.campaign =
     null;
 
@@ -4593,154 +3663,102 @@ function destroyCampaign() {
   state.members =
     [];
 
-  state.session =
-    null;
+  state.memberProfiles.clear();
 
   state.presentCharacters =
     [];
+
+  state.session =
+    null;
 
 }
 
 
 /* ============================================================
-   API GLOBAL
+   BIND UI
    ============================================================ */
 
-window.AERIOM_CAMPAIGN =
-  Object.freeze({
+function bindUI() {
 
-    getContext,
+  bindTabs();
 
-    getCampaign:
-      () =>
-        state.campaign,
+  bindMobileMenu();
 
-    getCampaignId:
-      () =>
-        state.campaignId,
+  bindLogout();
 
-    getUser:
-      () =>
-        state.user,
+  bindInviteButton();
 
-    getMembership:
-      () =>
-        state.membership,
+  bindRetry();
 
-    getSession:
-      () =>
-        state.session,
+  bindGlobalEvents();
 
-    getMembers:
-      () =>
-        state.members,
-
-    getPresentCharacters:
-      () =>
-        state.presentCharacters,
-
-    isMaster,
-
-    isPlayer,
-
-    showTab,
-
-    refresh:
-      () =>
-        initializeCampaign(
-          true
-        ),
-
-    destroy:
-      destroyCampaign
-
-  });
+}
 
 
 /* ============================================================
-   INICIALIZAÇÃO AUTOMÁTICA
+   START
    ============================================================ */
 
-function startCampaignModule() {
-
-  /*
-   * Só inicia quando estamos realmente na página
-   * da campanha.
-   */
-
-  const isCampaignPage =
-    Boolean(
-      getElement(
-        "campaign-app"
-      ) ||
-      getElement(
-        "campaign-loading"
-      ) ||
-      getElement(
-        "campaign-workspace"
-      )
-    );
-
+function start() {
 
   if (
-    !isCampaignPage
+    !document.body
   ) {
 
     return;
 
   }
 
-
-  if (
-    document.readyState ===
-    "loading"
-  ) {
-
-    document.addEventListener(
-      "DOMContentLoaded",
-      () => {
-
-        initializeCampaign();
-
-      },
-      {
-        once:
-          true
-      }
-    );
-
-
-    return;
-
-  }
-
+  bindUI();
 
   initializeCampaign();
 
 }
 
 
-startCampaignModule();
+if (
+  document.readyState ===
+  "loading"
+) {
+
+  document.addEventListener(
+    "DOMContentLoaded",
+    start,
+    {
+      once:
+        true
+    }
+  );
+
+} else {
+
+  start();
+
+}
 
 
 /* ============================================================
-   EXPORTS
+   API
    ============================================================ */
 
 export {
 
   initializeCampaign,
 
-  getContext,
+  destroyCampaign,
 
-  getCampaignIdFromUrl,
+  getCampaignContext,
 
   isMaster,
 
   isPlayer,
 
-  showTab,
+  setActiveTab,
 
-  destroyCampaign
+  loadCampaign,
+
+  loadMembers,
+
+  loadPresentCharacters
 
 };
