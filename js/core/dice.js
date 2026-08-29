@@ -3465,4 +3465,95 @@ function startDice() {
 
   bindCampaignEvents();
 
- 
+  bindKeyboardShortcuts();
+
+  exposeGlobalApi();
+
+
+  /*
+   * Se campanha.js já estiver pronto quando este módulo
+   * carregar, inicializamos imediatamente.
+   */
+
+  initializeFromCampaign();
+
+}
+
+
+if (
+  document.readyState ===
+  "loading"
+) {
+
+  document.addEventListener(
+    "DOMContentLoaded",
+    startDice,
+    {
+      once:
+        true
+    }
+  );
+
+}
+else {
+
+  startDice();
+
+}
+
+
+/* ============================================================
+   PAGE LIFECYCLE
+   ============================================================ */
+
+window.addEventListener(
+  "pagehide",
+  destroyDice,
+  {
+    once:
+      true
+  }
+);
+
+
+/* ============================================================
+   EXPORTS
+   ============================================================ */
+
+export {
+
+  roll,
+
+  rollLocal,
+
+  setDie,
+
+  setModifier,
+
+  setVisibility,
+
+  setContext,
+
+  setCharacter,
+
+  getSelectedCharacterId,
+
+  loadRecentRolls,
+
+  getDiceContext,
+
+  isMaster,
+
+  isPlayer,
+
+  formatDiceNotation,
+
+  formatRollResult,
+
+  classifyRoll,
+
+  initializeFromCampaign,
+
+  destroyDice
+
+};
