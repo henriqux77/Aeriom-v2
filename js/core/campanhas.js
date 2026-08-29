@@ -3,198 +3,84 @@ import {
   normalizeSupabaseError
 } from "./supabase.js";
 
-
-/* ============================================================
-   CONFIGURAÇÃO
-   ============================================================ */
-
 const CONFIG = Object.freeze({
-
-  LOGIN_PAGE:
-    "./index.html",
-
-  CAMPAIGN_PAGE:
-    "./campanha.html",
-
-  STORAGE_BUCKET:
-    "campaigns",
-
-  MAX_NAME_LENGTH:
-    120,
-
-  MAX_DESCRIPTION_LENGTH:
-    1000,
-
-  MAX_COVER_SIZE:
-    5 * 1024 * 1024,
-
-  ALLOWED_IMAGE_TYPES:
-    Object.freeze([
-      "image/jpeg",
-      "image/png",
-      "image/webp"
-    ]),
-
-  INVITE_DURATION_MINUTES:
-    5
-
+  LOGIN_PAGE: "./index.html",
+  CAMPAIGN_PAGE: "./campanha.html",
+  JOIN_PAGE: "./entrar.html",
+  STORAGE_BUCKET: "campaign-covers",
+  AVATAR_BUCKET: "avatars",
+  MAX_NAME_LENGTH: 120,
+  MAX_DESCRIPTION_LENGTH: 1000,
+  MAX_COVER_SIZE: 5 * 1024 * 1024,
+  ALLOWED_IMAGE_TYPES: Object.freeze([
+    "image/jpeg",
+    "image/png",
+    "image/webp"
+  ]),
+  SIGNED_URL_SECONDS: 60 * 60,
+  INVITE_DURATION_MINUTES: 5
 });
 
-
-/* ============================================================
-   ESTADO
-   ============================================================ */
-
 const state = {
-
-  supabase:
-    null,
-
-  user:
-    null,
-
-  campaigns:
-    [],
-
-  selectedCampaign:
-    null,
-
-  selectedInvite:
-    null,
-
-  isLoading:
-    false,
-
-  isCreating:
-    false,
-
-  isGeneratingInvite:
-    false,
-
-  modal:
-    null,
-
-  inviteTimer:
-    null,
-
-  coverObjectUrl:
-    null
-
+  supabase: null,
+  user: null,
+  profile: null,
+  campaigns: [],
+  selectedCampaign: null,
+  selectedInvite: null,
+  isLoading: false,
+  isCreating: false,
+  isGeneratingInvite: false,
+  modal: null,
+  inviteTimer: null,
+  authSubscription: null,
+  coverObjectUrl: null
 };
-
-
-/* ============================================================
-   HELPER DOM
-   ============================================================ */
 
 function $(id) {
   return document.getElementById(id);
 }
 
+function log(level, message, details = null) {
+  const prefix = "[AERIOM][CAMPAIGNS]";
 
-/* ============================================================
-   LOG
-   ============================================================ */
-
-function log(
-  level,
-  message,
-  details = null
-) {
-
-  const prefix =
-    "[AERIOM][CAMPAIGNS]";
-
-  if (
+  const fn =
     level === "error"
-  ) {
+      ? console.error
+      : level === "warn"
+        ? console.warn
+        : console.info;
 
-    console.error(
-      prefix,
-      message,
-      details ?? ""
-    );
-
-    return;
-  }
-
-  if (
-    level === "warn"
-  ) {
-
-    console.warn(
-      prefix,
-      message,
-      details ?? ""
-    );
-
-    return;
-  }
-
-  console.info(
-    prefix,
-    message,
-    details ?? ""
-  );
-
+  fn(prefix, message, details ?? "");
 }
 
-
-/* ============================================================
-   NORMALIZAÇÃO DE ERRO
-   ============================================================ */
-
-function normalizeError(
-  error,
-  context
-) {
-
+function normalizeError(error, context) {
   try {
-
-    return normalizeSupabaseError(
-      error,
-      context
-    );
-
+    return normalizeSupabaseError(error, context);
   } catch {
-
     return {
-
       message:
         error?.message ||
         "Erro desconhecido.",
-
       code:
         error?.code ||
         null,
-
       details:
         error?.details ||
         null,
-
       hint:
         error?.hint ||
         null,
-
       raw:
         error
-
     };
-
   }
-
 }
-
-
-/* ============================================================
-   TOAST
-   ============================================================ */
 
 function showToast(
   message,
   type = "info"
 ) {
-
   const region =
     $("aeriom-toast-region");
 
@@ -217,28 +103,21 @@ function showToast(
   );
 
   toast.textContent =
-    String(message ?? "");
+    String(
+      message ?? ""
+    );
 
   region.appendChild(
     toast
   );
 
   window.setTimeout(
-    () => {
-      toast.remove();
-    },
+    () => toast.remove(),
     4000
   );
-
 }
 
-
-/* ============================================================
-   ESTADOS DA PÁGINA
-   ============================================================ */
-
 function hideStates() {
-
   [
     "campaigns-loading",
     "campaigns-empty",
@@ -251,104 +130,147 @@ function hideStates() {
         $(id);
 
       if (element) {
-        element.hidden = true;
+        element.hidden =
+          true;
       }
 
     }
   );
-
 }
 
-
 function showLoading() {
-
   hideStates();
 
   const element =
     $("campaigns-loading");
 
   if (element) {
-    element.hidden = false;
+    element.hidden =
+      false;
   }
-
 }
 
-
 function showEmpty() {
-
   hideStates();
 
   const element =
     $("campaigns-empty");
 
   if (element) {
-    element.hidden = false;
+    element.hidden =
+      false;
   }
-
 }
 
-
 function showList() {
-
   hideStates();
 
   const element =
     $("campaigns-list-section");
 
   if (element) {
-    element.hidden = false;
+    element.hidden =
+      false;
   }
-
 }
-
 
 function showError(
   message
 ) {
-
   hideStates();
 
   const messageElement =
     $("campaigns-error-message");
 
   if (messageElement) {
-
     messageElement.textContent =
       message ||
-      "Não foi possível carregar as campanhas.";
-
+      "Não foi possível carregar suas campanhas.";
   }
 
   const errorElement =
     $("campaigns-error");
 
   if (errorElement) {
-    errorElement.hidden = false;
+    errorElement.hidden =
+      false;
   }
-
 }
-
-
-/* ============================================================
-   STRING / DATA
-   ============================================================ */
 
 function safeString(
   value,
   fallback = ""
 ) {
-
   return typeof value === "string"
     ? value
     : fallback;
-
 }
 
+function safeNumber(
+  value,
+  fallback = 0
+) {
+  const number =
+    Number(value);
+
+  return Number.isFinite(number)
+    ? number
+    : fallback;
+}
+
+function normalizeArray(
+  value
+) {
+  return Array.isArray(value)
+    ? value
+    : [];
+}
+
+function normalizeObject(
+  value
+) {
+  return value &&
+    typeof value === "object" &&
+    !Array.isArray(value)
+    ? value
+    : {};
+}
+
+function parseJSON(
+  value,
+  fallback = null
+) {
+  if (
+    value === null ||
+    value === undefined
+  ) {
+    return fallback;
+  }
+
+  if (
+    typeof value === "object"
+  ) {
+    return value;
+  }
+
+  if (
+    typeof value !== "string"
+  ) {
+    return fallback;
+  }
+
+  try {
+    return JSON.parse(
+      value
+    );
+  } catch {
+    return fallback;
+  }
+}
 
 function formatDate(
   value
 ) {
-
   if (!value) {
     return "";
   }
@@ -361,49 +283,36 @@ function formatDate(
       date.getTime()
     )
   ) {
-
     return "";
   }
 
   try {
-
     return new Intl.DateTimeFormat(
       "pt-BR",
       {
         day:
           "2-digit",
-
         month:
           "short",
-
         year:
           "numeric"
       }
-    ).format(date);
-
+    ).format(
+      date
+    );
   } catch {
-
     return "";
-
   }
-
 }
-
-
-/* ============================================================
-   URL DE IMAGEM
-   ============================================================ */
 
 function isSafeImageUrl(
   value
 ) {
-
   if (!value) {
     return false;
   }
 
   try {
-
     const url =
       new URL(
         value,
@@ -414,29 +323,18 @@ function isSafeImageUrl(
       url.protocol === "https:" ||
       url.protocol === "http:"
     );
-
   } catch {
-
     return false;
-
   }
-
 }
-
-
-/* ============================================================
-   CAMPANHA
-   ============================================================ */
 
 function normalizeCampaign(
   row
 ) {
-
   if (
     !row ||
     typeof row !== "object"
   ) {
-
     return null;
   }
 
@@ -448,12 +346,10 @@ function normalizeCampaign(
   if (
     !campaign?.id
   ) {
-
     return null;
   }
 
   return {
-
     id:
       String(
         campaign.id
@@ -510,34 +406,179 @@ function normalizeCampaign(
     updatedAt:
       campaign.updated_at ||
       null
-
   };
-
 }
 
-
-/* ============================================================
-   USUÁRIO
-   ============================================================ */
-
-function renderUser(
-  user
+function getUserDisplayName(
+  user,
+  profile = state.profile
 ) {
-
   const metadata =
-    user?.user_metadata ||
-    {};
+    normalizeObject(
+      user?.user_metadata
+    );
+
+  return (
+    safeString(
+      profile?.display_name
+    ) ||
+
+    safeString(
+      metadata.display_name
+    ) ||
+
+    safeString(
+      metadata.full_name
+    ) ||
+
+    safeString(
+      metadata.name
+    ) ||
+
+    safeString(
+      user?.email
+        ?.split("@")[0]
+    ) ||
+
+    "Aventureiro"
+  );
+}
+
+async function loadProfile() {
+  if (
+    !state.user
+  ) {
+    return null;
+  }
+
+  try {
+
+    const {
+      data,
+      error
+    } =
+      await state.supabase
+        .from("profiles")
+        .select(
+          "id, display_name, avatar_path"
+        )
+        .eq(
+          "id",
+          state.user.id
+        )
+        .maybeSingle();
+
+    if (error) {
+      throw normalizeError(
+        error,
+        {
+          file:
+            "js/core/campanhas.js",
+
+          function:
+            "loadProfile",
+
+          table:
+            "profiles",
+
+          operation:
+            "select"
+        }
+      );
+    }
+
+    state.profile =
+      data || null;
+
+    return state.profile;
+
+  } catch (error) {
+
+    log(
+      "warn",
+      "Não foi possível carregar o perfil; usando dados do Auth.",
+      error
+    );
+
+    state.profile =
+      null;
+
+    return null;
+  }
+}
+
+async function resolveSignedUrl(
+  bucket,
+  path
+) {
+  if (!path) {
+    return null;
+  }
+
+  try {
+
+    const {
+      data,
+      error
+    } =
+      await state.supabase.storage
+        .from(bucket)
+        .createSignedUrl(
+          path,
+          CONFIG.SIGNED_URL_SECONDS
+        );
+
+    if (error) {
+      throw error;
+    }
+
+    return (
+      data?.signedUrl ||
+      null
+    );
+
+  } catch (error) {
+
+    log(
+      "warn",
+      `Falha ao gerar URL assinada para ${bucket}.`,
+      error
+    );
+
+    return null;
+  }
+}
+
+function renderAvatarInitial(
+  container,
+  name
+) {
+  container.replaceChildren();
+
+  container.textContent =
+    name
+      .trim()
+      .charAt(0)
+      .toUpperCase() ||
+    "?";
+}
+
+async function renderUser(
+  user = state.user
+) {
+  if (!user) {
+    return;
+  }
 
   const name =
-    metadata.display_name ||
-    metadata.full_name ||
-    metadata.name ||
-    user?.email?.split("@")[0] ||
-    "Aventureiro";
+    getUserDisplayName(
+      user
+    );
 
   const email =
-    user?.email ||
-    "";
+    safeString(
+      user.email
+    );
 
   const nameElement =
     $("campaigns-user-name");
@@ -549,51 +590,110 @@ function renderUser(
     $("campaigns-user-avatar");
 
   if (nameElement) {
-
     nameElement.textContent =
       name;
-
   }
 
   if (emailElement) {
-
     emailElement.textContent =
       email;
-
   }
 
-  if (avatarElement) {
+  if (!avatarElement) {
+    return;
+  }
 
-    avatarElement.textContent =
+  const avatarPath =
+    safeString(
+      state.profile?.avatar_path
+    );
+
+  const avatarUrl =
+    avatarPath
+      ? await resolveSignedUrl(
+          CONFIG.AVATAR_BUCKET,
+          avatarPath
+        )
+      : null;
+
+  avatarElement.replaceChildren();
+
+  if (
+    avatarUrl &&
+    isSafeImageUrl(
+      avatarUrl
+    )
+  ) {
+
+    const image =
+      document.createElement(
+        "img"
+      );
+
+    image.src =
+      avatarUrl;
+
+    image.alt =
+      "";
+
+    image.loading =
+      "eager";
+
+    image.referrerPolicy =
+      "no-referrer";
+
+    image.addEventListener(
+      "error",
+      () => {
+
+        renderAvatarInitial(
+          avatarElement,
+          name
+        );
+
+      },
+      {
+        once:
+          true
+      }
+    );
+
+    avatarElement.appendChild(
+      image
+    );
+
+  } else {
+
+    renderAvatarInitial(
+      avatarElement,
       name
-        .trim()
-        .charAt(0)
-        .toUpperCase() ||
-      "?";
+    );
 
   }
-
 }
 
-
-/* ============================================================
-   SESSÃO
-   ============================================================ */
-
 async function loadSession() {
+
+  if (
+    !state.supabase?.auth
+  ) {
+    throw new Error(
+      "Cliente Supabase/Auth não está disponível."
+    );
+  }
 
   const {
     data,
     error
   } =
-    await state.supabase.auth.getSession();
+    await state.supabase.auth
+      .getSession();
 
   if (error) {
 
     throw normalizeError(
       error,
       {
-
         file:
           "js/core/campanhas.js",
 
@@ -605,7 +705,6 @@ async function loadSession() {
 
         operation:
           "getSession"
-
       }
     );
 
@@ -628,22 +727,25 @@ async function loadSession() {
   state.user =
     session.user;
 
-  renderUser(
-    state.user
-  );
+  await loadProfile();
+
+  await renderUser();
 
   return state.user;
-
 }
-
-
-/* ============================================================
-   CARREGAR CAMPANHAS
-   ============================================================ */
 
 async function loadCampaigns() {
 
-  if (!state.user) {
+  if (
+    !state.user ||
+    !state.supabase
+  ) {
+    return;
+  }
+
+  if (
+    state.isLoading
+  ) {
     return;
   }
 
@@ -654,48 +756,38 @@ async function loadCampaigns() {
 
   try {
 
-    /*
-     * O filtro usa o usuário autenticado.
-     *
-     * Mesmo assim, a proteção real continua no RLS.
-     */
-
     const {
       data,
       error
     } =
       await state.supabase
-
         .from(
           "campaign_members"
         )
-
         .select(
           `
-          id,
-          campaign_id,
-          role,
-          created_at,
-          campaigns (
             id,
-            name,
-            description,
-            cover_path,
-            cover_url,
-            created_by,
-            theme,
-            background_path,
+            campaign_id,
+            role,
             created_at,
-            updated_at
-          )
+            campaigns (
+              id,
+              name,
+              description,
+              cover_path,
+              cover_url,
+              created_by,
+              theme,
+              background_path,
+              created_at,
+              updated_at
+            )
           `
         )
-
         .eq(
           "user_id",
           state.user.id
         )
-
         .order(
           "created_at",
           {
@@ -709,7 +801,6 @@ async function loadCampaigns() {
       throw normalizeError(
         error,
         {
-
           file:
             "js/core/campanhas.js",
 
@@ -721,22 +812,52 @@ async function loadCampaigns() {
 
           operation:
             "select"
-
         }
       );
 
     }
 
+    const rows =
+      normalizeArray(
+        data
+      );
+
+    const normalized =
+      rows
+        .map(
+          normalizeCampaign
+        )
+        .filter(
+          Boolean
+        );
+
+    const resolved =
+      await Promise.all(
+        normalized.map(
+          async (
+            campaign
+          ) => {
+
+            if (
+              !campaign.coverUrl &&
+              campaign.coverPath
+            ) {
+
+              campaign.coverUrl =
+                await resolveSignedUrl(
+                  CONFIG.STORAGE_BUCKET,
+                  campaign.coverPath
+                );
+
+            }
+
+            return campaign;
+          }
+        )
+      );
+
     state.campaigns =
-      Array.isArray(data)
-        ? data
-            .map(
-              normalizeCampaign
-            )
-            .filter(
-              Boolean
-            )
-        : [];
+      resolved;
 
     renderCampaigns();
 
@@ -748,6 +869,9 @@ async function loadCampaigns() {
       error
     );
 
+    state.campaigns =
+      [];
+
     showError(
       "Não foi possível carregar suas campanhas. Tente novamente."
     );
@@ -758,13 +882,31 @@ async function loadCampaigns() {
       false;
 
   }
-
 }
 
+function appendCoverSymbol(
+  container
+) {
+  const symbol =
+    document.createElement(
+      "span"
+    );
 
-/* ============================================================
-   CARD DE CAMPANHA
-   ============================================================ */
+  symbol.className =
+    "campaign-card__cover-symbol";
+
+  symbol.setAttribute(
+    "aria-hidden",
+    "true"
+  );
+
+  symbol.textContent =
+    "✦";
+
+  container.appendChild(
+    symbol
+  );
+}
 
 function createCampaignCard(
   campaign
@@ -782,10 +924,6 @@ function createCampaignCard(
     campaign.id;
 
 
-  /* ----------------------------------------------------------
-     CAPA
-     ---------------------------------------------------------- */
-
   const cover =
     document.createElement(
       "div"
@@ -795,14 +933,9 @@ function createCampaignCard(
     "campaign-card__cover";
 
 
-  const imageUrl =
-    campaign.coverUrl ||
-    "";
-
-
   if (
     isSafeImageUrl(
-      imageUrl
+      campaign.coverUrl
     )
   ) {
 
@@ -815,7 +948,7 @@ function createCampaignCard(
       "campaign-card__image";
 
     image.src =
-      imageUrl;
+      campaign.coverUrl;
 
     image.alt =
       `Capa da campanha ${campaign.name}`;
@@ -836,6 +969,10 @@ function createCampaignCard(
           "campaign-card__cover--empty"
         );
 
+        appendCoverSymbol(
+          cover
+        );
+
       },
       {
         once:
@@ -853,32 +990,12 @@ function createCampaignCard(
       "campaign-card__cover--empty"
     );
 
-    const symbol =
-      document.createElement(
-        "span"
-      );
-
-    symbol.className =
-      "campaign-card__cover-symbol";
-
-    symbol.textContent =
-      "✦";
-
-    symbol.setAttribute(
-      "aria-hidden",
-      "true"
-    );
-
-    cover.appendChild(
-      symbol
+    appendCoverSymbol(
+      cover
     );
 
   }
 
-
-  /* ----------------------------------------------------------
-     CONTEÚDO
-     ---------------------------------------------------------- */
 
   const content =
     document.createElement(
@@ -928,12 +1045,8 @@ function createCampaignCard(
 
   description.textContent =
     campaign.description ||
-    "Uma nova aventura aguarda o grupo.";
+    "Uma nova aventura aguarda.";
 
-
-  /* ----------------------------------------------------------
-     FOOTER
-     ---------------------------------------------------------- */
 
   const footer =
     document.createElement(
@@ -953,20 +1066,9 @@ function createCampaignCard(
     "campaign-card__date";
 
   date.textContent =
-    campaign.updatedAt
-      ? `Atualizada em ${formatDate(
-          campaign.updatedAt
-        )}`
-      : "Nova campanha";
-
-
-  const actions =
-    document.createElement(
-      "div"
+    formatDate(
+      campaign.createdAt
     );
-
-  actions.className =
-    "campaign-card__actions";
 
 
   const openButton =
@@ -978,73 +1080,24 @@ function createCampaignCard(
     "button";
 
   openButton.className =
-    "campaign-card__open";
+    "button button--primary campaign-card__open";
 
   openButton.textContent =
     "Abrir campanha";
 
   openButton.addEventListener(
     "click",
-    () =>
+    () => {
       openCampaign(
         campaign.id
-      )
-  );
-
-
-  actions.appendChild(
-    openButton
-  );
-
-
-  /*
-   * Convite somente visualmente disponível para Master.
-   *
-   * A RPC também valida a permissão no banco.
-   */
-
-  if (
-    campaign.role ===
-    "master"
-  ) {
-
-    const inviteButton =
-      document.createElement(
-        "button"
       );
-
-    inviteButton.type =
-      "button";
-
-    inviteButton.className =
-      "campaign-card__invite";
-
-    inviteButton.textContent =
-      "Convidar";
-
-    inviteButton.addEventListener(
-      "click",
-      async () => {
-
-        state.selectedCampaign =
-          campaign;
-
-        await generateInvite(
-          campaign.id
-        );
-
-      }
-    );
-
-    actions.appendChild(
-      inviteButton
-    );
-  }
+    }
+  );
 
 
   footer.append(
     date,
-    actions
+    openButton
   );
 
   content.append(
@@ -1059,14 +1112,9 @@ function createCampaignCard(
     content
   );
 
+
   return article;
-
 }
-
-
-/* ============================================================
-   RENDER
-   ============================================================ */
 
 function renderCampaigns() {
 
@@ -1074,21 +1122,13 @@ function renderCampaigns() {
     $("campaigns-list");
 
   if (!list) {
-
-    log(
-      "warn",
-      "Elemento #campaigns-list não encontrado."
-    );
-
     return;
   }
 
   list.replaceChildren();
 
-
   if (
-    state.campaigns.length ===
-    0
+    !state.campaigns.length
   ) {
 
     showEmpty();
@@ -1096,15 +1136,12 @@ function renderCampaigns() {
     return;
   }
 
-
-  const fragment =
-    document.createDocumentFragment();
-
-
   state.campaigns.forEach(
-    (campaign) => {
+    (
+      campaign
+    ) => {
 
-      fragment.appendChild(
+      list.appendChild(
         createCampaignCard(
           campaign
         )
@@ -1113,20 +1150,64 @@ function renderCampaigns() {
     }
   );
 
-
-  list.appendChild(
-    fragment
-  );
-
-
   showList();
-
 }
 
+function openCampaign(
+  campaignId
+) {
 
-/* ============================================================
-   MODAL CRIAÇÃO
-   ============================================================ */
+  const id =
+    safeString(
+      campaignId
+    );
+
+  if (!id) {
+    return;
+  }
+
+  const campaign =
+    state.campaigns.find(
+      (
+        item
+      ) =>
+        item.id === id
+    );
+
+  if (!campaign) {
+
+    showToast(
+      "Campanha não encontrada.",
+      "error"
+    );
+
+    return;
+  }
+
+  state.selectedCampaign =
+    campaign;
+
+  /*
+   * A autorização real continua no Supabase.
+   *
+   * Este redirecionamento apenas transporta o ID.
+   */
+
+  const url =
+    new URL(
+      CONFIG.CAMPAIGN_PAGE,
+      window.location.href
+    );
+
+  url.searchParams.set(
+    "campaign",
+    id
+  );
+
+  window.location.assign(
+    url.href
+  );
+}
 
 function openCreateCampaignModal() {
 
@@ -1137,6 +1218,7 @@ function openCreateCampaignModal() {
     return;
   }
 
+  clearCreateForm();
 
   modal.hidden =
     false;
@@ -1146,75 +1228,64 @@ function openCreateCampaignModal() {
     "false"
   );
 
-
   state.modal =
     "create";
 
-
-  window.requestAnimationFrame(
-    () => {
-
-      $("campaign-name")?.focus();
-
-    }
+  window.setTimeout(
+    () =>
+      $("campaign-name")?.focus(),
+    0
   );
-
 }
-
 
 function closeCreateCampaignModal() {
 
   const modal =
     $("campaign-create-modal");
 
-  if (!modal) {
-    return;
+  if (modal) {
+
+    modal.hidden =
+      true;
+
+    modal.setAttribute(
+      "aria-hidden",
+      "true"
+    );
   }
-
-
-  modal.hidden =
-    true;
-
-  modal.setAttribute(
-    "aria-hidden",
-    "true"
-  );
-
 
   state.modal =
     null;
 
+  clearCoverPreview();
+}
+
+function clearCreateForm() {
 
   const form =
     $("campaign-create-form");
 
-  form?.reset();
-
-
-  clearCoverPreview();
-
+  if (form) {
+    form.reset();
+  }
 
   [
     "campaign-name-error",
     "campaign-description-error",
     "campaign-cover-error"
-  ]
-    .forEach(
-      (id) => {
+  ].forEach(
+    (id) => {
 
-        const element =
-          $(id);
+      const element =
+        $(id);
 
-        if (element) {
-
-          element.textContent =
-            "";
-
-        }
-
+      if (element) {
+        element.textContent =
+          "";
       }
-    );
 
+    }
+  );
 
   const message =
     $("campaign-create-message");
@@ -1226,15 +1297,34 @@ function closeCreateCampaignModal() {
 
     message.textContent =
       "";
-
   }
 
+  clearCoverPreview();
 }
 
+function setCreateMessage(
+  message,
+  type = "error"
+) {
 
-/* ============================================================
-   CAPA — VALIDAÇÃO
-   ============================================================ */
+  const element =
+    $("campaign-create-message");
+
+  if (!element) {
+    return;
+  }
+
+  element.textContent =
+    String(
+      message ?? ""
+    );
+
+  element.dataset.type =
+    type;
+
+  element.hidden =
+    !message;
+}
 
 function validateCover(
   file
@@ -1243,7 +1333,6 @@ function validateCover(
   if (!file) {
     return;
   }
-
 
   if (
     !CONFIG.ALLOWED_IMAGE_TYPES.includes(
@@ -1254,9 +1343,7 @@ function validateCover(
     throw new Error(
       "A capa precisa ser JPG, PNG ou WebP."
     );
-
   }
-
 
   if (
     file.size >
@@ -1264,46 +1351,12 @@ function validateCover(
   ) {
 
     throw new Error(
-      "A capa deve ter no máximo 5 MB."
+      "A capa não pode ultrapassar 5 MB."
     );
-
   }
-
 }
 
-
-/* ============================================================
-   PREVIEW CAPA
-   ============================================================ */
-
 function clearCoverPreview() {
-
-  const preview =
-    $("campaign-cover-preview");
-
-  if (!preview) {
-    return;
-  }
-
-
-  preview.replaceChildren();
-
-
-  const placeholder =
-    document.createElement(
-      "span"
-    );
-
-  placeholder.className =
-    "campaign-cover-upload__placeholder";
-
-  placeholder.textContent =
-    "✦";
-
-  preview.appendChild(
-    placeholder
-  );
-
 
   if (
     state.coverObjectUrl
@@ -1315,77 +1368,241 @@ function clearCoverPreview() {
 
     state.coverObjectUrl =
       null;
-
   }
 
-}
+  const preview =
+    $("campaign-cover-preview");
 
+  if (!preview) {
+    return;
+  }
+
+  preview.replaceChildren();
+
+  const placeholder =
+    document.createElement(
+      "span"
+    );
+
+  placeholder.className =
+    "campaign-cover-upload__placeholder";
+
+  placeholder.setAttribute(
+    "aria-hidden",
+    "true"
+  );
+
+  placeholder.textContent =
+    "✦";
+
+  preview.appendChild(
+    placeholder
+  );
+}
 
 function previewCover(
   file
 ) {
 
+  clearCoverPreview();
+
   const preview =
     $("campaign-cover-preview");
 
-  if (
-    !preview ||
-    !file
-  ) {
-
+  if (!preview) {
     return;
   }
-
-
-  clearCoverPreview();
-
 
   state.coverObjectUrl =
     URL.createObjectURL(
       file
     );
 
-
   const image =
     document.createElement(
       "img"
     );
 
-  image.className =
-    "campaign-cover-upload__image";
-
   image.src =
     state.coverObjectUrl;
 
   image.alt =
-    "Pré-visualização da capa";
+    "";
 
+  image.setAttribute(
+    "aria-hidden",
+    "true"
+  );
 
   preview.replaceChildren(
     image
   );
-
 }
 
-
-/* ============================================================
-   UPLOAD CAPA
-   ============================================================ */
-
-async function uploadCover(
-  file,
-  campaignId
+function setCreateButtonLoading(
+  loading
 ) {
 
-  if (!file) {
-    return null;
+  const button =
+    $("campaign-create-submit");
+
+  if (!button) {
+    return;
+  }
+
+  button.disabled =
+    loading;
+
+  const label =
+    button.querySelector(
+      ".button__label"
+    );
+
+  const loadingLabel =
+    button.querySelector(
+      ".button__loading"
+    );
+
+  if (label) {
+    label.hidden =
+      loading;
+  }
+
+  if (loadingLabel) {
+    loadingLabel.hidden =
+      !loading;
+  }
+}
+
+function getCreateFormValues() {
+
+  const nameInput =
+    $("campaign-name");
+
+  const descriptionInput =
+    $("campaign-description");
+
+  const coverInput =
+    $("campaign-cover");
+
+  const name =
+    safeString(
+      nameInput?.value
+    ).trim();
+
+  const description =
+    safeString(
+      descriptionInput?.value
+    ).trim();
+
+  const cover =
+    coverInput?.files?.[0] ||
+    null;
+
+  return {
+    name,
+    description,
+    cover
+  };
+}
+
+function validateCreateForm(
+  values
+) {
+
+  let valid =
+    true;
+
+  const nameError =
+    $("campaign-name-error");
+
+  const descriptionError =
+    $("campaign-description-error");
+
+  const coverError =
+    $("campaign-cover-error");
+
+
+  if (nameError) {
+    nameError.textContent =
+      "";
+  }
+
+  if (descriptionError) {
+    descriptionError.textContent =
+      "";
+  }
+
+  if (coverError) {
+    coverError.textContent =
+      "";
   }
 
 
-  validateCover(
-    file
-  );
+  if (
+    values.name.length < 1 ||
+    values.name.length >
+      CONFIG.MAX_NAME_LENGTH
+  ) {
 
+    valid =
+      false;
+
+    if (nameError) {
+
+      nameError.textContent =
+        `O nome deve possuir entre 1 e ${CONFIG.MAX_NAME_LENGTH} caracteres.`;
+    }
+  }
+
+
+  if (
+    values.description.length >
+    CONFIG.MAX_DESCRIPTION_LENGTH
+  ) {
+
+    valid =
+      false;
+
+    if (descriptionError) {
+
+      descriptionError.textContent =
+        `A descrição pode possuir no máximo ${CONFIG.MAX_DESCRIPTION_LENGTH} caracteres.`;
+    }
+  }
+
+
+  if (values.cover) {
+
+    try {
+
+      validateCover(
+        values.cover
+      );
+
+    } catch (
+      error
+    ) {
+
+      valid =
+        false;
+
+      if (coverError) {
+
+        coverError.textContent =
+          error.message;
+      }
+    }
+  }
+
+
+  return valid;
+}
+
+function getCampaignCoverPath(
+  campaignId,
+  file
+) {
 
   const extensionMap =
     Object.freeze({
@@ -1401,106 +1618,150 @@ async function uploadCover(
 
     });
 
-
   const extension =
     extensionMap[
       file.type
-    ];
+    ] ||
+    "bin";
 
+  return `${campaignId}/cover.${extension}`;
+}
 
-  if (!extension) {
+async function uploadCampaignCover(
+  campaignId,
+  file
+) {
 
-    throw new Error(
-      "Formato de imagem não suportado."
-    );
-
+  if (!file) {
+    return null;
   }
 
+  validateCover(
+    file
+  );
 
   const path =
-    `${state.user.id}/${campaignId}/cover.${extension}`;
-
+    getCampaignCoverPath(
+      campaignId,
+      file
+    );
 
   const {
     error
   } =
     await state.supabase.storage
-
       .from(
         CONFIG.STORAGE_BUCKET
       )
-
       .upload(
         path,
         file,
         {
-
-          upsert:
-            true,
+          cacheControl:
+            "3600",
 
           contentType:
             file.type,
 
-          cacheControl:
-            "3600"
-
+          upsert:
+            true
         }
       );
-
 
   if (error) {
 
     throw normalizeError(
       error,
       {
-
         file:
           "js/core/campanhas.js",
 
         function:
-          "uploadCover",
+          "uploadCampaignCover",
 
         table:
           "storage.objects",
 
         operation:
           "upload"
-
       }
     );
-
   }
 
-
   return path;
-
 }
 
+async function updateCampaignCoverPath(
+  campaignId,
+  coverPath
+) {
 
-/* ============================================================
-   CRIAR CAMPANHA
-   ============================================================ */
+  const {
+    error
+  } =
+    await state.supabase
+      .from(
+        "campaigns"
+      )
+      .update({
+        cover_path:
+          coverPath,
+
+        cover_url:
+          null,
+
+        updated_at:
+          new Date().toISOString()
+      })
+      .eq(
+        "id",
+        campaignId
+      );
+
+  if (error) {
+
+    throw normalizeError(
+      error,
+      {
+        file:
+          "js/core/campanhas.js",
+
+        function:
+          "updateCampaignCoverPath",
+
+        table:
+          "campaigns",
+
+        operation:
+          "update"
+      }
+    );
+  }
+}
 
 async function createCampaign(
   event
 ) {
 
-  if (
-    event
-  ) {
-
-    event.preventDefault();
-
-  }
-
+  event?.preventDefault?.();
 
   if (
     state.isCreating
   ) {
-
-    return;
+    return null;
   }
 
+  if (
+    !state.supabase
+  ) {
+
+    showToast(
+      "O Supabase ainda não está disponível.",
+      "error"
+    );
+
+    return null;
+  }
 
   if (
     !state.user
@@ -1511,188 +1772,70 @@ async function createCampaign(
       "error"
     );
 
-    return;
-  }
-
-
-  const nameInput =
-    $("campaign-name");
-
-  const descriptionInput =
-    $("campaign-description");
-
-  const coverInput =
-    $("campaign-cover");
-
-
-  const name =
-    String(
-      nameInput?.value ??
-      ""
-    ).trim();
-
-
-  const description =
-    String(
-      descriptionInput?.value ??
-      ""
-    ).trim();
-
-
-  const coverFile =
-    coverInput?.files?.[0] ||
-    null;
-
-
-  const nameError =
-    $("campaign-name-error");
-
-  const descriptionError =
-    $("campaign-description-error");
-
-  const coverError =
-    $("campaign-cover-error");
-
-
-  [
-    nameError,
-    descriptionError,
-    coverError
-  ]
-    .forEach(
-      (element) => {
-
-        if (element) {
-
-          element.textContent =
-            "";
-
-        }
-
-      }
+    window.location.replace(
+      CONFIG.LOGIN_PAGE
     );
 
-
-  if (!name) {
-
-    if (nameError) {
-
-      nameError.textContent =
-        "Digite o nome da campanha.";
-
-    }
-
-    nameInput?.focus();
-
-    return;
+    return null;
   }
 
+
+  const values =
+    getCreateFormValues();
 
   if (
-    name.length >
-    CONFIG.MAX_NAME_LENGTH
+    !validateCreateForm(
+      values
+    )
   ) {
-
-    if (nameError) {
-
-      nameError.textContent =
-        `O nome pode ter no máximo ${CONFIG.MAX_NAME_LENGTH} caracteres.`;
-
-    }
-
-    return;
-  }
-
-
-  if (
-    description.length >
-    CONFIG.MAX_DESCRIPTION_LENGTH
-  ) {
-
-    if (descriptionError) {
-
-      descriptionError.textContent =
-        `A descrição pode ter no máximo ${CONFIG.MAX_DESCRIPTION_LENGTH} caracteres.`;
-
-    }
-
-    return;
-  }
-
-
-  try {
-
-    validateCover(
-      coverFile
-    );
-
-  } catch (error) {
-
-    if (coverError) {
-
-      coverError.textContent =
-        error.message;
-
-    }
-
-    return;
+    return null;
   }
 
 
   state.isCreating =
     true;
 
-
-  setCreateLoading(
+  setCreateButtonLoading(
     true
+  );
+
+  setCreateMessage(
+    ""
   );
 
 
   try {
 
     /*
-     * ========================================================
-     * CRIAÇÃO TRANSAcional
-     * ========================================================
+     * O user_id NÃO é enviado pelo frontend.
      *
-     * O banco recebe apenas:
-     *
-     * - nome
-     * - descrição
-     * - cover_path
-     *
-     * created_by vem de auth.uid().
+     * A função SQL usa auth.uid().
      */
 
     const {
-      data:
-        createdCampaign,
+      data,
       error
     } =
       await state.supabase.rpc(
         "create_campaign",
         {
-
           p_name:
-            name,
+            values.name,
 
           p_description:
-            description ||
+            values.description ||
             null,
 
           p_cover_path:
             null
-
         }
       );
-
 
     if (error) {
 
       throw normalizeError(
         error,
         {
-
           file:
             "js/core/campanhas.js",
 
@@ -1704,19 +1847,15 @@ async function createCampaign(
 
           operation:
             "rpc:create_campaign"
-
         }
       );
-
     }
 
 
     const campaign =
-      Array.isArray(
-        createdCampaign
-      )
-        ? createdCampaign[0]
-        : createdCampaign;
+      Array.isArray(data)
+        ? data[0]
+        : data;
 
 
     if (
@@ -1724,114 +1863,87 @@ async function createCampaign(
     ) {
 
       throw new Error(
-        "O banco não retornou o ID da campanha criada."
+        "O Supabase não retornou a campanha criada."
       );
-
     }
 
 
+    const campaignId =
+      String(
+        campaign.id
+      );
+
+
     /*
-     * Upload da capa depois da criação,
-     * utilizando o ID real da campanha.
+     * A campanha já foi criada pelo RPC.
+     *
+     * Agora, opcionalmente, enviamos a capa.
      */
 
     if (
-      coverFile
+      values.cover
     ) {
 
-      try {
-
-        const coverPath =
-          await uploadCover(
-            coverFile,
-            campaign.id
-          );
-
-
-        const {
-          error:
-            coverUpdateError
-        } =
-          await state.supabase
-
-            .from(
-              "campaigns"
-            )
-
-            .update({
-
-              cover_path:
-                coverPath
-
-            })
-
-            .eq(
-              "id",
-              campaign.id
-            );
-
-
-        if (
-          coverUpdateError
-        ) {
-
-          throw normalizeError(
-            coverUpdateError,
-            {
-
-              file:
-                "js/core/campanhas.js",
-
-              function:
-                "createCampaign",
-
-              table:
-                "campaigns",
-
-              operation:
-                "update:cover_path"
-
-            }
-          );
-
-        }
-
-      } catch (coverError) {
-
-        /*
-         * A campanha já existe.
-         *
-         * Não apagamos automaticamente porque
-         * a criação principal foi bem-sucedida.
-         */
-
-        log(
-          "error",
-          "Campanha criada, mas falha ao enviar a capa.",
-          coverError
+      const coverPath =
+        await uploadCampaignCover(
+          campaignId,
+          values.cover
         );
 
 
-        showToast(
-          "Campanha criada, mas a capa não pôde ser enviada.",
-          "error"
-        );
-
-      }
-
+      await updateCampaignCoverPath(
+        campaignId,
+        coverPath
+      );
     }
 
 
     closeCreateCampaignModal();
 
+    showToast(
+      "Campanha criada com sucesso.",
+      "success"
+    );
+
 
     await loadCampaigns();
 
 
-    showToast(
-      "Campanha criada com sucesso!",
-      "success"
-    );
+    const createdCampaign =
+      state.campaigns.find(
+        (
+          item
+        ) =>
+          item.id ===
+          campaignId
+      );
+
+
+    if (
+      createdCampaign
+    ) {
+
+      state.selectedCampaign =
+        createdCampaign;
+
+      await generateInvite(
+        campaignId,
+        {
+          openModal:
+            true
+        }
+      );
+
+    } else {
+
+      showToast(
+        "A campanha foi criada, mas não apareceu na lista imediatamente.",
+        "warn"
+      );
+    }
+
+
+    return campaign;
 
 
   } catch (error) {
@@ -1848,119 +1960,70 @@ async function createCampaign(
       "Não foi possível criar a campanha.";
 
 
-    const formMessage =
-      $("campaign-create-message");
-
-
-    if (formMessage) {
-
-      formMessage.hidden =
-        false;
-
-      formMessage.dataset.type =
-        "error";
-
-      formMessage.textContent =
-        message;
-
-    }
-
+    setCreateMessage(
+      message,
+      "error"
+    );
 
     showToast(
       message,
       "error"
     );
 
+
+    return null;
+
+
   } finally {
 
     state.isCreating =
       false;
 
-
-    setCreateLoading(
+    setCreateButtonLoading(
       false
     );
 
   }
-
 }
-
-
-/* ============================================================
-   LOADING CRIAÇÃO
-   ============================================================ */
-
-function setCreateLoading(
-  loading
-) {
-
-  const button =
-    $("campaign-create-submit");
-
-  if (!button) {
-    return;
-  }
-
-
-  button.disabled =
-    Boolean(
-      loading
-    );
-
-
-  const label =
-    button.querySelector(
-      ".button__label"
-    );
-
-
-  const loadingElement =
-    button.querySelector(
-      ".button__loading"
-    );
-
-
-  if (label) {
-
-    label.hidden =
-      Boolean(
-        loading
-      );
-
-  }
-
-
-  if (loadingElement) {
-
-    loadingElement.hidden =
-      !loading;
-
-  }
-
-}
-
-
-/* ============================================================
-   CONVITE
-   ============================================================ */
 
 async function generateInvite(
-  campaignId
+  campaignId,
+  options = {}
 ) {
+
+  const {
+    openModal =
+      true
+  } =
+    options;
+
 
   if (
     state.isGeneratingInvite
   ) {
+    return null;
+  }
+
+  if (
+    !state.user ||
+    !state.supabase
+  ) {
+
+    showToast(
+      "Sessão indisponível.",
+      "error"
+    );
 
     return null;
   }
 
 
-  if (
-    !state.user ||
-    !campaignId
-  ) {
+  const id =
+    safeString(
+      campaignId
+    );
 
+  if (!id) {
     return null;
   }
 
@@ -1978,13 +2041,11 @@ async function generateInvite(
       await state.supabase.rpc(
         "generate_campaign_invite",
         {
-
           p_campaign_id:
-            campaignId,
+            id,
 
           p_max_uses:
             10
-
         }
       );
 
@@ -1994,7 +2055,6 @@ async function generateInvite(
       throw normalizeError(
         error,
         {
-
           file:
             "js/core/campanhas.js",
 
@@ -2006,26 +2066,37 @@ async function generateInvite(
 
           operation:
             "rpc:generate_campaign_invite"
-
         }
       );
-
     }
 
 
     const invite =
-      Array.isArray(data)
+      Array.isArray(
+        data
+      )
         ? data[0]
         : data;
 
 
-    if (!invite) {
+    if (
+      !invite?.invite_code
+    ) {
 
       throw new Error(
-        "O banco não retornou o convite."
+        "O banco não retornou o código do convite."
       );
-
     }
+
+
+    state.selectedCampaign =
+      state.campaigns.find(
+        (
+          campaign
+        ) =>
+          campaign.id === id
+      ) ||
+      state.selectedCampaign;
 
 
     state.selectedInvite =
@@ -2037,7 +2108,13 @@ async function generateInvite(
     );
 
 
-    openInviteModal();
+    if (
+      openModal
+    ) {
+
+      openInviteModal();
+
+    }
 
 
     return invite;
@@ -2061,19 +2138,29 @@ async function generateInvite(
 
     return null;
 
+
   } finally {
 
     state.isGeneratingInvite =
       false;
 
   }
-
 }
 
+function stopInviteTimer() {
 
-/* ============================================================
-   RENDER INVITE
-   ============================================================ */
+  if (
+    state.inviteTimer
+  ) {
+
+    window.clearInterval(
+      state.inviteTimer
+    );
+
+    state.inviteTimer =
+      null;
+  }
+}
 
 function renderInvite(
   invite
@@ -2084,11 +2171,15 @@ function renderInvite(
   }
 
 
+  stopInviteTimer();
+
+
   const code =
-    invite.invite_code ||
-    invite.code ||
-    invite.token ||
-    "";
+    safeString(
+      invite.invite_code ||
+      invite.code ||
+      invite.token
+    );
 
 
   const codeElement =
@@ -2098,27 +2189,20 @@ function renderInvite(
   if (codeElement) {
 
     codeElement.textContent =
-      String(
-        code
-      );
-
+      code ||
+      "-----";
   }
 
 
-  const expiration =
-    $("campaign-invite-expiration");
+  const campaignName =
+    $("campaign-invite-campaign-name");
 
 
-  if (
-    expiration &&
-    invite.expires_at
-  ) {
+  if (campaignName) {
 
-    expiration.textContent =
-      `Expira em ${formatDate(
-        invite.expires_at
-      )}`;
-
+    campaignName.textContent =
+      state.selectedCampaign?.name ||
+      "";
   }
 
 
@@ -2133,7 +2217,7 @@ function renderInvite(
 
     const url =
       new URL(
-        "./entrar.html",
+        CONFIG.JOIN_PAGE,
         window.location.href
       );
 
@@ -2146,15 +2230,137 @@ function renderInvite(
 
     linkInput.value =
       url.toString();
-
   }
 
+
+  const expiresAt =
+    invite.expires_at
+      ? new Date(
+          invite.expires_at
+        ).getTime()
+      : NaN;
+
+
+  const expiration =
+    $("campaign-invite-expiration");
+
+
+  const updateExpiration =
+    () => {
+
+      if (!expiration) {
+        return;
+      }
+
+
+      const remaining =
+        expiresAt -
+        Date.now();
+
+
+      if (
+        !Number.isFinite(
+          remaining
+        ) ||
+        remaining <= 0
+      ) {
+
+        expiration.textContent =
+          "Convite expirado.";
+
+        stopInviteTimer();
+
+        return;
+      }
+
+
+      const totalSeconds =
+        Math.ceil(
+          remaining /
+          1000
+        );
+
+
+      const minutes =
+        Math.floor(
+          totalSeconds /
+          60
+        );
+
+
+      const seconds =
+        totalSeconds %
+        60;
+
+
+      expiration.textContent =
+        `Expira em ${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+    };
+
+
+  updateExpiration();
+
+
+  if (
+    Number.isFinite(
+      expiresAt
+    )
+  ) {
+
+    state.inviteTimer =
+      window.setInterval(
+        updateExpiration,
+        1000
+      );
+  }
+
+
+  renderInviteQr(
+    linkInput?.value ||
+    ""
+  );
 }
 
+function renderInviteQr(
+  value
+) {
 
-/* ============================================================
-   MODAL INVITE
-   ============================================================ */
+  const container =
+    $("campaign-invite-qr");
+
+  if (!container) {
+    return;
+  }
+
+
+  container.replaceChildren();
+
+
+  /*
+   * O QR visual definitivo será conectado ao módulo
+   * de QR Code sem inserir HTML externo.
+   *
+   * Por enquanto mantemos um estado visual seguro.
+   */
+
+  const placeholder =
+    document.createElement(
+      "div"
+    );
+
+  placeholder.className =
+    "campaign-invite__qr-placeholder";
+
+  placeholder.textContent =
+    value
+      ? "QR"
+      : "QR";
+
+
+  container.appendChild(
+    placeholder
+  );
+}
 
 function openInviteModal() {
 
@@ -2169,6 +2375,7 @@ function openInviteModal() {
   modal.hidden =
     false;
 
+
   modal.setAttribute(
     "aria-hidden",
     "false"
@@ -2177,14 +2384,13 @@ function openInviteModal() {
 
   state.modal =
     "invite";
-
 }
-
 
 function closeInviteModal() {
 
   const modal =
     $("campaign-invite-modal");
+
 
   if (modal) {
 
@@ -2195,7 +2401,6 @@ function closeInviteModal() {
       "aria-hidden",
       "true"
     );
-
   }
 
 
@@ -2205,12 +2410,8 @@ function closeInviteModal() {
   state.selectedInvite =
     null;
 
+  stopInviteTimer();
 }
-
-
-/* ============================================================
-   COPIAR TEXTO
-   ============================================================ */
 
 async function copyText(
   value,
@@ -2230,9 +2431,23 @@ async function copyText(
 
   try {
 
-    await navigator.clipboard.writeText(
-      String(value)
-    );
+    if (
+      navigator.clipboard &&
+      typeof navigator.clipboard.writeText ===
+        "function"
+    ) {
+
+      await navigator.clipboard.writeText(
+        String(value)
+      );
+
+    } else {
+
+      throw new Error(
+        "Clipboard API indisponível."
+      );
+
+    }
 
 
     showToast(
@@ -2243,10 +2458,6 @@ async function copyText(
 
   } catch {
 
-    /*
-     * Fallback para navegadores sem Clipboard API.
-     */
-
     const textarea =
       document.createElement(
         "textarea"
@@ -2256,18 +2467,19 @@ async function copyText(
     textarea.value =
       String(value);
 
-
     textarea.setAttribute(
       "readonly",
       ""
     );
-
 
     textarea.style.position =
       "fixed";
 
     textarea.style.opacity =
       "0";
+
+    textarea.style.pointerEvents =
+      "none";
 
 
     document.body.appendChild(
@@ -2280,15 +2492,24 @@ async function copyText(
 
     try {
 
-      document.execCommand(
-        "copy"
-      );
+      const copied =
+        document.execCommand(
+          "copy"
+        );
+
+
+      if (!copied) {
+        throw new Error(
+          "Falha ao copiar."
+        );
+      }
 
 
       showToast(
         successMessage,
         "success"
       );
+
 
     } catch {
 
@@ -2297,79 +2518,55 @@ async function copyText(
         "error"
       );
 
+
     } finally {
 
       textarea.remove();
 
     }
-
   }
-
 }
-
-
-/* ============================================================
-   COPIAR CÓDIGO
-   ============================================================ */
 
 async function copyInviteCode() {
 
-  const codeElement =
-    $("campaign-invite-code");
-
-
-  const code =
-    codeElement
-      ?.textContent
-      ?.trim();
-
-
   await copyText(
-    code,
+    $(
+      "campaign-invite-code"
+    )
+      ?.textContent
+      ?.trim(),
+
     "Código copiado."
   );
-
 }
-
-
-/* ============================================================
-   COPIAR LINK
-   ============================================================ */
 
 async function copyInviteLink() {
 
-  const input =
-    $("campaign-invite-link");
-
-
-  const link =
-    input
-      ?.value
-      ?.trim();
-
-
   await copyText(
-    link,
+    $(
+      "campaign-invite-link"
+    )
+      ?.value
+      ?.trim(),
+
     "Link do convite copiado."
   );
-
 }
-
-
-/* ============================================================
-   COMPARTILHAR
-   ============================================================ */
 
 async function shareInvite() {
 
   const link =
-    $("campaign-invite-link")
+    $(
+      "campaign-invite-link"
+    )
       ?.value
       ?.trim();
 
 
   const code =
-    $("campaign-invite-code")
+    $(
+      "campaign-invite-code"
+    )
       ?.textContent
       ?.trim();
 
@@ -2404,16 +2601,14 @@ async function shareInvite() {
       "function"
     ) {
 
-      await navigator.share({
-
-        title,
-
-        text,
-
-        url:
-          link
-
-      });
+      await navigator.share(
+        {
+          title,
+          text,
+          url:
+            link
+        }
+      );
 
       return;
     }
@@ -2421,13 +2616,13 @@ async function shareInvite() {
 
     await copyInviteLink();
 
+
   } catch (error) {
 
     if (
       error?.name ===
       "AbortError"
     ) {
-
       return;
     }
 
@@ -2442,235 +2637,294 @@ async function shareInvite() {
     await copyInviteLink();
 
   }
-
 }
 
+async function handleLogout() {
 
-/* ============================================================
-   EVENTOS
-   ============================================================ */
+  const button =
+    $("campaigns-logout-button");
+
+
+  if (button) {
+    button.disabled =
+      true;
+  }
+
+
+  try {
+
+    const {
+      error
+    } =
+      await state.supabase.auth
+        .signOut();
+
+
+    if (error) {
+
+      throw normalizeError(
+        error,
+        {
+          file:
+            "js/core/campanhas.js",
+
+          function:
+            "handleLogout",
+
+          table:
+            "auth",
+
+          operation:
+            "signOut"
+        }
+      );
+    }
+
+
+    window.location.replace(
+      CONFIG.LOGIN_PAGE
+    );
+
+
+  } catch (error) {
+
+    log(
+      "error",
+      "Erro ao sair.",
+      error
+    );
+
+
+    showToast(
+      "Não foi possível sair agora.",
+      "error"
+    );
+
+
+    if (button) {
+      button.disabled =
+        false;
+    }
+  }
+}
 
 function bindEvents() {
 
-  $("campaigns-create-button")
-    ?.addEventListener(
-      "click",
-      openCreateCampaignModal
-    );
+  $(
+    "campaigns-create-button"
+  )?.addEventListener(
+    "click",
+    openCreateCampaignModal
+  );
 
 
-  $("campaigns-empty-create-button")
-    ?.addEventListener(
-      "click",
-      openCreateCampaignModal
-    );
+  $(
+    "campaigns-empty-create-button"
+  )?.addEventListener(
+    "click",
+    openCreateCampaignModal
+  );
 
 
-  $("campaign-create-close")
-    ?.addEventListener(
-      "click",
-      closeCreateCampaignModal
-    );
+  $(
+    "campaign-create-close"
+  )?.addEventListener(
+    "click",
+    closeCreateCampaignModal
+  );
 
 
-  $("campaign-create-cancel")
-    ?.addEventListener(
-      "click",
-      closeCreateCampaignModal
-    );
+  $(
+    "campaign-create-cancel"
+  )?.addEventListener(
+    "click",
+    closeCreateCampaignModal
+  );
 
 
-  $("campaign-create-form")
-    ?.addEventListener(
-      "submit",
-      createCampaign
-    );
+  $(
+    "campaign-create-form"
+  )?.addEventListener(
+    "submit",
+    createCampaign
+  );
 
 
-  $("campaign-cover")
-    ?.addEventListener(
-      "change",
-      (event) => {
+  $(
+    "campaign-cover"
+  )?.addEventListener(
+    "change",
+    (event) => {
 
-        const file =
-          event.currentTarget
-            ?.files
-            ?.[0] ||
-          null;
-
-
-        const error =
-          $("campaign-cover-error");
+      const file =
+        event.currentTarget
+          ?.files?.[0] ||
+        null;
 
 
-        if (error) {
+      const errorElement =
+        $(
+          "campaign-cover-error"
+        );
 
-          error.textContent =
-            "";
 
+      if (errorElement) {
+        errorElement.textContent =
+          "";
+      }
+
+
+      if (!file) {
+
+        clearCoverPreview();
+
+        return;
+      }
+
+
+      try {
+
+        validateCover(
+          file
+        );
+
+        previewCover(
+          file
+        );
+
+      } catch (error) {
+
+        if (errorElement) {
+
+          errorElement.textContent =
+            error.message;
         }
 
 
-        if (!file) {
-
-          clearCoverPreview();
-
-          return;
-        }
+        event.currentTarget.value =
+          "";
 
 
-        try {
-
-          validateCover(
-            file
-          );
-
-
-          previewCover(
-            file
-          );
-
-        } catch (validationError) {
-
-          if (error) {
-
-            error.textContent =
-              validationError.message;
-
-          }
-
-
-          event.currentTarget.value =
-            "";
-
-
-          clearCoverPreview();
-
-        }
+        clearCoverPreview();
 
       }
-    );
+    }
+  );
 
 
-  $("campaign-invite-close")
-    ?.addEventListener(
-      "click",
-      closeInviteModal
-    );
+  $(
+    "campaign-invite-close"
+  )?.addEventListener(
+    "click",
+    closeInviteModal
+  );
 
 
-  $("campaign-invite-copy-code")
-    ?.addEventListener(
-      "click",
-      copyInviteCode
-    );
+  $(
+    "campaign-invite-copy-code"
+  )?.addEventListener(
+    "click",
+    copyInviteCode
+  );
 
 
-  $("campaign-invite-copy-link")
-    ?.addEventListener(
-      "click",
-      copyInviteLink
-    );
+  $(
+    "campaign-invite-copy-link"
+  )?.addEventListener(
+    "click",
+    copyInviteLink
+  );
 
 
-  $("campaign-invite-link-copy")
-    ?.addEventListener(
-      "click",
-      copyInviteLink
-    );
+  $(
+    "campaign-invite-link-copy"
+  )?.addEventListener(
+    "click",
+    copyInviteLink
+  );
 
 
-  $("campaign-invite-share")
-    ?.addEventListener(
-      "click",
-      shareInvite
-    );
+  $(
+    "campaign-invite-share"
+  )?.addEventListener(
+    "click",
+    shareInvite
+  );
 
 
-  $("campaigns-retry-button")
-    ?.addEventListener(
-      "click",
-      () => {
+  $(
+    "campaigns-retry-button"
+  )?.addEventListener(
+    "click",
+    () => {
 
-        if (
-          !state.isLoading
-        ) {
+      if (
+        !state.isLoading
+      ) {
 
-          loadCampaigns();
-
-        }
-
-      }
-    );
-
-
-  $("campaigns-join-button")
-    ?.addEventListener(
-      "click",
-      () => {
-
-        window.location.href =
-          "./entrar.html";
+        loadCampaigns();
 
       }
-    );
+
+    }
+  );
 
 
-  $("campaign- create-modal")
-    ?.addEventListener(
-      "click",
-      () => {}
-    );
+  $(
+    "campaigns-join-button"
+  )?.addEventListener(
+    "click",
+    () => {
+
+      window.location.href =
+        CONFIG.JOIN_PAGE;
+
+    }
+  );
 
 
-  $("campaign-create-modal")
-    ?.addEventListener(
-      "click",
-      (event) => {
+  $(
+    "campaign-create-modal"
+  )?.addEventListener(
+    "click",
+    (event) => {
 
-        const target =
-          event.target instanceof
-          Element
-            ? event.target
-            : null;
-
-
-        if (
-          target?.dataset.modalClose ===
+      if (
+        event.target instanceof
+        Element &&
+        event.target.dataset
+          .modalClose ===
           "true"
-        ) {
+      ) {
 
-          closeCreateCampaignModal();
-
-        }
+        closeCreateCampaignModal();
 
       }
-    );
+
+    }
+  );
 
 
-  $("campaign-invite-modal")
-    ?.addEventListener(
-      "click",
-      (event) => {
+  $(
+    "campaign-invite-modal"
+  )?.addEventListener(
+    "click",
+    (event) => {
 
-        const target =
-          event.target instanceof
-          Element
-            ? event.target
-            : null;
-
-
-        if (
-          target?.dataset.inviteModalClose ===
+      if (
+        event.target instanceof
+        Element &&
+        event.target.dataset
+          .inviteModalClose ===
           "true"
-        ) {
+      ) {
 
-          closeInviteModal();
-
-        }
+        closeInviteModal();
 
       }
-    );
+
+    }
+  );
 
 
   document.addEventListener(
@@ -2681,7 +2935,6 @@ function bindEvents() {
         event.key !==
         "Escape"
       ) {
-
         return;
       }
 
@@ -2693,11 +2946,7 @@ function bindEvents() {
 
         closeCreateCampaignModal();
 
-        return;
-      }
-
-
-      if (
+      } else if (
         state.modal ===
         "invite"
       ) {
@@ -2710,56 +2959,62 @@ function bindEvents() {
   );
 
 
-  $("campaigns-mobile-menu-button")
-    ?.addEventListener(
-      "click",
-      () => {
+  $(
+    "campaigns-mobile-menu-button"
+  )?.addEventListener(
+    "click",
+    () => {
 
-        const sidebar =
-          $("campaigns-sidebar");
-
-
-        const button =
-          $("campaigns-mobile-menu-button");
-
-
-        if (
-          !sidebar ||
-          !button
-        ) {
-
-          return;
-        }
-
-
-        const open =
-          sidebar.classList.toggle(
-            "is-open"
-          );
-
-
-        button.setAttribute(
-          "aria-expanded",
-          String(open)
+      const sidebar =
+        $(
+          "campaigns-sidebar"
         );
 
+      const button =
+        $(
+          "campaigns-mobile-menu-button"
+        );
+
+
+      if (
+        !sidebar ||
+        !button
+      ) {
+        return;
       }
-    );
 
 
-  $("campaigns-logout-button")
-    ?.addEventListener(
-      "click",
-      handleLogout
-    );
+      const open =
+        sidebar.classList.toggle(
+          "is-open"
+        );
+
+
+      button.setAttribute(
+        "aria-expanded",
+        String(open)
+      );
+
+    }
+  );
+
+
+  $(
+    "campaigns-logout-button"
+  )?.addEventListener(
+    "click",
+    handleLogout
+  );
 
 
   document
     .querySelectorAll(
-      "[data-coming-soon=\"true\"]"
+      '[data-coming-soon="true"]'
     )
     .forEach(
-      (element) => {
+      (
+        element
+      ) => {
 
         element.addEventListener(
           "click",
@@ -2778,116 +3033,124 @@ function bindEvents() {
 
       }
     );
-
 }
 
+function bindAuthListener() {
 
-/* ============================================================
-   LOGOUT
-   ============================================================ */
-
-async function handleLogout() {
-
-  const button =
-    $("campaigns-logout-button");
-
-
-  if (button) {
-
-    button.disabled =
-      true;
-
+  if (
+    !state.supabase?.auth ||
+    state.authSubscription
+  ) {
+    return;
   }
 
 
-  try {
+  const {
+    data
+  } =
+    state.supabase.auth
+      .onAuthStateChange(
+        (
+          event,
+          session
+        ) => {
 
-    const {
-      error
-    } =
-      await state.supabase.auth.signOut();
+          window.setTimeout(
+            async () => {
+
+              if (
+                event ===
+                  "SIGNED_OUT" ||
+                !session?.user
+              ) {
+
+                window.location.replace(
+                  CONFIG.LOGIN_PAGE
+                );
+
+                return;
+              }
 
 
-    if (error) {
+              if (
+                session.user.id !==
+                state.user?.id
+              ) {
 
-      throw normalizeError(
-        error,
-        {
+                state.user =
+                  session.user;
 
-          file:
-            "js/core/campanhas.js",
 
-          function:
-            "handleLogout",
+                await loadProfile();
 
-          table:
-            "auth",
 
-          operation:
-            "signOut"
+                await renderUser();
+
+
+                await loadCampaigns();
+
+              }
+
+            },
+            0
+          );
 
         }
       );
 
-    }
 
-
-    window.location.replace(
-      CONFIG.LOGIN_PAGE
-    );
-
-  } catch (error) {
-
-    log(
-      "error",
-      "Erro ao sair.",
-      error
-    );
-
-
-    showToast(
-      "Não foi possível sair agora.",
-      "error"
-    );
-
-
-    if (button) {
-
-      button.disabled =
-        false;
-
-    }
-
-  }
-
+  state.authSubscription =
+    data?.subscription ||
+    null;
 }
 
+function cleanup() {
 
-/* ============================================================
-   INICIALIZAÇÃO
-   ============================================================ */
+  stopInviteTimer();
+
+  if (
+    state.coverObjectUrl
+  ) {
+
+    URL.revokeObjectURL(
+      state.coverObjectUrl
+    );
+
+    state.coverObjectUrl =
+      null;
+  }
+
+
+  if (
+    state.authSubscription
+  ) {
+
+    state.authSubscription.unsubscribe();
+
+    state.authSubscription =
+      null;
+  }
+}
 
 async function init() {
 
-  log(
-    "info",
-    "Inicializando página de campanhas..."
-  );
+  showLoading();
 
 
   try {
 
     /*
-     * IMPORTANTE:
-     *
-     * getSupabase() é async.
+     * PRIMEIRO:
+     * obter o cliente real do Supabase.
      */
 
     state.supabase =
       await getSupabase();
 
 
-    if (!state.supabase) {
+    if (
+      !state.supabase
+    ) {
 
       throw new Error(
         "Cliente Supabase não disponível."
@@ -2896,24 +3159,40 @@ async function init() {
     }
 
 
-    log(
-      "info",
-      "Cliente Supabase obtido."
-    );
-
+    /*
+     * SEGUNDO:
+     * registrar interface.
+     */
 
     bindEvents();
 
+
+    /*
+     * TERCEIRO:
+     * registrar Auth.
+     */
+
+    bindAuthListener();
+
+
+    /*
+     * QUARTO:
+     * carregar sessão.
+     */
 
     const user =
       await loadSession();
 
 
     if (!user) {
-
       return;
     }
 
+
+    /*
+     * QUINTO:
+     * carregar campanhas.
+     */
 
     await loadCampaigns();
 
@@ -2937,14 +3216,12 @@ async function init() {
       error?.message ||
       "Não foi possível inicializar a página."
     );
-
   }
-
 }
 
 
 /* ============================================================
-   API GLOBAL
+   API PÚBLICA
    ============================================================ */
 
 window.AeriomCampaigns =
@@ -2964,7 +3241,23 @@ window.AeriomCampaigns =
 
     openInviteModal,
 
-    closeInviteModal
+    closeInviteModal,
+
+    getState:
+      () =>
+        Object.freeze({
+          user:
+            state.user,
+
+          profile:
+            state.profile,
+
+          campaigns:
+            [...state.campaigns],
+
+          selectedCampaign:
+            state.selectedCampaign
+        })
 
   });
 
@@ -2992,3 +3285,17 @@ if (
   init();
 
 }
+
+
+/* ============================================================
+   PAGE LIFECYCLE
+   ============================================================ */
+
+window.addEventListener(
+  "pagehide",
+  cleanup,
+  {
+    once:
+      true
+  }
+);
