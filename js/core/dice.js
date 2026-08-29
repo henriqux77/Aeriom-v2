@@ -4,38 +4,7 @@
  * js/core/dice.js
  * Sistema de rolagem de dados
  * ============================================================
- *
- * Dados suportados:
- *
- * d4
- * d6
- * d8
- * d10
- * d12
- * d20
- * d100
- *
- * Recursos:
- *
- * - seleção de dado;
- * - modificador;
- * - personagem;
- * - visibilidade;
- * - contexto da rolagem;
- * - rolagem segura no cliente;
- * - persistência em dice_rolls;
- * - histórico;
- * - Realtime;
- * - crítico/falha crítica para d20;
- * - integração com campanha.js.
- *
- * ============================================================
  */
-
-
-/* ============================================================
-   CONFIGURAÇÃO
-   ============================================================ */
 
 const DICE_CONFIG = Object.freeze({
 
@@ -126,6 +95,9 @@ const state = {
     false,
 
   eventsBound:
+    false,
+
+  historyLoaded:
     false
 
 };
@@ -146,8 +118,7 @@ function log(
 
 
   if (
-    level ===
-    "error"
+    level === "error"
   ) {
 
     console.error(
@@ -162,8 +133,7 @@ function log(
 
 
   if (
-    level ===
-    "warn"
+    level === "warn"
   ) {
 
     console.warn(
@@ -300,12 +270,11 @@ function isValidDie(
   die
 ) {
 
-  return DICE_CONFIG.allowedDice
-    .includes(
-      safeInteger(
-        die
-      )
-    );
+  return DICE_CONFIG.allowedDice.includes(
+    safeInteger(
+      die
+    )
+  );
 
 }
 
@@ -321,18 +290,11 @@ function normalizeDie(
     );
 
 
-  if (
-    isValidDie(
-      value
-    )
-  ) {
-
-    return value;
-
-  }
-
-
-  return DICE_CONFIG.defaultDie;
+  return isValidDie(
+    value
+  )
+    ? value
+    : DICE_CONFIG.defaultDie;
 
 }
 
@@ -387,13 +349,13 @@ function normalizeVisibility(
 
 function readCampaignContext() {
 
-  const campaignApi =
+  const api =
     window.AERIOM_CAMPAIGN;
 
 
   if (
-    !campaignApi ||
-    typeof campaignApi.getContext !==
+    !api ||
+    typeof api.getContext !==
       "function"
   ) {
 
@@ -402,8 +364,28 @@ function readCampaignContext() {
   }
 
 
-  const context =
-    campaignApi.getContext();
+  let context;
+
+
+  try {
+
+    context =
+      api.getContext();
+
+  } catch (
+    error
+  ) {
+
+    log(
+      "error",
+      "Falha ao obter contexto da campanha.",
+      error
+    );
+
+
+    return false;
+
+  }
 
 
   if (
@@ -661,7 +643,7 @@ function setContext(
 
 
 /* ============================================================
-   ALEATÓRIO
+   RANDOM
    ============================================================ */
 
 function randomInteger(
@@ -699,10 +681,6 @@ function randomInteger(
     1;
 
 
-  /*
-   * Usa Web Crypto quando disponível.
-   */
-
   if (
     typeof crypto !==
       "undefined" &&
@@ -711,15 +689,15 @@ function randomInteger(
   ) {
 
     const maxUint =
-      0xFFFFFFFF;
+      0x100000000;
 
 
     const limit =
-      maxUint -
-      (
-        maxUint %
+      Math.floor(
+        maxUint /
         range
-      );
+      ) *
+      range;
 
 
     const buffer =
@@ -758,10 +736,6 @@ function randomInteger(
 
   }
 
-
-  /*
-   * Fallback.
-   */
 
   return (
     Math.floor(
@@ -854,10 +828,8 @@ function classifyRoll(
 
 
   if (
-    die ===
-      20 &&
-    result ===
-      20
+    die === 20 &&
+    result === 20
   ) {
 
     return "critical";
@@ -866,10 +838,8 @@ function classifyRoll(
 
 
   if (
-    die ===
-      20 &&
-    result ===
-      1
+    die === 20 &&
+    result === 1
   ) {
 
     return "critical-failure";
@@ -904,8 +874,7 @@ function formatDiceNotation(
 
 
   if (
-    normalizedModifier ===
-    0
+    normalizedModifier === 0
   ) {
 
     return `d${normalizedDie}`;
@@ -931,10 +900,6 @@ function formatDiceNotation(
 }
 
 
-/* ============================================================
-   FORMATA RESULTADO
-   ============================================================ */
-
 function formatRollResult(
   roll
 ) {
@@ -959,7 +924,7 @@ function formatRollResult(
 
 
 /* ============================================================
-   VALIDAÇÃO DO PERSONAGEM
+   PERSONAGEM
    ============================================================ */
 
 async function validateCharacterOwnership(
@@ -1042,7 +1007,7 @@ async function validateCharacterOwnership(
 
 
 /* ============================================================
-   NORMALIZA ROLAGEM DO BANCO
+   NORMALIZAR ROLAGEM DO BANCO
    ============================================================ */
 
 function normalizeSavedRoll(
@@ -1261,11 +1226,6 @@ async function roll(
   }
 
 
-  /*
-   * Tenta recuperar o contexto da campanha caso o módulo
-   * tenha sido carregado antes do campaign.js.
-   */
-
   if (
     !hasCampaignContext()
   ) {
@@ -1297,54 +1257,29 @@ async function roll(
 
   try {
 
-    /*
-     * ========================================================
-     * DADO
-     * ========================================================
-     *
-     * Ordem:
-     *
-     * 1. options.die quando realmente enviado;
-     * 2. caso contrário, state.selectedDie.
-     *
-     * Assim o dado escolhido na interface é preservado.
-     */
-
-    let die;
-
-
-    if (
+    const hasOwnDie =
       Object.prototype.hasOwnProperty.call(
         options,
         "die"
-      ) &&
+      );
+
+
+    const die =
+      hasOwnDie &&
       options.die !==
         undefined &&
       options.die !==
         null &&
-      options.die !==
-        ""
-    ) {
+      options.die !== ""
 
-      die =
-        normalizeDie(
-          options.die
-        );
+        ? normalizeDie(
+            options.die
+          )
 
-    }
-    else {
+        : normalizeDie(
+            state.selectedDie
+          );
 
-      die =
-        normalizeDie(
-          state.selectedDie
-        );
-
-    }
-
-
-    /*
-     * Modificador.
-     */
 
     const modifier =
       Object.prototype.hasOwnProperty.call(
@@ -1361,10 +1296,6 @@ async function roll(
           );
 
 
-    /*
-     * Visibilidade.
-     */
-
     const visibility =
       Object.prototype.hasOwnProperty.call(
         options,
@@ -1380,10 +1311,6 @@ async function roll(
           );
 
 
-    /*
-     * Contexto.
-     */
-
     const context =
       Object.prototype.hasOwnProperty.call(
         options,
@@ -1398,10 +1325,6 @@ async function roll(
             state.context
           );
 
-
-    /*
-     * Personagem.
-     */
 
     const characterId =
       Object.prototype.hasOwnProperty.call(
@@ -1419,10 +1342,6 @@ async function roll(
 
         : getSelectedCharacterId();
 
-
-    /*
-     * Mantém a interface sincronizada.
-     */
 
     state.selectedDie =
       die;
@@ -1451,10 +1370,6 @@ async function roll(
     renderCharacterSelection();
 
 
-    /*
-     * Validação do personagem.
-     */
-
     if (
       characterId
     ) {
@@ -1465,12 +1380,6 @@ async function roll(
 
     }
 
-
-    /*
-     * ========================================================
-     * ROLAGEM REAL
-     * ========================================================
-     */
 
     const local =
       rollLocal(
@@ -1509,10 +1418,6 @@ async function roll(
     };
 
 
-    /*
-     * Mostra imediatamente.
-     */
-
     state.lastRoll =
       rollData;
 
@@ -1527,10 +1432,6 @@ async function roll(
       rollData
     );
 
-
-    /*
-     * Salva no banco.
-     */
 
     const saved =
       await saveRoll(
@@ -1558,6 +1459,19 @@ async function roll(
 
 
     renderLastRoll(
+      finalRoll
+    );
+
+
+    /*
+     * ========================================================
+     * CORREÇÃO:
+     * O histórico agora é atualizado IMEDIATAMENTE.
+     * Não precisa trocar de guia.
+     * ========================================================
+     */
+
+    prependHistoryRoll(
       finalRoll
     );
 
@@ -1614,11 +1528,11 @@ async function roll(
 
 
 /* ============================================================
-   HISTÓRICO
+   HISTÓRICO — BANCO
    ============================================================ */
 
 async function loadRecentRolls(
-  limit = 30
+  limit = DICE_CONFIG.maxHistory
 ) {
 
   if (
@@ -1637,7 +1551,7 @@ async function loadRecentRolls(
         100,
         safeInteger(
           limit,
-          30
+          DICE_CONFIG.maxHistory
         )
       )
     );
@@ -1691,8 +1605,12 @@ async function loadRecentRolls(
   }
 
 
-  return arrayFrom(
-    data
+  return (
+    Array.isArray(
+      data
+    )
+      ? data
+      : []
   )
     .map(
       normalizeSavedRoll
@@ -1700,6 +1618,653 @@ async function loadRecentRolls(
     .filter(
       Boolean
     );
+
+}
+
+
+/* ============================================================
+   HISTÓRICO — ITEM
+   ============================================================ */
+
+function createHistoryElement(
+  roll
+) {
+
+  const item =
+    document.createElement(
+      "article"
+    );
+
+
+  item.className =
+    "dice-history__item";
+
+
+  if (
+    roll.id
+  ) {
+
+    item.dataset.rollId =
+      roll.id;
+
+  }
+
+
+  item.dataset.die =
+    `d${normalizeDie(
+      roll.dieType
+    )}`;
+
+
+  item.dataset.result =
+    roll.classification ||
+    classifyRoll(
+      roll
+    );
+
+
+  const notation =
+    document.createElement(
+      "span"
+    );
+
+
+  notation.className =
+    "dice-history__notation";
+
+
+  notation.textContent =
+    formatDiceNotation(
+      roll.dieType,
+      roll.modifier
+    );
+
+
+  const value =
+    document.createElement(
+      "strong"
+    );
+
+
+  value.className =
+    "dice-history__result";
+
+
+  value.textContent =
+    String(
+      roll.totalResult
+    );
+
+
+  const meta =
+    document.createElement(
+      "span"
+    );
+
+
+  meta.className =
+    "dice-history__meta";
+
+
+  meta.textContent =
+    roll.context ||
+    "Rolagem";
+
+
+  item.append(
+    notation,
+    value,
+    meta
+  );
+
+
+  return item;
+
+}
+
+
+/* ============================================================
+   HISTÓRICO — ID
+   ============================================================ */
+
+function historyHasRoll(
+  rollId
+) {
+
+  if (
+    !rollId
+  ) {
+
+    return false;
+
+  }
+
+
+  const history =
+    getElement(
+      "dice-history"
+    );
+
+
+  if (
+    !history
+  ) {
+
+    return false;
+
+  }
+
+
+  return Boolean(
+    Array.from(
+      history.children
+    )
+      .find(
+        child =>
+          child.dataset.rollId ===
+          String(
+            rollId
+          )
+      )
+  );
+
+}
+
+
+/* ============================================================
+   HISTÓRICO — ADICIONAR
+   ============================================================ */
+
+function prependHistoryRoll(
+  roll
+) {
+
+  const history =
+    getElement(
+      "dice-history"
+    );
+
+
+  if (
+    !history ||
+    !roll
+  ) {
+
+    return;
+
+  }
+
+
+  if (
+    historyHasRoll(
+      roll.id
+    )
+  ) {
+
+    return;
+
+  }
+
+
+  const element =
+    createHistoryElement(
+      roll
+    );
+
+
+  history.prepend(
+    element
+  );
+
+
+  /*
+   * Limite visual.
+   */
+
+  while (
+    history.children.length >
+    DICE_CONFIG.maxHistory
+  ) {
+
+    history.lastElementChild
+      ?.remove();
+
+  }
+
+
+  state.historyLoaded =
+    true;
+
+}
+
+
+/* ============================================================
+   HISTÓRICO — ROLAGEM REMOTA
+   ============================================================ */
+
+function renderRemoteRoll(
+  roll
+) {
+
+  if (
+    !roll
+  ) {
+
+    return;
+
+  }
+
+
+  prependHistoryRoll(
+    roll
+  );
+
+
+  dispatchDiceEvent(
+    "remoteroll",
+    roll
+  );
+
+}
+
+
+/* ============================================================
+   HISTÓRICO — RENDER COMPLETO
+   ============================================================ */
+
+async function renderHistory() {
+
+  const history =
+    getElement(
+      "dice-history"
+    );
+
+
+  if (
+    !history
+  ) {
+
+    return;
+
+  }
+
+
+  try {
+
+    const rolls =
+      await loadRecentRolls(
+        DICE_CONFIG.maxHistory
+      );
+
+
+    history.replaceChildren();
+
+
+    /*
+     * loadRecentRolls vem do mais novo para o mais antigo.
+     *
+     * Renderizamos do antigo para o novo usando prepend.
+     */
+
+    rolls
+      .reverse()
+      .forEach(
+        roll => {
+
+          prependHistoryRoll(
+            roll
+          );
+
+        }
+      );
+
+
+    state.historyLoaded =
+      true;
+
+
+    ensureClearHistoryButton();
+
+
+  } catch (
+    error
+  ) {
+
+    log(
+      "warn",
+      "Falha ao carregar histórico.",
+      error
+    );
+
+  }
+
+}
+
+
+/* ============================================================
+   LIMPAR HISTÓRICO
+   ============================================================ */
+
+async function clearHistory() {
+
+  if (
+    !hasCampaignContext()
+  ) {
+
+    showDiceError(
+      "A campanha ainda não está disponível."
+    );
+
+
+    return false;
+
+  }
+
+
+  if (
+    !isMaster()
+  ) {
+
+    showDiceError(
+      "Somente o Mestre pode limpar o histórico da campanha."
+    );
+
+
+    return false;
+
+  }
+
+
+  const confirmed =
+    window.confirm(
+      "Limpar todo o histórico de rolagens desta campanha?"
+    );
+
+
+  if (
+    !confirmed
+  ) {
+
+    return false;
+
+  }
+
+
+  try {
+
+    const {
+      error
+    } =
+      await state.supabase
+        .from(
+          "dice_rolls"
+        )
+        .delete()
+        .eq(
+          "campaign_id",
+          state.campaignId
+        );
+
+
+    if (
+      error
+    ) {
+
+      throw error;
+
+    }
+
+
+    const history =
+      getElement(
+        "dice-history"
+      );
+
+
+    if (
+      history
+    ) {
+
+      history.replaceChildren();
+
+    }
+
+
+    state.historyLoaded =
+      true;
+
+
+    showDiceSuccess(
+      "Histórico de rolagens limpo."
+    );
+
+
+    dispatchDiceEvent(
+      "historyclear",
+      {
+        campaignId:
+          state.campaignId
+      }
+    );
+
+
+    return true;
+
+  } catch (
+    error
+  ) {
+
+    log(
+      "error",
+      "Falha ao limpar histórico.",
+      error
+    );
+
+
+    showDiceError(
+      getFriendlyError(
+        error
+      )
+    );
+
+
+    return false;
+
+  }
+
+}
+
+
+/* ============================================================
+   BOTÃO LIMPAR HISTÓRICO
+   ============================================================ */
+
+function ensureClearHistoryButton() {
+
+  const history =
+    getElement(
+      "dice-history"
+    );
+
+
+  if (
+    !history
+  ) {
+
+    return;
+
+  }
+
+
+  const existing =
+    getElement(
+      "dice-history-clear"
+    );
+
+
+  if (
+    existing
+  ) {
+
+    existing.hidden =
+      !isMaster();
+
+    return;
+
+  }
+
+
+  /*
+   * Coloca o botão dentro do mesmo painel do histórico.
+   */
+
+  const panel =
+    history.closest(
+      ".dice-result-panel, .dice-history-panel, .dice-panel"
+    ) ||
+    history.parentElement;
+
+
+  if (
+    !panel
+  ) {
+
+    return;
+
+  }
+
+
+  const wrapper =
+    document.createElement(
+      "div"
+    );
+
+
+  wrapper.className =
+    "dice-history__toolbar";
+
+
+  wrapper.style.display =
+    "flex";
+
+
+  wrapper.style.justifyContent =
+    "flex-end";
+
+
+  wrapper.style.marginTop =
+    "12px";
+
+
+  wrapper.style.marginBottom =
+    "8px";
+
+
+  const button =
+    document.createElement(
+      "button"
+    );
+
+
+  button.id =
+    "dice-history-clear";
+
+
+  button.type =
+    "button";
+
+
+  button.className =
+    "dice-history__clear";
+
+
+  button.textContent =
+    "Limpar histórico";
+
+
+  button.hidden =
+    !isMaster();
+
+
+  button.addEventListener(
+    "click",
+    clearHistory
+  );
+
+
+  wrapper.appendChild(
+    button
+  );
+
+
+  /*
+   * O botão fica logo antes da lista.
+   */
+
+  history.parentNode.insertBefore(
+    wrapper,
+    history
+  );
+
+}
+
+
+/* ============================================================
+   MENSAGEM DE SUCESSO
+   ============================================================ */
+
+function showDiceSuccess(
+  message
+) {
+
+  const element =
+    getElement(
+      "dice-success"
+    );
+
+
+  if (
+    element
+  ) {
+
+    element.textContent =
+      message;
+
+
+    element.hidden =
+      false;
+
+
+    window.clearTimeout(
+      showDiceSuccess.timeout
+    );
+
+
+    showDiceSuccess.timeout =
+      window.setTimeout(
+        () => {
+
+          element.hidden =
+            true;
+
+        },
+        3500
+      );
+
+
+    return;
+
+  }
+
+
+  /*
+   * Não criamos alert para não atrapalhar a mesa.
+   */
+
+  log(
+    "info",
+    message
+  );
 
 }
 
@@ -1743,10 +2308,9 @@ function removeRealtime() {
 
     try {
 
-      state.supabase
-        .removeChannel(
-          state.realtimeChannel
-        );
+      state.supabase.removeChannel(
+        state.realtimeChannel
+      );
 
     } catch (
       error
@@ -1754,7 +2318,7 @@ function removeRealtime() {
 
       log(
         "warn",
-        "Falha ao remover canal Realtime dos dados.",
+        "Falha ao remover canal Realtime.",
         error
       );
 
@@ -1818,6 +2382,28 @@ function setupRealtime() {
       },
 
       handleRemoteRoll
+    );
+
+
+    channel.on(
+      "postgres_changes",
+      {
+
+        event:
+          "DELETE",
+
+        schema:
+          "public",
+
+        table:
+          "dice_rolls",
+
+        filter:
+          `campaign_id=eq.${state.campaignId}`
+
+      },
+
+      handleRemoteDelete
     );
 
 
@@ -1896,7 +2482,7 @@ function handleRemoteRoll(
 
 
   /*
-   * Não duplica a própria rolagem.
+   * A própria rolagem já foi colocada localmente.
    */
 
   if (
@@ -1904,6 +2490,25 @@ function handleRemoteRoll(
     roll.userId ===
       state.user.id
   ) {
+
+    /*
+     * Ainda assim garantimos que o histórico tenha o item
+     * caso a página tenha sido atualizada entre a rolagem
+     * e o evento Realtime.
+     */
+
+    if (
+      !historyHasRoll(
+        roll.id
+      )
+    ) {
+
+      prependHistoryRoll(
+        roll
+      );
+
+    }
+
 
     return;
 
@@ -1914,17 +2519,86 @@ function handleRemoteRoll(
     roll
   );
 
+}
+
+
+/* ============================================================
+   DELEÇÃO REMOTA
+   ============================================================ */
+
+function handleRemoteDelete(
+  payload
+) {
+
+  const deleted =
+    payload?.old;
+
+
+  const id =
+    deleted?.id
+      ? String(
+          deleted.id
+        )
+      : null;
+
+
+  if (
+    !id
+  ) {
+
+    /*
+     * Caso o Realtime não entregue o ID antigo,
+     * recarregamos o histórico.
+     */
+
+    renderHistory();
+
+    return;
+
+  }
+
+
+  const history =
+    getElement(
+      "dice-history"
+    );
+
+
+  if (
+    !history
+  ) {
+
+    return;
+
+  }
+
+
+  const item =
+    Array.from(
+      history.children
+    )
+      .find(
+        child =>
+          child.dataset.rollId ===
+          id
+      );
+
+
+  item?.remove();
+
 
   dispatchDiceEvent(
-    "remoteroll",
-    roll
+    "remotedelete",
+    {
+      id
+    }
   );
 
 }
 
 
 /* ============================================================
-   UI — SELEÇÃO DE DADOS
+   UI — SELEÇÃO
    ============================================================ */
 
 function renderDiceSelection() {
@@ -2021,8 +2695,7 @@ function renderModifier() {
   ) {
 
     display.textContent =
-      state.modifier >=
-        0
+      state.modifier >= 0
 
         ? `+${state.modifier}`
 
@@ -2208,20 +2881,24 @@ function renderLastRoll(
       "dice-result"
     );
 
+
   const empty =
     getElement(
       "dice-result-empty"
     );
+
 
   const number =
     getElement(
       "dice-result-number"
     );
 
+
   const notation =
     getElement(
       "dice-result-notation"
     );
+
 
   const classification =
     getElement(
@@ -2241,11 +2918,6 @@ function renderLastRoll(
       roll.classification ||
       "normal";
 
-
-    /*
-     * IMPORTANTE:
-     * agora o CSS pode identificar o dado real.
-     */
 
     result.dataset.die =
       `d${normalizeDie(
@@ -2487,6 +3159,12 @@ function showDiceError(
     !element
   ) {
 
+    log(
+      "error",
+      message
+    );
+
+
     return;
 
   }
@@ -2520,7 +3198,7 @@ function showDiceError(
 
 
 /* ============================================================
-   ERROS AMIGÁVEIS
+   ERRO AMIGÁVEL
    ============================================================ */
 
 function getFriendlyError(
@@ -2553,7 +3231,7 @@ function getFriendlyError(
   ) {
 
     return (
-      "O banco recusou essa rolagem. Verifique as permissões da mesa."
+      "O banco recusou essa operação. Verifique as permissões da mesa."
     );
 
   }
@@ -2573,6 +3251,9 @@ function getFriendlyError(
   if (
     lower.includes(
       "contexto"
+    ) ||
+    lower.includes(
+      "carregando"
     )
   ) {
 
@@ -2585,249 +3266,7 @@ function getFriendlyError(
 
   return (
     message ||
-    "Não foi possível realizar a rolagem."
-  );
-
-}
-
-
-/* ============================================================
-   ROLAGEM REMOTA — UI
-   ============================================================ */
-
-function renderRemoteRoll(
-  roll
-) {
-
-  const history =
-    getElement(
-      "dice-history"
-    );
-
-
-  if (
-    !history
-  ) {
-
-    return;
-
-  }
-
-
-  if (
-    roll.id
-  ) {
-
-    const escapedId =
-      typeof CSS !==
-        "undefined" &&
-      typeof CSS.escape ===
-        "function"
-
-        ? CSS.escape(
-            roll.id
-          )
-
-        : String(
-            roll.id
-          )
-            .replace(
-              /"/g,
-              '\\"'
-            );
-
-
-    const existing =
-      history.querySelector(
-        `[data-roll-id="${escapedId}"]`
-      );
-
-
-    if (
-      existing
-    ) {
-
-      return;
-
-    }
-
-  }
-
-
-  const item =
-    document.createElement(
-      "article"
-    );
-
-
-  item.className =
-    "dice-history__item";
-
-
-  if (
-    roll.id
-  ) {
-
-    item.dataset.rollId =
-      roll.id;
-
-  }
-
-
-  item.dataset.die =
-    `d${normalizeDie(
-      roll.dieType
-    )}`;
-
-
-  const notation =
-    document.createElement(
-      "span"
-    );
-
-
-  notation.className =
-    "dice-history__notation";
-
-
-  notation.textContent =
-    formatDiceNotation(
-      roll.dieType,
-      roll.modifier
-    );
-
-
-  const result =
-    document.createElement(
-      "strong"
-    );
-
-
-  result.className =
-    "dice-history__result";
-
-
-  result.textContent =
-    String(
-      roll.totalResult
-    );
-
-
-  const meta =
-    document.createElement(
-      "span"
-    );
-
-
-  meta.className =
-    "dice-history__meta";
-
-
-  meta.textContent =
-    roll.context ||
-    "Rolagem";
-
-
-  item.append(
-    notation,
-    result,
-    meta
-  );
-
-
-  history.prepend(
-    item
-  );
-
-
-  while (
-    history.children.length >
-    DICE_CONFIG.maxHistory
-  ) {
-
-    history.lastElementChild
-      ?.remove();
-
-  }
-
-}
-
-
-/* ============================================================
-   HISTÓRICO
-   ============================================================ */
-
-async function renderHistory() {
-
-  const history =
-    getElement(
-      "dice-history"
-    );
-
-
-  if (
-    !history
-  ) {
-
-    return;
-
-  }
-
-
-  history.replaceChildren();
-
-
-  try {
-
-    const rolls =
-      await loadRecentRolls(
-        30
-      );
-
-
-    rolls
-      .reverse()
-      .forEach(
-        roll => {
-
-          renderRemoteRoll(
-            roll
-          );
-
-        }
-      );
-
-  } catch (
-    error
-  ) {
-
-    log(
-      "warn",
-      "Falha ao carregar histórico.",
-      error
-    );
-
-  }
-
-}
-
-
-/* ============================================================
-   EVENTOS
-   ============================================================ */
-
-function dispatchDiceEvent(
-  name,
-  detail
-) {
-
-  window.dispatchEvent(
-    new CustomEvent(
-      `aeriom:dice:${name}`,
-      {
-        detail
-      }
-    )
+    "Não foi possível realizar a operação."
   );
 
 }
@@ -3088,90 +3527,85 @@ function bindContext() {
 
 function bindRollButtons() {
 
-  const buttons =
-    getElements(
-      "[data-dice-roll]"
-    );
+  getElements(
+    "[data-dice-roll]"
+  )
+    .forEach(
+      button => {
 
+        button.addEventListener(
+          "click",
+          async event => {
 
-  buttons.forEach(
-    button => {
+            event.preventDefault();
 
-      button.addEventListener(
-        "click",
-        async event => {
-
-          event.preventDefault();
-
-
-          /*
-           * ==================================================
-           * CORREÇÃO DEFINITIVA DO DADO FIXO
-           * ==================================================
-           *
-           * O botão principal não deve ter um dado fixado.
-           *
-           * Caso o atributo possua um valor real:
-           *
-           * data-dice-roll="6"
-           *
-           * ele será usado como rolagem específica.
-           *
-           * Caso o atributo esteja vazio:
-           *
-           * data-dice-roll
-           *
-           * usamos state.selectedDie.
-           */
-
-          const explicitValue =
-            button.getAttribute(
-              "data-dice-roll"
-            );
-
-
-          const hasExplicitDie =
-            explicitValue !==
-              null &&
-            explicitValue.trim() !==
-              "";
-
-
-          const options =
-            hasExplicitDie
-
-              ? {
-                  die:
-                    normalizeDie(
-                      explicitValue
-                    )
-                }
-
-              : {
-                  die:
-                    state.selectedDie
-                };
-
-
-          try {
-
-            await roll(
-              options
-            );
-
-          } catch {
 
             /*
-             * O erro já foi mostrado na interface.
+             * IMPORTANTE:
+             *
+             * Se data-dice-roll estiver vazio,
+             * usamos o dado selecionado.
+             *
+             * Portanto:
+             *
+             * data-dice-roll
+             *
+             * e NÃO:
+             *
+             * data-dice-roll="20"
              */
 
+            const explicitValue =
+              button.getAttribute(
+                "data-dice-roll"
+              );
+
+
+            const hasExplicitDie =
+              explicitValue !==
+                null &&
+              explicitValue.trim() !==
+                "";
+
+
+            try {
+
+              await roll(
+
+                hasExplicitDie
+
+                  ? {
+                      die:
+                        explicitValue
+                    }
+
+                  : {
+                      die:
+                        state.selectedDie
+                    }
+
+              );
+
+            } catch {
+              // erro já exibido
+            }
+
           }
+        );
 
-        }
-      );
+      }
+    );
 
-    }
-  );
+}
+
+
+/* ============================================================
+   BIND — HISTÓRICO
+   ============================================================ */
+
+function bindHistory() {
+
+  ensureClearHistoryButton();
 
 }
 
@@ -3222,7 +3656,7 @@ function bindCampaignEvents() {
 
 
 /* ============================================================
-   PERSONAGENS
+   POPULAR PERSONAGENS
    ============================================================ */
 
 function populateCharacterSelect() {
@@ -3363,7 +3797,7 @@ function populateCharacterSelect() {
 
 
 /* ============================================================
-   INICIALIZAÇÃO A PARTIR DA CAMPANHA
+   INIT
    ============================================================ */
 
 function initializeFromCampaign() {
@@ -3393,6 +3827,8 @@ function initializeFromCampaign() {
 
   updateRealtimeUi();
 
+  ensureClearHistoryButton();
+
 
   if (
     !state.realtimeChannel
@@ -3403,7 +3839,12 @@ function initializeFromCampaign() {
   }
 
 
+  /*
+   * O histórico é carregado imediatamente na inicialização.
+   */
+
   renderHistory();
+
 
   exposeApi();
 
@@ -3514,6 +3955,10 @@ function exposeApi() {
 
       loadRecentRolls,
 
+      renderHistory,
+
+      clearHistory,
+
       getContext,
 
       isMaster,
@@ -3532,6 +3977,8 @@ function exposeApi() {
           readCampaignContext();
 
           populateCharacterSelect();
+
+          ensureClearHistoryButton();
 
           await renderHistory();
 
@@ -3590,6 +4037,9 @@ function destroyDice() {
   state.lastRoll =
     null;
 
+  state.historyLoaded =
+    false;
+
 
   try {
 
@@ -3640,7 +4090,7 @@ function bindKeyboard() {
 
 
       /*
-       * D = rolar o dado atualmente selecionado.
+       * D = rolar o dado selecionado.
        */
 
       if (
@@ -3662,8 +4112,10 @@ function bindKeyboard() {
 
 
         roll({
+
           die:
             state.selectedDie
+
         })
           .catch(
             () => {}
@@ -3708,6 +4160,8 @@ function start() {
 
   bindRollButtons();
 
+  bindHistory();
+
   bindCampaignEvents();
 
   bindKeyboard();
@@ -3715,12 +4169,6 @@ function start() {
 
   exposeApi();
 
-
-  /*
-   * O campaign.js pode ainda não ter terminado.
-   * Nesse caso o evento aeriom:campaignready cuidará
-   * da inicialização do sistema.
-   */
 
   initializeFromCampaign();
 
@@ -3789,6 +4237,10 @@ export {
   getSelectedCharacterId,
 
   loadRecentRolls,
+
+  renderHistory,
+
+  clearHistory,
 
   getContext,
 
