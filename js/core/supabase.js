@@ -43,15 +43,15 @@ const AERIOM_SUPABASE_CONFIG =
       "https://kitlpowgcugvlxwhwhqv.supabase.co",
 
     /*
-     * Chave pública do projeto.
+     * Publishable Key.
      *
-     * Pode ficar no frontend porque é uma publishable key.
+     * Esta chave pode permanecer no frontend.
      *
-     * NUNCA usar aqui:
+     * NUNCA colocar aqui:
      *
      * - service_role
      * - secret key
-     * - outras chaves privadas
+     * - qualquer credencial privada
      */
 
     publishableKey:
@@ -68,7 +68,24 @@ let supabaseClient =
   null;
 
 
-let supabaseInitializationPromise =
+/*
+ * Promise exclusiva para carregar a biblioteca.
+ *
+ * Ela NÃO representa o cliente.
+ */
+
+let supabaseLibraryPromise =
+  null;
+
+
+/*
+ * Promise exclusiva para inicializar o cliente.
+ *
+ * Isso impede duas chamadas simultâneas de criarem
+ * duas instâncias diferentes.
+ */
+
+let supabaseClientPromise =
   null;
 
 
@@ -87,7 +104,8 @@ function logSupabase(
 
 
   if (
-    level === "error"
+    level ===
+    "error"
   ) {
 
     console.error(
@@ -101,7 +119,8 @@ function logSupabase(
 
 
   if (
-    level === "warn"
+    level ===
+    "warn"
   ) {
 
     console.warn(
@@ -124,7 +143,7 @@ function logSupabase(
 
 
 /* ============================================================
-   VALIDAR CONFIGURAÇÃO
+   CONFIGURAÇÃO
    ============================================================ */
 
 function validateConfig() {
@@ -137,7 +156,8 @@ function validateConfig() {
 
 
   if (
-    typeof url !== "string" ||
+    typeof url !==
+      "string" ||
     !url.trim()
   ) {
 
@@ -149,7 +169,8 @@ function validateConfig() {
 
 
   if (
-    typeof publishableKey !== "string" ||
+    typeof publishableKey !==
+      "string" ||
     !publishableKey.trim()
   ) {
 
@@ -192,9 +213,11 @@ function validateConfig() {
 
 
   /*
-   * Validação simples da chave pública.
+   * Aceitamos:
    *
-   * Aceitamos também JWT legado durante eventual migração.
+   * sb_publishable_...
+   *
+   * e JWT legado iniciando com eyJ.
    */
 
   const validPublishableFormat =
@@ -216,7 +239,7 @@ function validateConfig() {
 
     logSupabase(
       "warn",
-      "A chave configurada não corresponde ao formato esperado de uma chave pública do Supabase."
+      "A chave configurada não corresponde claramente ao formato esperado de uma chave pública."
     );
 
   }
@@ -231,19 +254,20 @@ function validateConfig() {
 async function loadSupabaseLibrary() {
 
   /*
-   * Se já estamos carregando, reaproveitamos a mesma Promise.
+   * Se a biblioteca já está sendo carregada,
+   * reutilizamos a mesma Promise.
    */
 
   if (
-    supabaseInitializationPromise
+    supabaseLibraryPromise
   ) {
 
-    return supabaseInitializationPromise;
+    return supabaseLibraryPromise;
 
   }
 
 
-  supabaseInitializationPromise =
+  supabaseLibraryPromise =
     import(
       SUPABASE_CDN_URL
     )
@@ -271,11 +295,10 @@ async function loadSupabaseLibrary() {
         (error) => {
 
           /*
-           * Permite tentar novamente posteriormente
-           * caso a CDN falhe temporariamente.
+           * Permite nova tentativa caso a CDN falhe.
            */
 
-          supabaseInitializationPromise =
+          supabaseLibraryPromise =
             null;
 
 
@@ -292,114 +315,7 @@ async function loadSupabaseLibrary() {
       );
 
 
-  return supabaseInitializationPromise;
-
-}
-
-
-/* ============================================================
-   INITIALIZE
-   ============================================================ */
-
-export async function initializeSupabase() {
-
-  if (
-    supabaseClient
-  ) {
-
-    return supabaseClient;
-
-  }
-
-
-  validateConfig();
-
-
-  /*
-   * Evita duas inicializações simultâneas.
-   */
-
-  if (
-    supabaseInitializationPromise
-  ) {
-
-    const module =
-      await supabaseInitializationPromise;
-
-
-    /*
-     * Se a Promise existente for a da biblioteca,
-     * o cliente pode ainda não existir.
-     */
-
-    if (
-      supabaseClient
-    ) {
-
-      return supabaseClient;
-
-    }
-
-
-    if (
-      module?.createClient
-    ) {
-
-      supabaseClient =
-        createSupabaseClient(
-          module.createClient
-        );
-
-
-      return supabaseClient;
-
-    }
-
-  }
-
-
-  try {
-
-    const module =
-      await loadSupabaseLibrary();
-
-
-    supabaseClient =
-      createSupabaseClient(
-        module.createClient
-      );
-
-
-    logSupabase(
-      "info",
-      "Cliente Supabase inicializado."
-    );
-
-
-    return supabaseClient;
-
-  } catch (
-    error
-  ) {
-
-    supabaseClient =
-      null;
-
-
-    /*
-     * Não mascaramos o erro.
-     */
-
-    logSupabase(
-      "error",
-      "Não foi possível inicializar o cliente Supabase.",
-      error
-    );
-
-
-    throw error;
-
-  }
+  return supabaseLibraryPromise;
 
 }
 
@@ -433,10 +349,11 @@ function createSupabaseClient(
         auth: {
 
           /*
-           * Sessão persistente do navegador.
+           * Necessário para:
            *
-           * Isso não é autorização.
-           * Autorização continua no JWT + RLS.
+           * - sessão persistente;
+           * - renovação automática;
+           * - processamento de callback OAuth/e-mail.
            */
 
           autoRefreshToken:
@@ -494,6 +411,108 @@ function createSupabaseClient(
 
 
 /* ============================================================
+   INICIALIZAÇÃO
+   ============================================================ */
+
+export async function initializeSupabase() {
+
+  /*
+   * Já inicializado.
+   */
+
+  if (
+    supabaseClient
+  ) {
+
+    return supabaseClient;
+
+  }
+
+
+  /*
+   * Já existe uma inicialização em andamento.
+   *
+   * Todas as chamadas passam a aguardar a mesma Promise.
+   */
+
+  if (
+    supabaseClientPromise
+  ) {
+
+    return supabaseClientPromise;
+
+  }
+
+
+  validateConfig();
+
+
+  supabaseClientPromise =
+    (async () => {
+
+      try {
+
+        const module =
+          await loadSupabaseLibrary();
+
+
+        const client =
+          createSupabaseClient(
+            module.createClient
+          );
+
+
+        supabaseClient =
+          client;
+
+
+        logSupabase(
+          "info",
+          "Cliente Supabase inicializado com sucesso."
+        );
+
+
+        return client;
+
+      } catch (
+        error
+      ) {
+
+        /*
+         * Limpa somente a Promise do cliente.
+         *
+         * A Promise da biblioteca poderá continuar existente
+         * caso o carregamento tenha sido concluído.
+         */
+
+        supabaseClientPromise =
+          null;
+
+
+        supabaseClient =
+          null;
+
+
+        logSupabase(
+          "error",
+          "Não foi possível inicializar o cliente Supabase.",
+          error
+        );
+
+
+        throw error;
+
+      }
+
+    })();
+
+
+  return supabaseClientPromise;
+
+}
+
+
+/* ============================================================
    GETTER
    ============================================================ */
 
@@ -508,11 +527,12 @@ export async function getSupabase() {
   }
 
 
-  await initializeSupabase();
+  const client =
+    await initializeSupabase();
 
 
   if (
-    !supabaseClient
+    !client
   ) {
 
     throw new Error(
@@ -522,7 +542,7 @@ export async function getSupabase() {
   }
 
 
-  return supabaseClient;
+  return client;
 
 }
 
@@ -676,3 +696,39 @@ globalThis.AERIOM_SUPABASE =
       isSupabaseInitialized
 
   });
+
+
+/* ============================================================
+   DIAGNÓSTICO
+   ============================================================ */
+
+export function getSupabaseDiagnostic() {
+
+  return Object.freeze({
+
+    initialized:
+      Boolean(
+        supabaseClient
+      ),
+
+    libraryLoading:
+      Boolean(
+        supabaseLibraryPromise
+      ),
+
+    clientInitializing:
+      Boolean(
+        supabaseClientPromise
+      ),
+
+    hasAuth:
+      Boolean(
+        supabaseClient?.auth
+      ),
+
+    url:
+      AERIOM_SUPABASE_CONFIG.url
+
+  });
+
+}
