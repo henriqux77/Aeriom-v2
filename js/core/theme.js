@@ -1,825 +1,1073 @@
 /*
+ * ============================================================
+ * AERIOM v2
+ * js/core/theme.js
+ * Gerenciador global de temas
+ * ============================================================
+ *
+ * Responsabilidades:
+ *
+ * - Aplicar o tema visual atual.
+ * - Controlar temas globais da aplicação.
+ * - Preparar a estrutura para temas das campanhas.
+ * - Aplicar variáveis CSS através do DOM.
+ * - Aplicar background da campanha.
+ * - Persistir somente preferências visuais locais.
+ *
+ * NÃO é responsabilidade deste arquivo:
+ *
+ * - autenticação;
+ * - autorização;
+ * - acesso ao banco;
+ * - RLS;
+ * - Realtime;
+ * - decisão de quem pode mudar o tema.
+ *
+ * A autorização de tema da campanha será feita pelo módulo
+ * da campanha + Supabase/RLS.
+ *
+ * ============================================================
+ */
 
-* ============================================================
-* AERIOM v2
-* js/core/theme.js
-* Gerenciador global de temas
-* ============================================================
-* 
-* Responsabilidades:
-* 
-* - Aplicar o tema visual atual.
-* - Controlar temas globais da aplicação.
-* - Preparar a estrutura para temas das campanhas.
-* - Aplicar variáveis CSS através do DOM.
-* - Persistir apenas preferências visuais locais.
-* 
-* IMPORTANTE:
-* 
-* Este módulo NÃO decide se um usuário pode alterar o tema
-* de uma campanha.
-* 
-* Permissão de Mestre/Jogador será determinada pelo Supabase.
-* 
-* localStorage neste arquivo serve SOMENTE para preferência
-* visual local. Nunca para autorização.
-* ============================================================
-  */
 
 /* ============================================================
-CONFIGURAÇÃO
-============================================================ */
+   CONFIGURAÇÃO
+   ============================================================ */
 
 const THEME_CONFIG = Object.freeze({
 
-storageKey:
-"aeriom_theme",
+  storageKey:
+    "aeriom_theme",
 
-defaultTheme:
-"default",
+  defaultTheme:
+    "default",
 
-transitionDuration:
-220,
+  transitionDuration:
+    220,
 
-themes: Object.freeze({
+  themes:
+    Object.freeze({
 
-default: Object.freeze({
-  id: "default",
+      default:
+        Object.freeze({
 
-  name: "AERIOM",
+          id:
+            "default",
 
-  description:
-    "O tema padrão da mesa.",
+          name:
+            "AERIOM",
 
-  variables: Object.freeze({
+          description:
+            "O tema padrão da mesa.",
 
-    "--theme-accent":
-      "#c49e53",
+          variables:
+            Object.freeze({
 
-    "--theme-accent-light":
-      "#e3c67f",
+              "--theme-accent":
+                "#c49e53",
 
-    "--theme-accent-dark":
-      "#886a31",
+              "--theme-accent-light":
+                "#e3c67f",
 
-    "--theme-danger":
-      "#a83b3b",
+              "--theme-accent-dark":
+                "#886a31",
 
-    "--theme-mana":
-      "#3f72b7",
+              "--theme-danger":
+                "#a83b3b",
 
-    "--theme-bg":
-      "#090807",
+              "--theme-mana":
+                "#3f72b7",
 
-    "--theme-surface":
-      "#15120f"
+              "--theme-bg":
+                "#090807",
 
-  })
-}),
+              "--theme-surface":
+                "#15120f"
 
+            })
 
-forest: Object.freeze({
-  id: "forest",
+        }),
 
-  name: "Floresta",
 
-  description:
-    "Uma atmosfera antiga e selvagem.",
+      forest:
+        Object.freeze({
 
-  variables: Object.freeze({
+          id:
+            "forest",
 
-    "--theme-accent":
-      "#a88d52",
+          name:
+            "Floresta",
 
-    "--theme-accent-light":
-      "#d0bb7a",
+          description:
+            "Uma atmosfera antiga e selvagem.",
 
-    "--theme-accent-dark":
-      "#746438",
+          variables:
+            Object.freeze({
 
-    "--theme-danger":
-      "#9d4138",
+              "--theme-accent":
+                "#a88d52",
 
-    "--theme-mana":
-      "#477b70",
+              "--theme-accent-light":
+                "#d0bb7a",
 
-    "--theme-bg":
-      "#080c09",
+              "--theme-accent-dark":
+                "#746438",
 
-    "--theme-surface":
-      "#101611"
+              "--theme-danger":
+                "#9d4138",
 
-  })
-}),
+              "--theme-mana":
+                "#477b70",
 
+              "--theme-bg":
+                "#080c09",
 
-cave: Object.freeze({
-  id: "cave",
+              "--theme-surface":
+                "#101611"
 
-  name: "Caverna",
+            })
 
-  description:
-    "Pedra, sombras e profundezas.",
+        }),
 
-  variables: Object.freeze({
 
-    "--theme-accent":
-      "#9f8a69",
+      cave:
+        Object.freeze({
 
-    "--theme-accent-light":
-      "#c9b28a",
+          id:
+            "cave",
 
-    "--theme-accent-dark":
-      "#6e604d",
+          name:
+            "Caverna",
 
-    "--theme-danger":
-      "#963f3f",
+          description:
+            "Pedra, sombras e profundezas.",
 
-    "--theme-mana":
-      "#536f91",
+          variables:
+            Object.freeze({
 
-    "--theme-bg":
-      "#08090a",
+              "--theme-accent":
+                "#9f8a69",
 
-    "--theme-surface":
-      "#121315"
+              "--theme-accent-light":
+                "#c9b28a",
 
-  })
-}),
+              "--theme-accent-dark":
+                "#6e604d",
 
+              "--theme-danger":
+                "#963f3f",
 
-volcano: Object.freeze({
-  id: "volcano",
+              "--theme-mana":
+                "#536f91",
 
-  name: "Vulcão",
+              "--theme-bg":
+                "#08090a",
 
-  description:
-    "Calor, cinzas e perigo.",
+              "--theme-surface":
+                "#121315"
 
-  variables: Object.freeze({
+            })
 
-    "--theme-accent":
-      "#c28a45",
+        }),
 
-    "--theme-accent-light":
-      "#e2ad60",
 
-    "--theme-accent-dark":
-      "#80582b",
+      volcano:
+        Object.freeze({
 
-    "--theme-danger":
-      "#c04432",
+          id:
+            "volcano",
 
-    "--theme-mana":
-      "#5c74a1",
+          name:
+            "Vulcão",
 
-    "--theme-bg":
-      "#100907",
+          description:
+            "Calor, cinzas e perigo.",
 
-    "--theme-surface":
-      "#1a0e0b"
+          variables:
+            Object.freeze({
 
-  })
-}),
+              "--theme-accent":
+                "#c28a45",
 
+              "--theme-accent-light":
+                "#e2ad60",
 
-castle: Object.freeze({
-  id: "castle",
+              "--theme-accent-dark":
+                "#80582b",
 
-  name: "Castelo",
+              "--theme-danger":
+                "#c04432",
 
-  description:
-    "Pedra antiga, nobreza e mistério.",
+              "--theme-mana":
+                "#5c74a1",
 
-  variables: Object.freeze({
+              "--theme-bg":
+                "#100907",
 
-    "--theme-accent":
-      "#b59a62",
+              "--theme-surface":
+                "#1a0e0b"
 
-    "--theme-accent-light":
-      "#dfc889",
+            })
 
-    "--theme-accent-dark":
-      "#76643f",
+        }),
 
-    "--theme-danger":
-      "#934141",
 
-    "--theme-mana":
-      "#506e9d",
+      castle:
+        Object.freeze({
 
-    "--theme-bg":
-      "#09090a",
+          id:
+            "castle",
 
-    "--theme-surface":
-      "#151516"
+          name:
+            "Castelo",
 
-  })
-}),
+          description:
+            "Pedra antiga, nobreza e mistério.",
 
+          variables:
+            Object.freeze({
 
-coast: Object.freeze({
-  id: "coast",
+              "--theme-accent":
+                "#b59a62",
 
-  name: "Costa",
+              "--theme-accent-light":
+                "#dfc889",
 
-  description:
-    "Mar, vento e horizontes distantes.",
+              "--theme-accent-dark":
+                "#76643f",
 
-  variables: Object.freeze({
+              "--theme-danger":
+                "#934141",
 
-    "--theme-accent":
-      "#bba36b",
+              "--theme-mana":
+                "#506e9d",
 
-    "--theme-accent-light":
-      "#dfca91",
+              "--theme-bg":
+                "#09090a",
 
-    "--theme-accent-dark":
-      "#786943",
+              "--theme-surface":
+                "#151516"
 
-    "--theme-danger":
-      "#a14b46",
+            })
 
-    "--theme-mana":
-      "#4382a7",
+        }),
 
-    "--theme-bg":
-      "#080b0d",
 
-    "--theme-surface":
-      "#101619"
+      coast:
+        Object.freeze({
 
-  })
-}),
+          id:
+            "coast",
 
+          name:
+            "Costa",
 
-ruins: Object.freeze({
-  id: "ruins",
+          description:
+            "Mar, vento e horizontes distantes.",
 
-  name: "Ruínas",
+          variables:
+            Object.freeze({
 
-  description:
-    "Vestígios de uma civilização esquecida.",
+              "--theme-accent":
+                "#bba36b",
 
-  variables: Object.freeze({
+              "--theme-accent-light":
+                "#dfca91",
 
-    "--theme-accent":
-      "#a68e62",
+              "--theme-accent-dark":
+                "#786943",
 
-    "--theme-accent-light":
-      "#d0b982",
+              "--theme-danger":
+                "#a14b46",
 
-    "--theme-accent-dark":
-      "#6f6043",
+              "--theme-mana":
+                "#4382a7",
 
-    "--theme-danger":
-      "#99413f",
+              "--theme-bg":
+                "#080b0d",
 
-    "--theme-mana":
-      "#596f8c",
+              "--theme-surface":
+                "#101619"
 
-    "--theme-bg":
-      "#090908",
+            })
 
-    "--theme-surface":
-      "#141311"
+        }),
 
-  })
-})
 
-})
+      ruins:
+        Object.freeze({
+
+          id:
+            "ruins",
+
+          name:
+            "Ruínas",
+
+          description:
+            "Vestígios de uma civilização esquecida.",
+
+          variables:
+            Object.freeze({
+
+              "--theme-accent":
+                "#a68e62",
+
+              "--theme-accent-light":
+                "#d0b982",
+
+              "--theme-accent-dark":
+                "#6f6043",
+
+              "--theme-danger":
+                "#99413f",
+
+              "--theme-mana":
+                "#596f8c",
+
+              "--theme-bg":
+                "#090908",
+
+              "--theme-surface":
+                "#141311"
+
+            })
+
+        })
+
+    })
 
 });
 
+
 /* ============================================================
-ESTADO
-============================================================ */
+   ESTADO
+   ============================================================ */
 
 let currentTheme =
-THEME_CONFIG.defaultTheme;
+  THEME_CONFIG.defaultTheme;
 
 let currentBackground =
-null;
+  null;
+
 
 /* ============================================================
-LOG
-============================================================ */
+   LOG
+   ============================================================ */
 
 function logTheme(
-level,
-message,
-details = null
+  level,
+  message,
+  details = null
 ) {
 
-const prefix =
-"[AERIOM][THEME]";
+  const prefix =
+    "[AERIOM][THEME]";
 
-if (level === "error") {
 
-console.error(
-  prefix,
-  message,
-  details ?? ""
-);
+  if (
+    level === "error"
+  ) {
 
-return;
+    console.error(
+      prefix,
+      message,
+      details ?? ""
+    );
+
+    return;
+  }
+
+
+  if (
+    level === "warn"
+  ) {
+
+    console.warn(
+      prefix,
+      message,
+      details ?? ""
+    );
+
+    return;
+  }
+
+
+  console.info(
+    prefix,
+    message,
+    details ?? ""
+  );
 
 }
 
-if (level === "warn") {
-
-console.warn(
-  prefix,
-  message,
-  details ?? ""
-);
-
-return;
-
-}
-
-console.info(
-prefix,
-message,
-details ?? ""
-);
-}
 
 /* ============================================================
-VALIDAR TEMA
-============================================================ */
+   VALIDAR TEMA
+   ============================================================ */
 
 function isValidTheme(
-themeId
+  themeId
 ) {
 
-if (
-typeof themeId !==
-"string"
-) {
-return false;
+  if (
+    typeof themeId !==
+    "string"
+  ) {
+
+    return false;
+  }
+
+
+  return Boolean(
+    THEME_CONFIG.themes[
+      themeId
+    ]
+  );
+
 }
 
-return Boolean(
-THEME_CONFIG.themes[
-themeId
-]
-);
-}
 
 /* ============================================================
-OBTER TEMA
-============================================================ */
+   OBTER TEMA
+   ============================================================ */
 
 export function getTheme(
-themeId = currentTheme
+  themeId = currentTheme
 ) {
 
-if (
-!isValidTheme(themeId)
-) {
+  if (
+    !isValidTheme(
+      themeId
+    )
+  ) {
 
-return THEME_CONFIG.themes[
-  THEME_CONFIG.defaultTheme
-];
+    return THEME_CONFIG.themes[
+      THEME_CONFIG.defaultTheme
+    ];
+
+  }
+
+
+  return THEME_CONFIG.themes[
+    themeId
+  ];
 
 }
 
-return THEME_CONFIG.themes[
-themeId
-];
-}
 
 /* ============================================================
-LISTAR TEMAS
-============================================================ */
+   LISTAR TEMAS
+   ============================================================ */
 
 export function getAvailableThemes() {
 
-return Object.values(
-THEME_CONFIG.themes
-).map(
-(theme) => ({
-id: theme.id,
+  return Object.values(
+    THEME_CONFIG.themes
+  ).map(
+    (
+      theme
+    ) => ({
 
-  name: theme.name,
+      id:
+        theme.id,
 
-  description:
-    theme.description
-})
+      name:
+        theme.name,
 
-);
+      description:
+        theme.description
+
+    })
+  );
+
 }
 
+
 /* ============================================================
-PREFERÊNCIA LOCAL
-============================================================ */
+   PREFERÊNCIA LOCAL
+   ============================================================ */
 
 function getStoredTheme() {
 
-try {
+  try {
 
-const stored =
-  localStorage.getItem(
-    THEME_CONFIG.storageKey
-  );
+    const stored =
+      localStorage.getItem(
+        THEME_CONFIG.storageKey
+      );
 
 
-if (
-  isValidTheme(stored)
-) {
-  return stored;
+    if (
+      isValidTheme(
+        stored
+      )
+    ) {
+
+      return stored;
+
+    }
+
+  } catch (
+    error
+  ) {
+
+    logTheme(
+      "warn",
+      "Não foi possível acessar a preferência de tema local.",
+      error
+    );
+
+  }
+
+
+  return THEME_CONFIG.defaultTheme;
+
 }
 
-} catch (error) {
-
-logTheme(
-  "warn",
-  "Não foi possível acessar a preferência de tema local.",
-  error
-);
-
-}
-
-return THEME_CONFIG.defaultTheme;
-}
 
 function storeTheme(
-themeId
+  themeId
 ) {
 
-try {
+  try {
 
-localStorage.setItem(
-  THEME_CONFIG.storageKey,
-  themeId
-);
+    localStorage.setItem(
+      THEME_CONFIG.storageKey,
+      themeId
+    );
 
-} catch (error) {
+  } catch (
+    error
+  ) {
 
-logTheme(
-  "warn",
-  "Não foi possível salvar a preferência visual local.",
-  error
-);
+    logTheme(
+      "warn",
+      "Não foi possível salvar a preferência visual local.",
+      error
+    );
+
+  }
 
 }
-}
+
 
 /* ============================================================
-TRANSIÇÃO
-============================================================ */
+   TRANSIÇÃO
+   ============================================================ */
 
 function enableThemeTransition() {
 
-document.documentElement
-.classList
-.add(
-"aeriom-theme-transition"
-);
+  const root =
+    document.documentElement;
 
-window.setTimeout(
-() => {
 
-  document.documentElement
-    .classList
-    .remove(
-      "aeriom-theme-transition"
-    );
+  root.classList.add(
+    "aeriom-theme-transition"
+  );
 
-},
-THEME_CONFIG.transitionDuration
 
-);
+  window.setTimeout(
+    () => {
+
+      root.classList.remove(
+        "aeriom-theme-transition"
+      );
+
+    },
+    THEME_CONFIG.transitionDuration
+  );
+
 }
 
+
 /* ============================================================
-APLICAR VARIÁVEIS
-============================================================ */
+   APLICAR VARIÁVEIS
+   ============================================================ */
 
 function applyThemeVariables(
-theme
+  theme
 ) {
 
-const root =
-document.documentElement;
+  const root =
+    document.documentElement;
 
-Object.entries(
-theme.variables
-).forEach(
-([property, value]) => {
 
-  root.style.setProperty(
-    property,
-    value
+  Object.entries(
+    theme.variables
+  ).forEach(
+    (
+      [
+        property,
+        value
+      ]
+    ) => {
+
+      root.style.setProperty(
+        property,
+        value
+      );
+
+    }
   );
 
 }
 
-);
-}
 
 /* ============================================================
-APLICAR TEMA
-============================================================ */
+   VALIDAR BACKGROUND
+   ============================================================ */
 
-export function applyTheme(
-themeId,
-options = {}
+function isValidBackgroundUrl(
+  imageUrl
 ) {
 
-const {
-persist = true,
-animate = true,
-backgroundImage = null
-} = options;
-
-const theme =
-getTheme(themeId);
-
-if (
-!isValidTheme(theme.id)
-) {
-
-logTheme(
-  "warn",
-  "Tema solicitado não existe.",
-  {
-    themeId
-  }
-);
-
-return false;
-
-}
-
-if (animate) {
-enableThemeTransition();
-}
-
-applyThemeVariables(
-theme
-);
-
-document.documentElement
-.dataset
-.theme =
-theme.id;
-
-currentTheme =
-theme.id;
-
-if (
-persist
-) {
-
-storeTheme(
-  theme.id
-);
-
-}
-
-if (
-backgroundImage !== null
-) {
-
-applyBackgroundImage(
-  backgroundImage
-);
-
-} else {
-
-/*
- * Quando o tema é aplicado sem uma imagem explícita,
- * preservamos a imagem atualmente definida.
- */
-
-if (currentBackground) {
-
-  applyBackgroundImage(
-    currentBackground
-  );
-}
-
-}
-
-document.dispatchEvent(
-new CustomEvent(
-"aeriom:themechange",
-{
-detail: Object.freeze({
-themeId: theme.id,
-
-      themeName:
-        theme.name,
-
-      backgroundImage:
-        currentBackground
-    })
-  }
-)
-
-);
-
-return true;
-}
-
-/* ============================================================
-TEMA DA CAMPANHA
-============================================================ */
-
-/**
-
-* Aplica o tema visual de uma campanha.
-* 
-* Esta função NÃO consulta o banco.
-* 
-* O módulo da campanha será responsável por obter:
-* 
-* campaign.theme
-* campaign.background_url
-* 
-* e então chamar esta função.
-  */
-  export function applyCampaignTheme(
-  themeId,
-  backgroundImage = null
+  if (
+    typeof imageUrl !==
+    "string"
   ) {
 
-return applyTheme(
-themeId,
-{
-persist: false,
-animate: true,
-backgroundImage
-}
-);
+    return false;
+  }
+
+
+  const value =
+    imageUrl.trim();
+
+
+  if (
+    !value
+  ) {
+
+    return false;
+  }
+
+
+  try {
+
+    const url =
+      new URL(
+        value,
+        window.location.href
+      );
+
+
+    /*
+     * Apenas HTTP/HTTPS.
+     *
+     * Impede javascript:, data:, blob: inesperados etc.
+     */
+
+    return (
+      url.protocol === "https:" ||
+      url.protocol === "http:"
+    );
+
+  } catch {
+
+    return false;
+  }
+
 }
 
+
 /* ============================================================
-BACKGROUND
-============================================================ */
+   APLICAR TEMA
+   ============================================================ */
+
+export function applyTheme(
+  themeId,
+  options = {}
+) {
+
+  const {
+    persist = true,
+    animate = true,
+    backgroundImage = null
+  } = options;
+
+
+  const theme =
+    getTheme(
+      themeId
+    );
+
+
+  if (
+    !isValidTheme(
+      theme.id
+    )
+  ) {
+
+    logTheme(
+      "warn",
+      "Tema solicitado não existe.",
+      {
+        themeId
+      }
+    );
+
+
+    return false;
+  }
+
+
+  if (
+    animate
+  ) {
+
+    enableThemeTransition();
+
+  }
+
+
+  applyThemeVariables(
+    theme
+  );
+
+
+  document.documentElement.dataset.theme =
+    theme.id;
+
+
+  currentTheme =
+    theme.id;
+
+
+  if (
+    persist
+  ) {
+
+    storeTheme(
+      theme.id
+    );
+
+  }
+
+
+  if (
+    backgroundImage !==
+    null
+  ) {
+
+    applyBackgroundImage(
+      backgroundImage
+    );
+
+  }
+  else if (
+    currentBackground
+  ) {
+
+    /*
+     * Mantém o background atual quando o tema
+     * for alterado sem uma nova imagem.
+     */
+
+    applyBackgroundImage(
+      currentBackground
+    );
+
+  }
+
+
+  document.dispatchEvent(
+    new CustomEvent(
+      "aeriom:themechange",
+      {
+
+        detail:
+          Object.freeze({
+
+            themeId:
+              theme.id,
+
+            themeName:
+              theme.name,
+
+            backgroundImage:
+              currentBackground
+
+          })
+
+      }
+    )
+  );
+
+
+  return true;
+
+}
+
+
+/* ============================================================
+   TEMA DE CAMPANHA
+   ============================================================ */
+
+/**
+ * Aplica o tema visual de uma campanha.
+ *
+ * NÃO consulta o banco.
+ *
+ * O módulo da campanha deverá receber o estado permitido
+ * pelo Supabase e chamar esta função.
+ */
+
+export function applyCampaignTheme(
+  themeId,
+  backgroundImage = null
+) {
+
+  return applyTheme(
+    themeId,
+    {
+
+      persist:
+        false,
+
+      animate:
+        true,
+
+      backgroundImage
+
+    }
+  );
+
+}
+
+
+/* ============================================================
+   BACKGROUND
+   ============================================================ */
 
 export function applyBackgroundImage(
-imageUrl
+  imageUrl
 ) {
 
-const body =
-document.body;
+  const body =
+    document.body;
 
-if (!body) {
-return;
+
+  if (
+    !body
+  ) {
+
+    return false;
+  }
+
+
+  /*
+   * Remover background.
+   */
+
+  if (
+    imageUrl ===
+    null ||
+    imageUrl ===
+    undefined ||
+    String(
+      imageUrl
+    ).trim() ===
+      ""
+  ) {
+
+    body.style.removeProperty(
+      "--aeriom-background-image"
+    );
+
+
+    currentBackground =
+      null;
+
+
+    body.removeAttribute(
+      "data-aeriom-background"
+    );
+
+
+    return true;
+  }
+
+
+  const normalizedUrl =
+    String(
+      imageUrl
+    ).trim();
+
+
+  if (
+    !isValidBackgroundUrl(
+      normalizedUrl
+    )
+  ) {
+
+    logTheme(
+      "warn",
+      "Background recusado por possuir URL inválida.",
+      {
+        imageUrl:
+          normalizedUrl
+      }
+    );
+
+
+    return false;
+  }
+
+
+  /*
+   * Não usamos innerHTML.
+   *
+   * Não precisamos de CSS.escape() aqui.
+   *
+   * A URL foi validada e é colocada como valor de
+   * custom property.
+   */
+
+  body.style.setProperty(
+    "--aeriom-background-image",
+    `url("${normalizedUrl.replaceAll(
+      "\"",
+      "\\\""
+    )}")`
+  );
+
+
+  body.dataset.aeriomBackground =
+    "true";
+
+
+  currentBackground =
+    normalizedUrl;
+
+
+  return true;
+
 }
 
-/*
-
-* Nunca inserimos a URL através de innerHTML.
-* 
-* O CSS recebe a URL através de uma variável.
-* 
-* A URL vem do banco/Storage e deve ser validada
-* pelos módulos responsáveis pelo conteúdo.
-  */
-
-if (
-typeof imageUrl !==
-"string" ||
-!imageUrl.trim()
-) {
-
-body.style.removeProperty(
-  "--aeriom-background-image"
-);
-
-currentBackground =
-  null;
-
-return;
-
-}
-
-const normalizedUrl =
-imageUrl.trim();
-
-body.style.setProperty(
-"--aeriom-background-image",
-"url("${CSS.escape(normalizedUrl)}")"
-);
-
-currentBackground =
-normalizedUrl;
-}
 
 /* ============================================================
-LIMPAR BACKGROUND
-============================================================ */
+   LIMPAR BACKGROUND
+   ============================================================ */
 
 export function clearBackgroundImage() {
 
-document.body?.style.removeProperty(
-"--aeriom-background-image"
-);
+  const body =
+    document.body;
 
-currentBackground =
-null;
+
+  if (
+    body
+  ) {
+
+    body.style.removeProperty(
+      "--aeriom-background-image"
+    );
+
+
+    body.removeAttribute(
+      "data-aeriom-background"
+    );
+
+  }
+
+
+  currentBackground =
+    null;
+
 }
 
+
 /* ============================================================
-ESTADO ATUAL
-============================================================ */
+   ESTADO ATUAL
+   ============================================================ */
 
 export function getCurrentThemeId() {
 
-return currentTheme;
+  return currentTheme;
+
 }
+
 
 export function getCurrentBackgroundImage() {
 
-return currentBackground;
+  return currentBackground;
+
 }
 
+
 /* ============================================================
-INICIALIZAÇÃO
-============================================================ */
+   INICIALIZAÇÃO
+   ============================================================ */
 
 export function initializeTheme() {
 
-/*
+  /*
+   * A preferência salva localmente é usada somente
+   * para a aparência local fora do contexto controlado
+   * por uma campanha.
+   */
 
-* A preferência local é utilizada somente para a aparência
-* da própria aplicação fora de uma campanha.
-  */
+  const storedTheme =
+    getStoredTheme();
 
-const storedTheme =
-getStoredTheme();
 
-applyTheme(
-storedTheme,
-{
-persist: false,
-animate: false
+  applyTheme(
+    storedTheme,
+    {
+
+      persist:
+        false,
+
+      animate:
+        false
+
+    }
+  );
+
+
+  logTheme(
+    "info",
+    "Gerenciador de temas inicializado.",
+    {
+
+      theme:
+        storedTheme
+
+    }
+  );
+
+
+  return storedTheme;
+
 }
-);
 
-logTheme(
-"info",
-"Gerenciador de temas inicializado.",
-{
-theme: storedTheme
-}
-);
-
-return storedTheme;
-}
 
 /* ============================================================
-EVENTO GLOBAL
-============================================================ */
+   API GLOBAL
+   ============================================================ */
 
-window.addEventListener(
-"aeriom:ready",
-() => {
+window.AERIOM_THEME =
+  Object.freeze({
 
-/*
- * O main.js dispara este evento depois que o núcleo
- * terminou de inicializar.
- *
- * O tema é inicializado uma única vez.
- */
+    apply:
+      applyTheme,
 
-initializeTheme();
+    applyCampaign:
+      applyCampaignTheme,
 
-},
-{
-once: true
-}
-);
+    get:
+      getTheme,
 
-/* ============================================================
-API GLOBAL CONTROLADA
-============================================================ */
+    getCurrent:
+      getCurrentThemeId,
 
-window.AERIOM_THEME = Object.freeze({
+    getAll:
+      getAvailableThemes,
 
-apply:
-applyTheme,
+    setBackground:
+      applyBackgroundImage,
 
-applyCampaign:
-applyCampaignTheme,
+    clearBackground:
+      clearBackgroundImage
 
-get:
-getTheme,
-
-getCurrent:
-getCurrentThemeId,
-
-getAll:
-getAvailableThemes,
-
-setBackground:
-applyBackgroundImage,
-
-clearBackground:
-clearBackgroundImage
-
-});
+  });
