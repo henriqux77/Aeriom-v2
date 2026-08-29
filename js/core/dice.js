@@ -2071,7 +2071,10 @@ async function clearHistory() {
     showDiceError(
       "Somente o Mestre pode limpar o histórico da campanha."
     );
+state.history = [];
+state.historyLoaded = true;
 
+renderHistory();
     return false;
   }
 
