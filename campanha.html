@@ -27,10 +27,7 @@
        FONTES
        ======================================================== -->
 
-  <link
-    rel="preconnect"
-    href="https://fonts.googleapis.com"
-  >
+  <link rel="preconnect" href="https://fonts.googleapis.com">
 
   <link
     rel="preconnect"
@@ -45,7 +42,7 @@
 
 
   <!-- ========================================================
-       DESIGN SYSTEM
+       CSS GLOBAL
        ======================================================== -->
 
   <link
@@ -55,7 +52,7 @@
 
 
   <!-- ========================================================
-       ESTILO DA MESA
+       CSS DA CAMPANHA
        ======================================================== -->
 
   <link
@@ -113,13 +110,16 @@
       </button>
 
 
-      <div class="campaign-mobile-topbar__center">
+      <div
+        class="campaign-mobile-topbar__center"
+      >
 
         <span
           class="campaign-mobile-topbar__eyebrow"
         >
           AERIOM
         </span>
+
 
         <span
           id="campaign-mobile-title"
@@ -157,7 +157,9 @@
 
       <!-- BRAND -->
 
-      <div class="campaign-sidebar__brand">
+      <div
+        class="campaign-sidebar__brand"
+      >
 
         <a
           href="./campanhas.html"
@@ -175,11 +177,15 @@
       </div>
 
 
-      <!-- INFORMAÇÕES DA CAMPANHA -->
+      <!-- CAMPANHA -->
 
-      <div class="campaign-sidebar__campaign">
+      <div
+        class="campaign-sidebar__campaign"
+      >
 
-        <div class="campaign-cover-small">
+        <div
+          class="campaign-cover-small"
+        >
 
           <div
             id="campaign-sidebar-cover"
@@ -192,7 +198,9 @@
         </div>
 
 
-        <div class="campaign-sidebar__campaign-info">
+        <div
+          class="campaign-sidebar__campaign-info"
+        >
 
           <p
             id="campaign-sidebar-role"
@@ -221,7 +229,6 @@
         aria-label="Seções da mesa"
       >
 
-
         <button
           class="campaign-nav-item is-active"
           type="button"
@@ -238,6 +245,28 @@
 
           <span>
             Visão Geral
+          </span>
+
+        </button>
+
+
+        <!-- DADOS -->
+
+        <button
+          class="campaign-nav-item"
+          type="button"
+          data-campaign-tab="dice"
+        >
+
+          <span
+            class="campaign-nav-item__icon"
+            aria-hidden="true"
+          >
+            ◉
+          </span>
+
+          <span>
+            Rolagem de Dados
           </span>
 
         </button>
@@ -407,9 +436,11 @@
       </nav>
 
 
-      <!-- RODAPÉ -->
+      <!-- FOOTER -->
 
-      <div class="campaign-sidebar__footer">
+      <div
+        class="campaign-sidebar__footer"
+      >
 
         <button
           id="campaign-invite-sidebar-button"
@@ -482,7 +513,7 @@
 
 
       <!-- ====================================================
-           TOPBAR DESKTOP
+           TOPBAR
            ==================================================== -->
 
       <header
@@ -496,7 +527,6 @@
           <div>
 
             <p
-              id="campaign-topbar-eyebrow"
               class="campaign-topbar__eyebrow"
             >
               Mesa virtual
@@ -519,9 +549,6 @@
           class="campaign-topbar__right"
         >
 
-
-          <!-- STATUS DA SESSÃO -->
-
           <div
             id="campaign-session-status"
             class="campaign-session-status"
@@ -533,6 +560,7 @@
               aria-hidden="true"
             ></span>
 
+
             <span
               id="campaign-session-status-text"
             >
@@ -541,8 +569,6 @@
 
           </div>
 
-
-          <!-- USUÁRIO -->
 
           <div
             class="campaign-user"
@@ -586,7 +612,7 @@
 
 
       <!-- ====================================================
-           CONTENT
+           CONTEÚDO
            ==================================================== -->
 
       <div
@@ -696,7 +722,7 @@
 
 
         <!-- ==================================================
-             MESA
+             WORKSPACE
              ================================================== -->
 
         <div
@@ -716,8 +742,6 @@
             data-campaign-panel="overview"
             aria-labelledby="campaign-overview-title"
           >
-
-            <!-- HERO -->
 
             <div
               class="campaign-hero"
@@ -781,7 +805,7 @@
             </div>
 
 
-            <!-- JOGADORES -->
+            <!-- MEMBROS -->
 
             <section
               class="campaign-section"
@@ -811,7 +835,7 @@
                   id="campaign-member-count"
                   class="campaign-section__count"
                 >
-                  0 jogadores
+                  0 integrantes
                 </span>
 
               </div>
@@ -825,14 +849,11 @@
             </section>
 
 
-            <!-- ESTADO DA MESA -->
+            <!-- CARDS -->
 
             <section
               class="campaign-overview-grid"
             >
-
-
-              <!-- STATUS -->
 
               <article
                 class="campaign-card"
@@ -867,6 +888,7 @@
                     aria-hidden="true"
                   ></span>
 
+
                   <span>
                     Mesa conectada
                   </span>
@@ -875,8 +897,6 @@
 
               </article>
 
-
-              <!-- AÇÕES -->
 
               <article
                 class="campaign-card"
@@ -899,7 +919,7 @@
                 <p
                   class="campaign-card__description"
                 >
-                  Acesse rapidamente as ferramentas da mesa.
+                  Use as ferramentas rápidas para conduzir a sessão.
                 </p>
 
 
@@ -928,11 +948,10 @@
 
               </article>
 
-
             </section>
 
 
-            <!-- FICHA RÁPIDA -->
+            <!-- PERSONAGEM -->
 
             <section
               class="campaign-section"
@@ -999,6 +1018,487 @@
 
 
           <!-- ================================================
+               DADOS
+               ================================================ -->
+
+          <section
+            id="campaign-panel-dice"
+            class="campaign-panel"
+            data-campaign-panel="dice"
+            hidden
+            aria-labelledby="campaign-dice-title"
+          >
+
+            <div
+              class="campaign-panel__heading"
+            >
+
+              <div>
+
+                <p
+                  class="campaign-panel__eyebrow"
+                >
+                  Sorte &amp; destino
+                </p>
+
+
+                <h1
+                  id="campaign-dice-title"
+                >
+                  Rolagem de Dados
+                </h1>
+
+
+                <p>
+                  Role seus dados, aplique modificadores e compartilhe o resultado com a mesa.
+                </p>
+
+              </div>
+
+            </div>
+
+
+            <div
+              class="dice-layout"
+            >
+
+
+              <!-- ==========================================
+                   PAINEL PRINCIPAL
+                   ========================================== -->
+
+              <section
+                class="dice-panel"
+              >
+
+                <div
+                  class="dice-panel__header"
+                >
+
+                  <div>
+
+                    <p
+                      class="dice-panel__eyebrow"
+                    >
+                      Dados disponíveis
+                    </p>
+
+
+                    <h2>
+                      Escolha seu dado
+                    </h2>
+
+                  </div>
+
+
+                  <div
+                    id="dice-realtime-status"
+                    class="dice-realtime-status"
+                    data-connected="false"
+                  >
+
+                    <span
+                      class="dice-realtime-status__dot"
+                      aria-hidden="true"
+                    ></span>
+
+
+                    <span
+                      data-dice-realtime-text
+                    >
+                      Reconectando dados...
+                    </span>
+
+                  </div>
+
+                </div>
+
+
+                <!-- DADOS -->
+
+                <div
+                  class="dice-selector"
+                  role="group"
+                  aria-label="Escolher dado"
+                >
+
+                  <button
+                    class="dice-button"
+                    type="button"
+                    data-die="4"
+                    aria-pressed="false"
+                  >
+                    <span>d4</span>
+                  </button>
+
+
+                  <button
+                    class="dice-button"
+                    type="button"
+                    data-die="6"
+                    aria-pressed="false"
+                  >
+                    <span>d6</span>
+                  </button>
+
+
+                  <button
+                    class="dice-button"
+                    type="button"
+                    data-die="8"
+                    aria-pressed="false"
+                  >
+                    <span>d8</span>
+                  </button>
+
+
+                  <button
+                    class="dice-button"
+                    type="button"
+                    data-die="10"
+                    aria-pressed="false"
+                  >
+                    <span>d10</span>
+                  </button>
+
+
+                  <button
+                    class="dice-button"
+                    type="button"
+                    data-die="12"
+                    aria-pressed="false"
+                  >
+                    <span>d12</span>
+                  </button>
+
+
+                  <button
+                    class="dice-button is-active"
+                    type="button"
+                    data-die="20"
+                    aria-pressed="true"
+                  >
+                    <span>d20</span>
+                  </button>
+
+
+                  <button
+                    class="dice-button"
+                    type="button"
+                    data-die="100"
+                    aria-pressed="false"
+                  >
+                    <span>d100</span>
+                  </button>
+
+                </div>
+
+
+                <!-- CONFIGURAÇÃO -->
+
+                <div
+                  class="dice-options"
+                >
+
+
+                  <!-- PERSONAGEM -->
+
+                  <div
+                    class="dice-field"
+                  >
+
+                    <label
+                      for="dice-character"
+                    >
+                      Personagem
+                    </label>
+
+
+                    <select
+                      id="dice-character"
+                      name="dice-character"
+                    >
+
+                      <option
+                        value=""
+                      >
+                        Sem personagem
+                      </option>
+
+                    </select>
+
+                  </div>
+
+
+                  <!-- MODIFICADOR -->
+
+                  <div
+                    class="dice-field"
+                  >
+
+                    <label
+                      for="dice-modifier"
+                    >
+                      Modificador
+                    </label>
+
+
+                    <input
+                      id="dice-modifier"
+                      name="dice-modifier"
+                      type="number"
+                      inputmode="numeric"
+                      value="0"
+                      min="-999"
+                      max="999"
+                      step="1"
+                    >
+
+                  </div>
+
+
+                  <!-- VISIBILIDADE -->
+
+                  <div
+                    class="dice-field"
+                  >
+
+                    <label
+                      for="dice-visibility"
+                    >
+                      Visibilidade
+                    </label>
+
+
+                    <select
+                      id="dice-visibility"
+                      name="dice-visibility"
+                    >
+
+                      <option
+                        value="public"
+                      >
+                        Pública
+                      </option>
+
+
+                      <option
+                        value="private"
+                      >
+                        Privada
+                      </option>
+
+                    </select>
+
+                  </div>
+
+                </div>
+
+
+                <!-- CONTEXTO -->
+
+                <div
+                  class="dice-field dice-field--full"
+                >
+
+                  <label
+                    for="dice-context"
+                  >
+                    Contexto da rolagem
+                  </label>
+
+
+                  <input
+                    id="dice-context"
+                    name="dice-context"
+                    type="text"
+                    maxlength="500"
+                    placeholder="Ex.: Teste de Percepção"
+                    autocomplete="off"
+                  >
+
+                </div>
+
+
+                <!-- NOTAÇÃO -->
+
+                <div
+                  class="dice-notation"
+                >
+
+                  <span>
+                    Rolagem
+                  </span>
+
+
+                  <strong
+                    id="dice-notation"
+                  >
+                    d20
+                  </strong>
+
+                </div>
+
+
+                <!-- BOTÃO -->
+
+                <button
+                  class="dice-roll-button"
+                  type="button"
+                  data-dice-roll="20"
+                >
+
+                  <span
+                    class="dice-roll-button__icon"
+                    aria-hidden="true"
+                  >
+                    ◈
+                  </span>
+
+
+                  <span
+                    class="dice-roll-button__text"
+                  >
+                    ROLAR DADO
+                  </span>
+
+                </button>
+
+
+                <p
+                  id="dice-error"
+                  class="dice-error"
+                  role="alert"
+                  hidden
+                ></p>
+
+              </section>
+
+
+              <!-- ==========================================
+                   RESULTADO
+                   ========================================== -->
+
+              <aside
+                class="dice-result-panel"
+              >
+
+                <p
+                  class="dice-result-panel__eyebrow"
+                >
+                  Resultado
+                </p>
+
+
+                <div
+                  id="dice-result"
+                  class="dice-result"
+                  data-result="normal"
+                  hidden
+                >
+
+                  <div
+                    class="dice-result__die"
+                  >
+
+                    <span
+                      class="dice-result__die-face"
+                      aria-hidden="true"
+                    >
+                      ◆
+                    </span>
+
+
+                    <span
+                      class="dice-result__value"
+                      id="dice-result-number"
+                    >
+                      20
+                    </span>
+
+                  </div>
+
+
+                  <p
+                    id="dice-result-notation"
+                    class="dice-result__notation"
+                  >
+                    d20
+                  </p>
+
+
+                  <p
+                    id="dice-result-classification"
+                    class="dice-result__classification"
+                  ></p>
+
+                </div>
+
+
+                <div
+                  id="dice-result-empty"
+                  class="dice-result-empty"
+                >
+
+                  <span
+                    aria-hidden="true"
+                  >
+                    ◇
+                  </span>
+
+
+                  <p>
+                    O resultado da próxima rolagem aparecerá aqui.
+                  </p>
+
+                </div>
+
+              </aside>
+
+            </div>
+
+
+            <!-- ==========================================
+                 HISTÓRICO
+                 ========================================== -->
+
+            <section
+              class="dice-history-section"
+            >
+
+              <div
+                class="campaign-section__heading"
+              >
+
+                <div>
+
+                  <p
+                    class="campaign-section__eyebrow"
+                  >
+                    Memória dos dados
+                  </p>
+
+
+                  <h2>
+                    Últimas Rolagens
+                  </h2>
+
+                </div>
+
+              </div>
+
+
+              <div
+                id="dice-history"
+                class="dice-history"
+              ></div>
+
+            </section>
+
+          </section>
+
+
+          <!-- ================================================
                COMBATE
                ================================================ -->
 
@@ -1007,6 +1507,7 @@
             class="campaign-panel"
             data-campaign-panel="combat"
             hidden
+            aria-labelledby="campaign-combat-title"
           >
 
             <div
@@ -1022,7 +1523,9 @@
                 </p>
 
 
-                <h1>
+                <h1
+                  id="campaign-combat-title"
+                >
                   Combate &amp; Turnos
                 </h1>
 
@@ -1072,6 +1575,7 @@
             class="campaign-panel"
             data-campaign-panel="mural"
             hidden
+            aria-labelledby="campaign-mural-title"
           >
 
             <div
@@ -1087,13 +1591,15 @@
                 </p>
 
 
-                <h1>
+                <h1
+                  id="campaign-mural-title"
+                >
                   Mural de Notas
                 </h1>
 
 
                 <p>
-                  Pistas, avisos e informações compartilhadas pelo Mestre.
+                  Pistas, avisos e informações compartilhadas pela mesa.
                 </p>
 
               </div>
@@ -1115,7 +1621,6 @@
               class="campaign-notes-grid"
             ></div>
 
-
           </section>
 
 
@@ -1128,6 +1633,7 @@
             class="campaign-panel"
             data-campaign-panel="timeline"
             hidden
+            aria-labelledby="campaign-timeline-title"
           >
 
             <div
@@ -1143,7 +1649,9 @@
                 </p>
 
 
-                <h1>
+                <h1
+                  id="campaign-timeline-title"
+                >
                   Linha do Tempo
                 </h1>
 
@@ -1174,6 +1682,7 @@
             class="campaign-panel"
             data-campaign-panel="kitchen"
             hidden
+            aria-labelledby="campaign-kitchen-title"
           >
 
             <div
@@ -1189,7 +1698,9 @@
                 </p>
 
 
-                <h1>
+                <h1
+                  id="campaign-kitchen-title"
+                >
                   Cozinha &amp; Poções
                 </h1>
 
@@ -1239,6 +1750,7 @@
             class="campaign-panel"
             data-campaign-panel="maps"
             hidden
+            aria-labelledby="campaign-maps-title"
           >
 
             <div
@@ -1254,7 +1766,9 @@
                 </p>
 
 
-                <h1>
+                <h1
+                  id="campaign-maps-title"
+                >
                   Mapas &amp; Regiões
                 </h1>
 
@@ -1287,7 +1801,7 @@
 
 
           <!-- ================================================
-               SEGREDOS — MESTRE
+               SEGREDOS
                ================================================ -->
 
           <section
@@ -1295,6 +1809,7 @@
             class="campaign-panel"
             data-campaign-panel="secrets"
             hidden
+            aria-labelledby="campaign-secrets-title"
           >
 
             <div
@@ -1310,7 +1825,9 @@
                 </p>
 
 
-                <h1>
+                <h1
+                  id="campaign-secrets-title"
+                >
                   Segredos
                 </h1>
 
@@ -1342,7 +1859,7 @@
 
 
           <!-- ================================================
-               TEMA — MESTRE
+               TEMA
                ================================================ -->
 
           <section
@@ -1350,6 +1867,7 @@
             class="campaign-panel"
             data-campaign-panel="theme"
             hidden
+            aria-labelledby="campaign-theme-title"
           >
 
             <div
@@ -1365,7 +1883,9 @@
                 </p>
 
 
-                <h1>
+                <h1
+                  id="campaign-theme-title"
+                >
                   Tema da Mesa
                 </h1>
 
@@ -1436,15 +1956,13 @@
 
         </div>
 
-
       </div>
-
 
     </main>
 
 
     <!-- ======================================================
-         BOTTOM NAVIGATION MOBILE
+         MOBILE BOTTOM NAVIGATION
          ====================================================== -->
 
     <nav
@@ -1476,6 +1994,25 @@
       <button
         class="campaign-mobile-nav-item"
         type="button"
+        data-campaign-tab="dice"
+      >
+
+        <span
+          aria-hidden="true"
+        >
+          ◉
+        </span>
+
+        <span>
+          Dados
+        </span>
+
+      </button>
+
+
+      <button
+        class="campaign-mobile-nav-item"
+        type="button"
         data-campaign-tab="combat"
       >
 
@@ -1487,25 +2024,6 @@
 
         <span>
           Combate
-        </span>
-
-      </button>
-
-
-      <button
-        class="campaign-mobile-nav-item"
-        type="button"
-        data-campaign-tab="mural"
-      >
-
-        <span
-          aria-hidden="true"
-        >
-          ▤
-        </span>
-
-        <span>
-          Mural
         </span>
 
       </button>
@@ -1622,7 +2140,6 @@
 
         <div
           class="campaign-invite__code"
-          aria-label="Código do convite"
         >
 
           <span
@@ -1710,7 +2227,7 @@
 
 
   <!-- ========================================================
-       MODAL — PERFIL DO JOGADOR
+       MODAL — MEMBRO
        ======================================================== -->
 
   <div
@@ -1777,7 +2294,7 @@
 
 
   <!-- ========================================================
-       MODAL — AÇÕES MOBILE
+       MOBILE ACTIONS
        ======================================================== -->
 
   <div
@@ -1839,7 +2356,7 @@
 
 
   <!-- ========================================================
-       APPLICATION
+       CORE
        ======================================================== -->
 
   <script
@@ -1849,13 +2366,24 @@
 
 
   <!-- ========================================================
-       MÓDULO DA CAMPANHA
+       NÚCLEO DA CAMPANHA
        ======================================================== -->
 
   <script
     type="module"
     src="./js/core/campanha.js"
   ></script>
+
+
+  <!-- ========================================================
+       DADOS
+       ======================================================== -->
+
+  <script
+    type="module"
+    src="./js/core/dice.js"
+  ></script>
+
 
 </body>
 
