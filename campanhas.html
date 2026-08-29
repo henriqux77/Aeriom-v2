@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+  >
+
+  <meta
+    name="theme-color"
+    content="#090807"
+  >
+
+  <meta
+    name="description"
+    content="AERIOM — suas campanhas de RPG."
+  >
+
+  <title>AERIOM — Campanhas</title>
+
+
+  <!-- ========================================================
+       FONTES
+       ======================================================== -->
+
+  <link
+    rel="preconnect"
+    href="https://fonts.googleapis.com"
+  >
+
+  <link
+    rel="preconnect"
+    href="https://fonts.gstatic.com"
+    crossorigin
+  >
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  >
+
+
+  <!-- ========================================================
+       DESIGN SYSTEM
+       ======================================================== -->
+
+  <link
+    rel="stylesheet"
+    href="./css/aeriom.css"
+  >
+
+
+  <!-- ========================================================
+       ESTILO DA PÁGINA
+       ======================================================== -->
+
+  <link
+    rel="stylesheet"
+    href="./css/campanhas.css"
+  >
+
+</head>
+
+
+<body class="aeriom-page aeriom-page--campaigns">
+
+
+  <!-- ========================================================
+       APP SHELL
+       ======================================================== -->
+
+  <div class="campaigns-shell">
+
+
+    <!-- ======================================================
+         SIDEBAR DESKTOP
+         ====================================================== -->
+
+    <aside
+      id="campaigns-sidebar"
+      class="campaigns-sidebar"
+      aria-label="Navegação principal"
+    >
+
+
+      <!-- BRAND -->
+
+      <div class="campaigns-sidebar__brand">
+
+        <a
+          href="./campanhas.html"
+          class="campaigns-brand"
+          aria-label="AERIOM — Campanhas"
+        >
+
+          <img
+            src="https://i.ibb.co/Cfd1zhc/52befe11-27fa-490b-a434-8afa6fd3f5c1-20260823-192033-0000.png"
+            alt="AERIOM"
+          >
+
+        </a>
+
+      </div>
+
+
+      <!-- NAVEGAÇÃO -->
+
+      <nav
+        class="campaigns-sidebar__nav"
+        aria-label="Menu principal"
+      >
+
+
+        <!-- CAMPANHAS -->
+
+        <a
+          class="campaigns-nav-item is-active"
+          href="./campanhas.html"
+          aria-current="page"
+        >
+
+          <span
+            class="campaigns-nav-item__icon"
+            aria-hidden="true"
+          >
+            ⚔
+          </span>
+
+          <span>
+            Campanhas
+          </span>
+
+        </a>
+
+
+        <!-- FICHAS -->
+
+        <a
+          class="campaigns-nav-item"
+          href="./fichas.html"
+        >
+
+          <span
+            class="campaigns-nav-item__icon"
+            aria-hidden="true"
+          >
+            ♜
+          </span>
+
+          <span>
+            Minhas Fichas
+          </span>
+
+        </a>
+
+
+        <!-- FERRAMENTAS -->
+
+        <a
+          class="campaigns-nav-item"
+          href="#"
+          data-coming-soon="true"
+        >
+
+          <span
+            class="campaigns-nav-item__icon"
+            aria-hidden="true"
+          >
+            ◈
+          </span>
+
+          <span>
+            Ferramentas
+          </span>
+
+        </a>
+
+
+        <!-- DADOS -->
+
+        <a
+          class="campaigns-nav-item"
+          href="#"
+          data-coming-soon="true"
+        >
+
+          <span
+            class="campaigns-nav-item__icon"
+            aria-hidden="true"
+          >
+            ◉
+          </span>
+
+          <span>
+            Dados
+          </span>
+
+        </a>
+
+
+        <!-- LIVROS -->
+
+        <a
+          class="campaigns-nav-item"
+          href="#"
+          data-coming-soon="true"
+        >
+
+          <span
+            class="campaigns-nav-item__icon"
+            aria-hidden="true"
+          >
+            ▤
+          </span>
+
+          <span>
+            Livros
+          </span>
+
+        </a>
+
+
+        <!-- HOMEBREW -->
+
+        <a
+          class="campaigns-nav-item"
+          href="#"
+          data-coming-soon="true"
+        >
+
+          <span
+            class="campaigns-nav-item__icon"
+            aria-hidden="true"
+          >
+            ✦
+          </span>
+
+          <span>
+            Homebrew
+          </span>
+
+        </a>
+
+
+      </nav>
+
+
+      <!-- FOOTER SIDEBAR -->
+
+      <div class="campaigns-sidebar__footer">
+
+        <button
+          id="campaigns-logout-button"
+          class="campaigns-logout"
+          type="button"
+        >
+
+          <span aria-hidden="true">
+            ↪
+          </span>
+
+          <span>
+            Sair
+          </span>
+
+        </button>
+
+      </div>
+
+
+    </aside>
+
+
+
+    <!-- ======================================================
+         ÁREA PRINCIPAL
+         ====================================================== -->
+
+    <main class="campaigns-main">
+
+
+      <!-- ====================================================
+           TOPBAR
+           ==================================================== -->
+
+      <header class="campaigns-topbar">
+
+
+        <div class="campaigns-topbar__left">
+
+
+          <!-- MENU MOBILE -->
+
+          <button
+            id="campaigns-mobile-menu-button"
+            class="campaigns-icon-button"
+            type="button"
+            aria-label="Abrir menu"
+            aria-controls="campaigns-sidebar"
+            aria-expanded="false"
+          >
+
+            <span aria-hidden="true">
+              ☰
+            </span>
+
+          </button>
+
+
+          <!-- TÍTULO -->
+
+          <div>
+
+            <p class="campaigns-topbar__eyebrow">
+              AERIOM
+            </p>
+
+            <h1 class="campaigns-topbar__title">
+              Suas campanhas
+            </h1>
+
+          </div>
+
+
+        </div>
+
+
+
+        <!-- USUÁRIO -->
+
+        <div class="campaigns-topbar__right">
+
+          <div
+            id="campaigns-user-badge"
+            class="campaigns-user-badge"
+            aria-live="polite"
+          >
+
+            <span
+              id="campaigns-user-avatar"
+              class="campaigns-user-badge__avatar"
+              aria-hidden="true"
+            >
+              ?
+            </span>
+
+
+            <span class="campaigns-user-badge__content">
+
+              <span
+                id="campaigns-user-name"
+                class="campaigns-user-badge__name"
+              >
+                Aventureiro
+              </span>
+
+
+              <span
+                id="campaigns-user-email"
+                class="campaigns-user-badge__email"
+              >
+                Carregando...
+              </span>
+
+            </span>
+
+          </div>
+
+        </div>
+
+
+      </header>
+
+
+
+      <!-- ====================================================
+           CONTEÚDO
+           ==================================================== -->
+
+      <section class="campaigns-content">
+
+
+        <!-- CABEÇALHO -->
+
+        <div class="campaigns-heading">
+
+
+          <div>
+
+            <p class="campaigns-heading__eyebrow">
+              O salão das aventuras
+            </p>
+
+            <h2 class="campaigns-heading__title">
+              Escolha sua mesa
+            </h2>
+
+            <p class="campaigns-heading__description">
+              Continue uma aventura ou reúna seu grupo para começar uma nova jornada.
+            </p>
+
+          </div>
+
+
+          <!-- NOVA CAMPANHA -->
+
+          <button
+            id="campaigns-create-button"
+            class="button button--primary"
+            type="button"
+          >
+
+            <span aria-hidden="true">
+              +
+            </span>
+
+            <span>
+              Nova campanha
+            </span>
+
+          </button>
+
+
+        </div>
+
+
+
+        <!-- ==================================================
+             LOADING
+             ================================================== -->
+
+        <section
+          id="campaigns-loading"
+          class="campaigns-state campaigns-state--loading"
+          aria-live="polite"
+        >
+
+          <div
+            class="campaigns-loading-mark"
+            aria-hidden="true"
+          >
+            ◈
+          </div>
+
+          <h3>
+            Consultando os registros...
+          </h3>
+
+          <p>
+            Buscando suas campanhas no grimório.
+          </p>
+
+        </section>
+
+
+
+        <!-- ==================================================
+             VAZIO
+             ================================================== -->
+
+        <section
+          id="campaigns-empty"
+          class="campaigns-state campaigns-state--empty"
+          aria-live="polite"
+          hidden
+        >
+
+          <div
+            class="campaigns-state__ornament"
+            aria-hidden="true"
+          >
+            ✦
+          </div>
+
+
+          <p class="campaigns-state__eyebrow">
+            Nenhuma aventura encontrada
+          </p>
+
+
+          <h3>
+            Seu grimório ainda está em branco.
+          </h3>
+
+
+          <p>
+            Crie sua primeira campanha ou entre em uma mesa usando um convite.
+          </p>
+
+
+          <div class="campaigns-empty-actions">
+
+
+            <button
+              id="campaigns-empty-create-button"
+              class="button button--primary"
+              type="button"
+            >
+              Criar campanha
+            </button>
+
+
+            <button
+              id="campaigns-join-button"
+              class="button button--secondary"
+              type="button"
+            >
+              Entrar com convite
+            </button>
+
+
+          </div>
+
+        </section>
+
+
+
+        <!-- ==================================================
+             ERRO
+             ================================================== -->
+
+        <section
+          id="campaigns-error"
+          class="campaigns-state campaigns-state--error"
+          aria-live="assertive"
+          hidden
+        >
+
+          <div
+            class="campaigns-state__ornament"
+            aria-hidden="true"
+          >
+            !
+          </div>
+
+
+          <p class="campaigns-state__eyebrow">
+            Algo interrompeu a jornada
+          </p>
+
+
+          <h3>
+            Não foi possível carregar suas campanhas.
+          </h3>
+
+
+          <p id="campaigns-error-message">
+            Tente novamente em alguns instantes.
+          </p>
+
+
+          <button
+            id="campaigns-retry-button"
+            class="button button--secondary"
+            type="button"
+          >
+            Tentar novamente
+          </button>
+
+        </section>
+
+
+
+        <!-- ==================================================
+             LISTA DE CAMPANHAS
+             ================================================== -->
+
+        <section
+          id="campaigns-list-section"
+          class="campaigns-list-section"
+          aria-label="Campanhas"
+          hidden
+        >
+
+          <div
+            id="campaigns-list"
+            class="campaigns-grid"
+          ></div>
+
+        </section>
+
+
+      </section>
+
+
+    </main>
+
+
+  </div>
+
+
+
+  <!-- ========================================================
+       MODAL — CRIAR CAMPANHA
+       ======================================================== -->
+
+  <div
+    id="campaign-create-modal"
+    class="campaign-modal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="campaign-create-title"
+    hidden
+  >
+
+
+    <!-- BACKDROP -->
+
+    <div
+      class="campaign-modal__backdrop"
+      data-modal-close="true"
+    ></div>
+
+
+    <!-- DIALOG -->
+
+    <div class="campaign-modal__dialog">
+
+
+      <!-- HEADER -->
+
+      <div class="campaign-modal__header">
+
+
+        <div>
+
+          <p class="campaign-modal__eyebrow">
+            Nova aventura
+          </p>
+
+          <h2 id="campaign-create-title">
+            Forje sua campanha
+          </h2>
+
+        </div>
+
+
+        <button
+          id="campaign-create-close"
+          class="campaigns-icon-button"
+          type="button"
+          aria-label="Fechar"
+        >
+          ×
+        </button>
+
+
+      </div>
+
+
+
+      <!-- FORMULÁRIO -->
+
+      <form
+        id="campaign-create-form"
+        class="campaign-form"
+        novalidate
+      >
+
+
+        <!-- NOME -->
+
+        <div class="form-field">
+
+          <label
+            class="form-field__label"
+            for="campaign-name"
+          >
+            Nome da campanha
+          </label>
+
+
+          <input
+            id="campaign-name"
+            class="form-field__input"
+            name="name"
+            type="text"
+            maxlength="120"
+            autocomplete="off"
+            placeholder="Ex.: As Ruínas de Aster"
+            required
+          >
+
+
+          <span
+            id="campaign-name-error"
+            class="form-field__error"
+            role="alert"
+          ></span>
+
+        </div>
+
+
+
+        <!-- DESCRIÇÃO -->
+
+        <div class="form-field">
+
+          <label
+            class="form-field__label"
+            for="campaign-description"
+          >
+            Descrição
+          </label>
+
+
+          <textarea
+            id="campaign-description"
+            class="form-field__input campaign-form__textarea"
+            name="description"
+            maxlength="1000"
+            rows="5"
+            placeholder="Conte brevemente sobre a aventura..."
+          ></textarea>
+
+
+          <span
+            id="campaign-description-error"
+            class="form-field__error"
+            role="alert"
+          ></span>
+
+        </div>
+
+
+
+        <!-- MENSAGEM -->
+
+        <div
+          id="campaign-create-message"
+          class="auth-message"
+          role="alert"
+          aria-live="polite"
+          hidden
+        ></div>
+
+
+
+        <!-- AÇÕES -->
+
+        <div class="campaign-modal__actions">
+
+
+          <button
+            id="campaign-create-cancel"
+            class="button button--secondary"
+            type="button"
+          >
+            Cancelar
+          </button>
+
+
+          <button
+            id="campaign-create-submit"
+            class="button button--primary"
+            type="submit"
+          >
+
+            <span class="button__label">
+              Criar campanha
+            </span>
+
+
+            <span
+              class="button__loading"
+              aria-hidden="true"
+              hidden
+            >
+              Criando...
+            </span>
+
+          </button>
+
+
+        </div>
+
+
+      </form>
+
+
+    </div>
+
+
+  </div>
+
+
+
+  <!-- ========================================================
+       TOAST
+       ======================================================== -->
+
+  <div
+    id="aeriom-toast-region"
+    class="aeriom-toast-region"
+    aria-live="polite"
+    aria-atomic="true"
+  ></div>
+
+
+
+  <!-- ========================================================
+       CORE
+       ======================================================== -->
+
+  <script
+    type="module"
+    src="./js/core/main.js"
+  ></script>
+
+
+</body>
+
+</html>
