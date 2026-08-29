@@ -1,0 +1,1862 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+  >
+
+  <meta
+    name="theme-color"
+    content="#090807"
+  >
+
+  <meta
+    name="description"
+    content="AERIOM — mesa virtual de RPG."
+  >
+
+  <title>AERIOM — Mesa</title>
+
+
+  <!-- ========================================================
+       FONTES
+       ======================================================== -->
+
+  <link
+    rel="preconnect"
+    href="https://fonts.googleapis.com"
+  >
+
+  <link
+    rel="preconnect"
+    href="https://fonts.gstatic.com"
+    crossorigin
+  >
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  >
+
+
+  <!-- ========================================================
+       DESIGN SYSTEM
+       ======================================================== -->
+
+  <link
+    rel="stylesheet"
+    href="./css/aeriom.css"
+  >
+
+
+  <!-- ========================================================
+       ESTILO DA MESA
+       ======================================================== -->
+
+  <link
+    rel="stylesheet"
+    href="./css/campanha.css"
+  >
+
+
+  <!-- ========================================================
+       TEMA PADRÃO
+       ======================================================== -->
+
+  <link
+    rel="stylesheet"
+    href="./css/themes/default.css"
+  >
+
+</head>
+
+
+<body
+  class="aeriom-page aeriom-page--campaign"
+  data-campaign-page
+>
+
+
+  <!-- ========================================================
+       APP
+       ======================================================== -->
+
+  <div
+    id="campaign-app"
+    class="campaign-app"
+  >
+
+
+    <!-- ======================================================
+         MOBILE TOPBAR
+         ====================================================== -->
+
+    <header
+      id="campaign-mobile-topbar"
+      class="campaign-mobile-topbar"
+    >
+
+      <button
+        id="campaign-mobile-menu-button"
+        class="campaign-icon-button"
+        type="button"
+        aria-label="Abrir navegação"
+        aria-controls="campaign-sidebar"
+        aria-expanded="false"
+      >
+        ☰
+      </button>
+
+
+      <div class="campaign-mobile-topbar__center">
+
+        <span
+          class="campaign-mobile-topbar__eyebrow"
+        >
+          AERIOM
+        </span>
+
+        <span
+          id="campaign-mobile-title"
+          class="campaign-mobile-topbar__title"
+        >
+          Carregando...
+        </span>
+
+      </div>
+
+
+      <button
+        id="campaign-mobile-actions-button"
+        class="campaign-icon-button"
+        type="button"
+        aria-label="Ações da mesa"
+        aria-expanded="false"
+      >
+        ⋮
+      </button>
+
+    </header>
+
+
+    <!-- ======================================================
+         SIDEBAR
+         ====================================================== -->
+
+    <aside
+      id="campaign-sidebar"
+      class="campaign-sidebar"
+      aria-label="Navegação da campanha"
+    >
+
+
+      <!-- BRAND -->
+
+      <div class="campaign-sidebar__brand">
+
+        <a
+          href="./campanhas.html"
+          class="campaign-brand"
+          aria-label="Voltar para campanhas"
+        >
+
+          <img
+            src="https://i.ibb.co/Cfd1zhc/52befe11-27fa-490b-a434-8afa6fd3f5c1-20260823-192033-0000.png"
+            alt="AERIOM"
+          >
+
+        </a>
+
+      </div>
+
+
+      <!-- INFORMAÇÕES DA CAMPANHA -->
+
+      <div class="campaign-sidebar__campaign">
+
+        <div class="campaign-cover-small">
+
+          <div
+            id="campaign-sidebar-cover"
+            class="campaign-cover-small__image"
+            aria-hidden="true"
+          >
+            ✦
+          </div>
+
+        </div>
+
+
+        <div class="campaign-sidebar__campaign-info">
+
+          <p
+            id="campaign-sidebar-role"
+            class="campaign-sidebar__role"
+          >
+            Carregando
+          </p>
+
+
+          <h1
+            id="campaign-sidebar-name"
+            class="campaign-sidebar__campaign-name"
+          >
+            Carregando...
+          </h1>
+
+        </div>
+
+      </div>
+
+
+      <!-- NAVEGAÇÃO -->
+
+      <nav
+        class="campaign-sidebar__nav"
+        aria-label="Seções da mesa"
+      >
+
+
+        <button
+          class="campaign-nav-item is-active"
+          type="button"
+          data-campaign-tab="overview"
+          aria-current="page"
+        >
+
+          <span
+            class="campaign-nav-item__icon"
+            aria-hidden="true"
+          >
+            ◈
+          </span>
+
+          <span>
+            Visão Geral
+          </span>
+
+        </button>
+
+
+        <button
+          class="campaign-nav-item"
+          type="button"
+          data-campaign-tab="combat"
+        >
+
+          <span
+            class="campaign-nav-item__icon"
+            aria-hidden="true"
+          >
+            ⚔
+          </span>
+
+          <span>
+            Combate &amp; Turnos
+          </span>
+
+        </button>
+
+
+        <button
+          class="campaign-nav-item"
+          type="button"
+          data-campaign-tab="mural"
+        >
+
+          <span
+            class="campaign-nav-item__icon"
+            aria-hidden="true"
+          >
+            ▤
+          </span>
+
+          <span>
+            Mural de Notas
+          </span>
+
+        </button>
+
+
+        <button
+          class="campaign-nav-item"
+          type="button"
+          data-campaign-tab="timeline"
+        >
+
+          <span
+            class="campaign-nav-item__icon"
+            aria-hidden="true"
+          >
+            ◷
+          </span>
+
+          <span>
+            Linha do Tempo
+          </span>
+
+        </button>
+
+
+        <button
+          class="campaign-nav-item"
+          type="button"
+          data-campaign-tab="kitchen"
+        >
+
+          <span
+            class="campaign-nav-item__icon"
+            aria-hidden="true"
+          >
+            ♨
+          </span>
+
+          <span>
+            Cozinha &amp; Poções
+          </span>
+
+        </button>
+
+
+        <button
+          class="campaign-nav-item"
+          type="button"
+          data-campaign-tab="maps"
+        >
+
+          <span
+            class="campaign-nav-item__icon"
+            aria-hidden="true"
+          >
+            🗺
+          </span>
+
+          <span>
+            Mapas &amp; Regiões
+          </span>
+
+        </button>
+
+
+        <!-- SOMENTE MESTRE -->
+
+        <div
+          id="master-navigation"
+          class="campaign-master-navigation"
+          hidden
+        >
+
+          <div
+            class="campaign-sidebar__separator"
+          ></div>
+
+
+          <p
+            class="campaign-sidebar__section-label"
+          >
+            Guia do Mestre
+          </p>
+
+
+          <button
+            class="campaign-nav-item campaign-nav-item--master"
+            type="button"
+            data-campaign-tab="secrets"
+          >
+
+            <span
+              class="campaign-nav-item__icon"
+              aria-hidden="true"
+            >
+              🔐
+            </span>
+
+            <span>
+              Segredos
+            </span>
+
+          </button>
+
+
+          <button
+            class="campaign-nav-item campaign-nav-item--master"
+            type="button"
+            data-campaign-tab="theme"
+          >
+
+            <span
+              class="campaign-nav-item__icon"
+              aria-hidden="true"
+            >
+              ✦
+            </span>
+
+            <span>
+              Tema da Mesa
+            </span>
+
+          </button>
+
+        </div>
+
+      </nav>
+
+
+      <!-- RODAPÉ -->
+
+      <div class="campaign-sidebar__footer">
+
+        <button
+          id="campaign-invite-sidebar-button"
+          class="campaign-sidebar-action"
+          type="button"
+        >
+
+          <span
+            aria-hidden="true"
+          >
+            ✉
+          </span>
+
+          <span>
+            Convidar jogadores
+          </span>
+
+        </button>
+
+
+        <a
+          href="./campanhas.html"
+          class="campaign-sidebar-action"
+        >
+
+          <span
+            aria-hidden="true"
+          >
+            ←
+          </span>
+
+          <span>
+            Voltar para campanhas
+          </span>
+
+        </a>
+
+
+        <button
+          id="campaign-logout-button"
+          class="campaign-sidebar-action campaign-sidebar-action--danger"
+          type="button"
+        >
+
+          <span
+            aria-hidden="true"
+          >
+            ↪
+          </span>
+
+          <span>
+            Sair
+          </span>
+
+        </button>
+
+      </div>
+
+    </aside>
+
+
+    <!-- ======================================================
+         MAIN
+         ====================================================== -->
+
+    <main
+      id="campaign-main"
+      class="campaign-main"
+    >
+
+
+      <!-- ====================================================
+           TOPBAR DESKTOP
+           ==================================================== -->
+
+      <header
+        class="campaign-topbar"
+      >
+
+        <div
+          class="campaign-topbar__left"
+        >
+
+          <div>
+
+            <p
+              id="campaign-topbar-eyebrow"
+              class="campaign-topbar__eyebrow"
+            >
+              Mesa virtual
+            </p>
+
+
+            <h2
+              id="campaign-topbar-title"
+              class="campaign-topbar__title"
+            >
+              Carregando...
+            </h2>
+
+          </div>
+
+        </div>
+
+
+        <div
+          class="campaign-topbar__right"
+        >
+
+
+          <!-- STATUS DA SESSÃO -->
+
+          <div
+            id="campaign-session-status"
+            class="campaign-session-status"
+            aria-live="polite"
+          >
+
+            <span
+              class="campaign-session-status__dot"
+              aria-hidden="true"
+            ></span>
+
+            <span
+              id="campaign-session-status-text"
+            >
+              Preparando mesa...
+            </span>
+
+          </div>
+
+
+          <!-- USUÁRIO -->
+
+          <div
+            class="campaign-user"
+          >
+
+            <div
+              id="campaign-user-avatar"
+              class="campaign-user__avatar"
+              aria-hidden="true"
+            >
+              ?
+            </div>
+
+
+            <div
+              class="campaign-user__content"
+            >
+
+              <span
+                id="campaign-user-name"
+                class="campaign-user__name"
+              >
+                Aventureiro
+              </span>
+
+
+              <span
+                id="campaign-user-role"
+                class="campaign-user__role"
+              >
+                Carregando
+              </span>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </header>
+
+
+      <!-- ====================================================
+           CONTENT
+           ==================================================== -->
+
+      <div
+        id="campaign-content"
+        class="campaign-content"
+      >
+
+
+        <!-- ==================================================
+             LOADING
+             ================================================== -->
+
+        <section
+          id="campaign-loading"
+          class="campaign-state campaign-state--loading"
+          aria-live="polite"
+        >
+
+          <div
+            class="campaign-state__ornament"
+            aria-hidden="true"
+          >
+            ◈
+          </div>
+
+
+          <p
+            class="campaign-state__eyebrow"
+          >
+            AERIOM
+          </p>
+
+
+          <h2>
+            Preparando a mesa...
+          </h2>
+
+
+          <p>
+            Reunindo os registros da campanha.
+          </p>
+
+        </section>
+
+
+        <!-- ==================================================
+             ERROR
+             ================================================== -->
+
+        <section
+          id="campaign-error"
+          class="campaign-state campaign-state--error"
+          hidden
+          aria-live="assertive"
+        >
+
+          <div
+            class="campaign-state__ornament"
+            aria-hidden="true"
+          >
+            !
+          </div>
+
+
+          <p
+            class="campaign-state__eyebrow"
+          >
+            Mesa indisponível
+          </p>
+
+
+          <h2>
+            Não foi possível abrir a campanha.
+          </h2>
+
+
+          <p
+            id="campaign-error-message"
+          >
+            Tente novamente.
+          </p>
+
+
+          <div
+            class="campaign-state__actions"
+          >
+
+            <button
+              id="campaign-retry-button"
+              class="campaign-button campaign-button--primary"
+              type="button"
+            >
+              Tentar novamente
+            </button>
+
+
+            <a
+              href="./campanhas.html"
+              class="campaign-button campaign-button--secondary"
+            >
+              Voltar para campanhas
+            </a>
+
+          </div>
+
+        </section>
+
+
+        <!-- ==================================================
+             MESA
+             ================================================== -->
+
+        <div
+          id="campaign-workspace"
+          class="campaign-workspace"
+          hidden
+        >
+
+
+          <!-- ================================================
+               VISÃO GERAL
+               ================================================ -->
+
+          <section
+            id="campaign-panel-overview"
+            class="campaign-panel is-active"
+            data-campaign-panel="overview"
+            aria-labelledby="campaign-overview-title"
+          >
+
+            <!-- HERO -->
+
+            <div
+              class="campaign-hero"
+            >
+
+              <div
+                id="campaign-hero-cover"
+                class="campaign-hero__background"
+                aria-hidden="true"
+              ></div>
+
+
+              <div
+                class="campaign-hero__overlay"
+                aria-hidden="true"
+              ></div>
+
+
+              <div
+                class="campaign-hero__content"
+              >
+
+                <p
+                  class="campaign-hero__eyebrow"
+                >
+                  Aventura em andamento
+                </p>
+
+
+                <h1
+                  id="campaign-overview-title"
+                  class="campaign-hero__title"
+                >
+                  Carregando...
+                </h1>
+
+
+                <p
+                  id="campaign-overview-description"
+                  class="campaign-hero__description"
+                >
+                  Preparando a descrição da aventura.
+                </p>
+
+
+                <div
+                  class="campaign-hero__meta"
+                >
+
+                  <span
+                    id="campaign-role-badge"
+                    class="campaign-badge"
+                  >
+                    Aventureiro
+                  </span>
+
+                </div>
+
+              </div>
+
+            </div>
+
+
+            <!-- JOGADORES -->
+
+            <section
+              class="campaign-section"
+            >
+
+              <div
+                class="campaign-section__heading"
+              >
+
+                <div>
+
+                  <p
+                    class="campaign-section__eyebrow"
+                  >
+                    A companhia
+                  </p>
+
+
+                  <h2>
+                    Aventureiros da mesa
+                  </h2>
+
+                </div>
+
+
+                <span
+                  id="campaign-member-count"
+                  class="campaign-section__count"
+                >
+                  0 jogadores
+                </span>
+
+              </div>
+
+
+              <div
+                id="campaign-members-grid"
+                class="campaign-members-grid"
+              ></div>
+
+            </section>
+
+
+            <!-- ESTADO DA MESA -->
+
+            <section
+              class="campaign-overview-grid"
+            >
+
+
+              <!-- STATUS -->
+
+              <article
+                class="campaign-card"
+              >
+
+                <p
+                  class="campaign-card__eyebrow"
+                >
+                  Estado da mesa
+                </p>
+
+
+                <h3>
+                  A aventura está pronta.
+                </h3>
+
+
+                <p
+                  class="campaign-card__description"
+                >
+                  A partir daqui, o Mestre poderá controlar a sessão e os jogadores poderão acompanhar a aventura em tempo real.
+                </p>
+
+
+                <div
+                  id="campaign-live-indicator"
+                  class="campaign-live-indicator"
+                >
+
+                  <span
+                    class="campaign-live-indicator__dot"
+                    aria-hidden="true"
+                  ></span>
+
+                  <span>
+                    Mesa conectada
+                  </span>
+
+                </div>
+
+              </article>
+
+
+              <!-- AÇÕES -->
+
+              <article
+                class="campaign-card"
+                id="campaign-master-card"
+                hidden
+              >
+
+                <p
+                  class="campaign-card__eyebrow"
+                >
+                  Ferramentas do Mestre
+                </p>
+
+
+                <h3>
+                  Controle a aventura
+                </h3>
+
+
+                <p
+                  class="campaign-card__description"
+                >
+                  Acesse rapidamente as ferramentas da mesa.
+                </p>
+
+
+                <div
+                  class="campaign-card__actions"
+                >
+
+                  <button
+                    class="campaign-button campaign-button--secondary"
+                    type="button"
+                    data-campaign-action="request-test"
+                  >
+                    Pedir teste
+                  </button>
+
+
+                  <button
+                    class="campaign-button campaign-button--secondary"
+                    type="button"
+                    data-campaign-action="roll"
+                  >
+                    Rolar dados
+                  </button>
+
+                </div>
+
+              </article>
+
+
+            </section>
+
+
+            <!-- FICHA RÁPIDA -->
+
+            <section
+              class="campaign-section"
+            >
+
+              <div
+                class="campaign-section__heading"
+              >
+
+                <div>
+
+                  <p
+                    class="campaign-section__eyebrow"
+                  >
+                    Sua aventura
+                  </p>
+
+
+                  <h2>
+                    Personagem
+                  </h2>
+
+                </div>
+
+              </div>
+
+
+              <div
+                id="campaign-character-summary"
+                class="campaign-character-summary"
+              >
+
+                <div
+                  class="campaign-character-summary__empty"
+                >
+
+                  <span
+                    aria-hidden="true"
+                  >
+                    ♜
+                  </span>
+
+
+                  <div>
+
+                    <strong>
+                      Nenhum personagem presente ainda.
+                    </strong>
+
+
+                    <p>
+                      Em breve você poderá selecionar sua ficha para esta mesa.
+                    </p>
+
+                  </div>
+
+                </div>
+
+              </div>
+
+            </section>
+
+          </section>
+
+
+          <!-- ================================================
+               COMBATE
+               ================================================ -->
+
+          <section
+            id="campaign-panel-combat"
+            class="campaign-panel"
+            data-campaign-panel="combat"
+            hidden
+          >
+
+            <div
+              class="campaign-panel__heading"
+            >
+
+              <div>
+
+                <p
+                  class="campaign-panel__eyebrow"
+                >
+                  Confronto
+                </p>
+
+
+                <h1>
+                  Combate &amp; Turnos
+                </h1>
+
+
+                <p>
+                  Controle a iniciativa e acompanhe o turno atual.
+                </p>
+
+              </div>
+
+            </div>
+
+
+            <div
+              id="campaign-combat-content"
+              class="campaign-module-placeholder"
+            >
+
+              <span
+                class="campaign-module-placeholder__icon"
+                aria-hidden="true"
+              >
+                ⚔
+              </span>
+
+
+              <h2>
+                Tracker de iniciativa
+              </h2>
+
+
+              <p>
+                O sistema de combate será conectado nesta área.
+              </p>
+
+            </div>
+
+          </section>
+
+
+          <!-- ================================================
+               MURAL
+               ================================================ -->
+
+          <section
+            id="campaign-panel-mural"
+            class="campaign-panel"
+            data-campaign-panel="mural"
+            hidden
+          >
+
+            <div
+              class="campaign-panel__heading"
+            >
+
+              <div>
+
+                <p
+                  class="campaign-panel__eyebrow"
+                >
+                  Registro da mesa
+                </p>
+
+
+                <h1>
+                  Mural de Notas
+                </h1>
+
+
+                <p>
+                  Pistas, avisos e informações compartilhadas pelo Mestre.
+                </p>
+
+              </div>
+
+
+              <button
+                id="campaign-create-note-button"
+                class="campaign-button campaign-button--primary"
+                type="button"
+              >
+                Nova nota
+              </button>
+
+            </div>
+
+
+            <div
+              id="campaign-notes-grid"
+              class="campaign-notes-grid"
+            ></div>
+
+
+          </section>
+
+
+          <!-- ================================================
+               TIMELINE
+               ================================================ -->
+
+          <section
+            id="campaign-panel-timeline"
+            class="campaign-panel"
+            data-campaign-panel="timeline"
+            hidden
+          >
+
+            <div
+              class="campaign-panel__heading"
+            >
+
+              <div>
+
+                <p
+                  class="campaign-panel__eyebrow"
+                >
+                  Memória da mesa
+                </p>
+
+
+                <h1>
+                  Linha do Tempo
+                </h1>
+
+
+                <p>
+                  A história da aventura conforme ela acontece.
+                </p>
+
+              </div>
+
+            </div>
+
+
+            <div
+              id="campaign-timeline"
+              class="campaign-timeline"
+            ></div>
+
+          </section>
+
+
+          <!-- ================================================
+               COZINHA
+               ================================================ -->
+
+          <section
+            id="campaign-panel-kitchen"
+            class="campaign-panel"
+            data-campaign-panel="kitchen"
+            hidden
+          >
+
+            <div
+              class="campaign-panel__heading"
+            >
+
+              <div>
+
+                <p
+                  class="campaign-panel__eyebrow"
+                >
+                  Sobrevivência
+                </p>
+
+
+                <h1>
+                  Cozinha &amp; Poções
+                </h1>
+
+
+                <p>
+                  Ingredientes, receitas e preparados da aventura.
+                </p>
+
+              </div>
+
+            </div>
+
+
+            <div
+              id="campaign-kitchen-content"
+              class="campaign-module-placeholder"
+            >
+
+              <span
+                class="campaign-module-placeholder__icon"
+                aria-hidden="true"
+              >
+                ♨
+              </span>
+
+
+              <h2>
+                Cozinha da campanha
+              </h2>
+
+
+              <p>
+                O sistema culinário será conectado nesta área.
+              </p>
+
+            </div>
+
+          </section>
+
+
+          <!-- ================================================
+               MAPAS
+               ================================================ -->
+
+          <section
+            id="campaign-panel-maps"
+            class="campaign-panel"
+            data-campaign-panel="maps"
+            hidden
+          >
+
+            <div
+              class="campaign-panel__heading"
+            >
+
+              <div>
+
+                <p
+                  class="campaign-panel__eyebrow"
+                >
+                  Mundo
+                </p>
+
+
+                <h1>
+                  Mapas &amp; Regiões
+                </h1>
+
+
+                <p>
+                  Explore os mapas compartilhados pela mesa.
+                </p>
+
+              </div>
+
+
+              <button
+                id="campaign-create-map-button"
+                class="campaign-button campaign-button--primary"
+                type="button"
+                hidden
+              >
+                Novo mapa
+              </button>
+
+            </div>
+
+
+            <div
+              id="campaign-maps-grid"
+              class="campaign-maps-grid"
+            ></div>
+
+          </section>
+
+
+          <!-- ================================================
+               SEGREDOS — MESTRE
+               ================================================ -->
+
+          <section
+            id="campaign-panel-secrets"
+            class="campaign-panel"
+            data-campaign-panel="secrets"
+            hidden
+          >
+
+            <div
+              class="campaign-panel__heading"
+            >
+
+              <div>
+
+                <p
+                  class="campaign-panel__eyebrow"
+                >
+                  Confidencial
+                </p>
+
+
+                <h1>
+                  Segredos
+                </h1>
+
+
+                <p>
+                  Mensagens privadas destinadas a jogadores específicos.
+                </p>
+
+              </div>
+
+
+              <button
+                id="campaign-create-secret-button"
+                class="campaign-button campaign-button--primary"
+                type="button"
+              >
+                Novo segredo
+              </button>
+
+            </div>
+
+
+            <div
+              id="campaign-secrets-list"
+              class="campaign-secrets-list"
+            ></div>
+
+          </section>
+
+
+          <!-- ================================================
+               TEMA — MESTRE
+               ================================================ -->
+
+          <section
+            id="campaign-panel-theme"
+            class="campaign-panel"
+            data-campaign-panel="theme"
+            hidden
+          >
+
+            <div
+              class="campaign-panel__heading"
+            >
+
+              <div>
+
+                <p
+                  class="campaign-panel__eyebrow"
+                >
+                  Atmosfera
+                </p>
+
+
+                <h1>
+                  Tema da Mesa
+                </h1>
+
+
+                <p>
+                  Altere a atmosfera visual da aventura para todos os jogadores.
+                </p>
+
+              </div>
+
+            </div>
+
+
+            <div
+              id="campaign-theme-selector"
+              class="campaign-theme-selector"
+            ></div>
+
+
+            <div
+              class="campaign-background-control"
+            >
+
+              <div>
+
+                <p
+                  class="campaign-background-control__eyebrow"
+                >
+                  Fundo personalizado
+                </p>
+
+
+                <h2>
+                  Imagem da cena
+                </h2>
+
+
+                <p>
+                  O Mestre poderá enviar uma imagem para servir como atmosfera da mesa.
+                </p>
+
+              </div>
+
+
+              <label
+                class="campaign-upload-control"
+                for="campaign-background-file"
+              >
+
+                <span>
+                  Escolher imagem
+                </span>
+
+
+                <input
+                  id="campaign-background-file"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  hidden
+                >
+
+              </label>
+
+            </div>
+
+          </section>
+
+
+        </div>
+
+
+      </div>
+
+
+    </main>
+
+
+    <!-- ======================================================
+         BOTTOM NAVIGATION MOBILE
+         ====================================================== -->
+
+    <nav
+      id="campaign-mobile-navigation"
+      class="campaign-mobile-navigation"
+      aria-label="Navegação da mesa"
+    >
+
+      <button
+        class="campaign-mobile-nav-item is-active"
+        type="button"
+        data-campaign-tab="overview"
+        aria-current="page"
+      >
+
+        <span
+          aria-hidden="true"
+        >
+          ◈
+        </span>
+
+        <span>
+          Mesa
+        </span>
+
+      </button>
+
+
+      <button
+        class="campaign-mobile-nav-item"
+        type="button"
+        data-campaign-tab="combat"
+      >
+
+        <span
+          aria-hidden="true"
+        >
+          ⚔
+        </span>
+
+        <span>
+          Combate
+        </span>
+
+      </button>
+
+
+      <button
+        class="campaign-mobile-nav-item"
+        type="button"
+        data-campaign-tab="mural"
+      >
+
+        <span
+          aria-hidden="true"
+        >
+          ▤
+        </span>
+
+        <span>
+          Mural
+        </span>
+
+      </button>
+
+
+      <button
+        class="campaign-mobile-nav-item"
+        type="button"
+        data-campaign-tab="maps"
+      >
+
+        <span
+          aria-hidden="true"
+        >
+          🗺
+        </span>
+
+        <span>
+          Mapas
+        </span>
+
+      </button>
+
+
+      <button
+        class="campaign-mobile-nav-item"
+        type="button"
+        data-campaign-tab="timeline"
+      >
+
+        <span
+          aria-hidden="true"
+        >
+          ◷
+        </span>
+
+        <span>
+          Histórico
+        </span>
+
+      </button>
+
+    </nav>
+
+
+  </div>
+
+
+  <!-- ========================================================
+       MODAL — CONVITE
+       ======================================================== -->
+
+  <div
+    id="campaign-invite-modal"
+    class="campaign-modal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="campaign-invite-title"
+    hidden
+  >
+
+    <div
+      class="campaign-modal__backdrop"
+      data-campaign-modal-close
+    ></div>
+
+
+    <div
+      class="campaign-modal__dialog"
+    >
+
+      <header
+        class="campaign-modal__header"
+      >
+
+        <div>
+
+          <p
+            class="campaign-modal__eyebrow"
+          >
+            Convite
+          </p>
+
+
+          <h2
+            id="campaign-invite-title"
+          >
+            Reunir aventureiros
+          </h2>
+
+        </div>
+
+
+        <button
+          id="campaign-invite-close"
+          class="campaign-icon-button"
+          type="button"
+          aria-label="Fechar convite"
+        >
+          ×
+        </button>
+
+      </header>
+
+
+      <div
+        class="campaign-invite"
+      >
+
+        <p>
+          Compartilhe o código abaixo com os jogadores.
+        </p>
+
+
+        <div
+          class="campaign-invite__code"
+          aria-label="Código do convite"
+        >
+
+          <span
+            id="campaign-invite-code"
+          >
+            -----
+          </span>
+
+        </div>
+
+
+        <p
+          id="campaign-invite-expiration"
+          class="campaign-invite__expiration"
+        >
+          Gerando convite...
+        </p>
+
+
+        <div
+          id="campaign-invite-qr"
+          class="campaign-invite__qr"
+          aria-label="QR Code do convite"
+        ></div>
+
+
+        <div
+          class="campaign-invite__link"
+        >
+
+          <label
+            for="campaign-invite-link"
+          >
+            Link
+          </label>
+
+
+          <input
+            id="campaign-invite-link"
+            type="text"
+            readonly
+            value=""
+          >
+
+        </div>
+
+
+        <div
+          class="campaign-modal__actions"
+        >
+
+          <button
+            id="campaign-invite-copy-code"
+            class="campaign-button campaign-button--secondary"
+            type="button"
+          >
+            Copiar código
+          </button>
+
+
+          <button
+            id="campaign-invite-copy-link"
+            class="campaign-button campaign-button--secondary"
+            type="button"
+          >
+            Copiar link
+          </button>
+
+
+          <button
+            id="campaign-invite-share"
+            class="campaign-button campaign-button--primary"
+            type="button"
+          >
+            Compartilhar
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- ========================================================
+       MODAL — PERFIL DO JOGADOR
+       ======================================================== -->
+
+  <div
+    id="campaign-member-modal"
+    class="campaign-modal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="campaign-member-title"
+    hidden
+  >
+
+    <div
+      class="campaign-modal__backdrop"
+      data-campaign-member-modal-close
+    ></div>
+
+
+    <div
+      class="campaign-modal__dialog campaign-modal__dialog--member"
+    >
+
+      <header
+        class="campaign-modal__header"
+      >
+
+        <div>
+
+          <p
+            class="campaign-modal__eyebrow"
+          >
+            Aventureiro
+          </p>
+
+
+          <h2
+            id="campaign-member-title"
+          >
+            Perfil
+          </h2>
+
+        </div>
+
+
+        <button
+          id="campaign-member-close"
+          class="campaign-icon-button"
+          type="button"
+          aria-label="Fechar perfil"
+        >
+          ×
+        </button>
+
+      </header>
+
+
+      <div
+        id="campaign-member-content"
+        class="campaign-member-modal-content"
+      ></div>
+
+    </div>
+
+  </div>
+
+
+  <!-- ========================================================
+       MODAL — AÇÕES MOBILE
+       ======================================================== -->
+
+  <div
+    id="campaign-mobile-actions"
+    class="campaign-mobile-actions"
+    hidden
+  >
+
+    <button
+      id="campaign-mobile-invite-button"
+      class="campaign-mobile-action"
+      type="button"
+    >
+
+      <span
+        aria-hidden="true"
+      >
+        ✉
+      </span>
+
+      <span>
+        Convidar jogadores
+      </span>
+
+    </button>
+
+
+    <button
+      id="campaign-mobile-logout-button"
+      class="campaign-mobile-action campaign-mobile-action--danger"
+      type="button"
+    >
+
+      <span
+        aria-hidden="true"
+      >
+        ↪
+      </span>
+
+      <span>
+        Sair
+      </span>
+
+    </button>
+
+  </div>
+
+
+  <!-- ========================================================
+       TOAST
+       ======================================================== -->
+
+  <div
+    id="aeriom-toast-region"
+    class="aeriom-toast-region"
+    aria-live="polite"
+    aria-atomic="true"
+  ></div>
+
+
+  <!-- ========================================================
+       APPLICATION
+       ======================================================== -->
+
+  <script
+    type="module"
+    src="./js/core/main.js"
+  ></script>
+
+
+  <!-- ========================================================
+       MÓDULO DA CAMPANHA
+       ======================================================== -->
+
+  <script
+    type="module"
+    src="./js/core/campanha.js"
+  ></script>
+
+</body>
+
+</html>
