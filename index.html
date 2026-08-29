@@ -8,86 +8,153 @@ content="width=device-width, initial-scale=1.0, viewport-fit=cover"
 
 <meta
 name="description"
-content="AERIOM — uma mesa virtual de RPG de fantasia sombria."
+content="AERIOM — sua mesa virtual de RPG de fantasia."
 
 «»
 
-  <meta name="theme-color" content="#0b0908">  <title>AERIOM — Mesa Virtual de RPG</title>  <!-- Tipografia -->  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <meta name="theme-color" content="#0b0908">  <title>AERIOM — Mesa Virtual de RPG</title>  <!-- ========================================================
+       FONTES
+       ======================================================== -->  <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>  <link
     href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap"
     rel="stylesheet"
-  >  <!-- Design System -->  <link rel="stylesheet" href="css/aeriom.css">
-</head><body class="aeriom-page aeriom-page--auth">  <!--
-    ============================================================
-    AERIOM
-    Página inicial / autenticação
-    ============================================================
+  >  <!-- ========================================================
+       DESIGN SYSTEM
+       ======================================================== -->  <link
+    rel="stylesheet"
+    href="css/aeriom.css"
+  >
+</head><body class="aeriom-page aeriom-page--auth">  <!-- ========================================================
+       AUTH SHELL
+       ======================================================== -->  <main class="auth-shell"><!-- ======================================================
+     PAINEL VISUAL / SLIDES
+     ====================================================== -->
 
-    Esta página não contém lógica de autenticação diretamente.
+<section
+  class="auth-visual"
+  aria-label="Apresentação do AERIOM"
+>
 
-    Responsabilidades:
-    - estrutura HTML;
-    - acessibilidade;
-    - estados visuais;
-    - pontos de montagem para auth.js.
+  <div
+    id="auth-slide-background"
+    class="auth-visual__background"
+    aria-hidden="true"
+  ></div>
 
-    A autenticação será feita pelo Supabase.
-  -->  <main class="auth-shell"><!-- Painel visual -->
-<section class="auth-visual" aria-hidden="true">
-
-  <div class="auth-visual__overlay"></div>
+  <div
+    class="auth-visual__overlay"
+    aria-hidden="true"
+  ></div>
 
   <div class="auth-visual__content">
 
-    <div class="brand-mark">
-      <span class="brand-mark__ornament">✦</span>
+    <!-- Logo -->
+    <a
+      class="auth-brand"
+      href="./index.html"
+      aria-label="AERIOM — página inicial"
+    >
 
-      <span class="brand-mark__name">
+      <img
+        class="auth-brand__logo"
+        src="https://i.ibb.co/Cfd1zhc/52befe11-27fa-490b-a434-8afa6fd3f5c1-20260823-192033-0000.png"
+        alt="AERIOM"
+      >
+
+    </a>
+
+
+    <!-- Texto do slide -->
+    <div
+      id="auth-slide-content"
+      class="auth-slide-content"
+    >
+
+      <p
+        id="auth-slide-eyebrow"
+        class="auth-slide-content__eyebrow"
+      >
         AERIOM
-      </span>
-
-      <span class="brand-mark__subtitle">
-        Mesa Virtual de RPG
-      </span>
-    </div>
-
-    <div class="auth-quote">
-      <p class="auth-quote__text">
-        “Toda jornada começa antes da primeira rolagem.”
       </p>
+
+      <h2
+        id="auth-slide-title"
+        class="auth-slide-content__title"
+      >
+        Sua aventura começa aqui
+      </h2>
+
+      <p
+        id="auth-slide-description"
+        class="auth-slide-content__description"
+      >
+        Reúna seu grupo, prepare suas fichas e entre na mesa.
+      </p>
+
     </div>
+
+
+    <!-- Indicadores dos slides -->
+    <div
+      id="auth-slide-indicators"
+      class="auth-slide-indicators"
+      aria-label="Slides da apresentação"
+    ></div>
 
   </div>
+
 </section>
 
 
-<!-- Painel de autenticação -->
+<!-- ======================================================
+     PAINEL DE AUTENTICAÇÃO
+     ====================================================== -->
+
 <section class="auth-panel">
 
   <div class="auth-panel__inner">
 
+    <!-- ==================================================
+         MARCA MOBILE
+         ================================================== -->
+
     <header class="auth-header">
 
-      <div class="auth-header__mobile-brand">
-        <span class="brand-mark__ornament">✦</span>
+      <a
+        class="auth-header__mobile-brand"
+        href="./index.html"
+        aria-label="AERIOM"
+      >
 
-        <span class="brand-mark__name">
-          AERIOM
-        </span>
-      </div>
+        <img
+          src="https://i.ibb.co/Cfd1zhc/52befe11-27fa-490b-a434-8afa6fd3f5c1-20260823-192033-0000.png"
+          alt="AERIOM"
+        >
 
-      <h1 class="auth-header__title">
+      </a>
+
+
+      <h1
+        id="auth-title"
+        class="auth-header__title"
+      >
         Entre na mesa
       </h1>
 
-      <p class="auth-header__description">
+      <p
+        id="auth-description"
+        class="auth-header__description"
+      >
         Acesse sua conta para continuar sua campanha.
       </p>
 
     </header>
 
 
-    <!-- Estado global de erro/sucesso -->
+    <!-- ==================================================
+         MENSAGEM GLOBAL
+         ================================================== -->
+
     <div
       id="auth-message"
       class="auth-message"
@@ -97,12 +164,17 @@ content="AERIOM — uma mesa virtual de RPG de fantasia sombria."
     ></div>
 
 
-    <!-- Login -->
+    <!-- ==================================================
+         LOGIN
+         ================================================== -->
+
     <form
       id="login-form"
       class="auth-form"
       novalidate
     >
+
+      <!-- E-mail -->
 
       <div class="form-field">
 
@@ -134,6 +206,8 @@ content="AERIOM — uma mesa virtual de RPG de fantasia sombria."
       </div>
 
 
+      <!-- Senha -->
+
       <div class="form-field">
 
         <div class="form-field__label-row">
@@ -154,6 +228,7 @@ content="AERIOM — uma mesa virtual de RPG de fantasia sombria."
           </button>
 
         </div>
+
 
         <div class="password-field">
 
@@ -189,11 +264,14 @@ content="AERIOM — uma mesa virtual de RPG de fantasia sombria."
       </div>
 
 
+      <!-- Entrar -->
+
       <button
         id="login-submit"
         class="button button--primary button--full"
         type="submit"
       >
+
         <span class="button__label">
           Entrar
         </span>
@@ -205,20 +283,68 @@ content="AERIOM — uma mesa virtual de RPG de fantasia sombria."
         >
           Entrando...
         </span>
+
       </button>
 
     </form>
 
 
-    <!-- Separador -->
+    <!-- ==================================================
+         DISCORD
+         ================================================== -->
+
     <div class="auth-divider">
+
       <span class="auth-divider__line"></span>
-      <span class="auth-divider__text">ou</span>
+
+      <span class="auth-divider__text">
+        ou
+      </span>
+
       <span class="auth-divider__line"></span>
+
     </div>
 
 
-    <!-- Cadastro -->
+    <button
+      id="discord-login-button"
+      class="button button--discord button--full"
+      type="button"
+    >
+
+      <span
+        class="button__icon"
+        aria-hidden="true"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          width="20"
+          height="20"
+          fill="currentColor"
+        >
+          <path d="M19.54 5.36A16.7 16.7 0 0 0 15.96 4.2l-.44.9a15.2 15.2 0 0 0-7.04 0l-.44-.9a16.75 16.75 0 0 0-3.58 1.16C2.2 8.84 1.58 12.24 1.88 15.6a16.6 16.6 0 0 0 4.4 2.24l1.07-1.46a10.6 10.6 0 0 1-1.68-.8l.4-.3c3.24 1.5 7.1 1.5 10.3 0l.4.3c-.53.3-1.09.57-1.68.8l1.07 1.46a16.6 16.6 0 0 0 4.4-2.24c.35-3.9-.6-7.27-1.04-10.24ZM8.53 14.08c-.97 0-1.77-.9-1.77-2s.78-2 1.77-2c.99 0 1.79.9 1.78 2 0 1.1-.79 2-1.78 2Zm6.94 0c-.97 0-1.77-.9-1.77-2s.78-2 1.77-2c.99 0 1.79.9 1.78 2 0 1.1-.79 2-1.78 2Z"/>
+        </svg>
+      </span>
+
+      <span class="button__label">
+        Entrar com Discord
+      </span>
+
+      <span
+        class="button__loading"
+        aria-hidden="true"
+        hidden
+      >
+        Conectando...
+      </span>
+
+    </button>
+
+
+    <!-- ==================================================
+         CADASTRO
+         ================================================== -->
+
     <button
       id="show-register-button"
       class="button button--secondary button--full"
@@ -228,13 +354,18 @@ content="AERIOM — uma mesa virtual de RPG de fantasia sombria."
     </button>
 
 
-    <!-- Cadastro escondido inicialmente -->
+    <!-- ==================================================
+         FORMULÁRIO DE CADASTRO
+         ================================================== -->
+
     <form
       id="register-form"
       class="auth-form"
       novalidate
       hidden
     >
+
+      <!-- Nome -->
 
       <div class="form-field">
 
@@ -264,6 +395,8 @@ content="AERIOM — uma mesa virtual de RPG de fantasia sombria."
 
       </div>
 
+
+      <!-- E-mail -->
 
       <div class="form-field">
 
@@ -295,6 +428,8 @@ content="AERIOM — uma mesa virtual de RPG de fantasia sombria."
       </div>
 
 
+      <!-- Senha -->
+
       <div class="form-field">
 
         <label
@@ -312,9 +447,9 @@ content="AERIOM — uma mesa virtual de RPG de fantasia sombria."
             name="password"
             type="password"
             autocomplete="new-password"
-            placeholder="Crie uma senha"
-            maxlength="128"
+            placeholder="Crie sua senha"
             minlength="8"
+            maxlength="128"
             required
           >
 
@@ -339,11 +474,60 @@ content="AERIOM — uma mesa virtual de RPG de fantasia sombria."
       </div>
 
 
+      <!-- Confirmar senha -->
+
+      <div class="form-field">
+
+        <label
+          class="form-field__label"
+          for="register-password-confirm"
+        >
+          Confirmar senha
+        </label>
+
+        <div class="password-field">
+
+          <input
+            id="register-password-confirm"
+            class="form-field__input"
+            name="passwordConfirm"
+            type="password"
+            autocomplete="new-password"
+            placeholder="Digite a senha novamente"
+            minlength="8"
+            maxlength="128"
+            required
+          >
+
+          <button
+            id="toggle-register-password-confirm"
+            class="password-field__toggle"
+            type="button"
+            aria-label="Mostrar confirmação da senha"
+            aria-pressed="false"
+          >
+            Mostrar
+          </button>
+
+        </div>
+
+        <span
+          id="register-password-confirm-error"
+          class="form-field__error"
+          role="alert"
+        ></span>
+
+      </div>
+
+
+      <!-- Criar conta -->
+
       <button
         id="register-submit"
         class="button button--primary button--full"
         type="submit"
       >
+
         <span class="button__label">
           Criar conta
         </span>
@@ -353,12 +537,15 @@ content="AERIOM — uma mesa virtual de RPG de fantasia sombria."
           aria-hidden="true"
           hidden
         >
-          Criando...
+          Criando conta...
         </span>
+
       </button>
 
     </form>
 
+
+    <!-- Voltar -->
 
     <button
       id="show-login-button"
@@ -369,6 +556,10 @@ content="AERIOM — uma mesa virtual de RPG de fantasia sombria."
       ← Voltar para login
     </button>
 
+
+    <!-- ==================================================
+         RODAPÉ
+         ================================================== -->
 
     <footer class="auth-footer">
 
@@ -388,15 +579,16 @@ content="AERIOM — uma mesa virtual de RPG de fantasia sombria."
 
 </section>
 
-  </main>  <!--
-    ============================================================
-    Scripts
-    ============================================================
-
-    O Supabase JS será carregado pelo módulo supabase.js.
-
-    Os módulos abaixo serão adicionados na sequência da Fase 2.
-  -->  <script
+  </main>  <!-- ========================================================
+       TOAST REGION
+       ======================================================== -->  <div
+    id="aeriom-toast-region"
+    class="aeriom-toast-region"
+    aria-live="polite"
+    aria-atomic="true"
+  ></div>  <!-- ========================================================
+       APPLICATION
+       ======================================================== -->  <script
     type="module"
     src="js/core/supabase.js"
   ></script></body>
