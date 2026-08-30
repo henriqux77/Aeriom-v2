@@ -1,865 +1,58 @@
 /* =========================================================
-   AERION — DADOS DE RAÇA / COMBATE
-   js/data/ficha-regras.js
-
-   OBS:
-   - Valores marcados como "proposta" ainda podem ser
-     ajustados pelo grupo de desenvolvimento.
-   - VOO é uma capacidade de movimento independente da
-     categoria Animalha.
-   ========================================================= */
-
-(() => {
-  "use strict";
-
-  const ATTR = Object.freeze([
-    "forca",
-    "vigor",
-    "agilidade",
-    "precisao",
-    "intelecto",
-    "controle",
-    "presenca",
-    "percepcao"
-  ]);
-
-  const attributeNames = Object.freeze({
-    forca: "Força",
-    vigor: "Vigor",
-    agilidade: "Agilidade",
-    precisao: "Precisão",
-    intelecto: "Intelecto",
-    controle: "Controle",
-    presenca: "Presença",
-    percepcao: "Percepção"
-  });
-
-  const SIZE = Object.freeze({
-    pequeno: {
-      label: "Pequeno",
-      lifeBonus: 1,
-      movementMultiplier: 0.5
-    },
-    medio: {
-      label: "Médio",
-      lifeBonus: 3,
-      movementMultiplier: 1
-    },
-    grande: {
-      label: "Grande",
-      lifeBonus: 5,
-      movementMultiplier: 0.5
-    },
-    colossal: {
-      label: "Colossal",
-      lifeBonus: 5,
-      movementMultiplier: 0.5
-    }
-  });
-
-  const COMBAT = Object.freeze({
-    baseLife: 10,
-    baseMovement: 9
-  });
-
-  /*
-   * Os 4 poderes principais são os que entram no D100.
-   * Os demais ficam em escolha específica/paralela.
-   */
-  const powers = Object.freeze({
-    primary: [
-      "Fogo",
-      "Ar",
-      "Terra",
-      "Água"
-    ],
-    parallel: [
-      "Gelo",
-      "Magnetismo",
-      "Vegetação",
-      "Tecnologia",
-      "Gravidade",
-      "Som"
-    ]
-  });
-
-  /*
-   * Classes: bônus de perícia ainda configuráveis.
-   * O sistema não aplica bônus de atributo de classe.
-   */
-  const classes = Object.freeze({
-    guerreiro: {
-      id: "guerreiro",
-      name: "Guerreiro",
-      skillFocus: [
-        "Atletismo",
-        "Tática"
-      ],
-      initialEquipment: [],
-      proposedNote:
-        "Foco em combate e perícias físicas/táticas."
-    },
-
-    feiticeiro: {
-      id: "feiticeiro",
-      name: "Feiticeiro",
-      skillFocus: [
-        "Conhecimento",
-        "Controle de Mana"
-      ],
-      initialEquipment: [],
-      proposedNote:
-        "Foco em conhecimento e domínio de Mana."
-    },
-
-    curandeiro: {
-      id: "curandeiro",
-      name: "Curandeiro",
-      skillFocus: [
-        "Medicina",
-        "Intuição"
-      ],
-      initialEquipment: [],
-      proposedNote:
-        "Foco em cura e suporte."
-    },
-
-    monge: {
-      id: "monge",
-      name: "Monge",
-      skillFocus: [
-        "Atletismo",
-        "Controle de Mana"
-      ],
-      initialEquipment: [],
-      proposedNote:
-        "Foco em domínio corporal e Mana."
-    }
-  });
-
-  /*
-   * Perfil racial.
-   *
-   * attrMods são modificadores mecânicos diretos.
-   * size define o bônus de Vida e a alteração de deslocamento.
-   * flight é movimento aéreo e não depende de ser Animalha.
-   */
-  const races = Object.freeze({
-    humano: {
-      id: "humano",
-      name: "Humano",
-      profile: "Adaptabilidade e aprendizado.",
-      attrMods: {
-        intelecto: 1,
-        presenca: 1
-      },
-      feature:
-        "Adaptação: pode repetir um teste recém-falhado uma vez por cena.",
-      size: "medio",
-      height: { min: 1.50, max: 2.00 },
-      movement: {},
-      flight: false
-    },
-
-    elfo: {
-      id: "elfo",
-      name: "Elfo",
-      profile: "Percepção e afinidade com Mana.",
-      attrMods: {
-        percepcao: 1,
-        controle: 1,
-        vigor: -1
-      },
-      feature:
-        "Percepção Élfica: percebe alterações de Mana e sinais difíceis de notar.",
-      size: "medio",
-      height: { min: 1.55, max: 2.05 },
-      movement: {},
-      flight: false
-    },
-
-    anao: {
-      id: "anao",
-      name: "Anão",
-      profile: "Resistência e força estrutural.",
-      attrMods: {
-        vigor: 1,
-        forca: 1,
-        agilidade: -1
-      },
-      feature:
-        "Forja Ancestral: facilidade temática com materiais e estruturas.",
-      size: "pequeno",
-      height: { min: 1.20, max: 1.55 },
-      movement: {},
-      flight: false
-    },
-
-    orc: {
-      id: "orc",
-      name: "Orc",
-      profile: "Potência física e resistência.",
-      attrMods: {
-        forca: 1,
-        vigor: 1,
-        presenca: -1
-      },
-      feature:
-        "Fúria de Sangue: resposta física intensa em situações extremas.",
-      size: "grande",
-      height: { min: 1.70, max: 2.20 },
-      movement: {},
-      flight: false
-    },
-
-    centauro: {
-      id: "centauro",
-      name: "Centauro",
-      profile: "Velocidade terrestre e potência física.",
-      attrMods: {
-        forca: 1,
-        agilidade: 1,
-        controle: -1
-      },
-      feature:
-        "Galope Ancestral: deslocamento terrestre excepcional.",
-      size: "grande",
-      height: { min: 1.80, max: 2.40 },
-      movement: {
-        groundMultiplier: 2
-      },
-      flight: false
-    },
-
-    vampiro: {
-      id: "vampiro",
-      name: "Vampiro",
-      profile: "Mobilidade, percepção e sobrevivência sobrenatural.",
-      attrMods: {
-        agilidade: 1,
-        percepcao: 1,
-        vigor: -1
-      },
-      feature:
-        "Regeneração Sanguínea: recuperação sobrenatural sujeita às fraquezas do sistema.",
-      size: "medio",
-      height: { min: 1.55, max: 2.05 },
-      movement: {},
-      flight: false
-    },
-
-    duende: {
-      id: "duende",
-      name: "Duende",
-      profile: "Intelecto, negociação e precisão.",
-      attrMods: {
-        intelecto: 1,
-        precisao: 1,
-        forca: -1
-      },
-      feature:
-        "Fortuna Mercante: percepção de fraude, preços e contratos.",
-      size: "pequeno",
-      height: { min: 1.00, max: 1.45 },
-      movement: {},
-      flight: false
-    },
-
-    fada: {
-      id: "fada",
-      name: "Fada",
-      profile: "Leveza, Agilidade e Mana.",
-      attrMods: {
-        controle: 1,
-        agilidade: 1,
-        forca: -1
-      },
-      feature:
-        "Bênção Feérica: característica feérica de suporte e proteção.",
-      size: "pequeno",
-      height: { min: 1.30, max: 1.60 },
-      movement: {
-        airMultiplier: 2
-      },
-      flight: true
-    },
-
-    povo_aquatico: {
-      id: "povo_aquatico",
-      name: "Povo Aquático",
-      profile: "Adaptação à água e percepção ambiental.",
-      attrMods: {
-        vigor: 1,
-        percepcao: 1,
-        forca: -1
-      },
-      feature:
-        "Anfíbio: adaptações naturais para respirar e agir em ambiente aquático.",
-      size: "medio",
-      height: { min: 1.50, max: 2.10 },
-      movement: {
-        aquaticMultiplier: 2
-      },
-      flight: false
-    },
-
-    povo_natureza: {
-      id: "povo_natureza",
-      name: "Povo da Natureza",
-      profile: "Percepção ambiental e resistência natural.",
-      attrMods: {
-        percepcao: 1,
-        vigor: 1,
-        precisao: -1
-      },
-      feature:
-        "Vínculo Natural: sintonia com ambientes e criaturas naturais.",
-      size: "medio",
-      height: { min: 1.50, max: 2.10 },
-      movement: {},
-      flight: false
-    },
-
-    neraliano: {
-      id: "neraliano",
-      name: "Neraliano",
-      profile: "Adaptação aquática e leitura de vibrações.",
-      attrMods: {
-        vigor: 1,
-        percepcao: 1,
-        agilidade: -1
-      },
-      feature:
-        "Adaptação Abissal: grande adaptação a água, profundidade e vibrações.",
-      size: "medio",
-      height: { min: 1.55, max: 2.05 },
-      movement: {
-        aquaticMultiplier: 2
-      },
-      flight: false
-    },
-
-    aureano: {
-      id: "aureano",
-      name: "Aureano",
-      profile: "Mobilidade vertical e percepção espacial.",
-      attrMods: {
-        agilidade: 1,
-        percepcao: 1,
-        vigor: -1
-      },
-      feature:
-        "Corpo Celestial: adaptação a altitude, saltos e movimento vertical.",
-      size: "medio",
-      height: { min: 1.70, max: 2.30 },
-      movement: {},
-      flight: false
-    },
-
-    povo_nuvens: {
-      id: "povo_nuvens",
-      name: "Povo das Nuvens",
-      profile: "Leveza e mobilidade em grandes altitudes.",
-      attrMods: {
-        agilidade: 1,
-        percepcao: 1,
-        vigor: -1
-      },
-      feature:
-        "Passo do Céu: movimentação e saltos excepcionais em ambientes elevados.",
-      size: "medio",
-      height: { min: 1.65, max: 2.25 },
-      movement: {},
-      flight: false
-    },
-
-    colosso: {
-      id: "colosso",
-      name: "Colosso",
-      profile: "Força e resistência extraordinárias.",
-      attrMods: {
-        forca: 2,
-        vigor: 1,
-        agilidade: -1
-      },
-      feature:
-        "Asas Colossais: asas capazes de proteger, atacar e sustentar movimento aéreo conforme a regra.",
-      size: "colossal",
-      height: { min: 2.50, max: 4.00 },
-      movement: {
-        airMultiplier: 2
-      },
-      flight: true
-    },
-
-    troll: {
-      id: "troll",
-      name: "Troll",
-      profile: "Resistência extrema e recuperação.",
-      attrMods: {
-        vigor: 2,
-        forca: 1,
-        agilidade: -1
-      },
-      feature:
-        "Regeneração Brutal: recuperação física excepcional.",
-      size: "grande",
-      height: { min: 2.20, max: 3.20 },
-      movement: {},
-      flight: false
-    }
-  });
-
-  /*
-   * Animalhas:
-   * porte e limites pertencem ao animal escolhido.
-   * Pequeno não significa 30 cm: é uma personagem humanoide
-   * com uma faixa física jogável.
-   */
-  const animalhaAnimals = Object.freeze([
-    {
-      id: "pantera",
-      name: "Pantera",
-      category: "Felinos",
-      profile: "Velocidade, furtividade e sentidos.",
-      attrMods: { agilidade: 1, percepcao: 1, vigor: -1 },
-      feature: "Movimento silencioso e reflexos felinos.",
-      size: "medio",
-      height: { min: 1.45, max: 1.80 },
-      movement: {},
-      flight: false
-    },
-    {
-      id: "tigre",
-      name: "Tigre",
-      category: "Felinos",
-      profile: "Força explosiva e mobilidade.",
-      attrMods: { forca: 1, agilidade: 1, vigor: -1 },
-      feature: "Salto e ataques físicos rápidos.",
-      size: "grande",
-      height: { min: 1.55, max: 1.95 },
-      movement: {},
-      flight: false
-    },
-    {
-      id: "leao",
-      name: "Leão",
-      category: "Felinos",
-      profile: "Força e presença.",
-      attrMods: { forca: 1, presenca: 1, agilidade: -1 },
-      feature: "Presença física e intimidação naturais.",
-      size: "grande",
-      height: { min: 1.65, max: 2.05 },
-      movement: {},
-      flight: false
-    },
-    {
-      id: "gato",
-      name: "Gato",
-      category: "Felinos",
-      profile: "Agilidade e percepção.",
-      attrMods: { agilidade: 1, percepcao: 1, forca: -1 },
-      feature: "Equilíbrio e movimentação precisa.",
-      size: "pequeno",
-      height: { min: 1.35, max: 1.60 },
-      movement: {},
-      flight: false
-    },
-
-    {
-      id: "lobo",
-      name: "Lobo",
-      category: "Canídeos",
-      profile: "Percepção, resistência e rastreamento.",
-      attrMods: { percepcao: 1, vigor: 1, presenca: -1 },
-      feature: "Sentidos aguçados e rastreamento.",
-      size: "medio",
-      height: { min: 1.45, max: 1.90 },
-      movement: {},
-      flight: false
-    },
-    {
-      id: "raposa",
-      name: "Raposa",
-      category: "Canídeos",
-      profile: "Astúcia e agilidade.",
-      attrMods: { agilidade: 1, intelecto: 1, forca: -1 },
-      feature: "Furtividade e adaptação.",
-      size: "pequeno",
-      height: { min: 1.35, max: 1.65 },
-      movement: {},
-      flight: false
-    },
-    {
-      id: "cao_de_caca",
-      name: "Cão de Caça",
-      category: "Canídeos",
-      profile: "Percepção e resistência.",
-      attrMods: { percepcao: 1, vigor: 1, intelecto: -1 },
-      feature: "Rastreamento especializado.",
-      size: "medio",
-      height: { min: 1.40, max: 1.80 },
-      movement: {},
-      flight: false
-    },
-
-    {
-      id: "falcao",
-      name: "Falcão",
-      category: "Aves",
-      profile: "Visão, precisão e mobilidade aérea.",
-      attrMods: { percepcao: 1, precisao: 1, vigor: -1 },
-      feature: "Visão aguçada e voo.",
-      size: "pequeno",
-      height: { min: 1.35, max: 1.65 },
-      movement: { airMultiplier: 2 },
-      flight: true
-    },
-    {
-      id: "aguia",
-      name: "Águia",
-      category: "Aves",
-      profile: "Percepção espacial e precisão.",
-      attrMods: { percepcao: 1, precisao: 1, vigor: -1 },
-      feature: "Visão de longa distância e voo.",
-      size: "medio",
-      height: { min: 1.45, max: 1.80 },
-      movement: { airMultiplier: 2 },
-      flight: true
-    },
-    {
-      id: "coruja",
-      name: "Coruja",
-      category: "Aves",
-      profile: "Percepção e intelecto.",
-      attrMods: { percepcao: 1, intelecto: 1, forca: -1 },
-      feature: "Percepção excepcional em baixa iluminação e voo.",
-      size: "pequeno",
-      height: { min: 1.35, max: 1.65 },
-      movement: { airMultiplier: 2 },
-      flight: true
-    },
-
-    {
-      id: "cobra",
-      name: "Cobra",
-      category: "Répteis",
-      profile: "Precisão, percepção e controle corporal.",
-      attrMods: { precisao: 1, percepcao: 1, vigor: -1 },
-      feature: "Leitura de movimento e controle corporal.",
-      size: "pequeno",
-      height: { min: 1.35, max: 1.65 },
-      movement: {},
-      flight: false
-    },
-    {
-      id: "crocodilo",
-      name: "Crocodilo",
-      category: "Répteis",
-      profile: "Força, vigor e adaptação aquática.",
-      attrMods: { forca: 1, vigor: 1, agilidade: -1 },
-      feature: "Grande resistência e adaptação à água.",
-      size: "grande",
-      height: { min: 1.80, max: 2.50 },
-      movement: { aquaticMultiplier: 2 },
-      flight: false
-    },
-    {
-      id: "lagarto",
-      name: "Lagarto",
-      category: "Répteis",
-      profile: "Agilidade e percepção.",
-      attrMods: { agilidade: 1, percepcao: 1, presenca: -1 },
-      feature: "Movimentos rápidos e sentidos aguçados.",
-      size: "medio",
-      height: { min: 1.40, max: 1.80 },
-      movement: {},
-      flight: false
-    },
-
-    {
-      id: "urso",
-      name: "Urso",
-      category: "Grande porte",
-      profile: "Força e resistência.",
-      attrMods: { forca: 1, vigor: 1, agilidade: -1 },
-      feature: "Potência física elevada.",
-      size: "grande",
-      height: { min: 1.90, max: 2.60 },
-      movement: {},
-      flight: false
-    },
-    {
-      id: "rinoceronte",
-      name: "Rinoceronte",
-      category: "Grande porte",
-      profile: "Resistência extrema.",
-      attrMods: { vigor: 2, agilidade: -1, precisao: -1 },
-      feature: "Corpo extremamente resistente.",
-      size: "grande",
-      height: { min: 2.00, max: 2.80 },
-      movement: {},
-      flight: false
-    },
-    {
-      id: "hipopotamo",
-      name: "Hipopótamo",
-      category: "Grande porte",
-      profile: "Força, vigor e adaptação à água.",
-      attrMods: { vigor: 1, forca: 1, agilidade: -1 },
-      feature: "Resistência física e adaptação aquática.",
-      size: "grande",
-      height: { min: 1.90, max: 2.50 },
-      movement: { aquaticMultiplier: 2 },
-      flight: false
-    },
-
-    {
-      id: "rato",
-      name: "Rato",
-      category: "Pequeno porte",
-      profile: "Agilidade, percepção e adaptação.",
-      attrMods: { agilidade: 1, percepcao: 1, forca: -1 },
-      feature: "Excelente percepção e capacidade de explorar espaços apertados.",
-      size: "pequeno",
-      height: { min: 1.35, max: 1.60 },
-      movement: {},
-      flight: false
-    },
-
-    {
-      id: "tubarao",
-      name: "Tubarão",
-      category: "Aquáticos",
-      profile: "Vigor e percepção.",
-      attrMods: { vigor: 1, percepcao: 1, presenca: -1 },
-      feature: "Percepção e adaptação aquática.",
-      size: "grande",
-      height: { min: 1.80, max: 2.50 },
-      movement: { aquaticMultiplier: 2 },
-      flight: false
-    },
-    {
-      id: "peixe",
-      name: "Peixe",
-      category: "Aquáticos",
-      profile: "Agilidade e percepção.",
-      attrMods: { agilidade: 1, percepcao: 1, forca: -1 },
-      feature: "Locomoção aquática natural.",
-      size: "pequeno",
-      height: { min: 1.35, max: 1.65 },
-      movement: { aquaticMultiplier: 2 },
-      flight: false
-    },
-    {
-      id: "foca",
-      name: "Foca",
-      category: "Aquáticos",
-      profile: "Vigor e agilidade.",
-      attrMods: { vigor: 1, agilidade: 1, precisao: -1 },
-      feature: "Mobilidade aquática superior.",
-      size: "medio",
-      height: { min: 1.45, max: 1.90 },
-      movement: { aquaticMultiplier: 2 },
-      flight: false
-    }
-  ]);
-
-  function mergeMods(base, bonus) {
-    const result = {};
-    ATTR.forEach(attr => {
-      result[attr] =
-        (Number(base?.[attr]) || 0) +
-        (Number(bonus?.[attr]) || 0);
-    });
-    return result;
-  }
-
-  function getRaceProfile(raceId, animalId = "") {
-    const race =
-      races[raceId] ||
-      races.humano;
-
-    if (
-      raceId !== "animalha"
-    ) {
-      return race;
-    }
-
-    const animal =
-      animalhaAnimals.find(
-        item => item.id === animalId
-      ) ||
-      animalhaAnimals[0];
-
-    return {
-      ...race,
-      ...animal,
-      id: "animalha",
-      name: "Animalha",
-      animalId: animal.id,
-      animalName: animal.name,
-      attrMods: mergeMods(
-        race.attrMods,
-        animal.attrMods
-      ),
-      profile:
-        `${animal.name}: ${animal.profile}`,
-      feature:
-        `${race.feature} ${animal.feature}`,
-      size:
-        animal.size,
-      height:
-        animal.height,
-      movement:
-        animal.movement,
-      flight:
-        Boolean(animal.flight)
-    };
-  }
-
-  function calculateLife({
-    vigorRoll,
-    raceId,
-    animalId
-  }) {
-    const profile =
-      getRaceProfile(
-        raceId,
-        animalId
-      );
-
-    const size =
-      SIZE[
-        profile.size
-      ] ||
-      SIZE.medio;
-
-    const raceVigor =
-      Number(
-        profile.attrMods?.vigor
-      ) || 0;
-
-    const roll =
-      Number(vigorRoll);
-
-    if (!Number.isFinite(roll)) {
-      return null;
-    }
-
-    return {
-      base: COMBAT.baseLife,
-      vigorRoll: roll,
-      racialVigor: raceVigor,
-      sizeBonus:
-        size.lifeBonus,
-      total:
-        COMBAT.baseLife +
-        roll +
-        raceVigor +
-        size.lifeBonus
-    };
-  }
-
-  function calculateMovement({
-    raceId,
-    animalId
-  }) {
-    const profile =
-      getRaceProfile(
-        raceId,
-        animalId
-      );
-
-    const size =
-      SIZE[
-        profile.size
-      ] ||
-      SIZE.medio;
-
-    let ground =
-      COMBAT.baseMovement *
-      (
-        profile.movement?.groundMultiplier ||
-        1
-      );
-
-    ground *=
-      size.movementMultiplier;
-
-    const air =
-      profile.flight
-        ? ground *
-          (
-            profile.movement?.airMultiplier ||
-            2
-          )
-        : null;
-
-    const aquatic =
-      profile.movement?.aquaticMultiplier
-        ? ground *
-          profile.movement.aquaticMultiplier
-        : null;
-
-    return {
-      ground,
-      air,
-      aquatic,
-      flight:
-        Boolean(profile.flight)
-    };
-  }
-
-  function getAttributeModifiers(
-    raceId,
-    animalId
-  ) {
-    return {
-      ...getRaceProfile(
-        raceId,
-        animalId
-      ).attrMods
-    };
-  }
-
-  window.AERION_FICHA_REGRAS =
-    Object.freeze({
-      ATTR,
-      attributeNames,
-      SIZE,
-      COMBAT,
-      powers,
-      classes,
-      races,
-      animalhaAnimals,
-      getRaceProfile,
-      getAttributeModifiers,
-      calculateLife,
-      calculateMovement
-    });
-})();
-
-
-/* =========================================================
    AERION — CRIAÇÃO DE FICHA
    js/core/ficha.js
 
-   Motor da criação de ficha.
-   Regras detalhadas ficam em js/data/ficha-regras.js.
+   VERSÃO CORRIGIDA
+   - 11 etapas, incluindo APARÊNCIA
+   - Identidade
+   - Raças
+   - Aparência 2D
+   - Classes
+   - Atributos
+   - Poder / D100
+   - Mana
+   - Perícias
+   - Técnicas
+   - Inventário
+   - Revisão
+   - Autosave local
+   - Dados limitados
+   - Clique para selecionar dado
+   - Drag & Drop
+   - Troca de dados
+   - Devolução de dados
+   - Gráfico radial de 8 eixos
+   - Modificadores raciais
+   - Porte / altura
+   - Deslocamento
+   - Voo independente de Animalha
+
+   IMPORTANTE
+   - A etapa de APARÊNCIA é criada automaticamente caso
+     o HTML ainda não possua os controles específicos.
+   - Os valores raciais abaixo continuam como PROPOSTAS
+     mecânicas até aprovação final dos desenvolvedores.
+   - O sistema de sacrificar dados NÃO está implementado.
    ========================================================= */
 
 (() => {
   "use strict";
 
-  const RULES = window.AERION_FICHA_REGRAS;
+  /* =========================================================
+     CONFIG
+  ========================================================= */
 
-  if (!RULES) {
-    console.error("[AERION] ficha-regras.js não foi carregado.");
-    return;
-  }
+  const CONFIG = Object.freeze({
+    draftKey: "aerion:ficha:draft:v6",
+    autosaveDelay: 700,
+    maxAvatarSize: 6 * 1024 * 1024
+  });
 
-  const STEPS = [
+  /* =========================================================
+     ETAPAS
+  ========================================================= */
+
+  const STEPS = Object.freeze([
     { id: "identity", title: "Identidade" },
     { id: "race", title: "Raça" },
     { id: "appearance", title: "Aparência" },
@@ -871,1596 +64,6426 @@
     { id: "techniques", title: "Técnicas" },
     { id: "inventory", title: "Inventário" },
     { id: "review", title: "Revisão" }
-  ];
+  ]);
+
+  /* =========================================================
+     ATRIBUTOS
+  ========================================================= */
+
+  const ATTRIBUTE_ORDER = Object.freeze([
+    "forca",
+    "vigor",
+    "agilidade",
+    "precisao",
+    "intelecto",
+    "controle",
+    "presenca",
+    "percepcao"
+  ]);
+
+  const ATTRIBUTE_NAMES = Object.freeze({
+    forca: "Força",
+    vigor: "Vigor",
+    agilidade: "Agilidade",
+    precisao: "Precisão",
+    intelecto: "Intelecto",
+    controle: "Controle",
+    presenca: "Presença",
+    percepcao: "Percepção"
+  });
+
+  /* =========================================================
+     PISCINA DE DADOS
+  ========================================================= */
 
   const DICE_LIMITS = Object.freeze({
-    d4: 1, d6: 2, d8: 1, d10: 1, d12: 1, d20: 2
+    d4: 1,
+    d6: 2,
+    d8: 1,
+    d10: 1,
+    d12: 1,
+    d20: 2
   });
 
-  const ATTR = RULES.ATTR;
-  const ATTR_NAMES = RULES.attributeNames;
-
-  const CONFIG = Object.freeze({
-    draftKey: "aerion:ficha:draft:v7",
-    autosaveDelay: 650
+  const DICE_VALUES = Object.freeze({
+    d4: 4,
+    d6: 6,
+    d8: 8,
+    d10: 10,
+    d12: 12,
+    d20: 20
   });
 
-  function baseState() {
+  /* =========================================================
+     COMBATE — BASE
+  ========================================================= */
+
+  const COMBAT_BASE = Object.freeze({
+    hp: 10,
+    movement: 9
+  });
+
+  const SIZE_DATA = Object.freeze({
+    pequeno: {
+      label: "Pequeno",
+      lifeBonus: 1,
+      movementMultiplier: 0.5
+    },
+
+    medio: {
+      label: "Médio",
+      lifeBonus: 3,
+      movementMultiplier: 1
+    },
+
+    grande: {
+      label: "Grande",
+      lifeBonus: 5,
+      movementMultiplier: 0.5
+    },
+
+    colossal: {
+      label: "Colossal",
+      lifeBonus: 5,
+      movementMultiplier: 0.5
+    }
+  });
+
+  /* =========================================================
+     PODERES
+  ========================================================= */
+
+  const PRIMARY_POWERS = Object.freeze([
+    "Fogo",
+    "Ar",
+    "Terra",
+    "Água"
+  ]);
+
+  const PARALLEL_POWERS = Object.freeze([
+    "Gelo",
+    "Magnetismo",
+    "Vegetação",
+    "Tecnologia",
+    "Gravidade",
+    "Som"
+  ]);
+
+  const ALL_POWERS = Object.freeze([
+    ...PRIMARY_POWERS,
+    ...PARALLEL_POWERS
+  ]);
+
+  /* =========================================================
+     PERÍCIAS
+  ========================================================= */
+
+  const SKILLS = Object.freeze([
+    {
+      id: "acrobacia",
+      name: "Acrobacia",
+      description: "Equilíbrio, movimentos rápidos e manobras."
+    },
+
+    {
+      id: "atletismo",
+      name: "Atletismo",
+      description: "Força corporal, corrida, escalada e esforço físico."
+    },
+
+    {
+      id: "furtividade",
+      name: "Furtividade",
+      description: "Mover-se sem ser percebido."
+    },
+
+    {
+      id: "percepcao",
+      name: "Percepção",
+      description: "Perceber detalhes, ameaças e mudanças no ambiente."
+    },
+
+    {
+      id: "investigacao",
+      name: "Investigação",
+      description: "Analisar pistas e descobrir informações."
+    },
+
+    {
+      id: "conhecimento",
+      name: "Conhecimento",
+      description: "Conhecimentos gerais e especializados."
+    },
+
+    {
+      id: "medicina",
+      name: "Medicina",
+      description: "Tratamento, primeiros socorros e diagnóstico."
+    },
+
+    {
+      id: "sobrevivencia",
+      name: "Sobrevivência",
+      description: "Rastreamento, exploração e adaptação ambiental."
+    },
+
+    {
+      id: "persuasao",
+      name: "Persuasão",
+      description: "Convencer e negociar de maneira legítima."
+    },
+
+    {
+      id: "intuicao",
+      name: "Intuição",
+      description: "Perceber intenções e situações suspeitas."
+    },
+
+    {
+      id: "enganacao",
+      name: "Enganação",
+      description: "Blefes, disfarces e manipulação verbal."
+    },
+
+    {
+      id: "tatica",
+      name: "Tática",
+      description: "Planejamento e leitura de situações de combate."
+    },
+
+    {
+      id: "oficio",
+      name: "Ofício / Crafting",
+      description: "Construção, reparo e criação de itens."
+    },
+
+    {
+      id: "controle_mana",
+      name: "Controle de Mana",
+      description: "Domínio e precisão na manipulação de Mana."
+    }
+  ]);
+
+  /* =========================================================
+     CLASSES
+  ========================================================= */
+
+  const CLASSES = Object.freeze([
+    {
+      id: "guerreiro",
+      name: "Guerreiro",
+      role: "Combatente",
+      skillModifiers: {
+        atletismo: 1,
+        tatica: 1
+      }
+    },
+
+    {
+      id: "feiticeiro",
+      name: "Feiticeiro",
+      role: "Mágico",
+      skillModifiers: {
+        conhecimento: 1,
+        controle_mana: 1
+      }
+    },
+
+    {
+      id: "curandeiro",
+      name: "Curandeiro",
+      role: "Suporte",
+      skillModifiers: {
+        medicina: 1,
+        intuicao: 1
+      }
+    },
+
+    {
+      id: "monge",
+      name: "Monge",
+      role: "Marcial",
+      skillModifiers: {
+        atletismo: 1,
+        controle_mana: 1
+      }
+    }
+  ]);
+
+  /* =========================================================
+     RAÇAS BASE
+  ========================================================= */
+
+  const RACES = Object.freeze([
+    {
+      id: "humano",
+      name: "Humano",
+
+      maleImage:
+        "https://i.ibb.co/TBNmfF0S/file-000000008b74820ea8b432fcf06ed975.png",
+
+      femaleImage:
+        "https://i.ibb.co/LdmxJ2h9/file-000000004b94820ead12a26ca92d75b7.png",
+
+      description:
+        "Humanos são conhecidos por sua capacidade de adaptação e aprendizado.",
+
+      profile:
+        "Adaptabilidade e aprendizado.",
+
+      attrMods: {
+        intelecto: 1,
+        presenca: 1
+      },
+
+      feature:
+        "Adaptação: pode repetir um teste recém-falhado uma vez por cena.",
+
+      size: "medio",
+
+      height: {
+        min: 150,
+        max: 200
+      },
+
+      movement: {},
+
+      flight: false
+    },
+
+    {
+      id: "elfo",
+      name: "Elfo",
+
+      maleImage:
+        "https://i.ibb.co/0y8WXSr8/file-00000000495c820e99fc5de509918d90.png",
+
+      femaleImage:
+        "https://i.ibb.co/F1DCc3j/file-00000000dcf8820e883635d6ca9de492.png",
+
+      description:
+        "Elfos possuem sentidos aguçados e forte afinidade com Mana.",
+
+      profile:
+        "Percepção e afinidade com Mana.",
+
+      attrMods: {
+        percepcao: 1,
+        controle: 1,
+        vigor: -1
+      },
+
+      feature:
+        "Percepção Élfica: percebe alterações de Mana e sinais difíceis de notar.",
+
+      size: "medio",
+
+      height: {
+        min: 155,
+        max: 205
+      },
+
+      movement: {},
+
+      flight: false
+    },
+
+    {
+      id: "anao",
+      name: "Anão",
+
+      maleImage:
+        "https://i.ibb.co/CySRyjQ/file-000000001824820e952c5a665ae3496f.png",
+
+      femaleImage:
+        "https://i.ibb.co/hJh4XYXM/file-00000000a4fc820e9bd0551b2472e125.png",
+
+      description:
+        "Anões possuem constituição robusta e forte tradição de forja.",
+
+      profile:
+        "Resistência e força estrutural.",
+
+      attrMods: {
+        vigor: 1,
+        forca: 1,
+        agilidade: -1
+      },
+
+      feature:
+        "Forja Ancestral: facilidade temática com materiais e estruturas.",
+
+      size: "pequeno",
+
+      height: {
+        min: 120,
+        max: 155
+      },
+
+      movement: {},
+
+      flight: false
+    },
+
+    {
+      id: "orc",
+      name: "Orc",
+
+      maleImage:
+        "https://i.ibb.co/ch4shzym/file-00000000e724820ebbe72fa63e4e81e3.png",
+
+      femaleImage:
+        "https://i.ibb.co/ksjBsffv/file-00000000decc820e9cd0c4ace952b82c.png",
+
+      description:
+        "Orcs são fisicamente poderosos e naturalmente resistentes.",
+
+      profile:
+        "Potência física e resistência.",
+
+      attrMods: {
+        forca: 1,
+        vigor: 1,
+        presenca: -1
+      },
+
+      feature:
+        "Fúria de Sangue: resposta física intensa em situações extremas.",
+
+      size: "grande",
+
+      height: {
+        min: 170,
+        max: 220
+      },
+
+      movement: {},
+
+      flight: false
+    },
+
+    {
+      id: "centauro",
+      name: "Centauro",
+
+      maleImage:
+        "https://i.ibb.co/5WckT8kZ/file-000000007e1c820ebec26e736b57ba50.png",
+
+      femaleImage:
+        "https://i.ibb.co/hFCDFvN2/file-00000000e5c8820ebb67aa67f2d7a1b8.png",
+
+      description:
+        "Centauros unem anatomia humanoide e equina.",
+
+      profile:
+        "Velocidade terrestre e potência física.",
+
+      attrMods: {
+        forca: 1,
+        agilidade: 1,
+        controle: -1
+      },
+
+      feature:
+        "Galope Ancestral: deslocamento terrestre excepcional.",
+
+      size: "grande",
+
+      height: {
+        min: 180,
+        max: 240
+      },
+
+      movement: {
+        groundMultiplier: 2
+      },
+
+      flight: false
+    },
+
+    {
+      id: "vampiro",
+      name: "Vampiro",
+
+      maleImage:
+        "https://i.ibb.co/PGFcNRXZ/file-0000000019dc820ea49a893a9831ffeb.png",
+
+      femaleImage:
+        "https://i.ibb.co/Kpx8jh0j/file-000000008cfc820e827a7b8376d3fd55.png",
+
+      description:
+        "Vampiros possuem uma natureza sobrenatural e sentidos aguçados.",
+
+      profile:
+        "Mobilidade, percepção e sobrevivência sobrenatural.",
+
+      attrMods: {
+        agilidade: 1,
+        percepcao: 1,
+        vigor: -1
+      },
+
+      feature:
+        "Regeneração Sanguínea: recuperação sobrenatural sujeita às regras da campanha.",
+
+      size: "medio",
+
+      height: {
+        min: 155,
+        max: 205
+      },
+
+      movement: {},
+
+      flight: false
+    },
+
+    {
+      id: "duende",
+      name: "Duende",
+
+      maleImage:
+        "https://i.ibb.co/0pCbh0Dq/file-00000000d1ec820eb0c562669244c953.png",
+
+      femaleImage:
+        "https://i.ibb.co/G3dGmfBg/file-000000001ce8820ea3db1f6c8da1c8dd.png",
+
+      description:
+        "Duendes possuem forte aptidão para comércio, contratos e astúcia.",
+
+      profile:
+        "Intelecto, negociação e precisão.",
+
+      attrMods: {
+        intelecto: 1,
+        precisao: 1,
+        forca: -1
+      },
+
+      feature:
+        "Fortuna Mercante: maior facilidade para identificar fraude e preço injusto.",
+
+      size: "pequeno",
+
+      height: {
+        min: 130,
+        max: 160
+      },
+
+      movement: {},
+
+      flight: false
+    },
+
+    {
+      id: "fada",
+      name: "Fada",
+
+      maleImage:
+        "https://i.ibb.co/kVKz2xjq/file-000000008c00820ebf7da3010a79bf7c.png",
+
+      femaleImage:
+        "https://i.ibb.co/jPysnZz1/file-00000000f014820e954413d3d309ae96.png",
+
+      description:
+        "Fadas possuem corpos leves e grande afinidade com Mana.",
+
+      profile:
+        "Leveza, Agilidade e Mana.",
+
+      attrMods: {
+        controle: 1,
+        agilidade: 1,
+        forca: -1
+      },
+
+      feature:
+        "Bênção Feérica: característica feérica de suporte e proteção.",
+
+      size: "pequeno",
+
+      height: {
+        min: 130,
+        max: 160
+      },
+
+      movement: {
+        airMultiplier: 2
+      },
+
+      flight: true
+    },
+
+    {
+      id: "povo_aquatico",
+      name: "Povo Aquático",
+
+      maleImage:
+        "https://i.ibb.co/nsCyckYB/file-0000000089f0820e89d6953c4857240c.png",
+
+      femaleImage:
+        "https://i.ibb.co/SDQqHjSj/file-00000000779c820ea18c5cf3ce6529b7.png",
+
+      description:
+        "O Povo Aquático possui adaptações naturais para ambientes aquáticos.",
+
+      profile:
+        "Adaptação à água e percepção ambiental.",
+
+      attrMods: {
+        vigor: 1,
+        percepcao: 1,
+        forca: -1
+      },
+
+      feature:
+        "Anfíbio: adaptação natural para respirar e agir em ambientes aquáticos.",
+
+      size: "medio",
+
+      height: {
+        min: 150,
+        max: 210
+      },
+
+      movement: {
+        aquaticMultiplier: 2
+      },
+
+      flight: false
+    },
+
+    {
+      id: "animalha",
+      name: "Animalha",
+
+      maleImage:
+        "https://i.ibb.co/fVfFL5ds/file-00000000b344820e9e39f31e92678a13.png",
+
+      femaleImage:
+        "https://i.ibb.co/zW6JnjPb/file-000000007a70820ea284e54236c00052.png",
+
+      description:
+        "Animalhas possuem traços animais integrados à anatomia humanoide e escolhem uma linhagem animal.",
+
+      profile:
+        "Instinto, sentidos e adaptação natural.",
+
+      attrMods: {},
+
+      feature:
+        "Instinto Animal: sentidos e capacidades naturais dependem da linhagem escolhida.",
+
+      size: "medio",
+
+      height: {
+        min: 140,
+        max: 210
+      },
+
+      movement: {},
+
+      flight: false,
+
+      animalha: true
+    },
+
+    {
+      id: "povo_natureza",
+      name: "Povo da Natureza",
+
+      maleImage:
+        "https://i.ibb.co/23GdF2Py/file-000000001e48820ebbfa246147f05c6f.png",
+
+      femaleImage:
+        "https://i.ibb.co/gFFk7Kyv/file-00000000a170820eaf15f8650242c3c9.png",
+
+      description:
+        "O Povo da Natureza possui forte ligação com ambientes e criaturas naturais.",
+
+      profile:
+        "Percepção ambiental e resistência natural.",
+
+      attrMods: {
+        percepcao: 1,
+        vigor: 1,
+        precisao: -1
+      },
+
+      feature:
+        "Vínculo Natural: sintonia com ambientes e criaturas naturais.",
+
+      size: "medio",
+
+      height: {
+        min: 150,
+        max: 210
+      },
+
+      movement: {},
+
+      flight: false
+    },
+
+    {
+      id: "neraliano",
+      name: "Neraliano",
+
+      maleImage:
+        "https://i.ibb.co/CpkBqzkC/file-00000000dee8820eb4f157009c1ceb5b.png",
+
+      femaleImage:
+        "https://i.ibb.co/k2ND7Tbp/file-000000003cb0820e842b5d0997ee34f5.png",
+
+      description:
+        "Neralianos possuem adaptações relacionadas à água, profundidade e vibrações.",
+
+      profile:
+        "Adaptação aquática e leitura de vibrações.",
+
+      attrMods: {
+        vigor: 1,
+        percepcao: 1,
+        agilidade: -1
+      },
+
+      feature:
+        "Adaptação Abissal: excelente adaptação à água, profundidade e vibrações.",
+
+      size: "medio",
+
+      height: {
+        min: 155,
+        max: 205
+      },
+
+      movement: {
+        aquaticMultiplier: 2
+      },
+
+      flight: false
+    },
+
+    {
+      id: "aureano",
+      name: "Aureano",
+
+      maleImage: "",
+      femaleImage: "",
+
+      description:
+        "Raça associada às grandes altitudes e mobilidade vertical.",
+
+      profile:
+        "Mobilidade vertical e percepção espacial.",
+
+      attrMods: {
+        agilidade: 1,
+        percepcao: 1,
+        vigor: -1
+      },
+
+      feature:
+        "Corpo Celestial: adaptação a altitude, saltos e movimento vertical.",
+
+      size: "medio",
+
+      height: {
+        min: 170,
+        max: 230
+      },
+
+      movement: {},
+
+      flight: false
+    },
+
+    {
+      id: "povo_nuvens",
+      name: "Povo das Nuvens",
+
+      maleImage: "",
+      femaleImage: "",
+
+      description:
+        "Raça adaptada a ambientes elevados e movimentação em grandes altitudes.",
+
+      profile:
+        "Leveza e mobilidade em grandes altitudes.",
+
+      attrMods: {
+        agilidade: 1,
+        percepcao: 1,
+        vigor: -1
+      },
+
+      feature:
+        "Passo do Céu: saltos e movimentação excepcionais em grandes altitudes.",
+
+      size: "medio",
+
+      height: {
+        min: 165,
+        max: 225
+      },
+
+      movement: {},
+
+      flight: false
+    },
+
+    {
+      id: "colosso",
+      name: "Colosso",
+
+      maleImage: "",
+      femaleImage: "",
+
+      description:
+        "Colossos possuem corpos de grande porte e asas colossais.",
+
+      profile:
+        "Força e resistência extraordinárias.",
+
+      attrMods: {
+        forca: 2,
+        vigor: 1,
+        agilidade: -1
+      },
+
+      feature:
+        "Asas Colossais: podem proteger, atacar e sustentar movimento aéreo conforme as regras.",
+
+      size: "colossal",
+
+      height: {
+        min: 250,
+        max: 400
+      },
+
+      movement: {
+        airMultiplier: 2
+      },
+
+      flight: true
+    },
+
+    {
+      id: "troll",
+      name: "Troll",
+
+      maleImage: "",
+      femaleImage: "",
+
+      description:
+        "Trolls possuem grande resistência física e capacidade regenerativa.",
+
+      profile:
+        "Resistência extrema e recuperação.",
+
+      attrMods: {
+        vigor: 2,
+        forca: 1,
+        agilidade: -1
+      },
+
+      feature:
+        "Regeneração Brutal: recuperação física excepcional.",
+
+      size: "grande",
+
+      height: {
+        min: 220,
+        max: 320
+      },
+
+      movement: {},
+
+      flight: false
+    }
+  ]);
+
+  /* =========================================================
+     ANIMALHAS — SUBESCOLHAS
+  ========================================================= */
+
+  const ANIMALHA_VARIANTS = Object.freeze([
+    {
+      id: "pantera",
+      name: "Pantera",
+      category: "Felino",
+      profile: "Velocidade, furtividade e percepção.",
+      attrMods: {
+        agilidade: 1,
+        percepcao: 1,
+        vigor: -1
+      },
+      feature: "Movimento silencioso e reflexos felinos.",
+      size: "medio",
+      height: {
+        min: 145,
+        max: 180
+      },
+      movement: {},
+      flight: false
+    },
+
+    {
+      id: "tigre",
+      name: "Tigre",
+      category: "Felino",
+      profile: "Força explosiva e mobilidade.",
+      attrMods: {
+        forca: 1,
+        agilidade: 1,
+        vigor: -1
+      },
+      feature: "Salto e ataques físicos rápidos.",
+      size: "grande",
+      height: {
+        min: 155,
+        max: 195
+      },
+      movement: {},
+      flight: false
+    },
+
+    {
+      id: "leao",
+      name: "Leão",
+      category: "Felino",
+      profile: "Força e presença.",
+      attrMods: {
+        forca: 1,
+        presenca: 1,
+        agilidade: -1
+      },
+      feature: "Presença física e intimidação naturais.",
+      size: "grande",
+      height: {
+        min: 165,
+        max: 205
+      },
+      movement: {},
+      flight: false
+    },
+
+    {
+      id: "gato",
+      name: "Gato",
+      category: "Felino",
+      profile: "Agilidade e percepção.",
+      attrMods: {
+        agilidade: 1,
+        percepcao: 1,
+        forca: -1
+      },
+      feature: "Equilíbrio e movimentação precisa.",
+      size: "pequeno",
+      height: {
+        min: 135,
+        max: 160
+      },
+      movement: {},
+      flight: false
+    },
+
+    {
+      id: "lobo",
+      name: "Lobo",
+      category: "Canídeo",
+      profile: "Percepção, resistência e rastreamento.",
+      attrMods: {
+        percepcao: 1,
+        vigor: 1,
+        presenca: -1
+      },
+      feature: "Sentidos aguçados e excelente rastreamento.",
+      size: "medio",
+      height: {
+        min: 145,
+        max: 190
+      },
+      movement: {},
+      flight: false
+    },
+
+    {
+      id: "raposa",
+      name: "Raposa",
+      category: "Canídeo",
+      profile: "Agilidade, astúcia e percepção.",
+      attrMods: {
+        agilidade: 1,
+        intelecto: 1,
+        forca: -1
+      },
+      feature: "Astúcia e movimentação silenciosa.",
+      size: "pequeno",
+      height: {
+        min: 135,
+        max: 165
+      },
+      movement: {},
+      flight: false
+    },
+
+    {
+      id: "falcao",
+      name: "Falcão",
+      category: "Ave",
+      profile: "Percepção, precisão e mobilidade aérea.",
+      attrMods: {
+        percepcao: 1,
+        precisao: 1,
+        vigor: -1
+      },
+      feature: "Visão extremamente aguçada.",
+      size: "pequeno",
+      height: {
+        min: 135,
+        max: 165
+      },
+      movement: {
+        airMultiplier: 2
+      },
+      flight: true
+    },
+
+    {
+      id: "aguia",
+      name: "Águia",
+      category: "Ave",
+      profile: "Percepção e precisão à distância.",
+      attrMods: {
+        percepcao: 1,
+        precisao: 1,
+        vigor: -1
+      },
+      feature: "Percepção de longa distância.",
+      size: "medio",
+      height: {
+        min: 145,
+        max: 180
+      },
+      movement: {
+        airMultiplier: 2
+      },
+      flight: true
+    },
+
+    {
+      id: "coruja",
+      name: "Coruja",
+      category: "Ave",
+      profile: "Percepção noturna e intelecto.",
+      attrMods: {
+        percepcao: 1,
+        intelecto: 1,
+        forca: -1
+      },
+      feature: "Excelente percepção em baixa iluminação.",
+      size: "pequeno",
+      height: {
+        min: 135,
+        max: 165
+      },
+      movement: {
+        airMultiplier: 2
+      },
+      flight: true
+    },
+
+    {
+      id: "cobra",
+      name: "Cobra",
+      category: "Réptil",
+      profile: "Precisão, percepção e controle corporal.",
+      attrMods: {
+        precisao: 1,
+        percepcao: 1,
+        vigor: -1
+      },
+      feature: "Percepção de movimento e controle corporal.",
+      size: "pequeno",
+      height: {
+        min: 135,
+        max: 165
+      },
+      movement: {},
+      flight: false
+    },
+
+    {
+      id: "crocodilo",
+      name: "Crocodilo",
+      category: "Réptil",
+      profile: "Força, vigor e adaptação aquática.",
+      attrMods: {
+        forca: 1,
+        vigor: 1,
+        agilidade: -1
+      },
+      feature: "Grande resistência e adaptação aquática.",
+      size: "grande",
+      height: {
+        min: 180,
+        max: 250
+      },
+      movement: {
+        aquaticMultiplier: 2
+      },
+      flight: false
+    },
+
+    {
+      id: "lagarto",
+      name: "Lagarto",
+      category: "Réptil",
+      profile: "Agilidade e percepção.",
+      attrMods: {
+        agilidade: 1,
+        percepcao: 1,
+        presenca: -1
+      },
+      feature: "Excelente adaptação a superfícies e ambientes variados.",
+      size: "medio",
+      height: {
+        min: 140,
+        max: 180
+      },
+      movement: {},
+      flight: false
+    },
+
+    {
+      id: "urso",
+      name: "Urso",
+      category: "Grande porte",
+      profile: "Força e Vigor.",
+      attrMods: {
+        forca: 1,
+        vigor: 1,
+        agilidade: -1
+      },
+      feature: "Grande potência física.",
+      size: "grande",
+      height: {
+        min: 190,
+        max: 270
+      },
+      movement: {},
+      flight: false
+    },
+
+    {
+      id: "rinoceronte",
+      name: "Rinoceronte",
+      category: "Grande porte",
+      profile: "Vigor extremo e resistência.",
+      attrMods: {
+        vigor: 2,
+        agilidade: -1,
+        precisao: -1
+      },
+      feature: "Resistência física extraordinária.",
+      size: "grande",
+      height: {
+        min: 200,
+        max: 280
+      },
+      movement: {},
+      flight: false
+    },
+
+    {
+      id: "hipopotamo",
+      name: "Hipopótamo",
+      category: "Grande porte / Aquático",
+      profile: "Vigor, força e adaptação aquática.",
+      attrMods: {
+        vigor: 1,
+        forca: 1,
+        agilidade: -1
+      },
+      feature: "Grande resistência e excelente adaptação à água.",
+      size: "grande",
+      height: {
+        min: 200,
+        max: 280
+      },
+      movement: {
+        aquaticMultiplier: 2
+      },
+      flight: false
+    },
+
+    {
+      id: "rato",
+      name: "Rato",
+      category: "Pequeno porte",
+      profile: "Agilidade e percepção.",
+      attrMods: {
+        agilidade: 1,
+        percepcao: 1,
+        forca: -1
+      },
+      feature: "Excelente percepção e movimentação em espaços reduzidos.",
+      size: "pequeno",
+      height: {
+        min: 135,
+        max: 160
+      },
+      movement: {},
+      flight: false
+    },
+
+    {
+      id: "tubarao",
+      name: "Tubarão",
+      category: "Aquático",
+      profile: "Vigor e percepção.",
+      attrMods: {
+        vigor: 1,
+        percepcao: 1,
+        presenca: -1
+      },
+      feature: "Percepção aquática e grande resistência.",
+      size: "grande",
+      height: {
+        min: 180,
+        max: 240
+      },
+      movement: {
+        aquaticMultiplier: 2
+      },
+      flight: false
+    },
+
+    {
+      id: "foca",
+      name: "Foca",
+      category: "Aquático",
+      profile: "Vigor e agilidade na água.",
+      attrMods: {
+        vigor: 1,
+        agilidade: 1,
+        precisao: -1
+      },
+      feature: "Excelente mobilidade aquática.",
+      size: "medio",
+      height: {
+        min: 145,
+        max: 180
+      },
+      movement: {
+        aquaticMultiplier: 2
+      },
+      flight: false
+    }
+  ]);
+
+  /* =========================================================
+     ESTADO
+  ========================================================= */
+
+  function createDefaultState() {
     return {
       id: null,
+
       name: "",
       age: "",
-      description: "",
       gender: "",
+
+      description: "",
+      appearance: {
+        heightCm: null,
+        sizeCategory: null,
+        hair: "",
+        eyes: "",
+        skin: "",
+        clothing: "",
+        scars: "",
+        tattoos: "",
+        physicalNotes: ""
+      },
+
       avatarDataUrl: "",
       avatarFileName: "",
+
       race: "",
       raceIndex: 0,
-      animalId: "",
-      appearance: {
-        heightCm: 170,
-        bodyType: "equilibrado",
-        hair: "",
-        clothing: "",
-        marks: ""
-      },
+
+      animalhaVariant: "",
+
       class: "",
-      attributes: Object.fromEntries(ATTR.map(a => [a, null])),
+      classBonus: "",
+
+      attributes: {
+        forca: null,
+        vigor: null,
+        agilidade: null,
+        precisao: null,
+        intelecto: null,
+        controle: null,
+        presenca: null,
+        percepcao: null
+      },
+
       power: "",
       powerRoll: null,
+      powerType: "",
+
       mana: "azul",
+
       skills: [],
+
       techniques: [],
+
       inventory: [],
-      combat: {
-        vigorRolled: false,
-        vigorResult: null,
-        life: null
-      },
+
       currentStep: 0,
+
       updatedAt: null
     };
   }
 
-  let state = baseState();
-  let selectedDie = null;
+  let state = createDefaultState();
+
+  let selectedDice = null;
+
   let saveTimer = null;
+
   let toastTimer = null;
+
   let initialized = false;
 
-  const $ = (s, root = document) => root.querySelector(s);
-  const $$ = (s, root = document) => [...root.querySelectorAll(s)];
+  /* =========================================================
+     DOM
+  ========================================================= */
 
-  function text(v) { return v == null ? "" : String(v); }
+  const $ = (selector, root = document) =>
+    root.querySelector(selector);
 
-  function deepClone(obj) {
-    try { return structuredClone(obj); }
-    catch { return JSON.parse(JSON.stringify(obj)); }
+  const $$ = (selector, root = document) =>
+    Array.from(
+      root.querySelectorAll(selector)
+    );
+
+  /* =========================================================
+     UTILIDADES
+  ========================================================= */
+
+  function safeText(value) {
+    return value === null ||
+      value === undefined
+      ? ""
+      : String(value);
   }
 
-  function showToast(message, duration = 2300) {
-    const el = $("#toast");
-    if (!el) return;
-    el.textContent = text(message);
-    el.hidden = false;
+  function clamp(value, min, max) {
+    return Math.max(
+      min,
+      Math.min(max, value)
+    );
+  }
+
+  function formatHeight(cm) {
+    const value = Number(cm);
+
+    if (!Number.isFinite(value)) {
+      return "—";
+    }
+
+    return `${(value / 100).toFixed(2)} m`;
+  }
+
+  function showToast(
+    message,
+    duration = 2400
+  ) {
+    const toast = $("#toast");
+
+    if (!toast) {
+      return;
+    }
+
+    toast.textContent =
+      safeText(message);
+
+    toast.hidden = false;
+
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => { el.hidden = true; }, duration);
+
+    toastTimer =
+      window.setTimeout(
+        () => {
+          toast.hidden = true;
+        },
+        duration
+      );
   }
 
-  function saveStatus(type, message) {
-    const textEl = $("#saveStatusText");
-    const dot = $(".save-dot");
-    if (textEl) textEl.textContent = message;
-    if (!dot) return;
+  function setSaveStatus(
+    type,
+    text
+  ) {
+    const textEl =
+      $("#saveStatusText");
+
+    const dot =
+      $(".save-dot");
+
+    if (textEl) {
+      textEl.textContent = text;
+    }
+
+    if (!dot) {
+      return;
+    }
 
     if (type === "error") {
-      dot.style.background = "var(--danger)";
-      dot.style.boxShadow = "0 0 12px rgba(197,108,99,.4)";
-    } else if (type === "saving") {
-      dot.style.background = "var(--gold)";
-      dot.style.boxShadow = "0 0 12px rgba(216,180,90,.4)";
-    } else {
-      dot.style.background = "var(--success)";
-      dot.style.boxShadow = "0 0 12px rgba(131,173,121,.4)";
+      dot.style.background =
+        "var(--danger)";
+
+      dot.style.boxShadow =
+        "0 0 12px rgba(197,108,99,.4)";
+
+      return;
     }
-  }
 
-  function saveDraft() {
-    try {
-      const payload = deepClone(state);
-      payload.updatedAt = new Date().toISOString();
-      payload.avatarDataUrl =
-        payload.avatarDataUrl?.length <= 2_000_000
-          ? payload.avatarDataUrl
-          : "";
-      localStorage.setItem(CONFIG.draftKey, JSON.stringify(payload));
-      state.updatedAt = payload.updatedAt;
-      saveStatus("saved", "Salvo automaticamente");
-      return true;
-    } catch (error) {
-      console.error("[AERION] Falha ao salvar rascunho:", error);
-      saveStatus("error", "Erro ao salvar");
-      return false;
+    if (type === "saved") {
+      dot.style.background =
+        "var(--success)";
+
+      dot.style.boxShadow =
+        "0 0 12px rgba(131,173,121,.4)";
+
+      return;
     }
+
+    dot.style.background =
+      "var(--gold)";
+
+    dot.style.boxShadow =
+      "0 0 12px rgba(216,180,90,.4)";
   }
 
-  function scheduleSave() {
-    saveStatus("saving", "Salvando...");
-    clearTimeout(saveTimer);
-    saveTimer = setTimeout(saveDraft, CONFIG.autosaveDelay);
-  }
+  function normalizeDie(
+    value
+  ) {
+    const raw =
+      safeText(value)
+        .trim()
+        .toLowerCase();
 
-  function normalizeState(raw) {
-    const next = baseState();
-    if (!raw || typeof raw !== "object") return next;
-
-    Object.assign(next, raw);
-
-    next.attributes = Object.fromEntries(
-      ATTR.map(attr => {
-        const die = text(raw.attributes?.[attr]).toLowerCase();
-        return [attr, Object.hasOwn(DICE_LIMITS, die) ? die : null];
-      })
-    );
-
-    next.appearance = {
-      ...baseState().appearance,
-      ...(raw.appearance || {})
-    };
-
-    next.skills = Array.isArray(raw.skills) ? raw.skills : [];
-    next.techniques = Array.isArray(raw.techniques) ? raw.techniques : [];
-    next.inventory = Array.isArray(raw.inventory) ? raw.inventory : [];
-
-    next.currentStep = Math.max(
-      0,
-      Math.min(STEPS.length - 1, Number(raw.currentStep) || 0)
-    );
-
-    next.raceIndex = Math.max(
-      0,
-      Math.min(RULES.races ? Object.keys(RULES.races).length - 1 : 0, Number(raw.raceIndex) || 0)
-    );
-
-    next.mana = "azul";
-    return next;
-  }
-
-  function loadDraft() {
-    try {
-      const raw = localStorage.getItem(CONFIG.draftKey);
-      if (!raw) return false;
-      state = normalizeState(JSON.parse(raw));
-      return true;
-    } catch (error) {
-      console.warn("[AERION] Rascunho inválido removido.", error);
-      localStorage.removeItem(CONFIG.draftKey);
-      return false;
+    if (
+      Object.prototype.hasOwnProperty.call(
+        DICE_LIMITS,
+        raw
+      )
+    ) {
+      return raw;
     }
+
+    const match =
+      raw.match(
+        /^d(4|6|8|10|12|20)$/
+      );
+
+    return match
+      ? `d${match[1]}`
+      : null;
   }
 
   /* =========================================================
-     REGRAS RACIAIS / PERFIL
-     ========================================================= */
+     RAÇA ATUAL
+  ========================================================= */
 
-  function isAnimalha() {
-    return state.race === "animalha";
-  }
-
-  function currentRaceProfile() {
-    return RULES.getRaceProfile(state.race || "humano", state.animalId);
-  }
-
-  function currentSize() {
-    const profile = currentRaceProfile();
-    return RULES.SIZE[profile?.size] || RULES.SIZE.medio;
-  }
-
-  function getHeightBounds() {
-    const p = currentRaceProfile();
-    const min = Math.round((p?.height?.min || 1.2) * 100);
-    const max = Math.round((p?.height?.max || 2.0) * 100);
-    return { min, max };
-  }
-
-  function clampAppearanceHeight() {
-    const b = getHeightBounds();
-    const h = Number(state.appearance.heightCm) || b.min;
-    state.appearance.heightCm = Math.max(b.min, Math.min(b.max, h));
-  }
-
-  function racialMods() {
-    return RULES.getAttributeModifiers(state.race || "humano", state.animalId);
-  }
-
-  /* =========================================================
-     PROGRESSÃO
-     ========================================================= */
-
-  function identityComplete() { return Boolean(state.name.trim()); }
-  function raceComplete() { return Boolean(state.race); }
-  function appearanceComplete() {
-    clampAppearanceHeight();
+  function getCurrentRace() {
     return (
-      Number.isFinite(Number(state.appearance.heightCm)) &&
-      state.appearance.heightCm >= getHeightBounds().min &&
-      state.appearance.heightCm <= getHeightBounds().max
+      RACES[state.raceIndex] ||
+      RACES[0]
     );
   }
-  function classComplete() { return Boolean(state.class); }
-  function attributesComplete() {
-    return ATTR.every(attr => Boolean(state.attributes[attr]));
-  }
-  function powerComplete() { return Boolean(state.power); }
-  function manaComplete() { return state.mana === "azul"; }
 
-  function stepComplete(index) {
-    switch (STEPS[index]?.id) {
-      case "identity": return identityComplete();
-      case "race": return raceComplete();
-      case "appearance": return appearanceComplete();
-      case "class": return classComplete();
-      case "attributes": return attributesComplete();
-      case "power": return powerComplete();
-      case "mana": return manaComplete();
-      case "skills": return true;       // módulo pode ser opcional
-      case "techniques": return true;   // módulo pode ser opcional
-      case "inventory": return true;    // módulo pode ser opcional
-      case "review":
-        return identityComplete() &&
-          raceComplete() &&
-          appearanceComplete() &&
-          classComplete() &&
-          attributesComplete() &&
-          powerComplete() &&
-          manaComplete();
-      default: return false;
-    }
-  }
-
-  function canEnter(index) {
-    if (index <= 0) return true;
-    if (!identityComplete()) return false;
-    if (index >= 2 && !raceComplete()) return false;
-    if (index >= 3 && !appearanceComplete()) return false;
-    if (index >= 4 && !classComplete()) return false;
-    if (index >= 5 && !attributesComplete()) return false;
-    if (index >= 6 && !powerComplete()) return false;
-    return true;
-  }
-
-  function progressPercent() {
-    const complete = STEPS.reduce(
-      (sum, _, i) => sum + (stepComplete(i) ? 1 : 0),
-      0
+  function getSelectedRace() {
+    return (
+      RACES.find(
+        race =>
+          race.id ===
+          state.race
+      ) ||
+      null
     );
-    return Math.round((complete / STEPS.length) * 100);
   }
 
-  function updateProgress() {
-    const pct = progressPercent();
-    if ($("#progressFill")) $("#progressFill").style.width = `${pct}%`;
-    if ($("#progressPercent")) $("#progressPercent").textContent = `${pct}%`;
-    if ($("#progressTitle")) $("#progressTitle").textContent = STEPS[state.currentStep]?.title || "Identidade";
-    if ($("#stepCounter")) $("#stepCounter").textContent = `${state.currentStep + 1} de ${STEPS.length}`;
+  function getAnimalhaVariant() {
+    if (
+      state.race !==
+      "animalha"
+    ) {
+      return null;
+    }
 
-    $$(".creation-step").forEach((btn, i) => {
-      btn.classList.toggle("is-active", i === state.currentStep);
-      btn.classList.toggle("is-complete", i < state.currentStep && stepComplete(i));
-      btn.disabled = i > state.currentStep && !canEnter(i);
-    });
-
-    if ($("#previousStepButton"))
-      $("#previousStepButton").disabled = state.currentStep === 0;
-
-    if ($("#nextStepButton"))
-      $("#nextStepButton").textContent =
-        state.currentStep === STEPS.length - 1 ? "Finalizar →" : "Próximo →";
+    return (
+      ANIMALHA_VARIANTS.find(
+        variant =>
+          variant.id ===
+          state.animalhaVariant
+      ) ||
+      null
+    );
   }
 
-  function goToStep(index) {
-    const target = Math.max(0, Math.min(STEPS.length - 1, Number(index)));
+  function getEffectiveRaceData() {
+    const race =
+      getSelectedRace();
 
-    if (target > state.currentStep && !canEnter(target)) {
-      validateCurrentStep();
-      return false;
+    if (!race) {
+      return null;
     }
 
-    state.currentStep = target;
+    const animalha =
+      getAnimalhaVariant();
 
-    $$(".creation-panel").forEach(panel => {
-      const active = panel.dataset.panel === STEPS[target].id;
-      panel.hidden = !active;
-      panel.classList.toggle("is-active", active);
-    });
-
-    updateProgress();
-
-    switch (STEPS[target].id) {
-      case "race": renderRace(); break;
-      case "appearance": renderAppearance(); break;
-      case "class": renderClasses(); break;
-      case "attributes": renderAttributes(); break;
-      case "power": renderPower(); break;
-      case "mana": renderMana(); break;
-      case "skills": renderSkills(); break;
-      case "techniques": renderTechniques(); break;
-      case "inventory": renderInventory(); break;
-      case "review": renderReview(); break;
+    if (!animalha) {
+      return race;
     }
 
-    window.scrollTo({ top: 0, behavior: "smooth" });
-    scheduleSave();
-    return true;
-  }
+    return {
+      ...race,
 
-  function validateCurrentStep() {
-    switch (STEPS[state.currentStep]?.id) {
-      case "identity":
-        if (!identityComplete()) {
-          showToast("Digite o nome do aventureiro.");
-          $("#characterName")?.focus();
-          return false;
-        }
-        break;
-      case "race":
-        if (!raceComplete()) {
-          showToast("Escolha uma raça.");
-          return false;
-        }
-        break;
-      case "appearance":
-        if (!appearanceComplete()) {
-          showToast("Defina uma altura válida para a raça.");
-          return false;
-        }
-        break;
-      case "class":
-        if (!classComplete()) {
-          showToast("Escolha uma classe.");
-          return false;
-        }
-        break;
-      case "attributes":
-        if (!attributesComplete()) {
-          showToast(`Complete os atributos: ${Object.values(state.attributes).filter(Boolean).length}/8.`);
-          return false;
-        }
-        break;
-      case "power":
-        if (!powerComplete()) {
-          showToast("Defina o poder.");
-          return false;
-        }
-        break;
-      case "mana":
-        if (!manaComplete()) {
-          showToast("A Mana Azul é a única Mana inicial disponível.");
-          return false;
-        }
-        break;
-    }
-    return true;
+      name:
+        `${race.name} — ${animalha.name}`,
+
+      profile:
+        animalha.profile,
+
+      feature:
+        animalha.feature,
+
+      size:
+        animalha.size,
+
+      height:
+        animalha.height,
+
+      attrMods:
+        {
+          ...(race.attrMods || {}),
+          ...(animalha.attrMods || {})
+        },
+
+      movement:
+        {
+          ...(race.movement || {}),
+          ...(animalha.movement || {})
+        },
+
+      flight:
+        Boolean(
+          race.flight ||
+          animalha.flight
+        )
+    };
   }
 
   /* =========================================================
      IDENTIDADE
-     ========================================================= */
-
-  function renderIdentity() {
-    const name = $("#characterName");
-    const age = $("#characterAge");
-    const desc = $("#characterDescription");
-
-    if (name) name.value = state.name;
-    if (age) age.value = state.age;
-    if (desc) desc.value = state.description;
-
-    $$('input[name="gender"]').forEach(r => {
-      r.checked = r.value === state.gender;
-    });
-
-    renderAvatar();
-  }
+  ========================================================= */
 
   function bindIdentity() {
-    $("#characterName")?.addEventListener("input", e => {
-      state.name = e.target.value;
-      $("#nameError")?.setAttribute("hidden", "");
-      updateProgress();
-      scheduleSave();
-      renderReview();
-    });
+    const name =
+      $("#characterName");
 
-    $("#characterAge")?.addEventListener("input", e => {
-      state.age = e.target.value;
-      scheduleSave();
-      renderReview();
-    });
+    const age =
+      $("#characterAge");
 
-    $("#characterDescription")?.addEventListener("input", e => {
-      state.description = e.target.value;
-      scheduleSave();
-    });
+    const description =
+      $("#characterDescription");
 
-    $$('input[name="gender"]').forEach(r => {
-      r.addEventListener("change", () => {
-        state.gender = r.value;
-        renderRace();
-        scheduleSave();
-        renderReview();
-      });
-    });
+    if (name) {
+      name.addEventListener(
+        "input",
+        event => {
+          state.name =
+            safeText(
+              event.target.value
+            );
 
-    $("#avatarInput")?.addEventListener("change", handleAvatar);
-    $("#removeAvatarButton")?.addEventListener("click", () => {
-      state.avatarDataUrl = "";
-      state.avatarFileName = "";
-      if ($("#avatarInput")) $("#avatarInput").value = "";
-      renderAvatar();
-      scheduleSave();
-    });
+          $("#nameError")?.setAttribute(
+            "hidden",
+            ""
+          );
+
+          updateProgress();
+          updateReview();
+          scheduleAutosave();
+        }
+      );
+    }
+
+    if (age) {
+      age.addEventListener(
+        "input",
+        event => {
+          state.age =
+            safeText(
+              event.target.value
+            );
+
+          updateReview();
+          scheduleAutosave();
+        }
+      );
+    }
+
+    if (description) {
+      description.addEventListener(
+        "input",
+        event => {
+          state.description =
+            safeText(
+              event.target.value
+            );
+
+          scheduleAutosave();
+        }
+      );
+    }
+
+    $$(
+      'input[name="gender"]'
+    ).forEach(
+      radio => {
+        radio.addEventListener(
+          "change",
+          () => {
+            state.gender =
+              radio.value;
+
+            renderRace();
+            updateAppearanceEditor();
+            updateReview();
+            scheduleAutosave();
+          }
+        );
+      }
+    );
+
+    $("#avatarInput")
+      ?.addEventListener(
+        "change",
+        handleAvatarUpload
+      );
+
+    $("#removeAvatarButton")
+      ?.addEventListener(
+        "click",
+        removeAvatar
+      );
   }
 
-  function handleAvatar(e) {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  function handleAvatarUpload(
+    event
+  ) {
+    const file =
+      event.target.files?.[0];
 
-    if (!["image/png","image/jpeg","image/webp","image/avif"].includes(file.type)) {
-      showToast("Formato de imagem não suportado.");
-      e.target.value = "";
+    if (!file) {
       return;
     }
 
-    if (file.size > 6 * 1024 * 1024) {
-      showToast("A imagem deve ter no máximo 6 MB.");
-      e.target.value = "";
+    const allowed = [
+      "image/png",
+      "image/jpeg",
+      "image/webp",
+      "image/avif"
+    ];
+
+    if (
+      !allowed.includes(
+        file.type
+      )
+    ) {
+      showToast(
+        "Formato de imagem não suportado."
+      );
+
+      event.target.value = "";
+
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      state.avatarDataUrl = text(reader.result);
-      state.avatarFileName = file.name;
-      renderAvatar();
-      scheduleSave();
-    };
-    reader.onerror = () => showToast("Não foi possível carregar a imagem.");
-    reader.readAsDataURL(file);
+    if (
+      file.size >
+      CONFIG.maxAvatarSize
+    ) {
+      showToast(
+        "A imagem deve ter no máximo 6 MB."
+      );
+
+      event.target.value = "";
+
+      return;
+    }
+
+    const reader =
+      new FileReader();
+
+    reader.onload =
+      () => {
+        state.avatarDataUrl =
+          safeText(
+            reader.result
+          );
+
+        state.avatarFileName =
+          file.name;
+
+        renderAvatar();
+        scheduleAutosave();
+      };
+
+    reader.onerror =
+      () => {
+        showToast(
+          "Não foi possível carregar a imagem."
+        );
+      };
+
+    reader.readAsDataURL(
+      file
+    );
   }
 
   function renderAvatar() {
-    const img = $("#avatarImage");
-    const placeholder = $("#avatarPlaceholder");
-    const remove = $("#removeAvatarButton");
+    const image =
+      $("#avatarImage");
 
-    if (!img || !placeholder) return;
+    const placeholder =
+      $("#avatarPlaceholder");
 
-    if (state.avatarDataUrl) {
-      img.src = state.avatarDataUrl;
-      img.hidden = false;
-      placeholder.hidden = true;
-      if (remove) remove.disabled = false;
-    } else {
-      img.hidden = true;
-      img.removeAttribute("src");
-      placeholder.hidden = false;
-      if (remove) remove.disabled = true;
+    const remove =
+      $("#removeAvatarButton");
+
+    if (
+      !image ||
+      !placeholder
+    ) {
+      return;
     }
 
-    const reviewImg = $("#reviewAvatar");
-    const fallback = $("#reviewAvatarFallback");
-    if (reviewImg && fallback) {
-      if (state.avatarDataUrl) {
-        reviewImg.src = state.avatarDataUrl;
-        reviewImg.hidden = false;
-        fallback.hidden = true;
-      } else {
-        reviewImg.hidden = true;
-        fallback.hidden = false;
+    if (
+      state.avatarDataUrl
+    ) {
+      image.src =
+        state.avatarDataUrl;
+
+      image.hidden =
+        false;
+
+      placeholder.hidden =
+        true;
+
+      if (remove) {
+        remove.disabled =
+          false;
+      }
+    } else {
+      image.hidden =
+        true;
+
+      image.removeAttribute(
+        "src"
+      );
+
+      placeholder.hidden =
+        false;
+
+      if (remove) {
+        remove.disabled =
+          true;
       }
     }
+  }
+
+  function removeAvatar() {
+    state.avatarDataUrl = "";
+    state.avatarFileName = "";
+
+    const input =
+      $("#avatarInput");
+
+    if (input) {
+      input.value = "";
+    }
+
+    renderAvatar();
+    scheduleAutosave();
   }
 
   /* =========================================================
-     RAÇA / ANIMALHA
-     ========================================================= */
+     RAÇA
+  ========================================================= */
 
-  function raceList() {
-    return Object.values(RULES.races);
-  }
-
-  function currentRace() {
-    return raceList()[state.raceIndex] || raceList()[0];
-  }
-
-  function raceImage(race) {
-    if (!race) return "";
-    if (state.gender === "feminino") return race.femaleImage || race.maleImage || "";
-    return race.maleImage || race.femaleImage || "";
-  }
-
-  function renderRace() {
-    const race = currentRace();
-    if (!race) return;
-
-    if ($("#raceImage")) {
-      $("#raceImage").src = raceImage(race);
-      $("#raceImage").alt = race.name;
-      $("#raceImage").style.display = raceImage(race) ? "" : "none";
+  function getRaceImage(
+    race
+  ) {
+    if (!race) {
+      return "";
     }
-    if ($("#raceName")) $("#raceName").textContent = race.name;
-    if ($("#raceShortDescription")) $("#raceShortDescription").textContent = race.profile || "";
-    if ($("#raceGenderLabel")) $("#raceGenderLabel").textContent =
-      `${race.name}${state.gender ? ` · ${state.gender}` : ""}`;
 
-    const chosen = state.race === race.id;
-    if ($("#raceSelectedText")) $("#raceSelectedText").textContent =
-      chosen ? "✓ Selecionada" : "Selecionar raça";
+    if (
+      state.gender ===
+      "feminino"
+    ) {
+      return (
+        race.femaleImage ||
+        race.maleImage ||
+        ""
+      );
+    }
 
-    if ($("#raceDescriptionTitle")) $("#raceDescriptionTitle").textContent = race.name;
-    if ($("#raceDescriptionText")) $("#raceDescriptionText").textContent = race.feature || "";
-
-    renderRaceDots();
-    renderAnimalhaSubchoice();
-    updateProgress();
+    return (
+      race.maleImage ||
+      race.femaleImage ||
+      ""
+    );
   }
 
   function renderRaceDots() {
-    const box = $("#raceDots");
-    if (!box) return;
-    box.innerHTML = "";
+    const container =
+      $("#raceDots");
 
-    raceList().forEach((race, i) => {
-      const b = document.createElement("button");
-      b.type = "button";
-      b.className = i === state.raceIndex ? "is-active" : "";
-      b.ariaLabel = race.name;
-      b.addEventListener("click", e => {
-        e.stopPropagation();
-        state.raceIndex = i;
-        renderRace();
-        scheduleSave();
-      });
-      box.appendChild(b);
-    });
-  }
-
-  function selectRace() {
-    const race = currentRace();
-    if (!race) return;
-
-    state.race = race.id;
-
-    if (race.id === "animalha" && !state.animalId) {
-      state.animalId = RULES.animalhaAnimals[0]?.id || "";
+    if (!container) {
+      return;
     }
 
-    clampAppearanceHeight();
-    renderRace();
-    renderAppearance();
-    updateProgress();
-    renderReview();
-    scheduleSave();
+    container.innerHTML =
+      "";
 
-    showToast(`${race.name} selecionada.`);
+    RACES.forEach(
+      (race, index) => {
+        const button =
+          document.createElement(
+            "button"
+          );
+
+        button.type =
+          "button";
+
+        button.className =
+          index ===
+          state.raceIndex
+            ? "is-active"
+            : "";
+
+        button.setAttribute(
+          "aria-label",
+          race.name
+        );
+
+        button.addEventListener(
+          "click",
+          event => {
+            event.stopPropagation();
+
+            state.raceIndex =
+              index;
+
+            renderRace();
+
+            scheduleAutosave();
+          }
+        );
+
+        container.appendChild(
+          button
+        );
+      }
+    );
+  }
+
+  function renderRace() {
+    const race =
+      getCurrentRace();
+
+    if (!race) {
+      return;
+    }
+
+    const image =
+      $("#raceImage");
+
+    const name =
+      $("#raceName");
+
+    const description =
+      $("#raceShortDescription");
+
+    const selected =
+      $("#raceSelectedText");
+
+    const gender =
+      $("#raceGenderLabel");
+
+    if (image) {
+      const src =
+        getRaceImage(
+          race
+        );
+
+      if (src) {
+        image.src = src;
+        image.hidden = false;
+      } else {
+        image.removeAttribute(
+          "src"
+        );
+
+        image.hidden = true;
+      }
+
+      image.alt =
+        `${race.name} — personagem`;
+    }
+
+    if (name) {
+      name.textContent =
+        race.name;
+    }
+
+    if (description) {
+      description.textContent =
+        race.description;
+    }
+
+    if (gender) {
+      gender.textContent =
+        state.gender
+          ? `${race.name} · ${state.gender}`
+          : race.name;
+    }
+
+    if (selected) {
+      selected.textContent =
+        state.race ===
+        race.id
+          ? "✓ Selecionada"
+          : "Selecionar raça";
+    }
+
+    const title =
+      $("#raceDescriptionTitle");
+
+    if (title) {
+      title.textContent =
+        race.name;
+    }
+
+    const text =
+      $("#raceDescriptionText");
+
+    if (text) {
+      text.textContent =
+        `${race.description} Perfil natural: ${race.profile} ${race.feature}`;
+    }
+
+    renderRaceDots();
+
+    updateAppearanceEditor();
+  }
+
+  function selectCurrentRace() {
+    const race =
+      getCurrentRace();
+
+    if (!race) {
+      return false;
+    }
+
+    state.race =
+      race.id;
+
+    state.raceIndex =
+      RACES.findIndex(
+        item =>
+          item.id ===
+          race.id
+      );
+
+    if (
+      race.id !==
+      "animalha"
+    ) {
+      state.animalhaVariant =
+        "";
+    }
+
+    if (
+      race.height &&
+      !state.appearance.heightCm
+    ) {
+      state.appearance.heightCm =
+        Math.round(
+          (
+            race.height.min +
+            race.height.max
+          ) / 2
+        );
+    }
+
+    if (
+      race.size
+    ) {
+      state.appearance.sizeCategory =
+        race.size;
+    }
+
+    renderRace();
+    updateAppearanceEditor();
+    updateProgress();
+    updateReview();
+    scheduleAutosave();
+
+    showToast(
+      `${race.name} selecionada.`
+    );
+
+    return true;
   }
 
   function bindRace() {
-    $("#racePrevious")?.addEventListener("click", e => {
-      e.stopPropagation();
-      state.raceIndex =
-        (state.raceIndex - 1 + raceList().length) % raceList().length;
-      renderRace();
-      scheduleSave();
-    });
+    $("#racePrevious")
+      ?.addEventListener(
+        "click",
+        event => {
+          event.stopPropagation();
 
-    $("#raceNext")?.addEventListener("click", e => {
-      e.stopPropagation();
-      state.raceIndex =
-        (state.raceIndex + 1) % raceList().length;
-      renderRace();
-      scheduleSave();
-    });
+          state.raceIndex =
+            (
+              state.raceIndex -
+              1 +
+              RACES.length
+            ) %
+            RACES.length;
 
-    $("#raceCard")?.addEventListener("click", e => {
-      if (e.target.closest(".race-select-indicator")) {
-        selectRace();
-        return;
-      }
-
-      const modal = $("#raceModal");
-      if (modal?.showModal) {
-        const race = currentRace();
-        $("#modalRaceName").textContent = race.name;
-        $("#modalRaceDescription").textContent = race.profile || race.feature || "";
-        modal.showModal();
-      } else if (raceComplete()) {
-        const desc = $("#raceDescription");
-        if (desc) desc.hidden = !desc.hidden;
-      }
-    });
-
-    $("#modalSelectRace")?.addEventListener("click", () => {
-      selectRace();
-      $("#raceModal")?.close();
-    });
-
-    $("#closeRaceModal")?.addEventListener("click", () => $("#raceModal")?.close());
-
-    $("#raceModal")?.addEventListener("click", e => {
-      if (e.target === e.currentTarget) e.currentTarget.close();
-    });
-  }
-
-  function renderAnimalhaSubchoice() {
-    const panel = $("#animalhaSubchoice");
-    if (!panel) return;
-
-    const active = state.race === "animalha";
-    panel.hidden = !active;
-    if (!active) return;
-
-    const tabs = $("#animalhaCategoryTabs");
-    const options = $("#animalhaOptions");
-    if (!tabs || !options) return;
-
-    const categories = [...new Set(RULES.animalhaAnimals.map(a => a.category))];
-    const current = RULES.animalhaAnimals.find(a => a.id === state.animalId) ||
-      RULES.animalhaAnimals[0];
-
-    tabs.innerHTML = "";
-    categories.forEach(cat => {
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = current?.category === cat ? "is-active" : "";
-      btn.textContent = cat;
-      btn.addEventListener("click", () => {
-        renderAnimalOptions(cat);
-        tabs.querySelectorAll("button").forEach(x => x.classList.remove("is-active"));
-        btn.classList.add("is-active");
-      });
-      tabs.appendChild(btn);
-    });
-
-    renderAnimalOptions(current?.category || categories[0]);
-  }
-
-  function renderAnimalOptions(category) {
-    const box = $("#animalhaOptions");
-    if (!box) return;
-
-    box.innerHTML = "";
-
-    RULES.animalhaAnimals
-      .filter(animal => animal.category === category)
-      .forEach(animal => {
-        const button = document.createElement("button");
-        button.type = "button";
-        button.className =
-          `animalha-option ${state.animalId === animal.id ? "is-selected" : ""}`;
-
-        button.innerHTML = `
-          <strong>${animal.name}</strong>
-          <small>${animal.profile}</small>
-        `;
-
-        button.addEventListener("click", () => {
-          state.animalId = animal.id;
-          clampAppearanceHeight();
           renderRace();
-          renderAppearance();
-          renderAttributes();
-          renderReview();
-          scheduleSave();
-          showToast(`${animal.name} selecionado.`);
-        });
+          scheduleAutosave();
+        }
+      );
 
-        box.appendChild(button);
-      });
+    $("#raceNext")
+      ?.addEventListener(
+        "click",
+        event => {
+          event.stopPropagation();
+
+          state.raceIndex =
+            (
+              state.raceIndex +
+              1
+            ) %
+            RACES.length;
+
+          renderRace();
+          scheduleAutosave();
+        }
+      );
+
+    $("#raceCard")
+      ?.addEventListener(
+        "click",
+        event => {
+          if (
+            event.target.closest(
+              ".race-select-indicator"
+            )
+          ) {
+            selectCurrentRace();
+            return;
+          }
+
+          const description =
+            $("#raceDescription");
+
+          if (description) {
+            description.hidden =
+              !description.hidden;
+          }
+        }
+      );
+
+    $("#raceSelectedText")
+      ?.addEventListener(
+        "click",
+        event => {
+          event.stopPropagation();
+          selectCurrentRace();
+        }
+      );
   }
 
   /* =========================================================
      APARÊNCIA
-     ========================================================= */
+  ========================================================= */
 
-  function renderAppearance() {
-    clampAppearanceHeight();
+  function ensureAppearancePanel() {
+    const panel =
+      $(
+        '.creation-panel[data-panel="appearance"]'
+      );
 
-    const b = getHeightBounds();
-    const a = state.appearance;
-
-    if ($("#heightSlider")) {
-      $("#heightSlider").min = String(b.min);
-      $("#heightSlider").max = String(b.max);
-      $("#heightSlider").value = String(a.heightCm);
+    if (!panel) {
+      return;
     }
 
-    if ($("#heightValue"))
-      $("#heightValue").textContent = `${(a.heightCm / 100).toFixed(2).replace(".", ",")} m`;
-
-    if ($("#heightBounds"))
-      $("#heightBounds").textContent =
-        `${(b.min / 100).toFixed(2).replace(".", ",")}–${(b.max / 100).toFixed(2).replace(".", ",")} m`;
-
-    if ($("#heightMinLabel"))
-      $("#heightMinLabel").textContent =
-        `${(b.min / 100).toFixed(2).replace(".", ",")} m`;
-
-    if ($("#heightMaxLabel"))
-      $("#heightMaxLabel").textContent =
-        `${(b.max / 100).toFixed(2).replace(".", ",")} m`;
-
-    if ($("#heightLimitText"))
-      $("#heightLimitText").textContent =
-        `${currentRaceProfile()?.name || "Raça"} · ${currentSize().label}`;
-
-    const indicator = $("#heightIndicator");
-    if (indicator) {
-      const ratio =
-        (a.heightCm - b.min) / Math.max(1, b.max - b.min);
-      indicator.style.bottom = `${ratio * 100}%`;
+    if (
+      panel.querySelector(
+        "#appearanceEditor"
+      )
+    ) {
+      return;
     }
 
-    const body = $("#bodyPreview");
-    if (body) {
-      body.classList.toggle("body-preview-female", state.gender === "feminino");
-      body.classList.toggle("body-preview-male", state.gender !== "feminino");
-      body.classList.toggle("body-type-esguio", a.bodyType === "esguio");
-      body.classList.toggle("body-type-robusto", a.bodyType === "robusto");
-      body.style.setProperty("--body-height", `${Math.max(220, 220 * (a.heightCm / 170))}px`);
-    }
+    const heading =
+      panel.querySelector(
+        ".section-heading"
+      );
 
-    if ($("#appearanceHair")) $("#appearanceHair").value = a.hair;
-    if ($("#appearanceClothing")) $("#appearanceClothing").value = a.clothing;
-    if ($("#appearanceMarks")) $("#appearanceMarks").value = a.marks;
+    const editor =
+      document.createElement(
+        "div"
+      );
 
-    $$(".appearance-choice").forEach(btn => {
-      btn.classList.toggle("is-selected", btn.dataset.bodyType === a.bodyType);
-    });
-  }
+    editor.id =
+      "appearanceEditor";
 
-  function bindAppearance() {
-    $("#heightSlider")?.addEventListener("input", e => {
-      state.appearance.heightCm = Number(e.target.value);
-      renderAppearance();
-      scheduleSave();
-      renderReview();
-    });
+    editor.className =
+      "appearance-editor";
 
-    ["appearanceHair","appearanceClothing","appearanceMarks"].forEach(id => {
-      $(`#${id}`)?.addEventListener("input", e => {
-        const key = id.replace("appearance", "").toLowerCase();
-        state.appearance[
-          key
-        ] = e.target.value;
-        scheduleSave();
-      });
-    });
-
-    $$(".appearance-choice").forEach(btn => {
-      btn.addEventListener("click", () => {
-        state.appearance.bodyType = btn.dataset.bodyType || "equilibrado";
-        renderAppearance();
-        scheduleSave();
-      });
-    });
-  }
-
-  /* =========================================================
-     CLASSE / PERÍCIAS
-     ========================================================= */
-
-  function renderClasses() {
-    $$(".class-card").forEach(card => {
-      const selected = card.dataset.class === state.class;
-      card.classList.toggle("is-selected", selected);
-      card.setAttribute("aria-pressed", String(selected));
-      const indicator = card.querySelector(".class-selection span");
-      if (indicator) indicator.textContent = selected ? "✓ Selecionada" : "Selecionar";
-    });
-  }
-
-  function bindClasses() {
-    document.addEventListener("click", e => {
-      const card = e.target.closest(".class-card[data-class]");
-      if (!card) return;
-
-      const id = card.dataset.class;
-      if (!RULES.classes[id]) return;
-
-      state.class = id;
-      renderClasses();
-      renderSkills();
-      updateProgress();
-      renderReview();
-      scheduleSave();
-
-      showToast(`${RULES.classes[id].name} selecionada.`);
-    });
-  }
-
-  const SKILLS = [
-    ["acrobacia","Acrobacia"], ["atletismo","Atletismo"],
-    ["furtividade","Furtividade"], ["percepcao","Percepção"],
-    ["investigacao","Investigação"], ["conhecimento","Conhecimento"],
-    ["medicina","Medicina"], ["sobrevivencia","Sobrevivência"],
-    ["persuasao","Persuasão"], ["intuicao","Intuição"],
-    ["enganacao","Enganação"], ["tatica","Tática"],
-    ["oficio","Ofício / Crafting"], ["controle_mana","Controle de Mana"]
-  ];
-
-  function renderSkills() {
-    const panel = $('[data-panel="skills"]');
-    if (!panel) return;
-    let list = $("#skillList");
-    if (!list) {
-      list = document.createElement("div");
-      list.id = "skillList";
-      list.className = "skill-list";
-      const empty = panel.querySelector(".empty-module");
-      if (empty) empty.replaceWith(list);
-      else panel.appendChild(list);
-    }
-
-    const classRule = RULES.classes[state.class];
-    const focus = new Set(classRule?.skillFocus || []);
-
-    list.innerHTML = "";
-
-    SKILLS.forEach(([id,name]) => {
-      const skill = state.skills.find(s => s.id === id) || {
-        id, name, trained: false, customBonus: ""
-      };
-
-      const card = document.createElement("article");
-      card.className = `skill-card ${skill.trained ? "is-trained" : ""}`;
-
-      const classFocus =
-        focus.has(name) ||
-        (name === "Controle de Mana" && focus.has("Controle de Mana"));
-
-      card.innerHTML = `
-        <div class="skill-main">
-          <strong>${name}</strong>
-          <small>${classFocus ? "Foco da classe" : "Perícia"}</small>
+    editor.innerHTML =
+      `
+      <div class="appearance-stage">
+        <div class="appearance-ruler">
+          <span class="ruler-label ruler-top">MAX</span>
+          <div class="ruler-line"></div>
+          <span class="ruler-label ruler-bottom">MIN</span>
         </div>
 
-        <div class="skill-actions">
-          <span class="skill-bonus">
-            ${skill.customBonus || (skill.trained ? "+treinado" : "+0")}
+        <div class="appearance-figure-area">
+          <div
+            id="appearanceFigure"
+            class="appearance-figure appearance-figure--neutral"
+            aria-hidden="true"
+          >
+            <div class="appearance-figure__head"></div>
+            <div class="appearance-figure__body"></div>
+            <div class="appearance-figure__left-arm"></div>
+            <div class="appearance-figure__right-arm"></div>
+            <div class="appearance-figure__left-leg"></div>
+            <div class="appearance-figure__right-leg"></div>
+          </div>
+        </div>
+
+        <div class="appearance-height-readout">
+          <span class="eyebrow">
+            ALTURA
           </span>
 
-          <button type="button" class="skill-train-button">
-            ${skill.trained ? "Treinada ✓" : "Treinar"}
-          </button>
+          <strong id="appearanceHeightValue">
+            —
+          </strong>
+
+          <small id="appearanceHeightLimits">
+            Selecione uma raça.
+          </small>
         </div>
+      </div>
+
+      <div class="appearance-controls">
+
+        <div class="appearance-control-card">
+          <span class="field-label">
+            Altura
+          </span>
+
+          <input
+            id="appearanceHeight"
+            type="range"
+            min="100"
+            max="300"
+            step="1"
+            value="170"
+          >
+
+          <div class="appearance-range-labels">
+            <span id="appearanceMinLabel">—</span>
+            <span id="appearanceMaxLabel">—</span>
+          </div>
+        </div>
+
+        <div
+          id="animalhaAppearance"
+          class="appearance-control-card"
+          hidden
+        >
+          <span class="field-label">
+            Linhagem Animalha
+          </span>
+
+          <select
+            id="animalhaVariant"
+          >
+            <option value="">
+              Escolha a linhagem
+            </option>
+          </select>
+
+          <small class="field-hint">
+            A linhagem altera o perfil natural,
+            porte, limites físicos e movimentação.
+          </small>
+        </div>
+
+        <div class="appearance-control-card">
+          <label class="field">
+            <span class="field-label">
+              Cabelo
+            </span>
+
+            <input
+              id="appearanceHair"
+              type="text"
+              maxlength="200"
+              placeholder="Cor, corte, comprimento..."
+            >
+          </label>
+
+          <label class="field">
+            <span class="field-label">
+              Olhos
+            </span>
+
+            <input
+              id="appearanceEyes"
+              type="text"
+              maxlength="200"
+              placeholder="Cor, formato..."
+            >
+          </label>
+
+          <label class="field">
+            <span class="field-label">
+              Pele
+            </span>
+
+            <input
+              id="appearanceSkin"
+              type="text"
+              maxlength="200"
+              placeholder="Cor, textura..."
+            >
+          </label>
+
+          <label class="field">
+            <span class="field-label">
+              Vestimenta
+            </span>
+
+            <textarea
+              id="appearanceClothing"
+              rows="3"
+              maxlength="600"
+              placeholder="Roupa, materiais, acessórios..."
+            ></textarea>
+          </label>
+
+          <label class="field">
+            <span class="field-label">
+              Cicatrizes
+            </span>
+
+            <textarea
+              id="appearanceScars"
+              rows="2"
+              maxlength="400"
+              placeholder="Cicatrizes e marcas..."
+            ></textarea>
+          </label>
+
+          <label class="field">
+            <span class="field-label">
+              Tatuagens
+            </span>
+
+            <textarea
+              id="appearanceTattoos"
+              rows="2"
+              maxlength="400"
+              placeholder="Tatuagens e símbolos..."
+            ></textarea>
+          </label>
+
+          <label class="field">
+            <span class="field-label">
+              Características físicas
+            </span>
+
+            <textarea
+              id="appearancePhysicalNotes"
+              rows="3"
+              maxlength="600"
+              placeholder="Orelhas, cauda, chifres, asas, marcas naturais..."
+            ></textarea>
+          </label>
+        </div>
+
+      </div>
       `;
 
-      card.querySelector(".skill-train-button").addEventListener("click", () => {
-        const idx = state.skills.findIndex(s => s.id === id);
-        if (idx >= 0) state.skills.splice(idx, 1);
-        else state.skills.push({ id, name, trained: true, customBonus: "" });
-        renderSkills();
-        updateProgress();
-        scheduleSave();
-      });
+    if (heading) {
+      heading.after(editor);
+    } else {
+      panel.appendChild(
+        editor
+      );
+    }
+  }
 
-      list.appendChild(card);
-    });
+  function populateAnimalhaVariants() {
+    const select =
+      $("#animalhaVariant");
+
+    if (!select) {
+      return;
+    }
+
+    const current =
+      state.animalhaVariant;
+
+    select.innerHTML =
+      "";
+
+    const first =
+      document.createElement(
+        "option"
+      );
+
+    first.value =
+      "";
+
+    first.textContent =
+      "Escolha a linhagem";
+
+    select.appendChild(
+      first
+    );
+
+    ANIMALHA_VARIANTS.forEach(
+      variant => {
+        const option =
+          document.createElement(
+            "option"
+          );
+
+        option.value =
+          variant.id;
+
+        option.textContent =
+          `${variant.name} — ${variant.category}`;
+
+        option.selected =
+          variant.id ===
+          current;
+
+        select.appendChild(
+          option
+        );
+      }
+    );
+  }
+
+  function setupAppearanceEditor() {
+    ensureAppearancePanel();
+
+    populateAnimalhaVariants();
+
+    const height =
+      $("#appearanceHeight");
+
+    if (height) {
+      height.addEventListener(
+        "input",
+        event => {
+          const race =
+            getEffectiveRaceData();
+
+          if (!race?.height) {
+            return;
+          }
+
+          state.appearance.heightCm =
+            clamp(
+              Number(
+                event.target.value
+              ),
+              race.height.min,
+              race.height.max
+            );
+
+          renderAppearanceFigure();
+          scheduleAutosave();
+        }
+      );
+    }
+
+    $("#animalhaVariant")
+      ?.addEventListener(
+        "change",
+        event => {
+          state.animalhaVariant =
+            safeText(
+              event.target.value
+            );
+
+          const variant =
+            getAnimalhaVariant();
+
+          if (variant) {
+            state.appearance.sizeCategory =
+              variant.size;
+
+            state.appearance.heightCm =
+              Math.round(
+                (
+                  variant.height.min +
+                  variant.height.max
+                ) / 2
+              );
+          }
+
+          updateAppearanceEditor();
+          updateProgress();
+          updateReview();
+          scheduleAutosave();
+        }
+      );
+
+    const textFields = [
+      [
+        "#appearanceHair",
+        "hair"
+      ],
+
+      [
+        "#appearanceEyes",
+        "eyes"
+      ],
+
+      [
+        "#appearanceSkin",
+        "skin"
+      ],
+
+      [
+        "#appearanceClothing",
+        "clothing"
+      ],
+
+      [
+        "#appearanceScars",
+        "scars"
+      ],
+
+      [
+        "#appearanceTattoos",
+        "tattoos"
+      ],
+
+      [
+        "#appearancePhysicalNotes",
+        "physicalNotes"
+      ]
+    ];
+
+    textFields.forEach(
+      ([selector, key]) => {
+        $(selector)
+          ?.addEventListener(
+            "input",
+            event => {
+              state.appearance[key] =
+                event.target.value;
+
+              scheduleAutosave();
+            }
+          );
+      }
+    );
+
+    updateAppearanceEditor();
+  }
+
+  function updateAppearanceEditor() {
+    ensureAppearancePanel();
+
+    const race =
+      getEffectiveRaceData();
+
+    const animalSection =
+      $("#animalhaAppearance");
+
+    if (animalSection) {
+      animalSection.hidden =
+        state.race !==
+        "animalha";
+    }
+
+    populateAnimalhaVariants();
+
+    const heightInput =
+      $("#appearanceHeight");
+
+    if (
+      !race?.height ||
+      !heightInput
+    ) {
+      return;
+    }
+
+    const min =
+      Number(
+        race.height.min
+      );
+
+    const max =
+      Number(
+        race.height.max
+      );
+
+    let current =
+      Number(
+        state.appearance.heightCm
+      );
+
+    if (
+      !Number.isFinite(
+        current
+      ) ||
+      current < min ||
+      current > max
+    ) {
+      current =
+        Math.round(
+          (
+            min +
+            max
+          ) / 2
+        );
+
+      state.appearance.heightCm =
+        current;
+    }
+
+    heightInput.min =
+      String(min);
+
+    heightInput.max =
+      String(max);
+
+    heightInput.value =
+      String(current);
+
+    const minLabel =
+      $("#appearanceMinLabel");
+
+    const maxLabel =
+      $("#appearanceMaxLabel");
+
+    const heightValue =
+      $("#appearanceHeightValue");
+
+    const limits =
+      $("#appearanceHeightLimits");
+
+    if (minLabel) {
+      minLabel.textContent =
+        formatHeight(min);
+    }
+
+    if (maxLabel) {
+      maxLabel.textContent =
+        formatHeight(max);
+    }
+
+    if (heightValue) {
+      heightValue.textContent =
+        formatHeight(current);
+    }
+
+    if (limits) {
+      limits.textContent =
+        `${formatHeight(min)} — ${formatHeight(max)}`;
+    }
+
+    syncAppearanceFields();
+
+    renderAppearanceFigure();
+  }
+
+  function syncAppearanceFields() {
+    const map = [
+      [
+        "#appearanceHair",
+        "hair"
+      ],
+
+      [
+        "#appearanceEyes",
+        "eyes"
+      ],
+
+      [
+        "#appearanceSkin",
+        "skin"
+      ],
+
+      [
+        "#appearanceClothing",
+        "clothing"
+      ],
+
+      [
+        "#appearanceScars",
+        "scars"
+      ],
+
+      [
+        "#appearanceTattoos",
+        "tattoos"
+      ],
+
+      [
+        "#appearancePhysicalNotes",
+        "physicalNotes"
+      ]
+    ];
+
+    map.forEach(
+      ([selector, key]) => {
+        const field =
+          $(selector);
+
+        if (
+          field &&
+          document.activeElement !==
+            field
+        ) {
+          field.value =
+            safeText(
+              state.appearance[
+                key
+              ]
+            );
+        }
+      }
+    );
+  }
+
+  function renderAppearanceFigure() {
+    const figure =
+      $("#appearanceFigure");
+
+    const race =
+      getEffectiveRaceData();
+
+    if (
+      !figure ||
+      !race?.height
+    ) {
+      return;
+    }
+
+    const min =
+      race.height.min;
+
+    const max =
+      race.height.max;
+
+    const value =
+      clamp(
+        Number(
+          state.appearance.heightCm
+        ) || min,
+        min,
+        max
+      );
+
+    const normalized =
+      (
+        value - min
+      ) /
+      Math.max(
+        1,
+        max - min
+      );
+
+    const scale =
+      0.82 +
+      normalized * 0.42;
+
+    figure.style.setProperty(
+      "--character-scale",
+      String(scale)
+    );
+
+    const genderClass =
+      state.gender ===
+      "feminino"
+        ? "appearance-figure--female"
+        : "appearance-figure--male";
+
+    figure.classList.remove(
+      "appearance-figure--male",
+      "appearance-figure--female"
+    );
+
+    figure.classList.add(
+      genderClass
+    );
   }
 
   /* =========================================================
-     ATRIBUTOS
-     ========================================================= */
+     CLASSES
+  ========================================================= */
 
-  function diceUsage() {
-    const use = Object.fromEntries(
-      Object.keys(DICE_LIMITS).map(k => [k, 0])
+  function bindClasses() {
+    document.addEventListener(
+      "click",
+      event => {
+        const card =
+          event.target.closest(
+            ".class-card[data-class]"
+          );
+
+        if (!card) {
+          return;
+        }
+
+        selectClass(
+          card.dataset.class
+        );
+      }
     );
 
-    Object.values(state.attributes).forEach(die => {
-      if (die) use[die]++;
-    });
+    document.addEventListener(
+      "keydown",
+      event => {
+        const card =
+          event.target.closest(
+            ".class-card[data-class]"
+          );
 
-    return use;
-  }
+        if (!card) {
+          return;
+        }
 
-  function remaining(die) {
-    return Math.max(
-      0,
-      (DICE_LIMITS[die] || 0) -
-        (diceUsage()[die] || 0)
+        if (
+          event.key !== "Enter" &&
+          event.key !== " "
+        ) {
+          return;
+        }
+
+        event.preventDefault();
+
+        selectClass(
+          card.dataset.class
+        );
+      }
     );
   }
 
-  function renderDicePool() {
-    $$(".dice-card[data-die]").forEach(card => {
-      const die = card.dataset.die;
-      card.classList.toggle("is-selected", selectedDie === die);
-      card.classList.toggle("is-exhausted", remaining(die) <= 0);
-    });
+  function selectClass(
+    classId
+  ) {
+    const data =
+      CLASSES.find(
+        item =>
+          item.id ===
+          classId
+      );
 
-    const count = Object.values(state.attributes).filter(Boolean).length;
-    if ($("#attributeCount")) $("#attributeCount").textContent = `${count}/8`;
-  }
-
-  function assignDie(attr, die) {
-    if (!ATTR.includes(attr) || !Object.hasOwn(DICE_LIMITS, die)) return false;
-
-    const old = state.attributes[attr];
-
-    if (old === die) {
-      state.attributes[attr] = null;
-      selectedDie = null;
-      renderAttributes();
-      scheduleSave();
-      return true;
-    }
-
-    state.attributes[attr] = null;
-
-    if (remaining(die) <= 0) {
-      state.attributes[attr] = old;
-      showToast(`${die.toUpperCase()} não está disponível.`);
-      renderAttributes();
+    if (!data) {
       return false;
     }
 
-    state.attributes[attr] = die;
-    selectedDie = null;
+    state.class =
+      data.id;
 
-    renderAttributes();
-    scheduleSave();
+    state.classBonus =
+      JSON.stringify(
+        data.skillModifiers
+      );
+
+    renderClasses();
+
+    updateProgress();
+    updateReview();
+    scheduleAutosave();
+
+    showToast(
+      `${data.name} selecionada.`
+    );
+
     return true;
   }
 
-  function swapAttributes(a,b) {
-    if (!ATTR.includes(a) || !ATTR.includes(b) || a === b) return;
+  function renderClasses() {
+    $$( ".class-card[data-class]" )
+      .forEach(
+        card => {
+          const id =
+            card.dataset.class;
 
-    const temp = state.attributes[a];
-    state.attributes[a] = state.attributes[b];
-    state.attributes[b] = temp;
+          const selected =
+            id ===
+            state.class;
 
-    selectedDie = null;
-    renderAttributes();
-    scheduleSave();
-  }
+          card.classList.toggle(
+            "is-selected",
+            selected
+          );
 
-  function bindAttributeInteraction() {
-    document.addEventListener("click", e => {
-      const die = e.target.closest(".dice-card[data-die]");
-      if (die) {
-        const d = die.dataset.die;
-        if (remaining(d) > 0) {
-          selectedDie = d;
-          renderDicePool();
-        } else showToast(`${d.toUpperCase()} já está em uso.`);
-        return;
-      }
+          card.setAttribute(
+            "aria-pressed",
+            String(
+              selected
+            )
+          );
 
-      const slot = e.target.closest(".attribute-slot");
-      if (!slot) return;
+          const indicator =
+            card.querySelector(
+              ".class-selection span"
+            );
 
-      const attr = slot.dataset.attribute;
-      if (!attr) return;
-
-      if (selectedDie) {
-        assignDie(attr, selectedDie);
-      } else if (state.attributes[attr]) {
-        state.attributes[attr] = null;
-        renderAttributes();
-        scheduleSave();
-      }
-    });
-
-    $$(".attribute-slot").forEach(slot => {
-      slot.draggable = true;
-
-      slot.addEventListener("dragover", e => {
-        e.preventDefault();
-        slot.classList.add("is-drag-over");
-      });
-
-      slot.addEventListener("dragleave", () => slot.classList.remove("is-drag-over"));
-
-      slot.addEventListener("drop", e => {
-        e.preventDefault();
-        slot.classList.remove("is-drag-over");
-
-        const payload = e.dataTransfer.getData("text/plain");
-        const source = e.dataTransfer.getData("application/x-aerion-source");
-        const target = slot.dataset.attribute;
-
-        if (source && ATTR.includes(source)) swapAttributes(source, target);
-        else if (payload) assignDie(target, payload);
-      });
-
-      slot.addEventListener("dragstart", e => {
-        const attr = slot.dataset.attribute;
-        const die = state.attributes[attr];
-        if (!die) {
-          e.preventDefault();
-          return;
+          if (indicator) {
+            indicator.textContent =
+              selected
+                ? "✓ Selecionada"
+                : "Selecionar";
+          }
         }
-
-        e.dataTransfer.effectAllowed = "move";
-        e.dataTransfer.setData("text/plain", die);
-        e.dataTransfer.setData("application/x-aerion-source", attr);
-      });
-    });
-
-    $$(".dice-card[data-die]").forEach(card => {
-      card.draggable = true;
-
-      card.addEventListener("dragstart", e => {
-        const die = card.dataset.die;
-        if (remaining(die) <= 0) {
-          e.preventDefault();
-          return;
-        }
-        e.dataTransfer.effectAllowed = "copy";
-        e.dataTransfer.setData("text/plain", die);
-        e.dataTransfer.setData("application/x-aerion-source", "pool");
-      });
-    });
-  }
-
-  function renderAttributes() {
-    const mods = racialMods();
-
-    $$(".attribute-row").forEach(row => {
-      const attr = row.dataset.attribute;
-      const die = state.attributes[attr];
-      const slot = row.querySelector(".attribute-slot");
-      const value = row.querySelector(".attribute-die-value");
-
-      if (value) {
-        const bonus = Number(mods[attr]) || 0;
-        value.textContent = die
-          ? `${die.toUpperCase()}${bonus ? ` ${bonus > 0 ? "+" : ""}${bonus}` : ""}`
-          : "D?";
-      }
-
-      if (slot) slot.classList.toggle("is-filled", Boolean(die));
-    });
-
-    renderDicePool();
-    renderAttributeChart();
-    updateProgress();
-  }
-
-  function renderAttributeChart() {
-    const svg = $("#attributeChart");
-    if (!svg) return;
-
-    const cx=180, cy=180, radius=112;
-    const total=ATTR.length;
-    svg.innerHTML="";
-
-    const point = (i,val,r=radius) => {
-      const angle=-Math.PI/2+i*(Math.PI*2/total);
-      return [
-        cx+Math.cos(angle)*r*val,
-        cy+Math.sin(angle)*r*val
-      ];
-    };
-
-    [0.25,0.5,0.75,1].forEach(scale => {
-      const pts=ATTR.map((_,i)=>point(i,scale).join(",")).join(" ");
-      const p=document.createElementNS("http://www.w3.org/2000/svg","polygon");
-      p.setAttribute("points",pts);
-      p.setAttribute("class","attribute-chart-ring");
-      svg.appendChild(p);
-    });
-
-    ATTR.forEach((_,i)=>{
-      const [x,y]=point(i,1);
-      const line=document.createElementNS("http://www.w3.org/2000/svg","line");
-      line.setAttribute("x1",cx); line.setAttribute("y1",cy);
-      line.setAttribute("x2",x); line.setAttribute("y2",y);
-      line.setAttribute("class","attribute-chart-axis");
-      svg.appendChild(line);
-    });
-
-    const pts=ATTR.map((attr,i)=>{
-      const die=state.attributes[attr];
-      const n=die ? Number(die.slice(1))/20 : 0.08;
-      const bonus=Number(racialMods()[attr])||0;
-      const adj=Math.max(0.06, Math.min(1, n + bonus*0.03));
-      const [x,y]=point(i,adj);
-      return {x,y,attr};
-    });
-
-    const polygon=document.createElementNS("http://www.w3.org/2000/svg","polygon");
-    polygon.setAttribute("points",pts.map(p=>`${p.x},${p.y}`).join(" "));
-    polygon.setAttribute("class","attribute-chart-area");
-    svg.appendChild(polygon);
-
-    pts.forEach(p=>{
-      const c=document.createElementNS("http://www.w3.org/2000/svg","circle");
-      c.setAttribute("cx",p.x); c.setAttribute("cy",p.y); c.setAttribute("r","5");
-      c.setAttribute("class","attribute-chart-point");
-      svg.appendChild(c);
-    });
-
-    pts.forEach((_,i)=>{
-      const [x,y]=point(i,1,radius+30);
-      const t=document.createElementNS("http://www.w3.org/2000/svg","text");
-      t.setAttribute("x",x); t.setAttribute("y",y);
-      t.setAttribute("class","attribute-chart-label");
-      t.setAttribute("text-anchor", x<cx-10?"end":x>cx+10?"start":"middle");
-      t.setAttribute("dominant-baseline","middle");
-      t.textContent=ATTR_NAMES[ATTR[i]];
-      svg.appendChild(t);
-    });
-
-    const center=document.createElementNS("http://www.w3.org/2000/svg","circle");
-    center.setAttribute("cx",cx); center.setAttribute("cy",cy); center.setAttribute("r","3");
-    center.setAttribute("class","attribute-chart-center");
-    svg.appendChild(center);
+      );
   }
 
   /* =========================================================
-     PODER
-     ========================================================= */
+     ATRIBUTOS — CÁLCULO DOS DADOS
+  ========================================================= */
 
-  function renderPower() {
-    if ($("#characterPower")) $("#characterPower").value = state.power;
-    const current = $("[data-power-current]");
-    if (current) current.textContent = state.power || "Nenhum poder escolhido";
+  function getDiceUsage() {
+    const usage = {
+      d4: 0,
+      d6: 0,
+      d8: 0,
+      d10: 0,
+      d12: 0,
+      d20: 0
+    };
 
-    const result = $("[data-power-result]");
-    if (result) result.textContent = state.powerRoll ? String(state.powerRoll) : "—";
+    Object.values(
+      state.attributes
+    ).forEach(
+      die => {
+        const normalized =
+          normalizeDie(
+            die
+          );
 
-    const note = $("[data-power-result-note]");
-    if (note)
-      note.textContent = state.powerRoll
-        ? `D100: ${state.powerRoll} → ${state.power}`
-        : "Gire o D100 para sortear um dos quatro poderes principais.";
+        if (
+          normalized &&
+          Object.prototype.hasOwnProperty.call(
+            usage,
+            normalized
+          )
+        ) {
+          usage[
+            normalized
+          ]++;
+        }
+      }
+    );
 
-    const powerPanel = $('[data-panel="power"]');
-    if (powerPanel && !powerPanel.querySelector(".power-system")) buildPowerUI(powerPanel);
+    return usage;
+  }
 
+  function getRemainingDice(
+    die
+  ) {
+    const normalized =
+      normalizeDie(
+        die
+      );
+
+    if (!normalized) {
+      return 0;
+    }
+
+    const usage =
+      getDiceUsage();
+
+    return Math.max(
+      0,
+      DICE_LIMITS[
+        normalized
+      ] -
+      (
+        usage[
+          normalized
+        ] || 0
+      )
+    );
+  }
+
+  function createDicePoolCards() {
+    const container =
+      $("#attributeDice");
+
+    if (!container) {
+      return;
+    }
+
+    container.innerHTML =
+      "";
+
+    Object.entries(
+      DICE_LIMITS
+    ).forEach(
+      ([die, count]) => {
+        for (
+          let i = 0;
+          i < count;
+          i++
+        ) {
+          const button =
+            document.createElement(
+              "button"
+            );
+
+          button.type =
+            "button";
+
+          button.className =
+            "dice-card";
+
+          button.dataset.die =
+            die;
+
+          button.draggable =
+            true;
+
+          button.setAttribute(
+            "aria-label",
+            `Dado ${die.toUpperCase()}`
+          );
+
+          button.innerHTML =
+            `
+            <span class="die-icon">
+              <svg
+                viewBox="0 0 100 100"
+                aria-hidden="true"
+              >
+                <polygon
+                  points="50,7 91,30 91,70 50,93 9,70 9,30"
+                ></polygon>
+              </svg>
+
+              <span class="die-label">
+                ${die.toUpperCase()}
+              </span>
+            </span>
+            `;
+
+          container.appendChild(
+            button
+          );
+        }
+      }
+    );
+
+    bindDicePoolDrag();
+  }
+
+  function bindDicePoolDrag() {
+    $$("#attributeDice .dice-card")
+      .forEach(
+        card => {
+          card.addEventListener(
+            "dragstart",
+            event => {
+              const die =
+                normalizeDie(
+                  card.dataset.die
+                );
+
+              if (
+                !die ||
+                getRemainingDice(
+                  die
+                ) <= 0
+              ) {
+                event.preventDefault();
+                return;
+              }
+
+              event.dataTransfer.effectAllowed =
+                "copy";
+
+              event.dataTransfer.setData(
+                "text/plain",
+                die
+              );
+
+              event.dataTransfer.setData(
+                "application/x-aerion-source",
+                "pool"
+              );
+
+              card.classList.add(
+                "is-dragging"
+              );
+            }
+          );
+
+          card.addEventListener(
+            "dragend",
+            () => {
+              card.classList.remove(
+                "is-dragging"
+              );
+            }
+          );
+        }
+      );
+  }
+
+  function selectDice(
+    die
+  ) {
+    const normalized =
+      normalizeDie(
+        die
+      );
+
+    if (!normalized) {
+      return false;
+    }
+
+    if (
+      getRemainingDice(
+        normalized
+      ) <= 0
+    ) {
+      selectedDice =
+        null;
+
+      renderAttributes();
+
+      showToast(
+        `${normalized.toUpperCase()} já está em uso.`
+      );
+
+      return false;
+    }
+
+    selectedDice =
+      normalized;
+
+    renderAttributes();
+
+    showToast(
+      `${normalized.toUpperCase()} selecionado.`
+    );
+
+    return true;
+  }
+
+  function assignDice(
+    attribute,
+    die
+  ) {
+    const normalized =
+      normalizeDie(
+        die
+      );
+
+    if (
+      !ATTRIBUTE_ORDER.includes(
+        attribute
+      )
+    ) {
+      return false;
+    }
+
+    if (!normalized) {
+      return false;
+    }
+
+    const current =
+      state.attributes[
+        attribute
+      ];
+
+    if (
+      current ===
+      normalized
+    ) {
+      return clearAttribute(
+        attribute
+      );
+    }
+
+    state.attributes[
+      attribute
+    ] = null;
+
+    if (
+      getRemainingDice(
+        normalized
+      ) <= 0
+    ) {
+      state.attributes[
+        attribute
+      ] =
+        current;
+
+      selectedDice =
+        null;
+
+      renderAttributes();
+
+      showToast(
+        `${normalized.toUpperCase()} não está disponível.`
+      );
+
+      return false;
+    }
+
+    state.attributes[
+      attribute
+    ] =
+      normalized;
+
+    selectedDice =
+      null;
+
+    renderAttributes();
+    scheduleAutosave();
+
+    showToast(
+      `${normalized.toUpperCase()} colocado em ${ATTRIBUTE_NAMES[attribute]}.`
+    );
+
+    return true;
+  }
+
+  function clearAttribute(
+    attribute
+  ) {
+    if (
+      !ATTRIBUTE_ORDER.includes(
+        attribute
+      )
+    ) {
+      return false;
+    }
+
+    const old =
+      state.attributes[
+        attribute
+      ];
+
+    if (!old) {
+      return false;
+    }
+
+    state.attributes[
+      attribute
+    ] = null;
+
+    selectedDice =
+      null;
+
+    renderAttributes();
+    scheduleAutosave();
+
+    showToast(
+      `${old.toUpperCase()} devolvido aos dados.`
+    );
+
+    return true;
+  }
+
+  function swapAttributes(
+    source,
+    target
+  ) {
+    if (
+      !ATTRIBUTE_ORDER.includes(
+        source
+      ) ||
+      !ATTRIBUTE_ORDER.includes(
+        target
+      ) ||
+      source === target
+    ) {
+      return false;
+    }
+
+    const a =
+      state.attributes[
+        source
+      ];
+
+    const b =
+      state.attributes[
+        target
+      ];
+
+    state.attributes[
+      source
+    ] =
+      b || null;
+
+    state.attributes[
+      target
+    ] =
+      a || null;
+
+    selectedDice =
+      null;
+
+    renderAttributes();
+    scheduleAutosave();
+
+    return true;
+  }
+
+  function renderAttributeSlots() {
+    $$( ".attribute-slot" )
+      .forEach(
+        slot => {
+          const attribute =
+            slot.dataset.attributeSlot ||
+            slot.dataset.attribute;
+
+          if (
+            !ATTRIBUTE_ORDER.includes(
+              attribute
+            )
+          ) {
+            return;
+          }
+
+          slot.dataset.attribute =
+            attribute;
+
+          const die =
+            state.attributes[
+              attribute
+            ];
+
+          const existing =
+            slot.querySelector(
+              ".attribute-die-value"
+            );
+
+          if (existing) {
+            existing.textContent =
+              die
+                ? die.toUpperCase()
+                : "D?";
+          } else {
+            slot.textContent =
+              die
+                ? die.toUpperCase()
+                : "Selecionar dado";
+          }
+
+          slot.classList.toggle(
+            "is-filled",
+            Boolean(
+              die
+            )
+          );
+
+          slot.draggable =
+            Boolean(
+              die
+            );
+        }
+      );
+  }
+
+  function renderAttributes() {
+    createDicePoolCards();
+    updateDiceVisualState();
+    renderAttributeSlots();
+    bindAttributeDropZones();
+    renderAttributeChart();
+    updateAttributeCountUI();
+    updateCombatPreview();
     updateProgress();
   }
 
-  function buildPowerUI(panel) {
-    const old = panel.querySelector("#powerLegacy");
-    if (old) old.remove();
+  function updateDiceVisualState() {
+    const usage =
+      getDiceUsage();
 
-    const box=document.createElement("div");
-    box.className="power-system";
-    box.id="powerLegacy";
+    $$("#attributeDice .dice-card")
+      .forEach(
+        card => {
+          const die =
+            normalizeDie(
+              card.dataset.die
+            );
 
-    const primaryButtons = RULES.powers.primary.map(p =>
-      `<button type="button" class="button button-secondary" data-power-value="${p}">${p}</button>`
-    ).join("");
+          if (!die) {
+            return;
+          }
 
-    const parallelButtons = RULES.powers.parallel.map(p =>
-      `<button type="button" class="button button-secondary" data-power-value="${p}">${p}</button>`
-    ).join("");
+          const exhausted =
+            getRemainingDice(
+              die
+            ) <= 0;
 
-    box.innerHTML=`
-      <div class="power-mode-buttons">
-        <button type="button" class="button button-secondary" data-power-mode="roll">◈ Girar D100</button>
-        <button type="button" class="button button-secondary" data-power-mode="manual">Escolher poder específico</button>
-      </div>
+          card.classList.toggle(
+            "is-selected",
+            selectedDice ===
+            die
+          );
 
-      <div class="power-section" data-power-section="roll">
-        <div class="power-roll-result">
-          <span class="eyebrow">D100 · PODER PRINCIPAL</span>
-          <strong data-power-result>—</strong>
-          <p data-power-result-note>Gire para sortear Fogo, Ar, Terra ou Água.</p>
-        </div>
-        <button type="button" class="button button-primary" data-roll-power>◈ Girar D100</button>
-      </div>
+          card.classList.toggle(
+            "is-exhausted",
+            exhausted
+          );
 
-      <div class="power-section" data-power-section="manual" hidden>
-        <span class="field-label">Poderes principais</span>
-        <div class="power-options">${primaryButtons}</div>
-        <span class="field-label">Poderes paralelos</span>
-        <div class="power-options">${parallelButtons}</div>
-      </div>
-
-      <div class="power-selected">
-        <span class="eyebrow">PODER ESCOLHIDO</span>
-        <strong data-power-current>Nenhum poder escolhido</strong>
-      </div>
-    `;
-
-    panel.appendChild(box);
+          card.setAttribute(
+            "aria-disabled",
+            String(
+              exhausted
+            )
+          );
+        }
+      );
   }
 
-  function rollPower() {
-    const roll = Math.floor(Math.random()*100)+1;
-    const primary = RULES.powers.primary[
-      Math.floor((roll-1)/25)
-    ] || RULES.powers.primary[0];
+  function bindAttributeDropZones() {
+    $$( ".attribute-slot" )
+      .forEach(
+        slot => {
+          const attribute =
+            slot.dataset.attributeSlot ||
+            slot.dataset.attribute;
 
-    state.powerRoll = roll;
-    state.power = primary;
-    renderPower();
-    renderReview();
-    scheduleSave();
-    showToast(`D100: ${roll} → ${primary}`);
+          if (
+            !ATTRIBUTE_ORDER.includes(
+              attribute
+            )
+          ) {
+            return;
+          }
+
+          if (
+            slot.dataset.aerionBound ===
+            "1"
+          ) {
+            return;
+          }
+
+          slot.dataset.aerionBound =
+            "1";
+
+          slot.addEventListener(
+            "dragover",
+            event => {
+              event.preventDefault();
+
+              slot.classList.add(
+                "is-drag-over"
+              );
+            }
+          );
+
+          slot.addEventListener(
+            "dragleave",
+            () => {
+              slot.classList.remove(
+                "is-drag-over"
+              );
+            }
+          );
+
+          slot.addEventListener(
+            "drop",
+            event => {
+              event.preventDefault();
+
+              slot.classList.remove(
+                "is-drag-over"
+              );
+
+              const die =
+                normalizeDie(
+                  event.dataTransfer.getData(
+                    "text/plain"
+                  )
+                );
+
+              const source =
+                event.dataTransfer.getData(
+                  "application/x-aerion-source"
+                );
+
+              if (!die) {
+                return;
+              }
+
+              if (
+                source &&
+                source !==
+                  "pool" &&
+                ATTRIBUTE_ORDER.includes(
+                  source
+                )
+              ) {
+                swapAttributes(
+                  source,
+                  attribute
+                );
+
+                return;
+              }
+
+              assignDice(
+                attribute,
+                die
+              );
+            }
+          );
+
+          slot.addEventListener(
+            "dragstart",
+            event => {
+              const die =
+                state.attributes[
+                  attribute
+                ];
+
+              if (!die) {
+                event.preventDefault();
+                return;
+              }
+
+              event.dataTransfer.effectAllowed =
+                "move";
+
+              event.dataTransfer.setData(
+                "text/plain",
+                die
+              );
+
+              event.dataTransfer.setData(
+                "application/x-aerion-source",
+                attribute
+              );
+
+              slot.classList.add(
+                "is-dragging"
+              );
+            }
+          );
+
+          slot.addEventListener(
+            "dragend",
+            () => {
+              slot.classList.remove(
+                "is-dragging"
+              );
+            }
+          );
+        }
+      );
+  }
+
+  function bindAttributeClicks() {
+    document.addEventListener(
+      "click",
+      event => {
+        const dice =
+          event.target.closest(
+            ".dice-card[data-die]"
+          );
+
+        if (dice) {
+          selectDice(
+            dice.dataset.die
+          );
+
+          return;
+        }
+
+        const slot =
+          event.target.closest(
+            ".attribute-slot"
+          );
+
+        if (!slot) {
+          return;
+        }
+
+        const attribute =
+          slot.dataset.attributeSlot ||
+          slot.dataset.attribute;
+
+        if (
+          selectedDice
+        ) {
+          assignDice(
+            attribute,
+            selectedDice
+          );
+
+          return;
+        }
+
+        if (
+          state.attributes[
+            attribute
+          ]
+        ) {
+          clearAttribute(
+            attribute
+          );
+        }
+      }
+    );
+  }
+
+  /* =========================================================
+     GRÁFICO RADIAL
+  ========================================================= */
+
+  function chartValue(
+    die
+  ) {
+    const normalized =
+      normalizeDie(
+        die
+      );
+
+    if (!normalized) {
+      return 0.08;
+    }
+
+    const value =
+      DICE_VALUES[
+        normalized
+      ];
+
+    return clamp(
+      value / 20,
+      0.08,
+      1
+    );
+  }
+
+  function createSvgElement(
+    name,
+    attrs = {}
+  ) {
+    const element =
+      document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        name
+      );
+
+    Object.entries(
+      attrs
+    ).forEach(
+      ([key, value]) => {
+        element.setAttribute(
+          key,
+          String(value)
+        );
+      }
+    );
+
+    return element;
+  }
+
+  function renderAttributeChart() {
+    let container =
+      $("#attributeChart");
+
+    if (!container) {
+      return;
+    }
+
+    let svg =
+      container.tagName
+        .toLowerCase() ===
+      "svg"
+        ? container
+        : container.querySelector(
+            "svg"
+          );
+
+    if (!svg) {
+      svg =
+        createSvgElement(
+          "svg"
+        );
+
+      container.innerHTML =
+        "";
+
+      container.appendChild(
+        svg
+      );
+    }
+
+    const size =
+      360;
+
+    const center =
+      180;
+
+    const radius =
+      112;
+
+    const count =
+      ATTRIBUTE_ORDER.length;
+
+    svg.setAttribute(
+      "viewBox",
+      `0 0 ${size} ${size}`
+    );
+
+    svg.setAttribute(
+      "role",
+      "img"
+    );
+
+    svg.setAttribute(
+      "aria-label",
+      "Gráfico radial dos atributos"
+    );
+
+    svg.innerHTML =
+      "";
+
+    [
+      0.25,
+      0.5,
+      0.75,
+      1
+    ].forEach(
+      scale => {
+        const points =
+          ATTRIBUTE_ORDER
+            .map(
+              (_, index) => {
+                const angle =
+                  -Math.PI / 2 +
+                  index *
+                    (
+                      Math.PI *
+                      2 /
+                      count
+                    );
+
+                const x =
+                  center +
+                  Math.cos(
+                    angle
+                  ) *
+                  radius *
+                  scale;
+
+                const y =
+                  center +
+                  Math.sin(
+                    angle
+                  ) *
+                  radius *
+                  scale;
+
+                return `${x},${y}`;
+              }
+            )
+            .join(" ");
+
+        svg.appendChild(
+          createSvgElement(
+            "polygon",
+            {
+              points,
+              class:
+                "attribute-chart-ring"
+            }
+          )
+        );
+      }
+    );
+
+    ATTRIBUTE_ORDER.forEach(
+      (_, index) => {
+        const angle =
+          -Math.PI / 2 +
+          index *
+            (
+              Math.PI *
+              2 /
+              count
+            );
+
+        const x =
+          center +
+          Math.cos(
+            angle
+          ) *
+          radius;
+
+        const y =
+          center +
+          Math.sin(
+            angle
+          ) *
+          radius;
+
+        svg.appendChild(
+          createSvgElement(
+            "line",
+            {
+              x1: center,
+              y1: center,
+              x2: x,
+              y2: y,
+              class:
+                "attribute-chart-axis"
+            }
+          )
+        );
+      }
+    );
+
+    const points =
+      ATTRIBUTE_ORDER.map(
+        (
+          attribute,
+          index
+        ) => {
+          const value =
+            chartValue(
+              state.attributes[
+                attribute
+              ]
+            );
+
+          const angle =
+            -Math.PI / 2 +
+            index *
+              (
+                Math.PI *
+                2 /
+                count
+              );
+
+          return {
+            attribute,
+
+            x:
+              center +
+              Math.cos(
+                angle
+              ) *
+              radius *
+              value,
+
+            y:
+              center +
+              Math.sin(
+                angle
+              ) *
+              radius *
+              value
+          };
+        }
+      );
+
+    svg.appendChild(
+      createSvgElement(
+        "polygon",
+        {
+          points:
+            points
+              .map(
+                point =>
+                  `${point.x},${point.y}`
+              )
+              .join(" "),
+
+          class:
+            "attribute-chart-area"
+        }
+      )
+    );
+
+    points.forEach(
+      point => {
+        svg.appendChild(
+          createSvgElement(
+            "circle",
+            {
+              cx: point.x,
+              cy: point.y,
+              r: 5,
+              class:
+                "attribute-chart-point"
+            }
+          )
+        );
+      }
+    );
+
+    points.forEach(
+      (
+        point,
+        index
+      ) => {
+        const angle =
+          -Math.PI / 2 +
+          index *
+            (
+              Math.PI *
+              2 /
+              count
+            );
+
+        const labelRadius =
+          radius + 30;
+
+        const x =
+          center +
+          Math.cos(
+            angle
+          ) *
+          labelRadius;
+
+        const y =
+          center +
+          Math.sin(
+            angle
+          ) *
+          labelRadius;
+
+        let anchor =
+          "middle";
+
+        if (
+          x <
+          center - 10
+        ) {
+          anchor =
+            "end";
+        } else if (
+          x >
+          center + 10
+        ) {
+          anchor =
+            "start";
+        }
+
+        const text =
+          createSvgElement(
+            "text",
+            {
+              x,
+              y,
+              "text-anchor":
+                anchor,
+              "dominant-baseline":
+                "middle",
+              class:
+                "attribute-chart-label"
+            }
+          );
+
+        text.textContent =
+          ATTRIBUTE_NAMES[
+            point.attribute
+          ];
+
+        svg.appendChild(
+          text
+        );
+      }
+    );
+
+    svg.appendChild(
+      createSvgElement(
+        "circle",
+        {
+          cx: center,
+          cy: center,
+          r: 3,
+          class:
+            "attribute-chart-center"
+        }
+      )
+    );
+  }
+
+  function updateAttributeCountUI() {
+    const element =
+      $("#attributeCount");
+
+    if (element) {
+      element.textContent =
+        `${Object.values(state.attributes).filter(Boolean).length}/8`;
+    }
+  }
+
+  /* =========================================================
+     PODER — D100
+  ========================================================= */
+
+  function renderPowerInterface() {
+    const panel =
+      $(
+        '.creation-panel[data-panel="power"]'
+      );
+
+    if (!panel) {
+      return;
+    }
+
+    let system =
+      panel.querySelector(
+        ".power-system"
+      );
+
+    if (!system) {
+      system =
+        document.createElement(
+          "div"
+        );
+
+      system.className =
+        "power-system";
+
+      system.innerHTML =
+        `
+        <div class="power-mode-buttons">
+
+          <button
+            type="button"
+            class="button button-secondary"
+            data-power-mode="roll"
+          >
+            Girar D100
+          </button>
+
+          <button
+            type="button"
+            class="button button-secondary"
+            data-power-mode="manual"
+          >
+            Escolher poder
+          </button>
+
+        </div>
+
+        <div
+          class="power-section"
+          data-power-section="roll"
+          hidden
+        >
+          <div class="power-roll-result">
+            <span class="eyebrow">
+              RESULTADO
+            </span>
+
+            <strong data-power-result>
+              —
+            </strong>
+
+            <p data-power-result-note>
+              O D100 define apenas os quatro poderes principais.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            class="button button-primary"
+            data-roll-power
+          >
+            Girar D100
+          </button>
+        </div>
+
+        <div
+          class="power-section"
+          data-power-section="manual"
+          hidden
+        >
+          <span class="field-label">
+            Poder específico / paralelo
+          </span>
+
+          <div
+            class="power-options"
+            data-power-options
+          ></div>
+        </div>
+
+        <div class="power-selected">
+          <span class="eyebrow">
+            PODER ESCOLHIDO
+          </span>
+
+          <strong data-power-current>
+            Nenhum poder escolhido
+          </strong>
+        </div>
+        `;
+
+      panel.appendChild(
+        system
+      );
+    }
+
+    const options =
+      panel.querySelector(
+        "[data-power-options]"
+      );
+
+    if (options) {
+      options.innerHTML =
+        "";
+
+      PARALLEL_POWERS.forEach(
+        power => {
+          const button =
+            document.createElement(
+              "button"
+            );
+
+          button.type =
+            "button";
+
+          button.className =
+            "button button-secondary";
+
+          button.dataset.powerValue =
+            power;
+
+          button.textContent =
+            power;
+
+          options.appendChild(
+            button
+          );
+        }
+      );
+    }
   }
 
   function bindPower() {
-    document.addEventListener("click", e => {
-      const mode=e.target.closest("[data-power-mode]");
-      if(mode){
-        const which=mode.dataset.powerMode;
-        $$('.power-section[data-power-section]').forEach(s=>{
-          s.hidden=s.dataset.powerSection!==which;
-        });
-        return;
-      }
+    renderPowerInterface();
 
-      const value=e.target.closest("[data-power-value]");
-      if(value){
-        state.power=value.dataset.powerValue;
-        state.powerRoll=null;
-        renderPower();
-        renderReview();
-        updateProgress();
-        scheduleSave();
-        showToast(`${state.power} escolhido.`);
-        return;
-      }
+    document.addEventListener(
+      "click",
+      event => {
+        const mode =
+          event.target.closest(
+            "[data-power-mode]"
+          );
 
-      const roll=e.target.closest("[data-roll-power]");
-      if(roll) rollPower();
-    });
+        if (mode) {
+          const selectedMode =
+            mode.dataset.powerMode;
+
+          $$( "[data-power-section]" )
+            .forEach(
+              section => {
+                section.hidden =
+                  section.dataset.powerSection !==
+                  selectedMode;
+              }
+            );
+
+          return;
+        }
+
+        const powerButton =
+          event.target.closest(
+            "[data-power-value]"
+          );
+
+        if (powerButton) {
+          choosePower(
+            powerButton.dataset.powerValue,
+            null,
+            "parallel"
+          );
+
+          return;
+        }
+
+        const rollButton =
+          event.target.closest(
+            "[data-roll-power]"
+          );
+
+        if (rollButton) {
+          rollPowerD100();
+        }
+      }
+    );
+  }
+
+  function choosePower(
+    power,
+    roll = null,
+    powerType = "manual"
+  ) {
+    if (
+      !ALL_POWERS.includes(
+        power
+      )
+    ) {
+      return false;
+    }
+
+    state.power =
+      power;
+
+    state.powerRoll =
+      roll;
+
+    state.powerType =
+      powerType;
+
+    renderPower();
+
+    updateProgress();
+    updateReview();
+    scheduleAutosave();
+
+    return true;
+  }
+
+  function rollPowerD100() {
+    const roll =
+      Math.floor(
+        Math.random() *
+        100
+      ) + 1;
+
+    const index =
+      (roll - 1) %
+      PRIMARY_POWERS.length;
+
+    const power =
+      PRIMARY_POWERS[index];
+
+    choosePower(
+      power,
+      roll,
+      "primary"
+    );
+
+    showToast(
+      `D100: ${roll} → ${power}`
+    );
+
+    return {
+      roll,
+      power
+    };
+  }
+
+  function renderPower() {
+    renderPowerInterface();
+
+    const current =
+      $(
+        "[data-power-current]"
+      );
+
+    const result =
+      $(
+        "[data-power-result]"
+      );
+
+    const note =
+      $(
+        "[data-power-result-note]"
+      );
+
+    if (current) {
+      current.textContent =
+        state.power ||
+        "Nenhum poder escolhido";
+    }
+
+    if (result) {
+      result.textContent =
+        state.powerRoll
+          ? String(
+              state.powerRoll
+            )
+          : "—";
+    }
+
+    if (note) {
+      note.textContent =
+        state.powerRoll
+          ? `D100 ${state.powerRoll} → ${state.power}`
+          : "O D100 define apenas os quatro poderes principais.";
+    }
   }
 
   /* =========================================================
      MANA
-     ========================================================= */
-
-  function renderMana() {
-    state.mana="azul";
-    $$(".mana-card").forEach(card => {
-      const blue=card.dataset.mana==="azul";
-      card.classList.toggle("is-selected",blue);
-      if(!blue) card.disabled=true;
-    });
-    updateProgress();
-  }
+  ========================================================= */
 
   function bindMana() {
-    document.addEventListener("click",e=>{
-      const card=e.target.closest(".mana-card[data-mana]");
-      if(!card || card.dataset.mana!=="azul") return;
-      state.mana="azul";
-      renderMana();
-      scheduleSave();
-    });
-  }
+    document.addEventListener(
+      "click",
+      event => {
+        const card =
+          event.target.closest(
+            ".mana-card[data-mana]"
+          );
 
-  /* =========================================================
-     TÉCNICAS / INVENTÁRIO
-     ========================================================= */
+        if (!card) {
+          return;
+        }
 
-  function renderTechniques() {
-    const list=$("#techniquesList");
-    if(!list) return;
-    list.innerHTML="";
+        if (
+          card.dataset.mana !==
+          "azul"
+        ) {
+          return;
+        }
 
-    state.techniques.forEach((tech,index)=>{
-      const box=document.createElement("div");
-      box.className="empty-module";
-      box.innerHTML=`
-        <div class="dynamic-form">
-          <label class="field"><span class="field-label">Nome</span><input data-k="name" maxlength="100"></label>
-          <label class="field"><span class="field-label">Descrição</span><textarea data-k="description" rows="4"></textarea></label>
-          <div class="dynamic-form-grid">
-            <label class="field"><span class="field-label">Alcance</span><input data-k="range"></label>
-            <label class="field"><span class="field-label">Dano / Efeito</span><input data-k="damage"></label>
-          </div>
-          <label class="field"><span class="field-label">Custo</span><input data-k="cost"></label>
-          <label class="field"><span class="field-label">Teste</span><input data-k="test"></label>
-          <label class="field"><span class="field-label">Limitação</span><textarea data-k="limitation" rows="3"></textarea></label>
-          <button type="button" class="button button-ghost" data-remove-technique>Remover técnica</button>
-        </div>
-      `;
+        state.mana =
+          "azul";
 
-      $$("[data-k]",box).forEach(input=>{
-        input.value=text(tech[input.dataset.k]);
-        input.addEventListener("input",()=>{
-          state.techniques[index][input.dataset.k]=input.value;
-          scheduleSave();
-        });
-      });
-
-      $("[data-remove-technique]",box).addEventListener("click",()=>{
-        state.techniques.splice(index,1);
-        renderTechniques();
-        scheduleSave();
-      });
-
-      list.appendChild(box);
-    });
-  }
-
-  function addTechnique(){
-    state.techniques.push({
-      name:"", description:"", range:"", damage:"",
-      cost:"", test:"", limitation:""
-    });
-    renderTechniques();
-    scheduleSave();
-  }
-
-  function renderInventory(){
-    const list=$("#inventoryList");
-    if(!list) return;
-    list.innerHTML="";
-
-    state.inventory.forEach((item,index)=>{
-      const box=document.createElement("div");
-      box.className="empty-module";
-      box.innerHTML=`
-        <div class="dynamic-form">
-          <label class="field"><span class="field-label">Item</span><input data-k="name" maxlength="100"></label>
-          <label class="field"><span class="field-label">Descrição</span><textarea data-k="description" rows="3"></textarea></label>
-          <button type="button" class="button button-ghost" data-remove-item>Remover item</button>
-        </div>
-      `;
-
-      $$("[data-k]",box).forEach(input=>{
-        input.value=text(item[input.dataset.k]);
-        input.addEventListener("input",()=>{
-          state.inventory[index][input.dataset.k]=input.value;
-          scheduleSave();
-        });
-      });
-
-      $("[data-remove-item]",box).addEventListener("click",()=>{
-        state.inventory.splice(index,1);
-        renderInventory();
-        scheduleSave();
-      });
-
-      list.appendChild(box);
-    });
-  }
-
-  function bindDynamic() {
-    $("#addTechniqueButton")?.addEventListener("click",addTechnique);
-    $("#addInventoryButton")?.addEventListener("click",()=>{
-      state.inventory.push({name:"",description:""});
-      renderInventory();
-      scheduleSave();
-    });
-  }
-
-  /* =========================================================
-     COMBATE / DERIVAÇÃO
-     ========================================================= */
-
-  function vigorDie() {
-    return state.attributes.vigor;
-  }
-
-  function rollVigorForLife() {
-    const die = vigorDie();
-    if (!die) {
-      showToast("Defina o dado de Vigor antes de rolar.");
-      goToStep(4);
-      return;
-    }
-
-    if (state.combat.vigorRolled) {
-      showToast(`Vigor já rolado: ${state.combat.vigorResult}.`);
-      return;
-    }
-
-    const sides = Number(die.slice(1));
-    const result = Math.floor(Math.random()*sides)+1;
-
-    state.combat.vigorRolled = true;
-    state.combat.vigorResult = result;
-
-    const life = RULES.calculateLife({
-      vigorRoll: result,
-      raceId: state.race || "humano",
-      animalId: state.animalId
-    });
-
-    state.combat.life = life;
-    renderReview();
-    scheduleSave();
-
-    showToast(
-      `Vigor: ${result} → Vida atualizada para ${life.total} PV.`
+        renderMana();
+        scheduleAutosave();
+      }
     );
   }
 
-  function renderReview() {
-    if ($("#reviewName"))
-      $("#reviewName").textContent=state.name||"Sem nome";
+  function renderMana() {
+    state.mana =
+      "azul";
 
-    if ($("#reviewIdentity")) {
-      const parts=[];
-      if(state.age) parts.push(`${state.age} anos`);
-      if(state.gender) parts.push(state.gender==="masculino"?"Masculino":"Feminino");
-      const p=currentRaceProfile();
-      if(p) parts.push(p.name);
-      if(isAnimalha() && p?.animalName) parts.push(p.animalName);
-      $("#reviewIdentity").textContent=parts.join(" · ")||"Identidade ainda não definida.";
+    $$( ".mana-card[data-mana]" )
+      .forEach(
+        card => {
+          const blue =
+            card.dataset.mana ===
+            "azul";
+
+          card.classList.toggle(
+            "is-selected",
+            blue
+          );
+
+          if (!blue) {
+            card.disabled =
+              true;
+          }
+        }
+      );
+
+    updateProgress();
+  }
+
+  /* =========================================================
+     PERÍCIAS
+  ========================================================= */
+
+  function getClassSkillModifiers() {
+    const classData =
+      CLASSES.find(
+        item =>
+          item.id ===
+          state.class
+      );
+
+    return (
+      classData?.skillModifiers ||
+      {}
+    );
+  }
+
+  function renderSkills() {
+    const list =
+      $("#skillsList");
+
+    if (!list) {
+      return;
     }
 
-    if ($("#reviewRace")) $("#reviewRace").textContent=currentRaceProfile()?.name||"—";
-    if ($("#reviewClass")) $("#reviewClass").textContent=RULES.classes[state.class]?.name||"—";
-    if ($("#reviewGender")) $("#reviewGender").textContent=state.gender ? (state.gender==="masculino"?"Masculino":"Feminino") : "—";
-    if ($("#reviewMana")) $("#reviewMana").textContent="Mana Azul";
+    list.innerHTML =
+      "";
 
-    const p=currentRaceProfile();
-    const movement=RULES.calculateMovement({
-      raceId:state.race||"humano",
-      animalId:state.animalId
-    });
+    const modifiers =
+      getClassSkillModifiers();
 
-    const moveText = movement.flight && movement.air
-      ? `${Number(movement.ground.toFixed(2))} m terrestre · ${Number(movement.air.toFixed(2))} m aéreo`
-      : `${Number(movement.ground.toFixed(2))} m`;
+    SKILLS.forEach(
+      skill => {
+        const row =
+          document.createElement(
+            "article"
+          );
 
-    if($("#combatMovement")) $("#combatMovement").textContent=moveText;
-    if($("#combatMovementFormula")){
-      const flags=[];
-      if(p?.flight) flags.push("voo");
-      if((p?.movement?.aquaticMultiplier||0)>1) flags.push("aquático");
-      $("#combatMovementFormula").textContent=
-        flags.length ? `Base 9 m · ${flags.join(" · ")}` : "Base 9 m · porte";
+        row.className =
+          "skill-card";
+
+        const trained =
+          state.skills.includes(
+            skill.id
+          );
+
+        const modifier =
+          Number(
+            modifiers[
+              skill.id
+            ] || 0
+          );
+
+        row.innerHTML =
+          `
+          <div class="skill-card__main">
+
+            <div>
+              <span class="eyebrow">
+                PERÍCIA
+              </span>
+
+              <h3>
+                ${skill.name}
+              </h3>
+
+              <p>
+                ${skill.description}
+              </p>
+            </div>
+
+            <div class="skill-card__bonus">
+              <span>
+                Bônus
+              </span>
+
+              <strong>
+                ${modifier >= 0 ? "+" : ""}${modifier}
+              </strong>
+            </div>
+
+          </div>
+
+          <button
+            type="button"
+            class="button button-secondary"
+            data-skill-toggle="${skill.id}"
+          >
+            ${
+              trained
+                ? "✓ Treinado"
+                : "Treinar"
+            }
+          </button>
+          `;
+
+        list.appendChild(
+          row
+        );
+      }
+    );
+  }
+
+  function bindSkills() {
+    document.addEventListener(
+      "click",
+      event => {
+        const button =
+          event.target.closest(
+            "[data-skill-toggle]"
+          );
+
+        if (!button) {
+          return;
+        }
+
+        const id =
+          button.dataset.skillToggle;
+
+        const index =
+          state.skills.indexOf(
+            id
+          );
+
+        if (
+          index >= 0
+        ) {
+          state.skills.splice(
+            index,
+            1
+          );
+        } else {
+          state.skills.push(
+            id
+          );
+        }
+
+        renderSkills();
+        updateProgress();
+        scheduleAutosave();
+      }
+    );
+  }
+
+  /* =========================================================
+     TÉCNICAS
+  ========================================================= */
+
+  function renderTechniques() {
+    const list =
+      $("#techniquesList");
+
+    if (!list) {
+      return;
     }
 
-    if($("#combatLife")){
-      $("#combatLife").textContent =
-        state.combat.life ? `${state.combat.life.total} PV` : "—";
+    list.innerHTML =
+      "";
+
+    state.techniques.forEach(
+      (
+        technique,
+        index
+      ) => {
+        const card =
+          document.createElement(
+            "article"
+          );
+
+        card.className =
+          "technique-card empty-module";
+
+        card.innerHTML =
+          `
+          <div
+            style="
+              display:grid;
+              gap:12px;
+              text-align:left;
+            "
+          >
+
+            <span class="eyebrow">
+              TÉCNICA ${index + 1}
+            </span>
+
+            <label class="field">
+              <span class="field-label">
+                Nome
+              </span>
+
+              <input
+                type="text"
+                data-technique-field="name"
+                maxlength="100"
+                value="${escapeAttribute(technique.name)}"
+                placeholder="Nome da técnica"
+              >
+            </label>
+
+            <label class="field">
+              <span class="field-label">
+                Descrição
+              </span>
+
+              <textarea
+                data-technique-field="description"
+                rows="4"
+                maxlength="1000"
+                placeholder="Descrição"
+              >${escapeHtml(technique.description)}</textarea>
+            </label>
+
+            <div
+              style="
+                display:grid;
+                grid-template-columns:1fr 1fr;
+                gap:10px;
+              "
+            >
+
+              <label class="field">
+                <span class="field-label">
+                  Alcance
+                </span>
+
+                <input
+                  type="text"
+                  data-technique-field="range"
+                  maxlength="100"
+                  value="${escapeAttribute(technique.range)}"
+                >
+              </label>
+
+              <label class="field">
+                <span class="field-label">
+                  Dano / Efeito
+                </span>
+
+                <input
+                  type="text"
+                  data-technique-field="damage"
+                  maxlength="150"
+                  value="${escapeAttribute(technique.damage)}"
+                >
+              </label>
+
+            </div>
+
+            <label class="field">
+              <span class="field-label">
+                Custo
+              </span>
+
+              <input
+                type="text"
+                data-technique-field="cost"
+                maxlength="100"
+                value="${escapeAttribute(technique.cost)}"
+              >
+            </label>
+
+            <label class="field">
+              <span class="field-label">
+                Teste
+              </span>
+
+              <input
+                type="text"
+                data-technique-field="test"
+                maxlength="100"
+                value="${escapeAttribute(technique.test)}"
+              >
+            </label>
+
+            <label class="field">
+              <span class="field-label">
+                Limitação
+              </span>
+
+              <textarea
+                data-technique-field="limitation"
+                rows="3"
+                maxlength="500"
+              >${escapeHtml(technique.limitation)}</textarea>
+            </label>
+
+            <button
+              type="button"
+              class="button button-ghost"
+              data-remove-technique="${index}"
+            >
+              Remover técnica
+            </button>
+
+          </div>
+          `;
+
+        list.appendChild(
+          card
+        );
+
+        $$(
+          "[data-technique-field]",
+          card
+        ).forEach(
+          field => {
+            const key =
+              field.dataset.techniqueField;
+
+            field.addEventListener(
+              "input",
+              () => {
+                if (
+                  !state.techniques[
+                    index
+                  ]
+                ) {
+                  return;
+                }
+
+                state.techniques[
+                  index
+                ][key] =
+                  field.value;
+
+                scheduleAutosave();
+              }
+            );
+          }
+        );
+      }
+    );
+  }
+
+  function bindTechniques() {
+    $("#addTechniqueButton")
+      ?.addEventListener(
+        "click",
+        () => {
+          state.techniques.push({
+            name: "",
+            description: "",
+            range: "",
+            damage: "",
+            cost: "",
+            test: "",
+            limitation: ""
+          });
+
+          renderTechniques();
+          scheduleAutosave();
+
+          $$(
+            '[data-technique-field="name"]'
+          ).at(-1)?.focus();
+        }
+      );
+
+    document.addEventListener(
+      "click",
+      event => {
+        const button =
+          event.target.closest(
+            "[data-remove-technique]"
+          );
+
+        if (!button) {
+          return;
+        }
+
+        const index =
+          Number(
+            button.dataset.removeTechnique
+          );
+
+        if (
+          !Number.isInteger(
+            index
+          )
+        ) {
+          return;
+        }
+
+        state.techniques.splice(
+          index,
+          1
+        );
+
+        renderTechniques();
+        updateProgress();
+        scheduleAutosave();
+      }
+    );
+  }
+
+  /* =========================================================
+     INVENTÁRIO
+  ========================================================= */
+
+  function renderInventory() {
+    const list =
+      $("#inventoryList");
+
+    if (!list) {
+      return;
     }
 
-    if($("#combatStatus")){
-      $("#combatStatus").textContent =
-        state.combat.vigorRolled
-          ? `Vigor rolado: ${state.combat.vigorResult}`
-          : "Vigor ainda não rolado";
+    list.innerHTML =
+      "";
+
+    state.inventory.forEach(
+      (
+        item,
+        index
+      ) => {
+        const card =
+          document.createElement(
+            "article"
+          );
+
+        card.className =
+          "inventory-card empty-module";
+
+        card.innerHTML =
+          `
+          <div
+            style="
+              display:grid;
+              gap:12px;
+              text-align:left;
+            "
+          >
+
+            <span class="eyebrow">
+              ITEM ${index + 1}
+            </span>
+
+            <label class="field">
+              <span class="field-label">
+                Item
+              </span>
+
+              <input
+                type="text"
+                data-inventory-field="name"
+                maxlength="150"
+                value="${escapeAttribute(item.name)}"
+                placeholder="Nome do item"
+              >
+            </label>
+
+            <label class="field">
+              <span class="field-label">
+                Descrição
+              </span>
+
+              <textarea
+                data-inventory-field="description"
+                rows="3"
+                maxlength="600"
+                placeholder="Descrição"
+              >${escapeHtml(item.description)}</textarea>
+            </label>
+
+            <button
+              type="button"
+              class="button button-ghost"
+              data-remove-inventory="${index}"
+            >
+              Remover item
+            </button>
+
+          </div>
+          `;
+
+        list.appendChild(
+          card
+        );
+
+        $$(
+          "[data-inventory-field]",
+          card
+        ).forEach(
+          field => {
+            const key =
+              field.dataset.inventoryField;
+
+            field.addEventListener(
+              "input",
+              () => {
+                if (
+                  !state.inventory[
+                    index
+                  ]
+                ) {
+                  return;
+                }
+
+                state.inventory[
+                  index
+                ][key] =
+                  field.value;
+
+                scheduleAutosave();
+              }
+            );
+          }
+        );
+      }
+    );
+  }
+
+  function bindInventory() {
+    $("#addInventoryButton")
+      ?.addEventListener(
+        "click",
+        () => {
+          state.inventory.push({
+            name: "",
+            description: ""
+          });
+
+          renderInventory();
+          scheduleAutosave();
+
+          $$(
+            '[data-inventory-field="name"]'
+          ).at(-1)?.focus();
+        }
+      );
+
+    document.addEventListener(
+      "click",
+      event => {
+        const button =
+          event.target.closest(
+            "[data-remove-inventory]"
+          );
+
+        if (!button) {
+          return;
+        }
+
+        const index =
+          Number(
+            button.dataset.removeInventory
+          );
+
+        if (
+          !Number.isInteger(
+            index
+          )
+        ) {
+          return;
+        }
+
+        state.inventory.splice(
+          index,
+          1
+        );
+
+        renderInventory();
+        updateProgress();
+        scheduleAutosave();
+      }
+    );
+  }
+
+  /* =========================================================
+     COMBATE — CÁLCULOS
+  ========================================================= */
+
+  function getAttributeModifier(
+    attribute
+  ) {
+    const race =
+      getEffectiveRaceData();
+
+    return Number(
+      race?.attrMods?.[
+        attribute
+      ] || 0
+    );
+  }
+
+  function getAttributeBaseValue(
+    attribute
+  ) {
+    const die =
+      state.attributes[
+        attribute
+      ];
+
+    if (!die) {
+      return null;
     }
 
-    if($("#combatLifeFormula")){
-      const size=currentSize();
-      const racial=Number(racialMods().vigor)||0;
-      $("#combatLifeFormula").textContent=
-        `10 + Vigor${racial?` ${racial>0?"+":""}${racial}`:""} + porte +3/+1/+5`;
+    return DICE_VALUES[
+      die
+    ] || null;
+  }
+
+  function getAttributeFinalValue(
+    attribute
+  ) {
+    const base =
+      getAttributeBaseValue(
+        attribute
+      );
+
+    if (
+      base === null
+    ) {
+      return null;
     }
 
-    if($("#combatRollNotification")){
-      $("#combatRollNotification").textContent=
-        state.combat.vigorRolled
-          ? `Vigor ${state.combat.vigorResult} foi aplicado automaticamente. Vida: ${state.combat.life?.total ?? "—"} PV.`
-          : `Role o ${vigorDie()?.toUpperCase()||"dado"} de Vigor uma única vez para calcular sua Vida.`;
+    return (
+      base +
+      getAttributeModifier(
+        attribute
+      )
+    );
+  }
+
+  function calculateMaxHp() {
+    const race =
+      getEffectiveRaceData();
+
+    if (!race) {
+      return null;
     }
 
-    renderAvatar();
+    const vigor =
+      getAttributeFinalValue(
+        "vigor"
+      );
+
+    if (
+      vigor === null
+    ) {
+      return null;
+    }
+
+    const size =
+      SIZE_DATA[
+        race.size
+      ] ||
+      SIZE_DATA.medio;
+
+    return (
+      COMBAT_BASE.hp +
+      vigor +
+      size.lifeBonus
+    );
+  }
+
+  function calculateMovement() {
+    const race =
+      getEffectiveRaceData();
+
+    if (!race) {
+      return {
+        value: null,
+        ground: null,
+        air: null,
+        aquatic: null
+      };
+    }
+
+    const size =
+      SIZE_DATA[
+        race.size
+      ] ||
+      SIZE_DATA.medio;
+
+    let ground =
+      COMBAT_BASE.movement *
+      size.movementMultiplier;
+
+    let air =
+      null;
+
+    let aquatic =
+      null;
+
+    /*
+     * VOO é independente de Animalha.
+     * Pode vir da raça ou da variante.
+     */
+    if (
+      race.flight
+    ) {
+      air =
+        ground *
+        Number(
+          race.movement
+            ?.airMultiplier ||
+          2
+        );
+    }
+
+    if (
+      race.movement
+        ?.groundMultiplier
+    ) {
+      ground *=
+        Number(
+          race.movement
+            .groundMultiplier
+        );
+    }
+
+    if (
+      race.movement
+        ?.aquaticMultiplier
+    ) {
+      aquatic =
+        ground *
+        Number(
+          race.movement
+            .aquaticMultiplier
+        );
+    }
+
+    return {
+      value: ground,
+      ground,
+      air,
+      aquatic
+    };
+  }
+
+  function updateCombatPreview() {
+    const hp =
+      calculateMaxHp();
+
+    const movement =
+      calculateMovement();
+
+    const hpElement =
+      $("#calculatedHp");
+
+    if (hpElement) {
+      hpElement.textContent =
+        hp === null
+          ? "—"
+          : String(
+              hp
+            );
+    }
+
+    const movementElement =
+      $("#calculatedMovement");
+
+    if (movementElement) {
+      movementElement.textContent =
+        movement.ground ===
+        null
+          ? "—"
+          : `${movement.ground} m`;
+    }
+
+    const airElement =
+      $("#calculatedAirMovement");
+
+    if (airElement) {
+      airElement.textContent =
+        movement.air ===
+        null
+          ? "—"
+          : `${movement.air} m`;
+    }
+
+    const aquaticElement =
+      $("#calculatedAquaticMovement");
+
+    if (aquaticElement) {
+      aquaticElement.textContent =
+        movement.aquatic ===
+        null
+          ? "—"
+          : `${movement.aquatic} m`;
+    }
+  }
+
+  /* =========================================================
+     REVISÃO
+  ========================================================= */
+
+  function getRaceDisplayName() {
+    const race =
+      getSelectedRace();
+
+    if (!race) {
+      return "—";
+    }
+
+    const animalha =
+      getAnimalhaVariant();
+
+    return animalha
+      ? `${race.name} — ${animalha.name}`
+      : race.name;
+  }
+
+  function getClassDisplayName() {
+    return (
+      CLASSES.find(
+        item =>
+          item.id ===
+          state.class
+      )?.name ||
+      "—"
+    );
+  }
+
+  function updateReview() {
+    const name =
+      $("#reviewName");
+
+    const identity =
+      $("#reviewIdentity");
+
+    const race =
+      $("#reviewRace");
+
+    const classEl =
+      $("#reviewClass");
+
+    const gender =
+      $("#reviewGender");
+
+    const mana =
+      $("#reviewMana");
+
+    if (name) {
+      name.textContent =
+        state.name.trim() ||
+        "Sem nome";
+    }
+
+    if (identity) {
+      const parts =
+        [];
+
+      if (state.age) {
+        parts.push(
+          `${state.age} anos`
+        );
+      }
+
+      if (state.gender) {
+        parts.push(
+          state.gender ===
+            "masculino"
+            ? "Masculino"
+            : "Feminino"
+        );
+      }
+
+      identity.textContent =
+        parts.length
+          ? parts.join(" · ")
+          : "Identidade ainda não definida.";
+    }
+
+    if (race) {
+      race.textContent =
+        getRaceDisplayName();
+    }
+
+    if (classEl) {
+      classEl.textContent =
+        getClassDisplayName();
+    }
+
+    if (gender) {
+      gender.textContent =
+        state.gender ===
+          "masculino"
+          ? "Masculino"
+          : state.gender ===
+              "feminino"
+            ? "Feminino"
+            : "—";
+    }
+
+    if (mana) {
+      mana.textContent =
+        "Mana Azul";
+    }
+
+    const reviewAvatar =
+      $("#reviewAvatar");
+
+    const fallback =
+      $("#reviewAvatarFallback");
+
+    if (
+      reviewAvatar &&
+      fallback
+    ) {
+      if (
+        state.avatarDataUrl
+      ) {
+        reviewAvatar.src =
+          state.avatarDataUrl;
+
+        reviewAvatar.hidden =
+          false;
+
+        fallback.hidden =
+          true;
+      } else {
+        reviewAvatar.hidden =
+          true;
+
+        fallback.hidden =
+          false;
+      }
+    }
+
+    updateCombatPreview();
+  }
+
+  /* =========================================================
+     PROGRESSO
+  ========================================================= */
+
+  function isIdentityComplete() {
+    return Boolean(
+      state.name.trim()
+    );
+  }
+
+  function isRaceComplete() {
+    return Boolean(
+      state.race
+    );
+  }
+
+  function isAppearanceComplete() {
+    return Boolean(
+      state.race &&
+      state.appearance.heightCm
+    );
+  }
+
+  function isClassComplete() {
+    return Boolean(
+      state.class
+    );
+  }
+
+  function areAttributesComplete() {
+    return (
+      Object.values(
+        state.attributes
+      ).filter(Boolean)
+        .length ===
+      ATTRIBUTE_ORDER.length
+    );
+  }
+
+  function isPowerComplete() {
+    return Boolean(
+      state.power.trim()
+    );
+  }
+
+  function isManaComplete() {
+    return (
+      state.mana ===
+      "azul"
+    );
+  }
+
+  function canEnterStep(
+    index
+  ) {
+    if (
+      index <= 0
+    ) {
+      return true;
+    }
+
+    if (
+      index >= 1 &&
+      !isIdentityComplete()
+    ) {
+      return false;
+    }
+
+    if (
+      index >= 2 &&
+      !isRaceComplete()
+    ) {
+      return false;
+    }
+
+    if (
+      index >= 3 &&
+      !isAppearanceComplete()
+    ) {
+      return false;
+    }
+
+    if (
+      index >= 4 &&
+      !isClassComplete()
+    ) {
+      return false;
+    }
+
+    if (
+      index >= 5 &&
+      !areAttributesComplete()
+    ) {
+      return false;
+    }
+
+    if (
+      index >= 6 &&
+      !isPowerComplete()
+    ) {
+      return false;
+    }
+
+    return true;
+  }
+
+  function isStepComplete(
+    index
+  ) {
+    const id =
+      STEPS[index]?.id;
+
+    switch (id) {
+      case "identity":
+        return isIdentityComplete();
+
+      case "race":
+        return isRaceComplete();
+
+      case "appearance":
+        return isAppearanceComplete();
+
+      case "class":
+        return isClassComplete();
+
+      case "attributes":
+        return areAttributesComplete();
+
+      case "power":
+        return isPowerComplete();
+
+      case "mana":
+        return isManaComplete();
+
+      case "skills":
+        return state.skills.length > 0;
+
+      case "techniques":
+        return state.techniques.length > 0;
+
+      case "inventory":
+        return state.inventory.length > 0;
+
+      case "review":
+        return (
+          isIdentityComplete() &&
+          isRaceComplete() &&
+          isAppearanceComplete() &&
+          isClassComplete() &&
+          areAttributesComplete() &&
+          isPowerComplete() &&
+          isManaComplete()
+        );
+
+      default:
+        return false;
+    }
+  }
+
+  function getProgressPercent() {
+    const completed =
+      STEPS.filter(
+        (_, index) =>
+          isStepComplete(
+            index
+          )
+      ).length;
+
+    return Math.round(
+      (
+        completed /
+        STEPS.length
+      ) * 100
+    );
+  }
+
+  function updateProgress() {
+    const current =
+      state.currentStep;
+
+    const percent =
+      getProgressPercent();
+
+    const fill =
+      $("#progressFill");
+
+    const percentEl =
+      $("#progressPercent");
+
+    const title =
+      $("#progressTitle");
+
+    const counter =
+      $("#stepCounter");
+
+    if (fill) {
+      fill.style.width =
+        `${percent}%`;
+    }
+
+    if (percentEl) {
+      percentEl.textContent =
+        `${percent}%`;
+    }
+
+    if (title) {
+      title.textContent =
+        STEPS[current]?.title ||
+        "Identidade";
+    }
+
+    if (counter) {
+      counter.textContent =
+        `${current + 1} de ${STEPS.length}`;
+    }
+
+    $$( ".creation-step" )
+      .forEach(
+        (
+          button,
+          index
+        ) => {
+          button.classList.toggle(
+            "is-active",
+            index ===
+            current
+          );
+
+          button.classList.toggle(
+            "is-complete",
+            index <
+              current &&
+            isStepComplete(
+              index
+            )
+          );
+
+          button.disabled =
+            index >
+              current &&
+            !canEnterStep(
+              index
+            );
+        }
+      );
+
+    const previous =
+      $("#previousStepButton");
+
+    if (previous) {
+      previous.disabled =
+        current === 0;
+    }
+
+    const next =
+      $("#nextStepButton");
+
+    if (next) {
+      next.textContent =
+        current ===
+          STEPS.length - 1
+          ? "Finalizar →"
+          : "Próximo →";
+    }
+  }
+
+  /* =========================================================
+     VALIDAÇÃO
+  ========================================================= */
+
+  function validateBeforeNext() {
+    if (
+      !isIdentityComplete()
+    ) {
+      showToast(
+        "Digite o nome do aventureiro."
+      );
+
+      goToStep(0);
+
+      $("#characterName")
+        ?.focus();
+
+      return false;
+    }
+
+    if (
+      !isRaceComplete()
+    ) {
+      showToast(
+        "Escolha uma raça."
+      );
+
+      goToStep(1);
+
+      return false;
+    }
+
+    if (
+      !isAppearanceComplete()
+    ) {
+      showToast(
+        "Defina a altura do personagem."
+      );
+
+      goToStep(2);
+
+      return false;
+    }
+
+    if (
+      !isClassComplete()
+    ) {
+      showToast(
+        "Escolha uma classe."
+      );
+
+      goToStep(3);
+
+      return false;
+    }
+
+    if (
+      !areAttributesComplete()
+    ) {
+      showToast(
+        "Complete os 8 atributos."
+      );
+
+      goToStep(4);
+
+      return false;
+    }
+
+    if (
+      !isPowerComplete()
+    ) {
+      showToast(
+        "Defina o poder."
+      );
+
+      goToStep(5);
+
+      return false;
+    }
+
+    return true;
   }
 
   /* =========================================================
      NAVEGAÇÃO
-     ========================================================= */
+  ========================================================= */
 
-  function bindNavigation(){
-    $("#previousStepButton")?.addEventListener("click",()=>goToStep(state.currentStep-1));
+  function goToStep(
+    target
+  ) {
+    const index =
+      clamp(
+        Number(
+          target
+        ) || 0,
+        0,
+        STEPS.length - 1
+      );
 
-    $("#nextStepButton")?.addEventListener("click",()=>{
-      if(state.currentStep===STEPS.length-1){
-        finish();
-        return;
-      }
+    if (
+      index >
+        state.currentStep &&
+      !canEnterStep(
+        index
+      )
+    ) {
+      validateBeforeNext();
+      return false;
+    }
 
-      if(!validateCurrentStep()){
-        return;
-      }
+    state.currentStep =
+      index;
 
-      goToStep(state.currentStep+1);
+    $$( ".creation-panel" )
+      .forEach(
+        panel => {
+          const active =
+            panel.dataset.panel ===
+            STEPS[index].id;
+
+          panel.hidden =
+            !active;
+
+          panel.classList.toggle(
+            "is-active",
+            active
+          );
+        }
+      );
+
+    updateProgress();
+
+    switch (
+      STEPS[index].id
+    ) {
+      case "identity":
+        renderAvatar();
+        break;
+
+      case "race":
+        renderRace();
+        break;
+
+      case "appearance":
+        updateAppearanceEditor();
+        break;
+
+      case "class":
+        renderClasses();
+        break;
+
+      case "attributes":
+        renderAttributes();
+        break;
+
+      case "power":
+        renderPower();
+        break;
+
+      case "mana":
+        renderMana();
+        break;
+
+      case "skills":
+        renderSkills();
+        break;
+
+      case "techniques":
+        renderTechniques();
+        break;
+
+      case "inventory":
+        renderInventory();
+        break;
+
+      case "review":
+        updateReview();
+        break;
+    }
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth"
     });
 
-    $$(".creation-step").forEach((button,index)=>{
-      button.addEventListener("click",()=>{
-        if(!button.disabled) goToStep(index);
-      });
-    });
+    scheduleAutosave();
+
+    return true;
   }
 
-  function finish(){
-    if(!identityComplete() ||
-       !raceComplete() ||
-       !appearanceComplete() ||
-       !classComplete() ||
-       !attributesComplete() ||
-       !powerComplete() ||
-       !manaComplete()){
-      showToast("Há etapas obrigatórias pendentes.");
+  function bindNavigation() {
+    $("#previousStepButton")
+      ?.addEventListener(
+        "click",
+        () => {
+          goToStep(
+            state.currentStep -
+            1
+          );
+        }
+      );
+
+    $("#nextStepButton")
+      ?.addEventListener(
+        "click",
+        () => {
+          if (
+            state.currentStep ===
+            STEPS.length - 1
+          ) {
+            finishCharacter();
+            return;
+          }
+
+          if (
+            !validateBeforeNext()
+          ) {
+            return;
+          }
+
+          goToStep(
+            state.currentStep +
+            1
+          );
+        }
+      );
+
+    $$( ".creation-step" )
+      .forEach(
+        (
+          button,
+          index
+        ) => {
+          button.addEventListener(
+            "click",
+            () => {
+              if (
+                button.disabled
+              ) {
+                return;
+              }
+
+              goToStep(
+                index
+              );
+            }
+          );
+        }
+      );
+  }
+
+  /* =========================================================
+     AUTOSAVE
+  ========================================================= */
+
+  function serializeState() {
+    return {
+      ...state,
+
+      attributes: {
+        ...state.attributes
+      },
+
+      appearance: {
+        ...state.appearance
+      },
+
+      skills: [
+        ...state.skills
+      ],
+
+      techniques:
+        state.techniques.map(
+          technique => ({
+            ...technique
+          })
+        ),
+
+      inventory:
+        state.inventory.map(
+          item => ({
+            ...item
+          })
+        ),
+
+      /*
+       * Imagem em base64 pode deixar
+       * o draft pesado demais.
+       */
+      avatarDataUrl:
+        state.avatarDataUrl &&
+        state.avatarDataUrl.length <=
+          2_000_000
+          ? state.avatarDataUrl
+          : ""
+    };
+  }
+
+  function saveLocalDraft() {
+    try {
+      const data =
+        serializeState();
+
+      data.updatedAt =
+        new Date().toISOString();
+
+      localStorage.setItem(
+        CONFIG.draftKey,
+        JSON.stringify(
+          data
+        )
+      );
+
+      state.updatedAt =
+        data.updatedAt;
+
+      setSaveStatus(
+        "saved",
+        "Salvo automaticamente"
+      );
+
+      return true;
+    } catch (
+      error
+    ) {
+      console.error(
+        "[AERION][FICHA] Erro ao salvar:",
+        error
+      );
+
+      setSaveStatus(
+        "error",
+        "Erro ao salvar"
+      );
+
+      return false;
+    }
+  }
+
+  function loadLocalDraft() {
+    try {
+      const raw =
+        localStorage.getItem(
+          CONFIG.draftKey
+        );
+
+      if (!raw) {
+        return false;
+      }
+
+      const parsed =
+        JSON.parse(
+          raw
+        );
+
+      state =
+        normalizeState(
+          parsed
+        );
+
+      return true;
+    } catch (
+      error
+    ) {
+      console.warn(
+        "[AERION][FICHA] Rascunho inválido:",
+        error
+      );
+
+      localStorage.removeItem(
+        CONFIG.draftKey
+      );
+
+      return false;
+    }
+  }
+
+  function scheduleAutosave() {
+    setSaveStatus(
+      "saving",
+      "Salvando..."
+    );
+
+    clearTimeout(
+      saveTimer
+    );
+
+    saveTimer =
+      window.setTimeout(
+        saveLocalDraft,
+        CONFIG.autosaveDelay
+      );
+  }
+
+  function normalizeState(
+    raw
+  ) {
+    const base =
+      createDefaultState();
+
+    if (
+      !raw ||
+      typeof raw !==
+        "object"
+    ) {
+      return base;
+    }
+
+    const merged =
+      {
+        ...base,
+        ...raw,
+
+        appearance: {
+          ...base.appearance,
+          ...(raw.appearance || {})
+        },
+
+        attributes:
+          normalizeAttributes(
+            raw.attributes
+          ),
+
+        skills:
+          Array.isArray(
+            raw.skills
+          )
+            ? raw.skills
+            : [],
+
+        techniques:
+          Array.isArray(
+            raw.techniques
+          )
+            ? raw.techniques
+            : [],
+
+        inventory:
+          Array.isArray(
+            raw.inventory
+          )
+            ? raw.inventory
+            : []
+      };
+
+    merged.currentStep =
+      clamp(
+        Number(
+          merged.currentStep
+        ) || 0,
+        0,
+        STEPS.length - 1
+      );
+
+    merged.raceIndex =
+      clamp(
+        Number(
+          merged.raceIndex
+        ) || 0,
+        0,
+        RACES.length - 1
+      );
+
+    if (
+      !RACES.some(
+        race =>
+          race.id ===
+          merged.race
+      )
+    ) {
+      merged.race =
+        "";
+    }
+
+    if (
+      !CLASSES.some(
+        item =>
+          item.id ===
+          merged.class
+      )
+    ) {
+      merged.class =
+        "";
+    }
+
+    if (
+      ![
+        "masculino",
+        "feminino"
+      ].includes(
+        merged.gender
+      )
+    ) {
+      merged.gender =
+        "";
+    }
+
+    merged.mana =
+      "azul";
+
+    return merged;
+  }
+
+  function normalizeAttributes(
+    raw
+  ) {
+    const result = {
+      forca: null,
+      vigor: null,
+      agilidade: null,
+      precisao: null,
+      intelecto: null,
+      controle: null,
+      presenca: null,
+      percepcao: null
+    };
+
+    if (
+      !raw ||
+      typeof raw !==
+        "object"
+    ) {
+      return result;
+    }
+
+    const usage = {
+      d4: 0,
+      d6: 0,
+      d8: 0,
+      d10: 0,
+      d12: 0,
+      d20: 0
+    };
+
+    ATTRIBUTE_ORDER.forEach(
+      attribute => {
+        const die =
+          normalizeDie(
+            raw[
+              attribute
+            ]
+          );
+
+        if (!die) {
+          return;
+        }
+
+        if (
+          usage[
+            die
+          ] >=
+          DICE_LIMITS[
+            die
+          ]
+        ) {
+          return;
+        }
+
+        result[
+          attribute
+        ] =
+          die;
+
+        usage[
+          die
+        ]++;
+      }
+    );
+
+    return result;
+  }
+
+  /* =========================================================
+     FINALIZAÇÃO
+  ========================================================= */
+
+  function validateFinal() {
+    if (
+      !isIdentityComplete()
+    ) {
+      goToStep(0);
+      showToast(
+        "Falta o nome."
+      );
+      return false;
+    }
+
+    if (
+      !isRaceComplete()
+    ) {
+      goToStep(1);
+      showToast(
+        "Falta a raça."
+      );
+      return false;
+    }
+
+    if (
+      !isAppearanceComplete()
+    ) {
+      goToStep(2);
+      showToast(
+        "Falta definir a aparência."
+      );
+      return false;
+    }
+
+    if (
+      !isClassComplete()
+    ) {
+      goToStep(3);
+      showToast(
+        "Falta a classe."
+      );
+      return false;
+    }
+
+    if (
+      !areAttributesComplete()
+    ) {
+      goToStep(4);
+      showToast(
+        "Os 8 atributos precisam ser definidos."
+      );
+      return false;
+    }
+
+    if (
+      !isPowerComplete()
+    ) {
+      goToStep(5);
+      showToast(
+        "Falta o poder."
+      );
+      return false;
+    }
+
+    if (
+      !isManaComplete()
+    ) {
+      goToStep(6);
+      showToast(
+        "A Mana precisa estar definida."
+      );
+      return false;
+    }
+
+    return true;
+  }
+
+  function finishCharacter() {
+    if (
+      !validateFinal()
+    ) {
       return;
     }
 
-    if(!state.combat.vigorRolled){
-      showToast("Na revisão, role o Vigor para calcular sua Vida.");
+    if (
+      !saveLocalDraft()
+    ) {
+      showToast(
+        "Não foi possível salvar a ficha."
+      );
+
       return;
     }
 
-    saveDraft();
-    showToast("Ficha concluída e salva neste dispositivo.",3200);
+    showToast(
+      "Ficha concluída e salva neste dispositivo.",
+      3200
+    );
+
+    /*
+     * O vínculo definitivo com Supabase entra
+     * na camada de persistência final.
+     *
+     * A estrutura do banco já possui:
+     * - characters
+     * - campaign_characters
+     * - campaign_character_settings
+     *
+     * A ficha-base e a cópia específica de campanha
+     * devem continuar separadas.
+     */
+  }
+
+  /* =========================================================
+     ESCAPE HTML
+  ========================================================= */
+
+  function escapeHtml(
+    value
+  ) {
+    return safeText(
+      value
+    )
+      .replaceAll(
+        "&",
+        "&amp;"
+      )
+      .replaceAll(
+        "<",
+        "&lt;"
+      )
+      .replaceAll(
+        ">",
+        "&gt;"
+      )
+      .replaceAll(
+        '"',
+        "&quot;"
+      )
+      .replaceAll(
+        "'",
+        "&#039;"
+      );
+  }
+
+  function escapeAttribute(
+    value
+  ) {
+    return escapeHtml(
+      value
+    );
+  }
+
+  /* =========================================================
+     EVENTOS GERAIS
+  ========================================================= */
+
+  function bindGeneralEvents() {
+    window.addEventListener(
+      "beforeunload",
+      () => {
+        saveLocalDraft();
+      }
+    );
+
+    document.addEventListener(
+      "visibilitychange",
+      () => {
+        if (
+          document.visibilityState ===
+          "hidden"
+        ) {
+          saveLocalDraft();
+        }
+      }
+    );
   }
 
   /* =========================================================
      INICIALIZAÇÃO
-     ========================================================= */
+  ========================================================= */
 
-  function init(){
-    if(initialized) return;
-    initialized=true;
+  function init() {
+    if (
+      initialized
+    ) {
+      return;
+    }
 
-    const restored=loadDraft();
+    initialized =
+      true;
+
+    const restored =
+      loadLocalDraft();
 
     bindIdentity();
     bindRace();
     bindClasses();
-    bindAttributeInteraction();
-    bindAppearance();
+
+    bindAttributeClicks();
+
     bindPower();
     bindMana();
-    bindDynamic();
+
+    bindSkills();
+    bindTechniques();
+    bindInventory();
+
     bindNavigation();
+    bindGeneralEvents();
 
-    $("[data-combat-roll='vigor']")?.addEventListener("click",rollVigorForLife);
+    setupAppearanceEditor();
 
-    renderIdentity();
-    renderRace();
-    renderAppearance();
-    renderClasses();
-    renderAttributes();
-    renderPower();
-    renderMana();
-    renderSkills();
-    renderTechniques();
-    renderInventory();
-    renderReview();
-    updateProgress();
+    hydrateInterface();
 
-    state.currentStep = Math.min(
-      state.currentStep,
-      STEPS.length-1
-    );
-
-    if(!canEnter(state.currentStep)){
-      state.currentStep=0;
+    if (
+      !canEnterStep(
+        state.currentStep
+      )
+    ) {
+      state.currentStep =
+        0;
     }
 
-    goToStep(state.currentStep);
+    goToStep(
+      state.currentStep
+    );
 
-    window.addEventListener("beforeunload",saveDraft);
-    document.addEventListener("visibilitychange",()=>{
-      if(document.visibilityState==="hidden") saveDraft();
+    updateProgress();
+    updateReview();
+
+    if (restored) {
+      showToast(
+        "Rascunho anterior restaurado.",
+        1800
+      );
+    }
+
+    console.info(
+      "[AERION][FICHA] Inicializado.",
+      {
+        steps:
+          STEPS.length,
+
+        races:
+          RACES.length,
+
+        animalhaVariants:
+          ANIMALHA_VARIANTS.length,
+
+        classes:
+          CLASSES.length,
+
+        attributes:
+          ATTRIBUTE_ORDER.length,
+
+        dice:
+          DICE_LIMITS,
+
+        flightIndependent:
+          true
+      }
+    );
+  }
+
+  function hydrateInterface() {
+    const name =
+      $("#characterName");
+
+    const age =
+      $("#characterAge");
+
+    const description =
+      $("#characterDescription");
+
+    if (name) {
+      name.value =
+        state.name;
+    }
+
+    if (age) {
+      age.value =
+        state.age;
+    }
+
+    if (description) {
+      description.value =
+        state.description;
+    }
+
+    $$( 'input[name="gender"]' )
+      .forEach(
+        radio => {
+          radio.checked =
+            radio.value ===
+            state.gender;
+        }
+      );
+
+    renderAvatar();
+
+    renderRace();
+
+    renderClasses();
+
+    renderAttributes();
+
+    renderPower();
+
+    renderMana();
+
+    renderSkills();
+
+    renderTechniques();
+
+    renderInventory();
+
+    updateAppearanceEditor();
+
+    updateReview();
+
+    updateCombatPreview();
+  }
+
+  /* =========================================================
+     API PÚBLICA
+  ========================================================= */
+
+  window.AERIONFicha =
+    Object.freeze({
+
+      getState() {
+        try {
+          return structuredClone(
+            state
+          );
+        } catch {
+          return JSON.parse(
+            JSON.stringify(
+              state
+            )
+          );
+        }
+      },
+
+      saveDraft:
+        saveLocalDraft,
+
+      goToStep,
+
+      selectRace:
+        selectCurrentRace,
+
+      selectClass,
+
+      selectDice,
+
+      assignDice,
+
+      clearAttribute,
+
+      swapAttributes,
+
+      getDiceUsage:
+        () => ({
+          ...getDiceUsage()
+        }),
+
+      getRemainingDice,
+
+      rollPowerD100,
+
+      selectPower:
+        choosePower,
+
+      calculateMaxHp,
+
+      calculateMovement,
+
+      getEffectiveRaceData
     });
 
-    if(restored) showToast("Rascunho anterior restaurado.",1800);
-  }
+  /* =========================================================
+     START
+  ========================================================= */
 
-  window.AERIONFicha=Object.freeze({
-    getState:()=>deepClone(state),
-    saveDraft,
-    goToStep,
-    rollVigorForLife,
-    getRaceProfile:currentRaceProfile,
-    calculateMovement:()=>RULES.calculateMovement({
-      raceId:state.race||"humano",
-      animalId:state.animalId
-    })
-  });
-
-  if(document.readyState==="loading"){
-    document.addEventListener("DOMContentLoaded",init,{once:true});
-  }else{
+  if (
+    document.readyState ===
+    "loading"
+  ) {
+    document.addEventListener(
+      "DOMContentLoaded",
+      init,
+      {
+        once: true
+      }
+    );
+  } else {
     init();
   }
+
 })();
