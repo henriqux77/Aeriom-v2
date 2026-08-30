@@ -4,7 +4,7 @@
 
    NÚCLEO DA CRIAÇÃO DE FICHA
 
-   Responsabilidades deste arquivo:
+   Responsabilidades:
    - Estado
    - Regras
    - Navegação
@@ -13,131 +13,65 @@
    - Dados
    - Rolagens
    - Autosave
+   - Perícias
    - Técnicas
    - Inventário
-   - Perícias
    - Finalização
 
-   NÃO RESPONSABILIDADES:
-   - Renderização visual
-   - Montagem de HTML
-   - SVG
-   - Modelo 2D
-   - Imagens
-   - Gráfico
-
-   Essas partes ficam no:
+   Renderização:
    js/core/ficha-render.js
-
    ========================================================= */
 
 (() => {
   "use strict";
 
-  /* =========================================================
-     CONFIG
-     ========================================================= */
+  /* =======================================================
+     CONFIGURAÇÃO
+     ======================================================= */
 
   const CONFIG = Object.freeze({
-    storageKey: "aerion:ficha:draft:v9",
-    lastCharacterKey: "aerion:ficha:last",
-    autosaveDelay: 500,
-    imageMaxSize: 6 * 1024 * 1024
+    storageKey: "aerion:ficha:draft:v10",
+    lastCharacterKey: "aerion:ficha:last:v10",
+    autosaveDelay: 450,
+    maxImageSize: 6 * 1024 * 1024
   });
 
-  /* =========================================================
+  /* =======================================================
      ETAPAS
-     ========================================================= */
+     ======================================================= */
 
   const STEPS = Object.freeze([
-    {
-      id: "identity",
-      name: "Identidade"
-    },
-    {
-      id: "race",
-      name: "Raça"
-    },
-    {
-      id: "appearance",
-      name: "Aparência"
-    },
-    {
-      id: "class",
-      name: "Classe"
-    },
-    {
-      id: "attributes",
-      name: "Atributos"
-    },
-    {
-      id: "power",
-      name: "Poder"
-    },
-    {
-      id: "mana",
-      name: "Mana"
-    },
-    {
-      id: "skills",
-      name: "Perícias"
-    },
-    {
-      id: "techniques",
-      name: "Técnicas"
-    },
-    {
-      id: "inventory",
-      name: "Inventário"
-    },
-    {
-      id: "review",
-      name: "Revisão"
-    }
+    { id: "identity", name: "Identidade" },
+    { id: "race", name: "Raça" },
+    { id: "appearance", name: "Aparência" },
+    { id: "class", name: "Classe" },
+    { id: "attributes", name: "Atributos" },
+    { id: "power", name: "Poder" },
+    { id: "mana", name: "Mana" },
+    { id: "skills", name: "Perícias" },
+    { id: "techniques", name: "Técnicas" },
+    { id: "inventory", name: "Inventário" },
+    { id: "review", name: "Revisão" }
   ]);
 
-  /* =========================================================
+  /* =======================================================
      ATRIBUTOS
-     ========================================================= */
+     ======================================================= */
 
   const ATTRIBUTES = Object.freeze([
-    {
-      id: "forca",
-      name: "Força"
-    },
-    {
-      id: "vigor",
-      name: "Vigor"
-    },
-    {
-      id: "agilidade",
-      name: "Agilidade"
-    },
-    {
-      id: "precisao",
-      name: "Precisão"
-    },
-    {
-      id: "intelecto",
-      name: "Intelecto"
-    },
-    {
-      id: "controle",
-      name: "Controle"
-    },
-    {
-      id: "presenca",
-      name: "Presença"
-    },
-    {
-      id: "percepcao",
-      name: "Percepção"
-    }
+    { id: "forca", name: "Força" },
+    { id: "vigor", name: "Vigor" },
+    { id: "agilidade", name: "Agilidade" },
+    { id: "precisao", name: "Precisão" },
+    { id: "intelecto", name: "Intelecto" },
+    { id: "controle", name: "Controle" },
+    { id: "presenca", name: "Presença" },
+    { id: "percepcao", name: "Percepção" }
   ]);
 
-  /* =========================================================
+  /* =======================================================
      DADOS PERMITIDOS
-  ========================================================= */
+     ======================================================= */
 
   const DICE = Object.freeze({
     d4: {
@@ -171,9 +105,9 @@
     }
   });
 
-  /* =========================================================
-     PODERES PRINCIPAIS
-  ========================================================= */
+  /* =======================================================
+     PODERES
+     ======================================================= */
 
   const PRIMARY_POWERS = Object.freeze([
     "Fogo",
@@ -181,10 +115,6 @@
     "Terra",
     "Água"
   ]);
-
-  /* =========================================================
-     PODERES PARALELOS
-  ========================================================= */
 
   const PARALLEL_POWERS = Object.freeze([
     "Gelo",
@@ -195,9 +125,9 @@
     "Som"
   ]);
 
-  /* =========================================================
+  /* =======================================================
      CLASSES
-  ========================================================= */
+     ======================================================= */
 
   const CLASSES = Object.freeze({
     guerreiro: {
@@ -245,9 +175,9 @@
     }
   });
 
-  /* =========================================================
+  /* =======================================================
      PERÍCIAS
-  ========================================================= */
+     ======================================================= */
 
   const SKILLS = Object.freeze({
     acrobacia: {
@@ -349,9 +279,9 @@
     }
   });
 
-  /* =========================================================
+  /* =======================================================
      RAÇAS
-     ========================================================= */
+     ======================================================= */
 
   const RACES = Object.freeze([
     {
@@ -370,13 +300,13 @@
       profile:
         "Adaptabilidade e aprendizado.",
 
+      feature:
+        "Adaptação.",
+
       modifiers: {
         intelecto: 1,
         presenca: 1
       },
-
-      feature:
-        "Adaptação.",
 
       size: "medio",
 
@@ -406,14 +336,14 @@
       profile:
         "Percepção e afinidade com Mana.",
 
+      feature:
+        "Percepção Élfica.",
+
       modifiers: {
         percepcao: 1,
         controle: 1,
         vigor: -1
       },
-
-      feature:
-        "Percepção Élfica.",
 
       size: "medio",
 
@@ -443,14 +373,14 @@
       profile:
         "Resistência e força estrutural.",
 
+      feature:
+        "Forja Ancestral.",
+
       modifiers: {
         vigor: 1,
         forca: 1,
         agilidade: -1
       },
-
-      feature:
-        "Forja Ancestral.",
 
       size: "pequeno",
 
@@ -480,14 +410,14 @@
       profile:
         "Potência física e resistência.",
 
+      feature:
+        "Fúria de Sangue.",
+
       modifiers: {
         forca: 1,
         vigor: 1,
         presenca: -1
       },
-
-      feature:
-        "Fúria de Sangue.",
 
       size: "grande",
 
@@ -517,14 +447,14 @@
       profile:
         "Velocidade terrestre e potência física.",
 
+      feature:
+        "Galope Ancestral.",
+
       modifiers: {
         forca: 1,
         agilidade: 1,
         controle: -1
       },
-
-      feature:
-        "Galope Ancestral.",
 
       size: "grande",
 
@@ -556,14 +486,14 @@
       profile:
         "Mobilidade e percepção sobrenatural.",
 
+      feature:
+        "Regeneração Sanguínea.",
+
       modifiers: {
         agilidade: 1,
         percepcao: 1,
         vigor: -1
       },
-
-      feature:
-        "Regeneração Sanguínea.",
 
       size: "medio",
 
@@ -593,14 +523,14 @@
       profile:
         "Intelecto, negociação e precisão.",
 
+      feature:
+        "Fortuna Mercante.",
+
       modifiers: {
         intelecto: 1,
         precisao: 1,
         forca: -1
       },
-
-      feature:
-        "Fortuna Mercante.",
 
       size: "pequeno",
 
@@ -630,14 +560,14 @@
       profile:
         "Leveza, agilidade e Mana.",
 
+      feature:
+        "Bênção Feérica.",
+
       modifiers: {
         controle: 1,
         agilidade: 1,
         forca: -1
       },
-
-      feature:
-        "Bênção Feérica.",
 
       size: "pequeno",
 
@@ -669,14 +599,14 @@
       profile:
         "Adaptação à água e percepção ambiental.",
 
+      feature:
+        "Anfíbio.",
+
       modifiers: {
         vigor: 1,
         percepcao: 1,
         forca: -1
       },
-
-      feature:
-        "Anfíbio.",
 
       size: "medio",
 
@@ -708,10 +638,10 @@
       profile:
         "Instinto, sentidos e adaptação natural.",
 
-      modifiers: {},
-
       feature:
         "Instinto Animal.",
+
+      modifiers: {},
 
       size: "medio",
 
@@ -741,14 +671,14 @@
       profile:
         "Percepção ambiental e resistência natural.",
 
+      feature:
+        "Vínculo Natural.",
+
       modifiers: {
         percepcao: 1,
         vigor: 1,
         precisao: -1
       },
-
-      feature:
-        "Vínculo Natural.",
 
       size: "medio",
 
@@ -778,14 +708,14 @@
       profile:
         "Adaptação aquática e leitura de vibrações.",
 
+      feature:
+        "Adaptação Abissal.",
+
       modifiers: {
         vigor: 1,
         percepcao: 1,
         agilidade: -1
       },
-
-      feature:
-        "Adaptação Abissal.",
 
       size: "medio",
 
@@ -814,14 +744,14 @@
       profile:
         "Mobilidade vertical e percepção espacial.",
 
+      feature:
+        "Corpo Celestial.",
+
       modifiers: {
         agilidade: 1,
         percepcao: 1,
         vigor: -1
       },
-
-      feature:
-        "Corpo Celestial.",
 
       size: "medio",
 
@@ -848,14 +778,14 @@
       profile:
         "Leveza e mobilidade em grandes altitudes.",
 
+      feature:
+        "Passo do Céu.",
+
       modifiers: {
         agilidade: 1,
         percepcao: 1,
         vigor: -1
       },
-
-      feature:
-        "Passo do Céu.",
 
       size: "medio",
 
@@ -882,14 +812,14 @@
       profile:
         "Força e resistência extraordinárias.",
 
+      feature:
+        "Asas Colossais.",
+
       modifiers: {
         forca: 2,
         vigor: 1,
         agilidade: -1
       },
-
-      feature:
-        "Asas Colossais.",
 
       size: "colossal",
 
@@ -918,14 +848,14 @@
       profile:
         "Resistência extrema e recuperação.",
 
+      feature:
+        "Regeneração Brutal.",
+
       modifiers: {
         vigor: 2,
         forca: 1,
         agilidade: -1
       },
-
-      feature:
-        "Regeneração Brutal.",
 
       size: "grande",
 
@@ -940,35 +870,30 @@
     }
   ]);
 
-  /* =========================================================
-     ANIMALHAS
-  ========================================================= */
+  /* =======================================================
+     ANIMALHA
+     ======================================================= */
 
   const ANIMALHA_VARIANTS = Object.freeze([
     {
       id: "pantera",
       name: "Pantera",
       category: "Felino",
-      profile: "Velocidade, furtividade e percepção.",
-
+      profile:
+        "Velocidade, furtividade e percepção.",
+      feature:
+        "Movimento silencioso e reflexos felinos.",
       modifiers: {
         agilidade: 1,
         percepcao: 1,
         vigor: -1
       },
-
-      feature:
-        "Movimento silencioso e reflexos felinos.",
-
       size: "medio",
-
       height: {
         min: 145,
         max: 180
       },
-
       flight: false,
-
       movement: {}
     },
 
@@ -976,26 +901,21 @@
       id: "tigre",
       name: "Tigre",
       category: "Felino",
-      profile: "Força explosiva e mobilidade.",
-
+      profile:
+        "Força explosiva e mobilidade.",
+      feature:
+        "Salto e ataques físicos rápidos.",
       modifiers: {
         forca: 1,
         agilidade: 1,
         vigor: -1
       },
-
-      feature:
-        "Salto e ataques físicos rápidos.",
-
       size: "grande",
-
       height: {
         min: 155,
         max: 195
       },
-
       flight: false,
-
       movement: {}
     },
 
@@ -1003,26 +923,21 @@
       id: "leao",
       name: "Leão",
       category: "Felino",
-      profile: "Força e presença.",
-
+      profile:
+        "Força e presença.",
+      feature:
+        "Presença física natural.",
       modifiers: {
         forca: 1,
         presenca: 1,
         agilidade: -1
       },
-
-      feature:
-        "Presença física natural.",
-
       size: "grande",
-
       height: {
         min: 165,
         max: 205
       },
-
       flight: false,
-
       movement: {}
     },
 
@@ -1030,26 +945,21 @@
       id: "gato",
       name: "Gato",
       category: "Felino",
-      profile: "Agilidade e percepção.",
-
+      profile:
+        "Agilidade e percepção.",
+      feature:
+        "Equilíbrio e movimentação precisa.",
       modifiers: {
         agilidade: 1,
         percepcao: 1,
         forca: -1
       },
-
-      feature:
-        "Equilíbrio e movimentação precisa.",
-
       size: "pequeno",
-
       height: {
         min: 135,
         max: 160
       },
-
       flight: false,
-
       movement: {}
     },
 
@@ -1057,26 +967,21 @@
       id: "lobo",
       name: "Lobo",
       category: "Canídeo",
-      profile: "Percepção, resistência e rastreamento.",
-
+      profile:
+        "Percepção, resistência e rastreamento.",
+      feature:
+        "Sentidos aguçados e rastreamento.",
       modifiers: {
         percepcao: 1,
         vigor: 1,
         presenca: -1
       },
-
-      feature:
-        "Sentidos aguçados e rastreamento.",
-
       size: "medio",
-
       height: {
         min: 145,
         max: 190
       },
-
       flight: false,
-
       movement: {}
     },
 
@@ -1084,26 +989,21 @@
       id: "raposa",
       name: "Raposa",
       category: "Canídeo",
-      profile: "Agilidade, astúcia e percepção.",
-
+      profile:
+        "Agilidade, astúcia e percepção.",
+      feature:
+        "Astúcia e movimentação silenciosa.",
       modifiers: {
         agilidade: 1,
         intelecto: 1,
         forca: -1
       },
-
-      feature:
-        "Astúcia e movimentação silenciosa.",
-
       size: "pequeno",
-
       height: {
         min: 135,
         max: 165
       },
-
       flight: false,
-
       movement: {}
     },
 
@@ -1111,26 +1011,21 @@
       id: "falcao",
       name: "Falcão",
       category: "Ave",
-      profile: "Percepção, precisão e mobilidade aérea.",
-
+      profile:
+        "Percepção, precisão e mobilidade aérea.",
+      feature:
+        "Visão extremamente aguçada.",
       modifiers: {
         percepcao: 1,
         precisao: 1,
         vigor: -1
       },
-
-      feature:
-        "Visão extremamente aguçada.",
-
       size: "pequeno",
-
       height: {
         min: 135,
         max: 165
       },
-
       flight: true,
-
       movement: {
         airMultiplier: 2
       }
@@ -1140,26 +1035,21 @@
       id: "aguia",
       name: "Águia",
       category: "Ave",
-      profile: "Percepção e precisão à distância.",
-
+      profile:
+        "Percepção e precisão à distância.",
+      feature:
+        "Percepção de longa distância.",
       modifiers: {
         percepcao: 1,
         precisao: 1,
         vigor: -1
       },
-
-      feature:
-        "Percepção de longa distância.",
-
       size: "medio",
-
       height: {
         min: 145,
         max: 180
       },
-
       flight: true,
-
       movement: {
         airMultiplier: 2
       }
@@ -1169,26 +1059,21 @@
       id: "coruja",
       name: "Coruja",
       category: "Ave",
-      profile: "Percepção noturna e intelecto.",
-
+      profile:
+        "Percepção noturna e intelecto.",
+      feature:
+        "Excelente percepção em baixa iluminação.",
       modifiers: {
         percepcao: 1,
         intelecto: 1,
         forca: -1
       },
-
-      feature:
-        "Excelente percepção em baixa iluminação.",
-
       size: "pequeno",
-
       height: {
         min: 135,
         max: 165
       },
-
       flight: true,
-
       movement: {
         airMultiplier: 2
       }
@@ -1198,26 +1083,21 @@
       id: "cobra",
       name: "Cobra",
       category: "Réptil",
-      profile: "Precisão, percepção e controle corporal.",
-
+      profile:
+        "Precisão, percepção e controle corporal.",
+      feature:
+        "Percepção de movimento.",
       modifiers: {
         precisao: 1,
         percepcao: 1,
         vigor: -1
       },
-
-      feature:
-        "Percepção de movimento.",
-
       size: "pequeno",
-
       height: {
         min: 135,
         max: 165
       },
-
       flight: false,
-
       movement: {}
     },
 
@@ -1225,26 +1105,21 @@
       id: "crocodilo",
       name: "Crocodilo",
       category: "Réptil",
-      profile: "Força, vigor e adaptação aquática.",
-
+      profile:
+        "Força, vigor e adaptação aquática.",
+      feature:
+        "Grande resistência e adaptação aquática.",
       modifiers: {
         forca: 1,
         vigor: 1,
         agilidade: -1
       },
-
-      feature:
-        "Grande resistência e adaptação aquática.",
-
       size: "grande",
-
       height: {
         min: 180,
         max: 250
       },
-
       flight: false,
-
       movement: {
         aquaticMultiplier: 2
       }
@@ -1254,26 +1129,21 @@
       id: "lagarto",
       name: "Lagarto",
       category: "Réptil",
-      profile: "Agilidade e percepção.",
-
+      profile:
+        "Agilidade e percepção.",
+      feature:
+        "Adaptação a superfícies e ambientes variados.",
       modifiers: {
         agilidade: 1,
         percepcao: 1,
         presenca: -1
       },
-
-      feature:
-        "Adaptação a superfícies e ambientes variados.",
-
       size: "medio",
-
       height: {
         min: 140,
         max: 180
       },
-
       flight: false,
-
       movement: {}
     },
 
@@ -1281,26 +1151,21 @@
       id: "urso",
       name: "Urso",
       category: "Grande porte",
-      profile: "Força e vigor.",
-
+      profile:
+        "Força e vigor.",
+      feature:
+        "Grande potência física.",
       modifiers: {
         forca: 1,
         vigor: 1,
         agilidade: -1
       },
-
-      feature:
-        "Grande potência física.",
-
       size: "grande",
-
       height: {
         min: 190,
         max: 270
       },
-
       flight: false,
-
       movement: {}
     },
 
@@ -1308,26 +1173,21 @@
       id: "rinoceronte",
       name: "Rinoceronte",
       category: "Grande porte",
-      profile: "Vigor extremo e resistência.",
-
+      profile:
+        "Vigor extremo e resistência.",
+      feature:
+        "Resistência física extraordinária.",
       modifiers: {
         vigor: 2,
         agilidade: -1,
         precisao: -1
       },
-
-      feature:
-        "Resistência física extraordinária.",
-
       size: "grande",
-
       height: {
         min: 200,
         max: 280
       },
-
       flight: false,
-
       movement: {}
     },
 
@@ -1335,26 +1195,21 @@
       id: "hipopotamo",
       name: "Hipopótamo",
       category: "Grande porte / Aquático",
-      profile: "Vigor, força e adaptação aquática.",
-
+      profile:
+        "Vigor, força e adaptação aquática.",
+      feature:
+        "Grande resistência e adaptação à água.",
       modifiers: {
         vigor: 1,
         forca: 1,
         agilidade: -1
       },
-
-      feature:
-        "Grande resistência e adaptação à água.",
-
       size: "grande",
-
       height: {
         min: 200,
         max: 280
       },
-
       flight: false,
-
       movement: {
         aquaticMultiplier: 2
       }
@@ -1364,26 +1219,21 @@
       id: "rato",
       name: "Rato",
       category: "Pequeno porte",
-      profile: "Agilidade e percepção.",
-
+      profile:
+        "Agilidade e percepção.",
+      feature:
+        "Movimentação em espaços reduzidos.",
       modifiers: {
         agilidade: 1,
         percepcao: 1,
         forca: -1
       },
-
-      feature:
-        "Movimentação em espaços reduzidos.",
-
       size: "pequeno",
-
       height: {
         min: 135,
         max: 160
       },
-
       flight: false,
-
       movement: {}
     },
 
@@ -1391,26 +1241,21 @@
       id: "tubarao",
       name: "Tubarão",
       category: "Aquático",
-      profile: "Vigor e percepção.",
-
+      profile:
+        "Vigor e percepção.",
+      feature:
+        "Percepção aquática e resistência.",
       modifiers: {
         vigor: 1,
         percepcao: 1,
         presenca: -1
       },
-
-      feature:
-        "Percepção aquática e resistência.",
-
       size: "grande",
-
       height: {
         min: 180,
         max: 240
       },
-
       flight: false,
-
       movement: {
         aquaticMultiplier: 2
       }
@@ -1420,35 +1265,30 @@
       id: "foca",
       name: "Foca",
       category: "Aquático",
-      profile: "Vigor e agilidade na água.",
-
+      profile:
+        "Vigor e agilidade na água.",
+      feature:
+        "Excelente mobilidade aquática.",
       modifiers: {
         vigor: 1,
         agilidade: 1,
         precisao: -1
       },
-
-      feature:
-        "Excelente mobilidade aquática.",
-
       size: "medio",
-
       height: {
         min: 145,
         max: 180
       },
-
       flight: false,
-
       movement: {
         aquaticMultiplier: 2
       }
     }
   ]);
 
-  /* =========================================================
+  /* =======================================================
      PORTE
-  ========================================================= */
+     ======================================================= */
 
   const SIZE_RULES = Object.freeze({
     pequeno: {
@@ -1472,9 +1312,9 @@
     }
   });
 
-  /* =========================================================
+  /* =======================================================
      ESTADO
-  ========================================================= */
+     ======================================================= */
 
   function createDefaultState() {
     return {
@@ -1487,7 +1327,6 @@
 
       race: "",
       raceIndex: 0,
-
       animalha: "",
 
       appearance: {
@@ -1546,158 +1385,54 @@
   let autosaveTimer =
     null;
 
-  /* =========================================================
-     RENDERER
-  ========================================================= */
+  /* =======================================================
+     HELPERS
+     ======================================================= */
 
-  function renderer() {
-    return window.AERIONFichaRender || null;
+  function clone(value) {
+    return JSON.parse(
+      JSON.stringify(value)
+    );
   }
 
   function render() {
-    const module =
-      renderer();
-
     if (
-      module &&
-      typeof module.render ===
+      window.AERIONFichaRender &&
+      typeof
+        window.AERIONFichaRender
+          .render ===
         "function"
     ) {
-      module.render(
+      window.AERIONFichaRender.render(
         getPublicState()
       );
     }
   }
 
-  /* =========================================================
-     UTILIDADES
-  ========================================================= */
-
-  function clamp(
-    value,
-    min,
-    max
-  ) {
-    return Math.max(
-      min,
-      Math.min(
-        max,
-        value
-      )
-    );
-  }
-
-  function deepClone(
-    value
-  ) {
-    return JSON.parse(
-      JSON.stringify(
-        value
-      )
-    );
-  }
-
-  function toast(
-    message
-  ) {
+  function toast(message) {
     if (
-      renderer() &&
-      typeof renderer()
-        .toast ===
+      window.AERIONFichaRender &&
+      typeof
+        window.AERIONFichaRender
+          .toast ===
         "function"
     ) {
-      renderer().toast(
+      window.AERIONFichaRender.toast(
         message
       );
 
       return;
     }
 
-    let element =
-      document.getElementById(
-        "toast"
-      );
-
-    if (!element) {
-      element =
-        document.createElement(
-          "div"
-        );
-
-      element.id =
-        "toast";
-
-      element.className =
-        "toast";
-
-      document.body.appendChild(
-        element
-      );
-    }
-
-    element.textContent =
-      message;
-
-    element.hidden =
-      false;
-
-    clearTimeout(
-      element._timer
+    console.info(
+      "[AERION]",
+      message
     );
-
-    element._timer =
-      setTimeout(
-        () => {
-          element.hidden =
-            true;
-        },
-        2200
-      );
   }
 
-  function normalize(
-    value
-  ) {
-    return String(
-      value ?? ""
-    )
-      .trim()
-      .toLowerCase();
-  }
-
-  /* =========================================================
-     ESTADO PÚBLICO
-  ========================================================= */
-
-  function getPublicState() {
-    return deepClone({
-      ...state,
-
-      selectedDie,
-
-      raceData:
-        getEffectiveRace(),
-
-      effectiveAttributes:
-        getEffectiveAttributes(),
-
-      effectiveSkills:
-        getEffectiveSkills(),
-
-      combat:
-        getCombatData(),
-
-      progress:
-        getProgress(),
-
-      steps:
-        STEPS
-    });
-  }
-
-  /* =========================================================
+  /* =======================================================
      AUTOSAVE
-  ========================================================= */
+     ======================================================= */
 
   function save() {
     clearTimeout(
@@ -1718,17 +1453,15 @@
               )
             );
 
-            setSaveStatus(
-              "Salvo automaticamente"
+            document.dispatchEvent(
+              new CustomEvent(
+                "aerion:ficha:saved"
+              )
             );
           } catch (error) {
             console.error(
               "[AERION] Erro ao salvar:",
               error
-            );
-
-            setSaveStatus(
-              "Erro ao salvar"
             );
           }
         },
@@ -1741,19 +1474,15 @@
       autosaveTimer
     );
 
-    try {
-      state.updatedAt =
-        new Date().toISOString();
+    state.updatedAt =
+      new Date().toISOString();
 
+    try {
       localStorage.setItem(
         CONFIG.storageKey,
         JSON.stringify(
           state
         )
-      );
-
-      setSaveStatus(
-        "Salvo automaticamente"
       );
 
       return true;
@@ -1763,25 +1492,7 @@
         error
       );
 
-      setSaveStatus(
-        "Erro ao salvar"
-      );
-
       return false;
-    }
-  }
-
-  function setSaveStatus(
-    message
-  ) {
-    const element =
-      document.getElementById(
-        "saveStatusText"
-      );
-
-    if (element) {
-      element.textContent =
-        message;
     }
   }
 
@@ -1850,12 +1561,14 @@
       };
 
       state.step =
-        clamp(
-          Number(
-            state.step
-          ) || 0,
+        Math.max(
           0,
-          STEPS.length - 1
+          Math.min(
+            STEPS.length - 1,
+            Number(
+              state.step
+            ) || 0
+          )
         );
 
       ensureRaceIndex();
@@ -1864,7 +1577,7 @@
       return true;
     } catch (error) {
       console.warn(
-        "[AERION] Não foi possível carregar o rascunho.",
+        "[AERION] Rascunho inválido:",
         error
       );
 
@@ -1872,19 +1585,42 @@
     }
   }
 
-  function clearDraft() {
-    clearTimeout(
-      autosaveTimer
-    );
+  /* =======================================================
+     ESTADO PÚBLICO
+     ======================================================= */
 
-    localStorage.removeItem(
-      CONFIG.storageKey
-    );
+  function getPublicState() {
+    return clone({
+      ...state,
+
+      selectedDie,
+
+      previewRace:
+        getPreviewRace(),
+
+      raceData:
+        getEffectiveRace(),
+
+      effectiveAttributes:
+        getEffectiveAttributes(),
+
+      effectiveSkills:
+        getEffectiveSkills(),
+
+      combat:
+        getCombatData(),
+
+      progress:
+        getProgress(),
+
+      steps:
+        STEPS
+    });
   }
 
-  /* =========================================================
+  /* =======================================================
      RAÇA
-  ========================================================= */
+     ======================================================= */
 
   function ensureRaceIndex() {
     if (
@@ -1919,6 +1655,15 @@
           race.id ===
           state.race
       ) ||
+      null
+    );
+  }
+
+  function getPreviewRace() {
+    return (
+      RACES[
+        state.raceIndex
+      ] ||
       null
     );
   }
@@ -1958,6 +1703,9 @@
 
     return {
       ...race,
+
+      id:
+        `${race.id}:${animal.id}`,
 
       name:
         `${race.name} — ${animal.name}`,
@@ -2007,14 +1755,13 @@
       );
 
     if (
-      index ===
-      -1
+      index < 0
     ) {
       return false;
     }
 
     state.race =
-      RACES[index].id;
+      raceId;
 
     state.raceIndex =
       index;
@@ -2034,6 +1781,17 @@
     return true;
   }
 
+  function selectCurrentRace() {
+    const race =
+      getPreviewRace();
+
+    return race
+      ? selectRace(
+          race.id
+        )
+      : false;
+  }
+
   function setRaceIndex(
     index
   ) {
@@ -2043,14 +1801,8 @@
     if (
       !Number.isInteger(
         index
-      )
-    ) {
-      return false;
-    }
-
-    if (
-      index <
-      0 ||
+      ) ||
+      index < 0 ||
       index >=
         RACES.length
     ) {
@@ -2066,68 +1818,34 @@
   }
 
   function nextRace() {
-    let next =
-      state.raceIndex +
-      1;
-
-    if (
-      next >=
-      RACES.length
-    ) {
-      next =
-        0;
-    }
-
     state.raceIndex =
-      next;
+      (
+        state.raceIndex +
+        1
+      ) %
+      RACES.length;
 
     render();
-
-    save();
 
     return true;
   }
 
   function previousRace() {
-    let previous =
-      state.raceIndex -
-      1;
-
-    if (
-      previous <
-      0
-    ) {
-      previous =
-        RACES.length - 1;
-    }
-
     state.raceIndex =
-      previous;
+      (
+        state.raceIndex -
+        1 +
+        RACES.length
+      ) %
+      RACES.length;
 
     render();
-
-    save();
 
     return true;
   }
 
-  function selectCurrentRace() {
-    const race =
-      RACES[
-        state.raceIndex
-      ];
-
-    if (!race) {
-      return false;
-    }
-
-    return selectRace(
-      race.id
-    );
-  }
-
   function selectAnimalha(
-    variantId
+    id
   ) {
     if (
       state.race !==
@@ -2136,43 +1854,37 @@
       return false;
     }
 
-    const variant =
-      ANIMALHA_VARIANTS.find(
-        item =>
-          item.id ===
-          variantId
-      );
-
-    if (!variant) {
+    if (
+      !ANIMALHA_VARIANTS.some(
+        variant =>
+          variant.id ===
+          id
+      )
+    ) {
       return false;
     }
 
     state.animalha =
-      variant.id;
+      id;
 
     resetAppearanceHeight();
 
     save();
     render();
 
-    toast(
-      `${variant.name} selecionado.`
-    );
-
     return true;
   }
 
-  /* =========================================================
+  /* =======================================================
      APARÊNCIA
-  ========================================================= */
+     ======================================================= */
 
   function resetAppearanceHeight() {
     const race =
       getEffectiveRace();
 
     if (
-      !race ||
-      !race.height
+      !race?.height
     ) {
       return;
     }
@@ -2189,17 +1901,16 @@
 
     const current =
       Number(
-        state.appearance.height
+        state.appearance
+          .height
       );
 
     if (
       !Number.isFinite(
         current
       ) ||
-      current <
-        min ||
-      current >
-        max
+      current < min ||
+      current > max
     ) {
       state.appearance.height =
         Math.round(
@@ -2210,53 +1921,6 @@
             2
         );
     }
-  }
-
-  function setAppearanceField(
-    field,
-    value
-  ) {
-    const allowed = [
-      "height",
-      "hair",
-      "eyes",
-      "skin",
-      "clothing",
-      "scars",
-      "tattoos",
-      "physicalNotes"
-    ];
-
-    if (
-      !allowed.includes(
-        field
-      )
-    ) {
-      return false;
-    }
-
-    if (
-      field ===
-      "height"
-    ) {
-      setHeight(
-        value
-      );
-
-      return true;
-    }
-
-    state.appearance[
-      field
-    ] =
-      String(
-        value ?? ""
-      );
-
-    save();
-    render();
-
-    return true;
   }
 
   function setHeight(
@@ -2281,16 +1945,17 @@
         race.height.max
       );
 
-    const height =
-      clamp(
-        Number(value),
-        min,
-        max
-      );
-
     state.appearance.height =
-      Math.round(
-        height
+      Math.max(
+        min,
+        Math.min(
+          max,
+          Math.round(
+            Number(
+              value
+            ) || min
+          )
+        )
       );
 
     save();
@@ -2299,9 +1964,44 @@
     return true;
   }
 
-  /* =========================================================
+  function setAppearanceField(
+    field,
+    value
+  ) {
+    if (
+      field ===
+      "height"
+    ) {
+      return setHeight(
+        value
+      );
+    }
+
+    if (
+      !Object.prototype.hasOwnProperty.call(
+        state.appearance,
+        field
+      )
+    ) {
+      return false;
+    }
+
+    state.appearance[
+      field
+    ] =
+      String(
+        value ?? ""
+      );
+
+    save();
+    render();
+
+    return true;
+  }
+
+  /* =======================================================
      CLASSE
-  ========================================================= */
+     ======================================================= */
 
   function selectClass(
     classId
@@ -2329,146 +2029,46 @@
     return true;
   }
 
-  /* =========================================================
-     ATRIBUTOS
-  ========================================================= */
+  /* =======================================================
+     DADOS
+     ======================================================= */
 
-  function getAvailableDice() {
-    const available =
-      [];
-
-    Object.entries(
-      DICE
-    ).forEach(
-      ([
-        die,
-        data
-      ]) => {
-        let used =
-          0;
-
-        Object.values(
-          state.attributes
-        ).forEach(
-          value => {
-            if (
-              value ===
-              die
-            ) {
-              used++;
-            }
-          }
-        );
-
-        const remaining =
-          data.amount -
-          used;
-
-        for (
-          let i = 0;
-          i <
-          remaining;
-          i++
-        ) {
-          available.push(
-            die
-          );
-        }
-      }
-    );
-
-    return available;
+  function countAssignedDie(
+    die
+  ) {
+    return Object.values(
+      state.attributes
+    ).filter(
+      value =>
+        value ===
+        die
+    ).length;
   }
 
-  function isValidDie(
+  function isDieAvailable(
     die
   ) {
     return Boolean(
       DICE[
-        normalize(die)
-      ]
+        die
+      ] &&
+      countAssignedDie(
+        die
+      ) <
+        DICE[die].amount
     );
   }
 
-  function canUseDie(
+  function selectDie(
     die
   ) {
     die =
-      normalize(
+      String(
         die
-      );
+      ).toLowerCase();
 
     if (
-      !isValidDie(
-        die
-      )
-    ) {
-      return false;
-    }
-
-    return getAvailableDice()
-      .includes(
-        die
-      );
-  }
-
-  function assignDie(
-    attribute,
-    die
-  ) {
-    attribute =
-      normalize(
-        attribute
-      );
-
-    die =
-      normalize(
-        die
-      );
-
-    const validAttribute =
-      ATTRIBUTES.some(
-        item =>
-          item.id ===
-          attribute
-      );
-
-    if (
-      !validAttribute
-    ) {
-      return false;
-    }
-
-    if (
-      !isValidDie(
-        die
-      )
-    ) {
-      return false;
-    }
-
-    /*
-     * Mesmo dado clicado novamente:
-     * devolve.
-     */
-    if (
-      state.attributes[
-        attribute
-      ] ===
-      die
-    ) {
-      returnDie(
-        attribute
-      );
-
-      return true;
-    }
-
-    /*
-     * Impede quantidade acima do limite.
-     */
-    if (
-      !canUseDie(
+      !isDieAvailable(
         die
       )
     ) {
@@ -2479,10 +2079,59 @@
       return false;
     }
 
-    /*
-     * Se já estiver em outro atributo,
-     * remove de lá.
-     */
+    selectedDie =
+      die;
+
+    render();
+
+    return true;
+  }
+
+  function assignDie(
+    attribute,
+    die
+  ) {
+    if (
+      !ATTRIBUTES.some(
+        item =>
+          item.id ===
+          attribute
+      )
+    ) {
+      return false;
+    }
+
+    if (
+      !DICE[
+        die
+      ]
+    ) {
+      return false;
+    }
+
+    if (
+      state.attributes[
+        attribute
+      ] ===
+      die
+    ) {
+      return returnDie(
+        attribute
+      );
+    }
+
+    if (
+      !isDieAvailable(
+        die
+      )
+    ) {
+      toast(
+        `${die.toUpperCase()} já está em uso.`
+      );
+
+      return false;
+    }
+
     ATTRIBUTES.forEach(
       item => {
         if (
@@ -2495,7 +2144,8 @@
         ) {
           state.attributes[
             item.id
-          ] = null;
+          ] =
+            null;
 
           delete state.rolls[
             item.id
@@ -2522,76 +2172,6 @@
     return true;
   }
 
-  function returnDie(
-    attribute
-  ) {
-    attribute =
-      normalize(
-        attribute
-      );
-
-    if (
-      !ATTRIBUTES.some(
-        item =>
-          item.id ===
-          attribute
-      )
-    ) {
-      return false;
-    }
-
-    state.attributes[
-      attribute
-    ] = null;
-
-    delete state.rolls[
-      attribute
-    ];
-
-    selectedDie =
-      null;
-
-    save();
-    render();
-
-    return true;
-  }
-
-  function selectDie(
-    die
-  ) {
-    die =
-      normalize(
-        die
-      );
-
-    if (
-      !canUseDie(
-        die
-      )
-    ) {
-      toast(
-        `${die.toUpperCase()} não está disponível.`
-      );
-
-      return false;
-    }
-
-    selectedDie =
-      die;
-
-    render();
-
-    return true;
-  }
-
-  function clearDieSelection() {
-    selectedDie =
-      null;
-
-    render();
-  }
-
   function assignSelectedDie(
     attribute
   ) {
@@ -2607,6 +2187,37 @@
     );
   }
 
+  function returnDie(
+    attribute
+  ) {
+    if (
+      !ATTRIBUTES.some(
+        item =>
+          item.id ===
+          attribute
+      )
+    ) {
+      return false;
+    }
+
+    state.attributes[
+      attribute
+    ] =
+      null;
+
+    delete state.rolls[
+      attribute
+    ];
+
+    selectedDie =
+      null;
+
+    save();
+    render();
+
+    return true;
+  }
+
   function swapAttributes(
     first,
     second
@@ -2618,23 +2229,17 @@
       return false;
     }
 
-    const firstValid =
-      ATTRIBUTES.some(
+    if (
+      !ATTRIBUTES.some(
         item =>
           item.id ===
           first
-      );
-
-    const secondValid =
-      ATTRIBUTES.some(
+      ) ||
+      !ATTRIBUTES.some(
         item =>
           item.id ===
           second
-      );
-
-    if (
-      !firstValid ||
-      !secondValid
+      )
     ) {
       return false;
     }
@@ -2653,7 +2258,8 @@
 
     state.attributes[
       second
-    ] = temp;
+    ] =
+      temp;
 
     const firstRoll =
       state.rolls[
@@ -2697,6 +2303,19 @@
     return true;
   }
 
+  function getRaceModifier(
+    attribute
+  ) {
+    return (
+      Number(
+        getEffectiveRace()
+          ?.modifiers?.[
+          attribute
+        ]
+      ) || 0
+    );
+  }
+
   function getAttribute(
     attribute
   ) {
@@ -2705,35 +2324,36 @@
         attribute
       ];
 
-    const raceBonus =
-      Number(
-        getEffectiveRace()
-          ?.modifiers?.[
-          attribute
-        ]
-      ) || 0;
+    const roll =
+      state.rolls[
+        attribute
+      ];
+
+    const modifier =
+      getRaceModifier(
+        attribute
+      );
 
     const sides =
       DICE[
         die
       ]?.sides || 0;
 
-    const roll =
-      state.rolls[
-        attribute
-      ];
-
     return {
       id:
         attribute,
 
-      die:
-        die,
+      name:
+        getAttributeName(
+          attribute
+        ),
+
+      die,
 
       sides,
 
       racialModifier:
-        raceBonus,
+        modifier,
 
       rolled:
         Boolean(
@@ -2749,7 +2369,7 @@
         (
           die
             ? sides +
-              raceBonus
+              modifier
             : null
         )
     };
@@ -2776,11 +2396,6 @@
   function rollAttribute(
     attribute
   ) {
-    attribute =
-      normalize(
-        attribute
-      );
-
     const die =
       state.attributes[
         attribute
@@ -2788,7 +2403,9 @@
 
     if (
       !die ||
-      !DICE[die]
+      !DICE[
+        die
+      ]
     ) {
       toast(
         "Coloque um dado nesse atributo primeiro."
@@ -2797,11 +2414,14 @@
       return null;
     }
 
-    const result =
+    const roll =
       Math.floor(
         Math.random() *
-          DICE[die].sides
-      ) + 1;
+          DICE[
+            die
+          ].sides
+      ) +
+      1;
 
     const modifier =
       getRaceModifier(
@@ -2809,20 +2429,20 @@
       );
 
     const total =
-      result +
+      roll +
       modifier;
 
     state.rolls[
       attribute
     ] = {
+      die,
+
       value:
-        result,
+        roll,
 
       modifier,
 
       total,
-
-      die,
 
       timestamp:
         Date.now()
@@ -2840,57 +2460,42 @@
     return total;
   }
 
-  function getRaceModifier(
-    attribute
-  ) {
-    return (
-      Number(
-        getEffectiveRace()
-          ?.modifiers?.[
-          attribute
-        ]
-      ) || 0
-    );
-  }
-
   function getAttributeName(
     id
   ) {
     return (
       ATTRIBUTES.find(
-        attribute =>
-          attribute.id ===
+        item =>
+          item.id ===
           id
       )?.name ||
       id
     );
   }
 
-  /* =========================================================
+  /* =======================================================
      PODER
-  ========================================================= */
+     ======================================================= */
 
   function rollPower() {
     const roll =
       Math.floor(
         Math.random() *
           100
-      ) + 1;
+      ) +
+      1;
 
-    let index =
-      Math.floor(
-        (
-          roll -
-          1
-        ) /
-          25
-      );
-
-    index =
-      clamp(
-        index,
-        0,
-        PRIMARY_POWERS.length - 1
+    const index =
+      Math.min(
+        PRIMARY_POWERS.length -
+          1,
+        Math.floor(
+          (
+            roll -
+            1
+          ) /
+            25
+        )
       );
 
     const power =
@@ -2923,13 +2528,10 @@
   function selectParallelPower(
     power
   ) {
-    const exists =
-      PARALLEL_POWERS.includes(
-        power
-      );
-
     if (
-      !exists
+      !PARALLEL_POWERS.includes(
+        power
+      )
     ) {
       return false;
     }
@@ -2953,24 +2555,21 @@
     return true;
   }
 
-  /* =========================================================
+  /* =======================================================
      MANA
-  ========================================================= */
+     ======================================================= */
 
   function selectMana(
     mana
   ) {
-    mana =
-      normalize(
-        mana
-      );
-
     if (
-      mana !==
+      String(
+        mana
+      ).toLowerCase() !==
       "azul"
     ) {
       toast(
-        "Esta Mana está bloqueada. Ela pode ser liberada pelo Mestre dentro da campanha."
+        "Esta Mana está bloqueada. O Mestre pode liberá-la dentro da campanha."
       );
 
       return false;
@@ -2985,9 +2584,9 @@
     return true;
   }
 
-  /* =========================================================
+  /* =======================================================
      PERÍCIAS
-  ========================================================= */
+     ======================================================= */
 
   function ensureSkills() {
     if (
@@ -3086,12 +2685,14 @@
     state.skills[
       skillId
     ].bonus =
-      clamp(
-        Number(
-          value
-        ) || 0,
+      Math.max(
         -20,
-        20
+        Math.min(
+          20,
+          Number(
+            value
+          ) || 0
+        )
       );
 
     save();
@@ -3114,7 +2715,7 @@
       return 0;
     }
 
-    const trained =
+    const training =
       skill.trained
         ? 5
         : 0;
@@ -3134,7 +2735,7 @@
       ) || 0;
 
     return (
-      trained +
+      training +
       manual +
       classBonus
     );
@@ -3153,6 +2754,9 @@
         result[
           skillId
         ] = {
+          id:
+            skillId,
+
           ...state.skills[
             skillId
           ],
@@ -3168,9 +2772,9 @@
     return result;
   }
 
-  /* =========================================================
+  /* =======================================================
      TÉCNICAS
-  ========================================================= */
+     ======================================================= */
 
   function createTechnique() {
     return {
@@ -3192,17 +2796,19 @@
   function addTechnique(
     data = {}
   ) {
-    state.techniques.push({
+    const technique = {
       ...createTechnique(),
       ...data
-    });
+    };
+
+    state.techniques.push(
+      technique
+    );
 
     save();
     render();
 
-    return state.techniques[
-      state.techniques.length - 1
-    ];
+    return technique;
   }
 
   function updateTechnique(
@@ -3221,18 +2827,16 @@
       return false;
     }
 
-    const allowed = [
-      "name",
-      "description",
-      "range",
-      "damage",
-      "cost",
-      "test",
-      "limitation"
-    ];
-
     if (
-      !allowed.includes(
+      ![
+        "name",
+        "description",
+        "range",
+        "damage",
+        "cost",
+        "test",
+        "limitation"
+      ].includes(
         field
       )
     ) {
@@ -3247,8 +2851,11 @@
       );
 
     save();
-    render();
 
+    /*
+     * Não renderiza enquanto o usuário
+     * está digitando para não roubar foco.
+     */
     return true;
   }
 
@@ -3268,39 +2875,40 @@
     return true;
   }
 
-  /* =========================================================
+  /* =======================================================
      INVENTÁRIO
-  ========================================================= */
+     ======================================================= */
 
-  function addInventoryItem(
-    data = {}
-  ) {
-    const item = {
+  function createInventoryItem() {
+    return {
       id:
         `item-${Date.now()}-${Math.random()
           .toString(36)
           .slice(2)}`,
 
-      name:
-        String(
-          data.name ??
-            ""
-        ),
+      name: "",
 
-      quantity:
-        Math.max(
-          0,
-          Number(
-            data.quantity
-          ) || 1
-        ),
+      quantity: 1,
 
-      description:
-        String(
-          data.description ??
-            ""
-        )
+      description: ""
     };
+  }
+
+  function addInventoryItem(
+    data = {}
+  ) {
+    const item = {
+      ...createInventoryItem(),
+      ...data
+    };
+
+    item.quantity =
+      Math.max(
+        0,
+        Number(
+          item.quantity
+        ) || 1
+      );
 
     state.inventory.push(
       item
@@ -3340,14 +2948,14 @@
           ) || 0
         );
     } else if (
-      [
-        "name",
+      field ===
+        "name" ||
+      field ===
         "description"
-      ].includes(
-        field
-      )
     ) {
-      item[field] =
+      item[
+        field
+      ] =
         String(
           value ?? ""
         );
@@ -3357,6 +2965,9 @@
 
     save();
 
+    /*
+     * Evita rerender durante digitação.
+     */
     return true;
   }
 
@@ -3376,9 +2987,44 @@
     return true;
   }
 
-  /* =========================================================
+  /* =======================================================
      COMBATE
-  ========================================================= */
+     ======================================================= */
+
+  function calculateHP() {
+    const race =
+      getEffectiveRace();
+
+    const vigor =
+      getAttribute(
+        "vigor"
+      );
+
+    if (
+      !race ||
+      !vigor.die
+    ) {
+      return null;
+    }
+
+    const size =
+      SIZE_RULES[
+        race.size
+      ] ||
+      SIZE_RULES.medio;
+
+    return (
+      10 +
+      Number(
+        vigor.total ||
+          0
+      ) +
+      Number(
+        size.hpBonus ||
+          0
+      )
+    );
+  }
 
   function getCombatData() {
     const race =
@@ -3400,22 +3046,7 @@
       ] ||
       SIZE_RULES.medio;
 
-    const vigor =
-      getAttribute(
-        "vigor"
-      );
-
-    const hp =
-      vigor.die
-        ? 10 +
-          (
-            vigor.total ||
-            0
-          ) +
-          size.hpBonus
-        : null;
-
-    let ground =
+    let movement =
       9 *
       size.movementMultiplier;
 
@@ -3423,7 +3054,7 @@
       race.movement
         ?.groundMultiplier
     ) {
-      ground *=
+      movement *=
         Number(
           race.movement
             .groundMultiplier
@@ -3455,17 +3086,19 @@
     ) {
       aquatic =
         9 *
-        Number(
-          race.movement
-            .aquaticMultiplier
+        (
+          Number(
+            race.movement
+              .aquaticMultiplier
+          ) || 1
         );
     }
 
     return {
-      hp,
+      hp:
+        calculateHP(),
 
-      movement:
-        ground,
+      movement,
 
       air,
 
@@ -3478,9 +3111,9 @@
     };
   }
 
-  /* =========================================================
+  /* =======================================================
      PROGRESSO
-  ========================================================= */
+     ======================================================= */
 
   function isStepComplete(
     index
@@ -3489,12 +3122,14 @@
       index
     ) {
       case 0:
-        return Boolean(
-          state.name.trim()
-        ) &&
+        return (
+          Boolean(
+            state.name.trim()
+          ) &&
           Boolean(
             state.gender
-          );
+          )
+        );
 
       case 1:
         return Boolean(
@@ -3503,7 +3138,8 @@
 
       case 2:
         return Boolean(
-          state.appearance.height
+          state.appearance
+            .height
         );
 
       case 3:
@@ -3533,11 +3169,7 @@
         );
 
       case 7:
-        return true;
-
       case 8:
-        return true;
-
       case 9:
         return true;
 
@@ -3587,9 +3219,6 @@
   }
 
   function getProgress() {
-    const total =
-      STEPS.length;
-
     const completed =
       STEPS.filter(
         (
@@ -3603,22 +3232,24 @@
 
     return {
       completed,
-      total,
+
+      total:
+        STEPS.length,
 
       percent:
         Math.round(
           (
             completed /
-            total
+            STEPS.length
           ) *
             100
         )
     };
   }
 
-  /* =========================================================
+  /* =======================================================
      NAVEGAÇÃO
-  ========================================================= */
+     ======================================================= */
 
   function goToStep(
     index
@@ -3629,14 +3260,8 @@
     if (
       !Number.isInteger(
         index
-      )
-    ) {
-      return false;
-    }
-
-    if (
-      index <
-      0 ||
+      ) ||
+      index < 0 ||
       index >=
         STEPS.length
     ) {
@@ -3726,9 +3351,9 @@
     return true;
   }
 
-  /* =========================================================
+  /* =======================================================
      IDENTIDADE
-  ========================================================= */
+     ======================================================= */
 
   function setName(
     value
@@ -3757,12 +3382,10 @@
     value
   ) {
     if (
-      ![
-        "masculino",
+      value !==
+        "masculino" &&
+      value !==
         "feminino"
-      ].includes(
-        value
-      )
     ) {
       return false;
     }
@@ -3798,9 +3421,9 @@
     save();
   }
 
-  /* =========================================================
+  /* =======================================================
      AVATAR
-  ========================================================= */
+     ======================================================= */
 
   function setAvatar(
     file
@@ -3823,7 +3446,7 @@
 
     if (
       file.size >
-      CONFIG.imageMaxSize
+      CONFIG.maxImageSize
     ) {
       toast(
         "A imagem deve ter no máximo 6 MB."
@@ -3880,21 +3503,23 @@
     return true;
   }
 
-  /* =========================================================
+  /* =======================================================
      RESET
-  ========================================================= */
+     ======================================================= */
 
   function reset() {
     const confirmed =
       window.confirm(
-        "Deseja realmente começar uma nova ficha?"
+        "Deseja realmente começar uma nova ficha? O rascunho atual será apagado."
       );
 
     if (!confirmed) {
       return false;
     }
 
-    clearDraft();
+    localStorage.removeItem(
+      CONFIG.storageKey
+    );
 
     state =
       createDefaultState();
@@ -3914,28 +3539,29 @@
     return true;
   }
 
-  /* =========================================================
+  /* =======================================================
      FINALIZAÇÃO
-  ========================================================= */
+     ======================================================= */
 
   function validateBeforeFinish() {
     for (
-      let i = 0;
-      i <= 6;
-      i++
+      let index = 0;
+      index <= 6;
+      index++
     ) {
       if (
         !isStepComplete(
-          i
+          index
         )
       ) {
         state.step =
-          i;
+          index;
 
+        save();
         render();
 
         toast(
-          `Complete "${STEPS[i].name}" antes de finalizar.`
+          `Complete "${STEPS[index].name}" antes de finalizar.`
         );
 
         return false;
@@ -3946,20 +3572,15 @@
   }
 
   function buildCharacter() {
-    const race =
-      getEffectiveRace();
-
     return {
-      ...deepClone(
+      ...clone(
         state
       ),
 
       raceData:
-        race
-          ? deepClone(
-              race
-            )
-          : null,
+        clone(
+          getEffectiveRace()
+        ),
 
       effectiveAttributes:
         getEffectiveAttributes(),
@@ -3971,7 +3592,7 @@
         getCombatData(),
 
       version:
-        9,
+        10,
 
       exportedAt:
         new Date().toISOString()
@@ -3988,12 +3609,6 @@
     const character =
       buildCharacter();
 
-    if (
-      !forceSave()
-    ) {
-      return false;
-    }
-
     try {
       localStorage.setItem(
         CONFIG.lastCharacterKey,
@@ -4001,11 +3616,9 @@
           character
         )
       );
-    } catch (
-      error
-    ) {
+    } catch (error) {
       console.warn(
-        "[AERION] Não foi possível salvar a ficha final.",
+        "[AERION] Não foi possível salvar a ficha final:",
         error
       );
     }
@@ -4023,37 +3636,77 @@
       )
     );
 
+    forceSave();
+
     toast(
       "Ficha concluída com sucesso!",
+      3200
     );
 
     return true;
   }
 
-  /* =========================================================
-     EVENTOS
-  ========================================================= */
+  /* =======================================================
+     EVENTOS — CLICK
+     ======================================================= */
 
   function onClick(
     event
   ) {
-    const actionElement =
+    /*
+     * DADO
+     */
+    const die =
+      event.target.closest(
+        "[data-die]"
+      );
+
+    if (
+      die
+    ) {
+      selectDie(
+        die.dataset
+          .die
+      );
+
+      return;
+    }
+
+    /*
+     * DROP TARGET POR CLIQUE
+     */
+    const attribute =
+      event.target.closest(
+        "[data-attribute-drop]"
+      );
+
+    if (
+      attribute &&
+      selectedDie
+    ) {
+      assignSelectedDie(
+        attribute.dataset
+          .attributeDrop
+      );
+
+      return;
+    }
+
+    /*
+     * AÇÃO
+     */
+    const action =
       event.target.closest(
         "[data-action]"
       );
 
-    if (
-      !actionElement
-    ) {
+    if (!action) {
       return;
     }
 
-    const action =
-      actionElement.dataset
-        .action;
-
     switch (
-      action
+      action.dataset
+        .action
     ) {
       case "next":
         nextStep();
@@ -4065,8 +3718,15 @@
 
       case "go-step":
         goToStep(
-          actionElement.dataset
+          action.dataset
             .step
+        );
+        break;
+
+      case "go-race-index":
+        setRaceIndex(
+          action.dataset
+            .raceIndex
         );
         break;
 
@@ -4084,37 +3744,30 @@
 
       case "select-race":
         selectRace(
-          actionElement.dataset
+          action.dataset
             .race
         );
         break;
 
       case "select-animalha":
         selectAnimalha(
-          actionElement.dataset
+          action.dataset
             .animalha
         );
         break;
 
       case "select-class":
         selectClass(
-          actionElement.dataset
+          action.dataset
             .class
         );
         break;
 
       case "power-mode":
-        if (
-          renderer() &&
-          typeof renderer()
-            .setPowerMode ===
-            "function"
-        ) {
-          renderer().setPowerMode(
-            actionElement.dataset
-              .powerMode
-          );
-        }
+        window.AERIONFichaRender?.setPowerMode?.(
+          action.dataset
+            .powerMode
+        );
         break;
 
       case "roll-power":
@@ -4123,21 +3776,21 @@
 
       case "select-parallel-power":
         selectParallelPower(
-          actionElement.dataset
+          action.dataset
             .power
         );
         break;
 
       case "select-mana":
         selectMana(
-          actionElement.dataset
+          action.dataset
             .mana
         );
         break;
 
       case "roll-attribute":
         rollAttribute(
-          actionElement.dataset
+          action.dataset
             .attribute
         );
         break;
@@ -4145,14 +3798,14 @@
       case "return-die":
       case "remove-die":
         returnDie(
-          actionElement.dataset
+          action.dataset
             .attribute
         );
         break;
 
       case "train-skill":
         trainSkill(
-          actionElement.dataset
+          action.dataset
             .skill
         );
         break;
@@ -4163,7 +3816,7 @@
 
       case "remove-technique":
         removeTechnique(
-          actionElement.dataset
+          action.dataset
             .techniqueId
         );
         break;
@@ -4174,7 +3827,7 @@
 
       case "remove-inventory":
         removeInventoryItem(
-          actionElement.dataset
+          action.dataset
             .inventoryId
         );
         break;
@@ -4190,11 +3843,12 @@
       case "finish":
         finish();
         break;
-
-      default:
-        break;
     }
   }
+
+  /* =======================================================
+     EVENTOS — INPUT
+     ======================================================= */
 
   function onInput(
     event
@@ -4206,39 +3860,37 @@
       return;
     }
 
-    /*
-     * IDENTIDADE
-     */
     switch (
       element.id
     ) {
       case "characterName":
-        setName(
-          element.value
-        );
+        state.name =
+          element.value;
+
+        save();
         break;
 
       case "characterAge":
-        setAge(
-          element.value
-        );
+        state.age =
+          element.value;
+
+        save();
         break;
 
       case "characterDescription":
-        setDescription(
-          element.value
-        );
+        state.description =
+          element.value;
+
+        save();
         break;
 
       case "characterOrigin":
-        setOrigin(
-          element.value
-        );
+        state.origin =
+          element.value;
+
+        save();
         break;
 
-      /*
-       * APARÊNCIA
-       */
       case "heightRange":
         setHeight(
           element.value
@@ -4252,19 +3904,18 @@
       case "scars":
       case "tattoos":
       case "physicalNotes":
-        setAppearanceField(
-          element.id,
-          element.value
-        );
+        state.appearance[
+          element.id
+        ] =
+          element.value;
+
+        save();
         break;
 
       default:
         break;
     }
 
-    /*
-     * PERÍCIAS
-     */
     if (
       element.matches(
         "[data-skill-bonus]"
@@ -4279,9 +3930,6 @@
       return;
     }
 
-    /*
-     * TÉCNICAS
-     */
     if (
       element.matches(
         "[data-technique-id][data-technique-field]"
@@ -4298,9 +3946,6 @@
       return;
     }
 
-    /*
-     * INVENTÁRIO
-     */
     if (
       element.matches(
         "[data-inventory-id][data-inventory-field]"
@@ -4317,6 +3962,10 @@
       return;
     }
   }
+
+  /* =======================================================
+     EVENTOS — CHANGE
+     ======================================================= */
 
   function onChange(
     event
@@ -4360,35 +4009,11 @@
 
       return;
     }
-
-    if (
-      element.matches(
-        "[data-race-select]"
-      )
-    ) {
-      selectRace(
-        element.value
-      );
-
-      return;
-    }
-
-    if (
-      element.matches(
-        "[data-class-select]"
-      )
-    ) {
-      selectClass(
-        element.value
-      );
-
-      return;
-    }
   }
 
-  /* =========================================================
+  /* =======================================================
      DRAG & DROP
-  ========================================================= */
+     ======================================================= */
 
   function onDragStart(
     event
@@ -4403,13 +4028,13 @@
     }
 
     const die =
-      normalize(
+      String(
         element.dataset
           .die
-      );
+      ).toLowerCase();
 
     if (
-      !canUseDie(
+      !isDieAvailable(
         die
       )
     ) {
@@ -4432,8 +4057,6 @@
         die
       );
     }
-
-    render();
   }
 
   function onDragOver(
@@ -4490,16 +4113,14 @@
       "drag-over"
     );
 
-    const dropped =
-      event.dataTransfer?.getData(
-        "text/plain"
-      );
-
     const die =
-      normalize(
-        dropped ||
-          selectedDie
-      );
+      String(
+        event.dataTransfer?.getData(
+          "text/plain"
+        ) ||
+        selectedDie ||
+        ""
+      ).toLowerCase();
 
     if (!die) {
       return;
@@ -4510,14 +4131,11 @@
         .attributeDrop,
       die
     );
-
-    selectedDie =
-      null;
   }
 
-  /* =========================================================
+  /* =======================================================
      INICIALIZAÇÃO
-  ========================================================= */
+     ======================================================= */
 
   function init() {
     const recovered =
@@ -4527,9 +4145,6 @@
     ensureRaceIndex();
     resetAppearanceHeight();
 
-    /*
-     * Eventos.
-     */
     document.addEventListener(
       "click",
       onClick
@@ -4582,22 +4197,23 @@
       forceSave
     );
 
-    /*
-     * Render inicial.
-     */
     render();
 
-    setSaveStatus(
-      recovered
-        ? "Rascunho recuperado"
-        : "Salvo automaticamente"
-    );
-
-    /*
-     * API pública.
-     */
     window.AERIONFicha =
       Object.freeze({
+        constants: {
+          STEPS,
+          ATTRIBUTES,
+          DICE,
+          PRIMARY_POWERS,
+          PARALLEL_POWERS,
+          CLASSES,
+          SKILLS,
+          RACES,
+          ANIMALHA_VARIANTS,
+          SIZE_RULES
+        },
+
         getState:
           getPublicState,
 
@@ -4619,11 +4235,11 @@
 
         selectRace,
 
+        selectCurrentRace,
+
         nextRace,
 
         previousRace,
-
-        selectCurrentRace,
 
         setRaceIndex,
 
@@ -4637,7 +4253,13 @@
 
         selectDie,
 
-        clearDieSelection,
+        clearDieSelection:
+          () => {
+            selectedDie =
+              null;
+
+            render();
+          },
 
         assignDie,
 
@@ -4685,20 +4307,7 @@
 
         removeAvatar,
 
-        finish,
-
-        constants: {
-          STEPS,
-          ATTRIBUTES,
-          DICE,
-          PRIMARY_POWERS,
-          PARALLEL_POWERS,
-          CLASSES,
-          SKILLS,
-          RACES,
-          ANIMALHA_VARIANTS,
-          SIZE_RULES
-        }
+        finish
       });
 
     window.dispatchEvent(
@@ -4708,13 +4317,16 @@
     );
 
     console.info(
-      "[AERION] ficha.js inicializado."
+      "[AERION] ficha.js inicializado.",
+      recovered
+        ? "Rascunho recuperado."
+        : ""
     );
   }
 
-  /* =========================================================
+  /* =======================================================
      START
-  ========================================================= */
+     ======================================================= */
 
   if (
     document.readyState ===
