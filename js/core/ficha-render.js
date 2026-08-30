@@ -19,41 +19,34 @@
    - Perícias
    - Técnicas
    - Inventário
+   - Combate
    - Revisão
    - Progresso
 
-   NÃO contém:
-   - regras centrais
-   - estado principal
-   - autosave
-   - decisões de jogo
-
-   O núcleo fica em:
+   O estado e as regras ficam em:
    js/core/ficha.js
    ========================================================= */
 
 (() => {
   "use strict";
 
-  /* =========================================================
-     ESTADO LOCAL DO RENDER
-     ========================================================= */
+  let lastState = null;
 
-  let currentState = null;
-
-  /* =========================================================
-     UTILIDADES DOM
-     ========================================================= */
+  /* =======================================================
+     DOM
+     ======================================================= */
 
   function $(selector, root = document) {
     return root.querySelector(selector);
   }
 
   function $$(selector, root = document) {
-    return Array.from(
-      root.querySelectorAll(selector)
-    );
+    return [...root.querySelectorAll(selector)];
   }
+
+  /* =======================================================
+     SEGURANÇA / FORMATAÇÃO
+     ======================================================= */
 
   function escapeHtml(value) {
     return String(value ?? "")
@@ -74,11 +67,29 @@
     return `${(value / 100).toFixed(2)} m`;
   }
 
-  /* =========================================================
-     TOAST
-     ========================================================= */
+  function formatSigned(value) {
+    const number = Number(value) || 0;
 
-  function toast(message, duration = 2400) {
+    if (number > 0) {
+      return `+${number}`;
+    }
+
+    return String(number);
+  }
+
+  function getCore() {
+    return window.AERIONFicha || null;
+  }
+
+  function getConstants(name) {
+    return getCore()?.constants?.[name] || [];
+  }
+
+  /* =======================================================
+     TOAST
+     ======================================================= */
+
+  function toast(message, duration = 2200) {
     let element = $("#toast");
 
     if (!element) {
@@ -99,25 +110,25 @@
     element.hidden = false;
 
     clearTimeout(
-      element.__aerionToastTimer
+      element.__aerionTimer
     );
 
-    element.__aerionToastTimer =
+    element.__aerionTimer =
       setTimeout(() => {
         element.hidden = true;
       }, duration);
   }
 
-  /* =========================================================
-     RENDER PRINCIPAL
-     ========================================================= */
+  /* =======================================================
+     RENDER GERAL
+     ======================================================= */
 
   function render(state) {
-    currentState = state;
-
-    if (!currentState) {
+    if (!state) {
       return;
     }
+
+    lastState = state;
 
     renderProgress();
     renderPanels();
@@ -132,6 +143,7 @@
     renderClasses();
 
     renderAttributes();
+
     renderPower();
     renderMana();
 
@@ -145,21 +157,28 @@
     renderNavigation();
   }
 
-  /* =========================================================
+  /* =======================================================
      PROGRESSO
-     ========================================================= */
+     ======================================================= */
 
   function renderProgress() {
     const progress =
-      currentState.progress || {
+      lastState.progress || {
         percent: 0,
         completed: 0,
-        total:
-          currentState.steps?.length || 11
+        total: 11
       };
 
     const percent =
-      Number(progress.percent) || 0;
+      Math.max(
+        0,
+        Math.min(
+          100,
+          Number(
+            progress.percent
+          ) || 0
+        )
+      );
 
     const bar =
       $("#progressBar");
@@ -184,13 +203,11 @@
 
     const step =
       Number(
-        currentState.step
+        lastState.step
       ) || 0;
 
     const title =
-      currentState.steps?.[
-        step
-      ]?.name ||
+      lastState.steps?.[step]?.name ||
       "Identidade";
 
     const progressTitle =
@@ -201,51 +218,54 @@
         title;
     }
 
-    $$(".progress-step")
+    $$(".creation-step")
       .forEach(
-        (element, index) => {
+        (
+          button,
+          index
+        ) => {
           const active =
             index === step;
 
           const complete =
-            isProgressStepComplete(
+            isStepCompleteVisual(
               index
             );
 
           const unlocked =
-            isStepUnlocked(
+            isStepUnlockedVisual(
               index
             );
 
-          element.classList.toggle(
+          button.classList.toggle(
             "active",
             active
           );
 
-          element.classList.toggle(
+          button.classList.toggle(
             "is-active",
             active
           );
 
-          element.classList.toggle(
+          button.classList.toggle(
             "complete",
             complete
           );
 
-          element.classList.toggle(
+          button.classList.toggle(
             "is-complete",
             complete
           );
 
-          element.classList.toggle(
+          button.classList.toggle(
             "locked",
             !unlocked
           );
 
-          element.disabled =
+          button.disabled =
             !unlocked;
 
-          element.setAttribute(
+          button.setAttribute(
             "aria-current",
             active
               ? "step"
@@ -255,13 +275,13 @@
       );
   }
 
-  function isProgressStepComplete(
+  function isStepCompleteVisual(
     index
   ) {
     const step =
       Number(
-        currentState.step
-      );
+        lastState.step
+      ) || 0;
 
     if (
       index <
@@ -270,47 +290,38 @@
       return true;
     }
 
-    if (
-      currentState.progress
-        ?.completed >=
-      currentState.steps?.length
-    ) {
-      return true;
-    }
-
-    /*
-     * O estado público não expõe necessariamente
-     * isStepComplete, então calculamos os pontos
-     * básicos visualmente.
-     */
     switch (index) {
       case 0:
         return Boolean(
-          currentState.name &&
-          currentState.gender
-        );
+          String(
+            lastState.name || ""
+          ).trim()
+        ) &&
+          Boolean(
+            lastState.gender
+          );
 
       case 1:
         return Boolean(
-          currentState.race
+          lastState.race
         );
 
       case 2:
         return Boolean(
-          currentState.appearance
+          lastState.appearance
             ?.height
         );
 
       case 3:
         return Boolean(
-          currentState.class
+          lastState.class
         );
 
       case 4:
         return Boolean(
-          currentState.effectiveAttributes &&
+          lastState.effectiveAttributes &&
           Object.values(
-            currentState.effectiveAttributes
+            lastState.effectiveAttributes
           ).every(
             attribute =>
               Boolean(
@@ -321,13 +332,24 @@
 
       case 5:
         return Boolean(
-          currentState.power
+          lastState.power
         );
 
       case 6:
         return (
-          currentState.mana ===
+          lastState.mana ===
           "azul"
+        );
+
+      case 10:
+        return (
+          isStepCompleteVisual(0) &&
+          isStepCompleteVisual(1) &&
+          isStepCompleteVisual(2) &&
+          isStepCompleteVisual(3) &&
+          isStepCompleteVisual(4) &&
+          isStepCompleteVisual(5) &&
+          isStepCompleteVisual(6)
         );
 
       default:
@@ -335,165 +357,80 @@
     }
   }
 
-  function isStepUnlocked(
+  function isStepUnlockedVisual(
     index
   ) {
-    if (
-      index <= 0
-    ) {
+    if (index <= 0) {
       return true;
     }
 
-    return isProgressStepComplete(
+    return isStepCompleteVisual(
       index - 1
     );
   }
 
-  /* =========================================================
+  /* =======================================================
      PAINÉIS
-     ========================================================= */
+     ======================================================= */
 
   function renderPanels() {
     const current =
       Number(
-        currentState.step
+        lastState.step
       ) || 0;
 
-    const currentId =
-      currentState.steps?.[
-        current
-      ]?.id;
-
-    $$(".creation-panel")
-      .forEach(
-        panel => {
-          const panelId =
-            panel.dataset
-              .panel;
-
-          const index =
-            currentState.steps
-              ?.findIndex(
-                step =>
-                  step.id ===
-                  panelId
-              );
-
-          const active =
-            index === current;
-
-          panel.hidden =
-            !active;
-
-          panel.classList.toggle(
-            "is-active",
-            active
+    lastState.steps?.forEach(
+      (
+        step,
+        index
+      ) => {
+        const panel =
+          $(
+            `.creation-panel[data-panel="${step.id}"]`
           );
-        }
-      );
 
-    /*
-     * Fallback para páginas antigas
-     * usando data-step numérico.
-     */
-    $$(
-      '[data-step]'
-    ).forEach(
-      element => {
-        if (
-          element.classList.contains(
-            "progress-step"
-          )
-        ) {
+        if (!panel) {
           return;
         }
 
-        const raw =
-          element.dataset
-            .step;
+        const active =
+          index === current;
 
-        const index =
-          Number(raw);
+        panel.hidden =
+          !active;
 
-        if (
-          !Number.isInteger(
-            index
-          )
-        ) {
-          return;
-        }
-
-        if (
-          index === current
-        ) {
-          element.classList.add(
-            "active"
-          );
-        } else {
-          element.classList.remove(
-            "active"
-          );
-        }
+        panel.classList.toggle(
+          "is-active",
+          active
+        );
       }
     );
   }
 
-  /* =========================================================
+  /* =======================================================
      IDENTIDADE
-     ========================================================= */
+     ======================================================= */
 
   function renderIdentity() {
-    const name =
-      $("#characterName");
+    setInputValue(
+      "#characterName",
+      lastState.name
+    );
 
-    if (
-      name &&
-      document.activeElement !==
-        name
-    ) {
-      name.value =
-        currentState.name ||
-        "";
-    }
+    setInputValue(
+      "#characterAge",
+      lastState.age
+    );
 
-    const age =
-      $("#characterAge");
+    setInputValue(
+      "#characterDescription",
+      lastState.description
+    );
 
-    if (
-      age &&
-      document.activeElement !==
-        age
-    ) {
-      age.value =
-        currentState.age ||
-        "";
-    }
-
-    const description =
-      $("#characterDescription");
-
-    if (
-      description &&
-      document.activeElement !==
-        description
-    ) {
-      description.value =
-        currentState.description ||
-        "";
-    }
-
-    const origin =
-      $("#characterOrigin");
-
-    if (
-      origin &&
-      document.activeElement !==
-        origin
-    ) {
-      origin.value =
-        currentState.origin ||
-        "";
-    }
+    setInputValue(
+      "#characterOrigin",
+      lastState.origin
+    );
 
     $$(
       'input[name="gender"]'
@@ -501,39 +438,57 @@
       radio => {
         radio.checked =
           radio.value ===
-          currentState.gender;
+          lastState.gender;
       }
     );
 
-    $$(
-      ".gender-option"
-    ).forEach(
-      option => {
-        const selected =
-          option.dataset
-            .gender ===
-          currentState.gender;
+    $$(".gender-option")
+      .forEach(
+        option => {
+          const selected =
+            option.dataset
+              .gender ===
+            lastState.gender;
 
-        option.classList.toggle(
-          "selected",
-          selected
-        );
+          option.classList.toggle(
+            "selected",
+            selected
+          );
 
-        option.classList.toggle(
-          "active",
-          selected
-        );
-      }
-    );
+          option.classList.toggle(
+            "active",
+            selected
+          );
+        }
+      );
   }
 
-  /* =========================================================
+  function setInputValue(
+    selector,
+    value
+  ) {
+    const element =
+      $(selector);
+
+    if (
+      !element ||
+      document.activeElement ===
+        element
+    ) {
+      return;
+    }
+
+    element.value =
+      value || "";
+  }
+
+  /* =======================================================
      AVATAR
-     ========================================================= */
+     ======================================================= */
 
   function renderAvatar() {
     const avatar =
-      currentState.avatar ||
+      lastState.avatar ||
       "";
 
     const image =
@@ -576,39 +531,15 @@
         );
     }
 
-    $$(
-      "[data-character-avatar]"
-    ).forEach(
-      element => {
-        if (avatar) {
-          element.src =
-            avatar;
-
-          element.hidden =
-            false;
-        } else {
-          element.removeAttribute(
-            "src"
-          );
-
-          element.hidden =
-            true;
-        }
-      }
-    );
-
-    /*
-     * Preview da revisão.
-     */
     const reviewAvatar =
       $("#reviewAvatar");
 
-    const reviewFallback =
+    const fallback =
       $("#reviewAvatarFallback");
 
     if (
       reviewAvatar &&
-      reviewFallback
+      fallback
     ) {
       if (avatar) {
         reviewAvatar.src =
@@ -617,55 +548,72 @@
         reviewAvatar.hidden =
           false;
 
-        reviewFallback.hidden =
+        fallback.hidden =
           true;
       } else {
+        reviewAvatar.removeAttribute(
+          "src"
+        );
+
         reviewAvatar.hidden =
           true;
 
-        reviewFallback.hidden =
+        fallback.hidden =
           false;
       }
     }
   }
 
-  /* =========================================================
+  /* =======================================================
      RAÇA
-     ========================================================= */
+     ======================================================= */
 
   function renderRace() {
+    /*
+     * Aqui usamos previewRace, não raceData.
+     *
+     * Isso é importante:
+     * navegar pelo carrossel NÃO seleciona a raça.
+     * A raça só é escolhida ao clicar em Selecionar.
+     */
     const race =
-      currentState.raceData;
+      lastState.previewRace;
 
     if (!race) {
       return;
     }
 
+    const gender =
+      lastState.gender;
+
     const image =
-      currentState.gender ===
-      "feminino"
+      gender === "feminino"
         ? race.female
         : race.male;
 
-    const raceImage =
+    const imageElement =
       $("#raceImage");
 
-    if (raceImage) {
+    if (imageElement) {
       if (image) {
-        raceImage.src =
+        imageElement.src =
           image;
 
-        raceImage.alt =
-          race.name;
+        imageElement.alt =
+          `${race.name}${
+            gender
+              ? ` — ${gender}`
+              : ""
+          }`;
 
-        raceImage.hidden =
+        imageElement.hidden =
           false;
       } else {
-        raceImage.removeAttribute(
+        imageElement.removeAttribute(
           "src"
         );
 
-        raceImage.hidden =
+        imageElement.hidden =
           true;
       }
     }
@@ -678,76 +626,103 @@
         race.name;
     }
 
-    const description =
+    const short =
       $("#raceShortDescription");
 
-    if (description) {
-      description.textContent =
+    if (short) {
+      short.textContent =
         race.description ||
-        race.desc ||
         "";
     }
 
-    const genderLabel =
+    const label =
       $("#raceGenderLabel");
 
-    if (genderLabel) {
-      const gender =
-        currentState.gender ===
+    if (label) {
+      const genderText =
+        gender ===
         "feminino"
           ? "Feminino"
-          : currentState.gender ===
+          : gender ===
               "masculino"
             ? "Masculino"
             : "";
 
-      genderLabel.textContent =
-        gender
-          ? `${race.name} · ${gender}`
+      label.textContent =
+        genderText
+          ? `${race.name} · ${genderText}`
           : race.name;
     }
 
-    const descriptionTitle =
+    const descTitle =
       $("#raceDescriptionTitle");
 
-    if (descriptionTitle) {
-      descriptionTitle.textContent =
+    if (descTitle) {
+      descTitle.textContent =
         race.name;
     }
 
-    const descriptionText =
+    const descText =
       $("#raceDescriptionText");
 
-    if (descriptionText) {
-      const lines = [
-        race.description ||
-          race.desc ||
-          "",
+    if (descText) {
+      const parts = [];
 
+      if (
+        race.description
+      ) {
+        parts.push(
+          race.description
+        );
+      }
+
+      if (
         race.profile
-          ? `Perfil natural: ${race.profile}`
-          : "",
+      ) {
+        parts.push(
+          `Perfil natural: ${race.profile}`
+        );
+      }
 
+      if (
         race.feature
-          ? `Característica: ${race.feature}`
-          : ""
-      ].filter(Boolean);
+      ) {
+        parts.push(
+          `Característica: ${race.feature}`
+        );
+      }
 
-      descriptionText.textContent =
-        lines.join(" ");
+      descText.textContent =
+        parts.join(" ");
     }
-
-    const selected =
-      currentState.race;
 
     const selectedText =
       $("#raceSelectedText");
 
     if (selectedText) {
       selectedText.textContent =
-        selected
+        lastState.race ===
+        race.id
           ? "✓ Selecionada"
           : "Selecionar";
+    }
+
+    const descriptionPanel =
+      $("#raceDescription");
+
+    if (descriptionPanel) {
+      /*
+       * Continua fechado por padrão.
+       * O clique na imagem pode ser tratado
+       * depois pelo HTML/UI.
+       */
+      if (
+        descriptionPanel.dataset
+          .open === "true"
+      ) {
+        descriptionPanel.hidden =
+          false;
+      }
     }
 
     renderRaceDots();
@@ -761,24 +736,23 @@
       return;
     }
 
+    const races =
+      getConstants(
+        "RACES"
+      );
+
+    const current =
+      Number(
+        lastState.raceIndex
+      ) || 0;
+
     container.innerHTML =
       "";
-
-    const races =
-      window.AERIONFicha
-        ?.constants
-        ?.RACES ||
-      [];
-
-    const index =
-      Number(
-        currentState.raceIndex
-      ) || 0;
 
     races.forEach(
       (
         race,
-        raceIndex
+        index
       ) => {
         const button =
           document.createElement(
@@ -789,8 +763,8 @@
           "button";
 
         button.className =
-          raceIndex ===
-          index
+          index ===
+          current
             ? "is-active"
             : "";
 
@@ -798,9 +772,7 @@
           "go-race-index";
 
         button.dataset.raceIndex =
-          String(
-            raceIndex
-          );
+          String(index);
 
         button.setAttribute(
           "aria-label",
@@ -814,9 +786,9 @@
     );
   }
 
-  /* =========================================================
+  /* =======================================================
      ANIMALHA
-     ========================================================= */
+     ======================================================= */
 
   function renderAnimalha() {
     const container =
@@ -829,7 +801,7 @@
     }
 
     if (
-      currentState.race !==
+      lastState.race !==
       "animalha"
     ) {
       container.hidden =
@@ -841,18 +813,17 @@
       return;
     }
 
-    container.hidden =
-      false;
-
     const variants =
-      window.AERIONFicha
-        ?.constants
-        ?.ANIMALHA_VARIANTS ||
-      [];
+      getConstants(
+        "ANIMALHA_VARIANTS"
+      );
 
     const selected =
-      currentState.animalha ||
+      lastState.animalha ||
       "";
+
+    container.hidden =
+      false;
 
     container.innerHTML = `
       <div class="section-heading compact">
@@ -866,8 +837,8 @@
         </h3>
 
         <p>
-          O animal escolhido altera perfil natural,
-          porte, limites físicos e movimentação.
+          A linhagem altera o perfil natural,
+          porte, limites físicos e características.
         </p>
 
       </div>
@@ -890,8 +861,11 @@
               )}"
             >
 
-              <span class="animalha-variant-icon">
-                ${getAnimalhaIcon(
+              <span
+                class="animalha-variant-icon"
+                aria-hidden="true"
+              >
+                ${getAnimalIcon(
                   variant.category
                 )}
               </span>
@@ -922,7 +896,7 @@
     `;
   }
 
-  function getAnimalhaIcon(
+  function getAnimalIcon(
     category
   ) {
     const value =
@@ -957,22 +931,17 @@
     return "✦";
   }
 
-  /* =========================================================
+  /* =======================================================
      APARÊNCIA
-     ========================================================= */
+     ======================================================= */
 
   function renderAppearance() {
     const appearance =
-      currentState.appearance ||
+      lastState.appearance ||
       {};
 
-    const height =
-      Number(
-        appearance.height
-      ) || 0;
-
     const race =
-      currentState.raceData;
+      lastState.raceData;
 
     const min =
       Number(
@@ -984,31 +953,38 @@
         race?.height?.max
       ) || 0;
 
-    const heightRange =
+    const height =
+      Number(
+        appearance.height
+      ) || 0;
+
+    const range =
       $("#heightRange");
 
-    if (heightRange) {
-      if (min) {
-        heightRange.min =
-          String(min);
-      }
+    if (range) {
+      range.min =
+        String(
+          min ||
+            100
+        );
 
-      if (max) {
-        heightRange.max =
-          String(max);
-      }
+      range.max =
+        String(
+          max ||
+            400
+        );
 
-      if (height) {
-        heightRange.value =
-          String(height);
-      }
+      range.value =
+        String(
+          height
+        );
     }
 
-    const heightValue =
+    const value =
       $("#appearanceHeightValue");
 
-    if (heightValue) {
-      heightValue.textContent =
+    if (value) {
+      value.textContent =
         formatHeight(
           height
         );
@@ -1049,7 +1025,37 @@
           : "—";
     }
 
-    renderAppearanceFigure();
+    renderCharacterModel();
+    renderAppearanceFields();
+    renderAnimalhaEditor();
+
+    const movementStatus =
+      $(
+        "[data-flight-status]"
+      );
+
+    if (movementStatus) {
+      const canFly =
+        Boolean(
+          race?.flight
+        );
+
+      movementStatus.textContent =
+        canFly
+          ? "Voo disponível"
+          : "Voo indisponível";
+
+      movementStatus.classList.toggle(
+        "available",
+        canFly
+      );
+    }
+  }
+
+  function renderAppearanceFields() {
+    const appearance =
+      lastState.appearance ||
+      {};
 
     [
       "hair",
@@ -1061,105 +1067,76 @@
       "physicalNotes"
     ].forEach(
       field => {
-        const element =
-          $(`#${field}`);
-
-        if (
-          element &&
-          document.activeElement !==
-            element
-        ) {
-          element.value =
-            appearance[field] ||
-            "";
-        }
+        setInputValue(
+          `#${field}`,
+          appearance[field]
+        );
       }
     );
+  }
 
-    /*
-     * Select Animalha.
-     */
-    const animalhaSection =
+  function renderAnimalhaEditor() {
+    const section =
       $(
         "[data-animalha-editor]"
       );
 
-    if (
-      animalhaSection
-    ) {
-      animalhaSection.hidden =
-        currentState.race !==
-        "animalha";
-    }
-
-    const animalhaSelect =
+    const select =
       $("#animalhaVariant");
 
+    const active =
+      lastState.race ===
+      "animalha";
+
+    if (section) {
+      section.hidden =
+        !active;
+    }
+
     if (
-      animalhaSelect
+      !active ||
+      !select
     ) {
-      const variants =
-        window.AERIONFicha
-          ?.constants
-          ?.ANIMALHA_VARIANTS ||
-        [];
+      return;
+    }
 
-      animalhaSelect.innerHTML =
+    const variants =
+      getConstants(
+        "ANIMALHA_VARIANTS"
+      );
+
+    select.innerHTML = `
+      <option value="">
+        Escolha a linhagem
+      </option>
+
+      ${variants.map(
+        variant => `
+          <option
+            value="${escapeHtml(
+              variant.id
+            )}"
+            ${
+              lastState.animalha ===
+              variant.id
+                ? "selected"
+                : ""
+            }
+          >
+            ${escapeHtml(
+              variant.name
+            )}
+          </option>
         `
-        <option value="">
-          Escolha a linhagem
-        </option>
-
-        ${variants.map(
-          variant => `
-            <option
-              value="${escapeHtml(
-                variant.id
-              )}"
-              ${
-                currentState.animalha ===
-                variant.id
-                  ? "selected"
-                  : ""
-              }
-            >
-              ${escapeHtml(
-                variant.name
-              )}
-            </option>
-          `
-        ).join("")}
-      `;
-    }
-
-    const flight =
-      $(
-        "[data-flight-status]"
-      );
-
-    if (flight) {
-      const canFly =
-        Boolean(
-          race?.flight
-        );
-
-      flight.textContent =
-        canFly
-          ? "Voo disponível"
-          : "Voo indisponível";
-
-      flight.classList.toggle(
-        "available",
-        canFly
-      );
-    }
+      ).join("")}
+    `;
   }
 
-  /* =========================================================
+  /* =======================================================
      MODELO 2D
-     ========================================================= */
+     ======================================================= */
 
-  function renderAppearanceFigure() {
+  function renderCharacterModel() {
     const container =
       $("#appearanceFigure");
 
@@ -1168,10 +1145,10 @@
     }
 
     const race =
-      currentState.raceData;
+      lastState.raceData;
 
     const appearance =
-      currentState.appearance ||
+      lastState.appearance ||
       {};
 
     const min =
@@ -1185,120 +1162,128 @@
       ) || 200;
 
     const height =
-      clampNumber(
-        Number(
-          appearance.height
-        ) || (
+      Number(
+        appearance.height
+      ) ||
+      Math.round(
+        (
           min +
           max
-        ) / 2,
-        min,
-        max
+        ) / 2
       );
 
     const normalized =
-      (
-        height -
-        min
-      ) /
       Math.max(
-        1,
-        max -
-          min
+        0,
+        Math.min(
+          1,
+          (
+            height -
+            min
+          ) /
+            Math.max(
+              1,
+              max -
+                min
+            )
+        )
       );
 
     /*
-     * Altura visual.
+     * Escala visual.
+     *
+     * Não tenta representar centímetros físicos.
+     * Apenas preserva proporção visual entre mínimo
+     * e máximo da raça.
      */
-    const visualHeight =
-      225 +
+    const visualScale =
+      0.88 +
       normalized *
-        125;
+        0.24;
+
+    const visualHeight =
+      220 +
+      normalized *
+        120;
+
+    container.style.setProperty(
+      "--character-scale",
+      String(
+        visualScale
+      )
+    );
 
     container.style.setProperty(
       "--character-height",
       `${visualHeight}px`
     );
 
-    container.style.setProperty(
-      "--character-scale",
-      `${0.9 +
-        normalized *
-          0.22}`
-    );
-
     container.classList.toggle(
       "appearance-figure--female",
-      currentState.gender ===
+      lastState.gender ===
         "feminino"
     );
 
     container.classList.toggle(
       "appearance-figure--male",
-      currentState.gender !==
+      lastState.gender !==
         "feminino"
     );
 
-    /*
-     * Classes raciais.
-     */
     container.dataset.race =
-      currentState.race ||
+      lastState.race ||
       "";
 
     container.dataset.animalha =
-      currentState.animalha ||
+      lastState.animalha ||
       "";
 
     /*
-     * Mostra elementos visuais especiais
-     * sem obrigar o HTML inteiro a conhecer
-     * as regras da ficha.
+     * Adapta visualmente o modelo ao porte.
      */
-    updateVisualFeature(
-      container,
-      "wings",
-      Boolean(
-        race?.flight
-      )
-    );
+    const size =
+      race?.size ||
+      "medio";
 
-    updateVisualFeature(
-      container,
-      "tail",
-      currentState.race ===
-        "animalha"
-    );
-  }
+    container.dataset.size =
+      size;
 
-  function updateVisualFeature(
-    container,
-    feature,
-    visible
-  ) {
-    const element =
+    /*
+     * Características especiais.
+     */
+    const wings =
       container.querySelector(
-        `[data-character-feature="${feature}"]`
+        '[data-character-feature="wings"]'
       );
 
-    if (!element) {
-      return;
+    if (wings) {
+      wings.hidden =
+        !Boolean(
+          race?.flight
+        );
     }
 
-    element.hidden =
-      !visible;
+    const tail =
+      container.querySelector(
+        '[data-character-feature="tail"]'
+      );
+
+    if (tail) {
+      tail.hidden =
+        lastState.race !==
+        "animalha";
+    }
   }
 
-  /* =========================================================
+  /* =======================================================
      CLASSES
-     ========================================================= */
+     ======================================================= */
 
   function renderClasses() {
     const classes =
-      window.AERIONFicha
-        ?.constants
-        ?.CLASSES ||
-      {};
+      getConstants(
+        "CLASSES"
+      );
 
     $$(".class-card")
       .forEach(
@@ -1307,9 +1292,12 @@
             card.dataset
               .class;
 
+          const data =
+            classes[id];
+
           const selected =
             id ===
-            currentState.class;
+            lastState.class;
 
           card.classList.toggle(
             "selected",
@@ -1328,12 +1316,7 @@
             )
           );
 
-          const classData =
-            classes[
-              id
-            ];
-
-          if (!classData) {
+          if (!data) {
             return;
           }
 
@@ -1345,27 +1328,37 @@
           if (bonus) {
             bonus.textContent =
               Object.entries(
-                classData.skillBonuses ||
+                data.skillBonuses ||
                   {}
               )
                 .map(
                   ([
                     skillId,
-                    value
+                    amount
                   ]) => {
                     const skill =
-                      window
-                        .AERIONFicha
-                        ?.constants
-                        ?.SKILLS?.[
-                          skillId
-                        ];
+                      getConstants(
+                        "SKILLS"
+                      )?.[
+                        skillId
+                      ];
 
-                    if (!skill) {
-                      return "";
+                    if (
+                      Array.isArray(
+                        skill
+                      )
+                    ) {
+                      return `${skill[0]} +${amount}`;
                     }
 
-                    return `${skill.name} +${value}`;
+                    if (
+                      skill &&
+                      skill.name
+                    ) {
+                      return `${skill.name} +${amount}`;
+                    }
+
+                    return "";
                   }
                 )
                 .filter(
@@ -1373,35 +1366,8 @@
                 )
                 .join(" • ");
           }
-
-          /*
-           * O caminho da imagem da classe
-           * pode ser configurado posteriormente
-           * no HTML/data.
-           */
-          const image =
-            card.querySelector(
-              "[data-class-image]"
-            );
-
-          if (
-            image &&
-            image.dataset
-              .src &&
-            image.dataset
-              .src.trim()
-          ) {
-            image.src =
-              image.dataset
-                .src;
-          }
         }
       );
-
-    const selected =
-      classes[
-        currentState.class
-      ];
 
     const className =
       $(
@@ -1410,43 +1376,57 @@
 
     if (className) {
       className.textContent =
-        selected?.name ||
+        classes[
+          lastState.class
+        ]?.name ||
         "—";
     }
 
-    const classRole =
+    const role =
       $(
         "[data-class-role]"
       );
 
-    if (classRole) {
-      classRole.textContent =
-        selected?.role ||
+    if (role) {
+      role.textContent =
+        classes[
+          lastState.class
+        ]?.role ||
         "—";
     }
   }
 
-  /* =========================================================
+  /* =======================================================
+     ATRIBUTOS
+     ======================================================= */
+
+  function renderAttributes() {
+    renderDice();
+    renderAttributeCards();
+    renderRadar();
+  }
+
+  /* =======================================================
      DADOS
-     ========================================================= */
+     ======================================================= */
 
   function renderDice() {
     const root =
-      $("[data-dice-pool]");
+      $(
+        "[data-dice-pool]"
+      );
 
     if (!root) {
       return;
     }
 
     const dice =
-      window.AERIONFicha
-        ?.constants
-        ?.DICE ||
-      {};
+      getConstants(
+        "DICE"
+      );
 
     const attributes =
-      currentState
-        .effectiveAttributes ||
+      lastState.effectiveAttributes ||
       {};
 
     const used =
@@ -1471,104 +1451,134 @@
       }
     );
 
-    const cards =
-      [];
+    root.innerHTML =
+      "";
 
     Object.entries(
       dice
     ).forEach(
       ([
-        id,
+        die,
         data
       ]) => {
-        for (
-          let i = 0;
-          i <
+        const amount =
           Number(
             data.amount
+          ) || 0;
+
+        const availableCount =
+          Math.max(
+            0,
+            amount -
+              (
+                used[die] ||
+                0
+              )
           );
-          i++
+
+        /*
+         * O pool só mostra dados ainda disponíveis.
+         * Os dados usados aparecem dentro dos atributos.
+         */
+        for (
+          let index = 0;
+          index <
+          availableCount;
+          index++
         ) {
-          /*
-           * Cada cópia possui uma chave própria.
-           */
-          const assigned =
-            i <
-            (
-              used[id] || 0
+          const button =
+            document.createElement(
+              "button"
             );
 
-          cards.push(`
-            <button
-              type="button"
-              class="dice-card ${
-                assigned
-                  ? "assigned"
-                  : ""
-              } ${
-                currentState.selectedDie ===
-                id
-                  ? "dice-selected"
-                  : ""
-              }"
-              data-die="${escapeHtml(
-                id
-              )}"
-              draggable="${
-                assigned
-                  ? "false"
-                  : "true"
-              }"
-              aria-label="D${data.sides}"
-              aria-disabled="${assigned}"
+          button.type =
+            "button";
+
+          button.className =
+            `dice-card ${
+              lastState.selectedDie ===
+              die
+                ? "dice-selected"
+                : ""
+            }`;
+
+          button.dataset.die =
+            die;
+
+          button.draggable =
+            true;
+
+          button.setAttribute(
+            "aria-label",
+            `D${data.sides}`
+          );
+
+          button.innerHTML = `
+            <span
+              class="dice-icon"
+              aria-hidden="true"
             >
 
-              <span
-                class="dice-icon"
-                aria-hidden="true"
+              <svg
+                class="dice-svg"
+                viewBox="0 0 100 100"
               >
 
-                <svg
-                  viewBox="0 0 100 100"
-                  class="dice-svg"
-                >
+                <polygon
+                  points="50,5 90,28 90,72 50,95 10,72 10,28"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="5"
+                  stroke-linejoin="round"
+                />
 
-                  <polygon
-                    points="50,5 90,28 90,72 50,95 10,72 10,28"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="5"
-                    stroke-linejoin="round"
-                  />
+              </svg>
 
-                </svg>
-
-                <span>
-                  D${data.sides}
-                </span>
-
+              <span>
+                D${data.sides}
               </span>
 
-            </button>
-          `);
+            </span>
+          `;
+
+          root.appendChild(
+            button
+          );
         }
       }
     );
 
-    root.innerHTML =
-      cards.join("");
+    /*
+     * Mostra estado vazio se tudo estiver atribuído.
+     */
+    if (
+      root.children.length ===
+      0
+    ) {
+      const empty =
+        document.createElement(
+          "div"
+        );
+
+      empty.className =
+        "dice-pool-empty";
+
+      empty.textContent =
+        "Todos os dados foram distribuídos.";
+
+      root.appendChild(
+        empty
+      );
+    }
   }
 
-  /* =========================================================
-     ATRIBUTOS
-     ========================================================= */
+  /* =======================================================
+     CARDS DOS ATRIBUTOS
+     ======================================================= */
 
-  function renderAttributes() {
-    renderDice();
-
+  function renderAttributeCards() {
     const attributes =
-      currentState
-        .effectiveAttributes ||
+      lastState.effectiveAttributes ||
       {};
 
     $$(".attribute-card")
@@ -1579,9 +1589,7 @@
               .attribute;
 
           const data =
-            attributes[
-              id
-            ];
+            attributes[id];
 
           if (!data) {
             return;
@@ -1611,18 +1619,24 @@
               data.die
             ) {
               die.innerHTML = `
-                <span class="attribute-die-icon">
+                <span
+                  class="attribute-die-icon"
+                  aria-hidden="true"
+                >
 
                   <svg
                     viewBox="0 0 100 100"
                     class="dice-svg"
                   >
+
                     <polygon
                       points="50,5 90,28 90,72 50,95 10,72 10,28"
                       fill="none"
                       stroke="currentColor"
                       stroke-width="5"
+                      stroke-linejoin="round"
                     />
+
                   </svg>
 
                   <span>
@@ -1644,12 +1658,8 @@
 
           if (value) {
             value.textContent =
-              data.total ===
-              null
-                ? "—"
-                : String(
-                    data.total
-                  );
+              data.total ??
+              "—";
           }
 
           const modifier =
@@ -1659,7 +1669,7 @@
 
           if (modifier) {
             modifier.textContent =
-              formatModifier(
+              formatSigned(
                 data.racialModifier
               );
 
@@ -1684,7 +1694,7 @@
           if (result) {
             result.textContent =
               data.rolled
-                ? `${data.roll} ${formatModifier(
+                ? `${data.roll} ${formatSigned(
                     data.racialModifier
                   )} = ${data.total}`
                 : "";
@@ -1701,9 +1711,11 @@
           }
         }
       );
-
-    renderRadar();
   }
+
+  /* =======================================================
+     RADAR DOS ATRIBUTOS
+     ======================================================= */
 
   function renderRadar() {
     const root =
@@ -1715,35 +1727,29 @@
       return;
     }
 
-    const attributes =
-      currentState
-        .effectiveAttributes ||
-      {};
-
     const definitions =
-      window.AERIONFicha
-        ?.constants
-        ?.ATTRIBUTES ||
-      [];
+      getConstants(
+        "ATTRIBUTES"
+      );
+
+    const attributes =
+      lastState.effectiveAttributes ||
+      {};
 
     const values =
       definitions.map(
-        attribute => {
-          const data =
-            attributes[
-              attribute.id
-            ];
-
-          return Math.max(
+        attribute =>
+          Math.max(
             0,
             Number(
-              data?.total
+              attributes[
+                attribute.id
+              ]?.total
             ) || 0
-          );
-        }
+          )
       );
 
-    const max =
+    const maximum =
       Math.max(
         1,
         ...values
@@ -1770,7 +1776,7 @@
           360 /
           count
         ) *
-        index -
+          index -
         90;
 
       const radians =
@@ -1793,10 +1799,11 @@
       ];
     }
 
-    let grid = "";
+    let grid =
+      "";
 
     /*
-     * Grades internas.
+     * 4 níveis de grade.
      */
     for (
       let level = 1;
@@ -1813,8 +1820,10 @@
               point(
                 index,
                 radius *
-                  level /
-                  4
+                  (
+                    level /
+                    4
+                  )
               ).join(",")
           )
           .join(" ");
@@ -1831,7 +1840,7 @@
     }
 
     /*
-     * Eixos.
+     * Linhas de cada atributo.
      */
     definitions.forEach(
       (
@@ -1873,7 +1882,7 @@
               radius *
                 (
                   value /
-                  max
+                  maximum
                 )
             ).join(",")
         )
@@ -1918,7 +1927,7 @@
         class="radar-svg"
         viewBox="0 0 420 420"
         role="img"
-        aria-label="Gráfico dos atributos do personagem"
+        aria-label="Perfil dos oito atributos"
       >
 
         ${grid}
@@ -1934,9 +1943,9 @@
     `;
   }
 
-  /* =========================================================
+  /* =======================================================
      PODER
-     ========================================================= */
+     ======================================================= */
 
   function renderPower() {
     const current =
@@ -1946,7 +1955,7 @@
 
     if (current) {
       current.textContent =
-        currentState.power ||
+        lastState.power ||
         "Nenhum poder escolhido";
     }
 
@@ -1957,7 +1966,7 @@
 
     if (result) {
       result.textContent =
-        currentState.powerRoll ??
+        lastState.powerRoll ??
         "—";
     }
 
@@ -1968,50 +1977,80 @@
 
     if (note) {
       if (
-        currentState.powerRoll
+        lastState.powerRoll
       ) {
         note.textContent =
-          `D100 ${currentState.powerRoll} → ${currentState.power}`;
+          `D100 ${lastState.powerRoll} → ${lastState.power}`;
       } else if (
-        currentState.power
+        lastState.power
       ) {
         note.textContent =
-          `${currentState.powerType === "paralelo" ? "Poder paralelo" : "Poder principal"} selecionado.`;
+          "Poder selecionado.";
       } else {
         note.textContent =
           "O D100 define um dos quatro poderes principais.";
       }
     }
 
-    /*
-     * Marca o botão de poder paralelo selecionado.
-     */
     $$(
       '[data-action="select-parallel-power"]'
     ).forEach(
       button => {
-        const power =
+        const selected =
           button.dataset
-            .power;
+            .power ===
+          lastState.power;
 
         button.classList.toggle(
           "selected",
-          power ===
-            currentState.power
+          selected
+        );
+
+        button.setAttribute(
+          "aria-pressed",
+          String(
+            selected
+          )
         );
       }
     );
   }
 
-  /* =========================================================
+  function setPowerMode(
+    mode
+  ) {
+    const roll =
+      $(
+        '[data-power-section="roll"]'
+      );
+
+    const manual =
+      $(
+        '[data-power-section="manual"]'
+      );
+
+    if (roll) {
+      roll.hidden =
+        mode !==
+        "roll";
+    }
+
+    if (manual) {
+      manual.hidden =
+        mode !==
+        "manual";
+    }
+  }
+
+  /* =======================================================
      MANA
-     ========================================================= */
+     ======================================================= */
 
   function renderMana() {
     $$(".mana-card")
       .forEach(
         card => {
-          const id =
+          const mana =
             String(
               card.dataset
                 .mana ||
@@ -2019,19 +2058,27 @@
             ).toLowerCase();
 
           /*
-           * A Azul é a única disponível
-           * fora da campanha.
+           * Nesta criação de ficha apenas Azul
+           * fica liberada.
+           *
+           * As outras permanecem reservadas
+           * para a liberação dentro da campanha.
            */
           const available =
-            id ===
+            mana ===
             "azul";
 
           const selected =
-            currentState.mana ===
-            id;
+            lastState.mana ===
+            mana;
 
           card.classList.toggle(
             "selected",
+            selected
+          );
+
+          card.classList.toggle(
+            "is-selected",
             selected
           );
 
@@ -2045,33 +2092,22 @@
             !available
           );
 
+          card.disabled =
+            !available;
+
           card.setAttribute(
             "aria-disabled",
             String(
               !available
             )
           );
-
-          /*
-           * Não deixa Mana bloqueada ser
-           * ativada pelo navegador.
-           */
-          if (
-            !available
-          ) {
-            card.disabled =
-              true;
-          } else {
-            card.disabled =
-              false;
-          }
         }
       );
   }
 
-  /* =========================================================
+  /* =======================================================
      PERÍCIAS
-     ========================================================= */
+     ======================================================= */
 
   function renderSkills() {
     const root =
@@ -2082,153 +2118,170 @@
     }
 
     const skills =
-      window.AERIONFicha
-        ?.constants
-        ?.SKILLS ||
-      {};
+      getConstants(
+        "SKILLS"
+      );
 
-    const stateSkills =
-      currentState
-        .effectiveSkills ||
+    const effective =
+      lastState.effectiveSkills ||
       {};
 
     root.innerHTML =
-      Object.values(
-        skills
-      )
-        .map(
-          skill => {
-            const data =
-              stateSkills[
-                skill.id
-              ] || {
-                trained: false,
-                bonus: 0,
-                effectiveBonus: 0
-              };
+      "";
 
-            const trained =
-              Boolean(
-                data.trained
-              );
+    Object.entries(
+      skills
+    ).forEach(
+      ([
+        id,
+        skill
+      ]) => {
+        const data =
+          effective[id] || {
+            trained: false,
+            bonus: 0,
+            effectiveBonus: 0
+          };
 
-            const total =
-              Number(
-                data.effectiveBonus
-              ) || 0;
+        const trained =
+          Boolean(
+            data.trained
+          );
 
-            const classBonus =
-              Number(
-                window
-                  .AERIONFicha
-                  ?.getState?.()
-                  ?.class
-              ) || 0;
+        const total =
+          Number(
+            data.effectiveBonus
+          ) || 0;
 
-            return `
-              <article
-                class="skill-card ${
-                  trained
-                    ? "trained"
-                    : ""
-                }"
-                data-skill="${escapeHtml(
-                  skill.id
-                )}"
+        const classBonus =
+          Number(
+            getCore()
+              ?.constants
+              ?.CLASSES?.[
+              lastState.class
+            ]?.skillBonuses?.[
+              id
+            ]
+          ) || 0;
+
+        const card =
+          document.createElement(
+            "article"
+          );
+
+        card.className =
+          `skill-card ${
+            trained
+              ? "trained"
+              : ""
+          }`;
+
+        card.dataset.skill =
+          id;
+
+        card.innerHTML = `
+          <div
+            class="skill-card-main"
+          >
+
+            <div>
+
+              <span class="eyebrow">
+                PERÍCIA
+              </span>
+
+              <h3>
+                ${escapeHtml(
+                  skill.name
+                )}
+              </h3>
+
+              <p>
+                ${escapeHtml(
+                  skill.description
+                )}
+              </p>
+
+            </div>
+
+            <div
+              class="skill-bonus-box"
+            >
+
+              <span>
+                Bônus
+              </span>
+
+              <strong
+                data-skill-value
               >
+                ${formatSigned(
+                  total
+                )}
+              </strong>
 
-                <div class="skill-card-main">
+              <small
+                data-class-skill-bonus
+              >
+                ${
+                  classBonus
+                    ? `Classe +${classBonus}`
+                    : ""
+                }
+              </small>
 
-                  <div>
+            </div>
 
-                    <span class="eyebrow">
-                      PERÍCIA
-                    </span>
+          </div>
 
-                    <h3>
-                      ${escapeHtml(
-                        skill.name
-                      )}
-                    </h3>
+          <div
+            class="skill-actions"
+          >
 
-                    <p>
-                      ${escapeHtml(
-                        skill.description
-                      )}
-                    </p>
+            <button
+              type="button"
+              class="button button-secondary"
+              data-action="train-skill"
+              data-skill="${escapeHtml(
+                id
+              )}"
+            >
+              ${
+                trained
+                  ? "✓ Treinado"
+                  : "Treinar"
+              }
+            </button>
 
-                  </div>
+            <input
+              class="skill-bonus-input"
+              type="number"
+              min="-20"
+              max="20"
+              value="${Number(
+                data.bonus
+              ) || 0}"
+              data-skill-bonus="${escapeHtml(
+                id
+              )}"
+              aria-label="Bônus de ${escapeHtml(
+                skill.name
+              )}"
+            />
 
+          </div>
+        `;
 
-                  <div class="skill-bonus-box">
-
-                    <span>
-                      Bônus
-                    </span>
-
-                    <strong
-                      data-skill-value
-                    >
-                      ${formatSigned(
-                        total
-                      )}
-                    </strong>
-
-                    <small
-                      data-class-skill-bonus
-                    ></small>
-
-                  </div>
-
-                </div>
-
-
-                <div class="skill-actions">
-
-                  <button
-                    type="button"
-                    class="button button-secondary"
-                    data-action="train-skill"
-                    data-skill="${escapeHtml(
-                      skill.id
-                    )}"
-                  >
-                    ${
-                      trained
-                        ? "✓ Treinado"
-                        : "Treinar"
-                    }
-                  </button>
-
-
-                  <input
-                    class="skill-bonus-input"
-                    type="number"
-                    min="-20"
-                    max="20"
-                    value="${Number(
-                      data.bonus
-                    ) || 0}"
-                    data-skill-bonus="${escapeHtml(
-                      skill.id
-                    )}"
-                    aria-label="Bônus de ${escapeHtml(
-                      skill.name
-                    )}"
-                  />
-
-                </div>
-
-              </article>
-            `;
-          }
-        )
-        .join("");
+        root.appendChild(
+          card
+        );
+      }
+    );
   }
 
-  /* =========================================================
+  /* =======================================================
      TÉCNICAS
-     ========================================================= */
+     ======================================================= */
 
   function renderTechniques() {
     const root =
@@ -2242,10 +2295,13 @@
 
     const techniques =
       Array.isArray(
-        currentState.techniques
+        lastState.techniques
       )
-        ? currentState.techniques
+        ? lastState.techniques
         : [];
+
+    root.innerHTML =
+      "";
 
     if (
       techniques.length ===
@@ -2268,137 +2324,143 @@
       return;
     }
 
-    root.innerHTML =
-      techniques
-        .map(
-          technique => `
-            <article
-              class="technique-card"
+    techniques.forEach(
+      technique => {
+        const article =
+          document.createElement(
+            "article"
+          );
+
+        article.className =
+          "technique-card";
+
+        article.dataset
+          .techniqueId =
+          technique.id;
+
+        article.innerHTML = `
+          <div
+            class="technique-card-header"
+          >
+
+            <input
+              type="text"
+              value="${escapeHtml(
+                technique.name
+              )}"
+              placeholder="Nome da técnica"
               data-technique-id="${escapeHtml(
                 technique.id
               )}"
+              data-technique-field="name"
+            />
+
+            <button
+              type="button"
+              class="icon-button"
+              data-action="remove-technique"
+              data-technique-id="${escapeHtml(
+                technique.id
+              )}"
+              aria-label="Remover técnica"
             >
+              ×
+            </button>
 
-              <div class="technique-card-header">
+          </div>
 
-                <input
-                  type="text"
-                  value="${escapeHtml(
-                    technique.name
-                  )}"
-                  placeholder="Nome da técnica"
-                  data-technique-id="${escapeHtml(
-                    technique.id
-                  )}"
-                  data-technique-field="name"
-                >
+          <textarea
+            placeholder="Descrição da técnica"
+            data-technique-id="${escapeHtml(
+              technique.id
+            )}"
+            data-technique-field="description"
+          >${escapeHtml(
+            technique.description
+          )}</textarea>
 
-                <button
-                  type="button"
-                  class="icon-button"
-                  data-action="remove-technique"
-                  data-technique-id="${escapeHtml(
-                    technique.id
-                  )}"
-                  aria-label="Remover técnica"
-                >
-                  ×
-                </button>
+          <div
+            class="technique-fields"
+          >
 
-              </div>
+            <input
+              type="text"
+              value="${escapeHtml(
+                technique.range
+              )}"
+              placeholder="Alcance"
+              data-technique-id="${escapeHtml(
+                technique.id
+              )}"
+              data-technique-field="range"
+            />
 
+            <input
+              type="text"
+              value="${escapeHtml(
+                technique.damage
+              )}"
+              placeholder="Dano / efeito"
+              data-technique-id="${escapeHtml(
+                technique.id
+              )}"
+              data-technique-field="damage"
+            />
 
-              <textarea
-                placeholder="Descrição da técnica"
-                data-technique-id="${escapeHtml(
-                  technique.id
-                )}"
-                data-technique-field="description"
-              >${escapeHtml(
-                technique.description
-              )}</textarea>
+          </div>
 
+          <div
+            class="technique-extra-fields"
+          >
 
-              <div class="technique-fields">
+            <input
+              type="text"
+              value="${escapeHtml(
+                technique.cost
+              )}"
+              placeholder="Custo"
+              data-technique-id="${escapeHtml(
+                technique.id
+              )}"
+              data-technique-field="cost"
+            />
 
-                <input
-                  type="text"
-                  value="${escapeHtml(
-                    technique.range
-                  )}"
-                  placeholder="Alcance"
-                  data-technique-id="${escapeHtml(
-                    technique.id
-                  )}"
-                  data-technique-field="range"
-                >
+            <input
+              type="text"
+              value="${escapeHtml(
+                technique.test
+              )}"
+              placeholder="Teste"
+              data-technique-id="${escapeHtml(
+                technique.id
+              )}"
+              data-technique-field="test"
+            />
 
+            <textarea
+              rows="2"
+              placeholder="Limitação"
+              data-technique-id="${escapeHtml(
+                technique.id
+              )}"
+              data-technique-field="limitation"
+            >${escapeHtml(
+              technique.limitation
+            )}</textarea>
 
-                <input
-                  type="text"
-                  value="${escapeHtml(
-                    technique.damage
-                  )}"
-                  placeholder="Dano / efeito"
-                  data-technique-id="${escapeHtml(
-                    technique.id
-                  )}"
-                  data-technique-field="damage"
-                >
+          </div>
+        `;
 
-              </div>
-
-
-              <div class="technique-extra-fields">
-
-                <input
-                  type="text"
-                  value="${escapeHtml(
-                    technique.cost
-                  )}"
-                  placeholder="Custo"
-                  data-technique-id="${escapeHtml(
-                    technique.id
-                  )}"
-                  data-technique-field="cost"
-                >
-
-
-                <input
-                  type="text"
-                  value="${escapeHtml(
-                    technique.test
-                  )}"
-                  placeholder="Teste"
-                  data-technique-id="${escapeHtml(
-                    technique.id
-                  )}"
-                  data-technique-field="test"
-                >
-
-
-                <textarea
-                  rows="2"
-                  placeholder="Limitação"
-                  data-technique-id="${escapeHtml(
-                    technique.id
-                  )}"
-                  data-technique-field="limitation"
-                >${escapeHtml(
-                  technique.limitation
-                )}</textarea>
-
-              </div>
-
-            </article>
-          `
-        )
-        .join("");
+        root.appendChild(
+          article
+        );
+      }
+    );
   }
 
-  /* =========================================================
+  /* =======================================================
      INVENTÁRIO
-     ========================================================= */
+     ======================================================= */
 
   function renderInventory() {
     const root =
@@ -2412,10 +2474,13 @@
 
     const inventory =
       Array.isArray(
-        currentState.inventory
+        lastState.inventory
       )
-        ? currentState.inventory
+        ? lastState.inventory
         : [];
+
+    root.innerHTML =
+      "";
 
     if (
       inventory.length ===
@@ -2438,82 +2503,85 @@
       return;
     }
 
-    root.innerHTML =
-      inventory
-        .map(
-          item => `
-            <article
-              class="inventory-item"
-              data-inventory-id="${escapeHtml(
-                item.id
-              )}"
-            >
+    inventory.forEach(
+      item => {
+        const article =
+          document.createElement(
+            "article"
+          );
 
-              <input
-                type="text"
-                value="${escapeHtml(
-                  item.name
-                )}"
-                placeholder="Nome do item"
-                data-inventory-id="${escapeHtml(
-                  item.id
-                )}"
-                data-inventory-field="name"
-              >
+        article.className =
+          "inventory-item";
 
+        article.dataset
+          .inventoryId =
+          item.id;
 
-              <input
-                type="number"
-                min="0"
-                value="${Number(
-                  item.quantity
-                ) || 0}"
-                data-inventory-id="${escapeHtml(
-                  item.id
-                )}"
-                data-inventory-field="quantity"
-                aria-label="Quantidade"
-              >
+        article.innerHTML = `
+          <input
+            type="text"
+            value="${escapeHtml(
+              item.name
+            )}"
+            placeholder="Nome do item"
+            data-inventory-id="${escapeHtml(
+              item.id
+            )}"
+            data-inventory-field="name"
+          />
 
+          <input
+            type="number"
+            min="0"
+            value="${Number(
+              item.quantity
+            ) || 0}"
+            data-inventory-id="${escapeHtml(
+              item.id
+            )}"
+            data-inventory-field="quantity"
+            aria-label="Quantidade"
+          />
 
-              <input
-                type="text"
-                value="${escapeHtml(
-                  item.description
-                )}"
-                placeholder="Descrição"
-                data-inventory-id="${escapeHtml(
-                  item.id
-                )}"
-                data-inventory-field="description"
-              >
+          <input
+            type="text"
+            value="${escapeHtml(
+              item.description
+            )}"
+            placeholder="Descrição"
+            data-inventory-id="${escapeHtml(
+              item.id
+            )}"
+            data-inventory-field="description"
+          />
 
+          <button
+            type="button"
+            class="icon-button"
+            data-action="remove-inventory"
+            data-inventory-id="${escapeHtml(
+              item.id
+            )}"
+            aria-label="Remover item"
+          >
+            ×
+          </button>
+        `;
 
-              <button
-                type="button"
-                class="icon-button"
-                data-action="remove-inventory"
-                data-inventory-id="${escapeHtml(
-                  item.id
-                )}"
-                aria-label="Remover item"
-              >
-                ×
-              </button>
-
-            </article>
-          `
-        )
-        .join("");
+        root.appendChild(
+          article
+        );
+      }
+    );
   }
 
-  /* =========================================================
+  /* =======================================================
      COMBATE
-     ========================================================= */
+     ======================================================= */
 
   function renderCombat() {
     const combat =
-      currentState.combat ||
+      lastState.combat ||
       {};
 
     const hp =
@@ -2534,10 +2602,8 @@
 
     if (movement) {
       movement.textContent =
-        combat.movement ===
-        null ||
-        combat.movement ===
-          undefined
+        combat.movement ==
+          null
           ? "—"
           : `${combat.movement} m`;
     }
@@ -2549,10 +2615,8 @@
 
     if (air) {
       air.textContent =
-        combat.air ===
-        null ||
-        combat.air ===
-          undefined
+        combat.air ==
+          null
           ? "—"
           : `${combat.air} m`;
     }
@@ -2564,10 +2628,8 @@
 
     if (aquatic) {
       aquatic.textContent =
-        combat.aquatic ===
-        null ||
-        combat.aquatic ===
-          undefined
+        combat.aquatic ==
+          null
           ? "—"
           : `${combat.aquatic} m`;
     }
@@ -2585,35 +2647,34 @@
     }
   }
 
-  /* =========================================================
+  /* =======================================================
      REVISÃO
-     ========================================================= */
+     ======================================================= */
 
   function renderReview() {
     const race =
-      currentState.raceData;
+      lastState.raceData;
 
     const classes =
-      window.AERIONFicha
-        ?.constants
-        ?.CLASSES ||
-      {};
+      getConstants(
+        "CLASSES"
+      );
 
     const classData =
       classes[
-        currentState.class
+        lastState.class
       ];
 
-    const reviewValues = {
+    const values = {
       name:
-        currentState.name ||
+        lastState.name ||
         "Sem nome",
 
       gender:
-        currentState.gender ===
+        lastState.gender ===
         "masculino"
           ? "Masculino"
-          : currentState.gender ===
+          : lastState.gender ===
               "feminino"
             ? "Feminino"
             : "—",
@@ -2628,13 +2689,13 @@
 
       height:
         formatHeight(
-          currentState
+          lastState
             .appearance
             ?.height
         ),
 
       power:
-        currentState.power ||
+        lastState.power ||
         "—",
 
       mana:
@@ -2642,7 +2703,7 @@
     };
 
     Object.entries(
-      reviewValues
+      values
     ).forEach(
       ([
         key,
@@ -2651,9 +2712,10 @@
         $$(
           `[data-review="${key}"]`
         ).forEach(
-          element =>
+          element => {
             element.textContent =
-              value
+              value;
+          }
         );
       }
     );
@@ -2663,7 +2725,7 @@
     ).forEach(
       element => {
         element.textContent =
-          currentState.description ||
+          lastState.description ||
           "Nenhuma descrição.";
       }
     );
@@ -2673,12 +2735,11 @@
     ).forEach(
       element => {
         const appearance =
-          currentState
+          lastState
             .appearance ||
           {};
 
-        const lines =
-          [];
+        const lines = [];
 
         if (
           appearance.hair
@@ -2745,26 +2806,25 @@
       }
     );
 
-    const attributeRoot =
+    const attributesRoot =
       $(
         "[data-review-attributes]"
       );
 
     if (
-      attributeRoot
+      attributesRoot
     ) {
+      const definitions =
+        getConstants(
+          "ATTRIBUTES"
+        );
+
       const attributes =
-        currentState
+        lastState
           .effectiveAttributes ||
         {};
 
-      const definitions =
-        window.AERIONFicha
-          ?.constants
-          ?.ATTRIBUTES ||
-        [];
-
-      attributeRoot.innerHTML =
+      attributesRoot.innerHTML =
         definitions
           .map(
             attribute => {
@@ -2795,7 +2855,7 @@
                   <small>
                     ${
                       data
-                        ? formatModifier(
+                        ? formatSigned(
                             data.racialModifier
                           )
                         : ""
@@ -2808,34 +2868,46 @@
           )
           .join("");
     }
+
+    renderReviewAvatarText();
   }
 
-  /* =========================================================
+  function renderReviewAvatarText() {
+    const name =
+      $(
+        '[data-review="name"]'
+      );
+
+    if (name) {
+      name.title =
+        lastState.name ||
+        "Sem nome";
+    }
+  }
+
+  /* =======================================================
      NAVEGAÇÃO
-     ========================================================= */
+     ======================================================= */
 
   function renderNavigation() {
     const current =
       Number(
-        currentState.step
+        lastState.step
       ) || 0;
 
-    $(
-      "#stepCurrent"
-    )?.replaceChildren(
-      document.createTextNode(
+    const currentStep =
+      $("#stepCurrent");
+
+    if (currentStep) {
+      currentStep.textContent =
         String(
           current + 1
-        )
-      )
-    );
+        );
+    }
 
-    const previous =
-      $$(
-        '[data-action="previous"]'
-      );
-
-    previous.forEach(
+    $$(
+      '[data-action="previous"]'
+    ).forEach(
       button => {
         button.disabled =
           current <=
@@ -2843,89 +2915,127 @@
       }
     );
 
-    const next =
-      $$(
-        '[data-action="next"]'
-      );
-
-    const last =
-      current >=
-      (
-        currentState.steps
-          ?.length || 11
-      ) -
-        1;
-
-    next.forEach(
+    $$(
+      '[data-action="next"]'
+    ).forEach(
       button => {
         button.textContent =
-          last
+          current >= 10
             ? "Finalizar"
             : "Próximo →";
       }
     );
   }
 
-  /* =========================================================
-     AUXILIARES
-     ========================================================= */
+  /* =======================================================
+     ACESSIBILIDADE
+     ======================================================= */
 
-  function formatModifier(
-    value
+  function announce(
+    message
   ) {
-    const number =
-      Number(value) || 0;
+    let live =
+      $("#aerionLiveRegion");
 
-    if (
-      number >
-      0
-    ) {
-      return `+${number}`;
-    }
+    if (!live) {
+      live =
+        document.createElement(
+          "div"
+        );
 
-    if (
-      number <
-      0
-    ) {
-      return String(
-        number
+      live.id =
+        "aerionLiveRegion";
+
+      live.setAttribute(
+        "aria-live",
+        "polite"
+      );
+
+      live.setAttribute(
+        "aria-atomic",
+        "true"
+      );
+
+      live.className =
+        "visually-hidden";
+
+      document.body.appendChild(
+        live
       );
     }
 
-    return "0";
+    live.textContent =
+      message;
   }
 
-  function formatSigned(
-    value
-  ) {
-    const number =
-      Number(value) || 0;
+  /* =======================================================
+     EVENTOS VISUAIS DO RENDERER
+     ======================================================= */
 
-    return number >=
-      0
-      ? `+${number}`
-      : String(
-          number
-        );
+  function initRendererEvents() {
+    /*
+     * Clique na imagem da raça:
+     * abre/fecha a descrição.
+     */
+    const raceCard =
+      $("#raceCard");
+
+    if (
+      raceCard &&
+      !raceCard.dataset
+        .rendererBound
+    ) {
+      raceCard.dataset
+        .rendererBound =
+        "true";
+
+      raceCard.addEventListener(
+        "click",
+        event => {
+          /*
+           * Não intercepta botões internos.
+           */
+          if (
+            event.target.closest(
+              "button"
+            )
+          ) {
+            return;
+          }
+
+          const description =
+            $(
+              "#raceDescription"
+            );
+
+          if (!description) {
+            return;
+          }
+
+          const open =
+            description.hidden;
+
+          description.hidden =
+            !open;
+
+          description.dataset.open =
+            open
+              ? "true"
+              : "false";
+
+          announce(
+            open
+              ? "Descrição da raça aberta."
+              : "Descrição da raça fechada."
+          );
+        }
+      );
+    }
   }
 
-  function clampNumber(
-    value,
-    min,
-    max
-  ) {
-    return Math.max(
-      min,
-      Math.min(
-        max,
-        value
-      )
-    );
-  }
-
-  /* =========================================================
-     API PÚBLICA
-     ========================================================= */
+  /* =======================================================
+     API
+     ======================================================= */
 
   window.AERIONFichaRender =
     Object.freeze({
@@ -2933,46 +3043,64 @@
 
       toast,
 
-      renderProgress,
+      announce,
 
+      setPowerMode,
+
+      renderProgress,
       renderPanels,
 
       renderIdentity,
-
       renderAvatar,
 
       renderRace,
-
       renderAnimalha,
 
       renderAppearance,
-
-      renderAppearanceFigure,
+      renderAppearanceFields,
+      renderAnimalhaEditor,
+      renderCharacterModel,
 
       renderClasses,
 
-      renderDice,
-
       renderAttributes,
-
+      renderDice,
+      renderAttributeCards,
       renderRadar,
 
       renderPower,
-
       renderMana,
 
       renderSkills,
-
       renderTechniques,
-
       renderInventory,
 
       renderCombat,
-
       renderReview,
 
-      renderNavigation
+      renderNavigation,
+
+      initRendererEvents
     });
+
+  /* =======================================================
+     INICIALIZAÇÃO DO RENDERER
+     ======================================================= */
+
+  if (
+    document.readyState ===
+    "loading"
+  ) {
+    document.addEventListener(
+      "DOMContentLoaded",
+      initRendererEvents,
+      {
+        once: true
+      }
+    );
+  } else {
+    initRendererEvents();
+  }
 
   console.info(
     "[AERION] ficha-render.js carregado."
