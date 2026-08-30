@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0a0908">
+<title>AERION — Criar Ficha</title>
+<link rel="stylesheet" href="./ficha.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+<script src="./ficha.js" defer></script>
+</head>
+<body>
+<div id="app" class="ficha-app">
+
+<header class="ficha-header">
+  <a class="ficha-back" href="./fichas.html" aria-label="Voltar para fichas">←</a>
+  <div class="ficha-brand"><span>AERION</span><h1>Criar Ficha</h1></div>
+  <div id="saveStatus" class="ficha-save-status" aria-live="polite">
+    <span class="save-dot"></span><span id="saveStatusText">Salvamento automático</span>
+  </div>
+</header>
+
+<section class="progress-area" aria-label="Progresso">
+  <div class="progress-topline">
+    <div><span class="eyebrow">NOVA AVENTURA</span><h2 id="progressTitle">Identidade</h2></div>
+    <strong id="progressPercent">0%</strong>
+  </div>
+  <div class="progress-track"><div id="progressFill" class="progress-fill" style="width:0%"></div></div>
+  <nav id="creationSteps" class="creation-steps" aria-label="Etapas">
+    <button type="button" class="creation-step is-active" data-step="identity"><span>01</span><b>Identidade</b></button>
+    <button type="button" class="creation-step" data-step="race" disabled><span>02</span><b>Raça</b></button>
+    <button type="button" class="creation-step" data-step="class" disabled><span>03</span><b>Classe</b></button>
+    <button type="button" class="creation-step" data-step="attributes" disabled><span>04</span><b>Atributos</b></button>
+    <button type="button" class="creation-step" data-step="power" disabled><span>05</span><b>Poder</b></button>
+    <button type="button" class="creation-step" data-step="mana" disabled><span>06</span><b>Mana</b></button>
+    <button type="button" class="creation-step" data-step="skills" disabled><span>07</span><b>Perícias</b></button>
+    <button type="button" class="creation-step" data-step="techniques" disabled><span>08</span><b>Técnicas</b></button>
+    <button type="button" class="creation-step" data-step="inventory" disabled><span>09</span><b>Inventário</b></button>
+    <button type="button" class="creation-step" data-step="review" disabled><span>10</span><b>Revisão</b></button>
+  </nav>
+</section>
+
+<main class="ficha-main">
+
+<section class="creation-panel is-active" data-panel="identity">
+  <div class="section-heading"><span class="eyebrow">PRIMEIRA ETAPA</span><h2>Quem é o aventureiro?</h2><p>Comece pela identidade básica da ficha.</p></div>
+  <div class="identity-layout">
+    <article class="character-image-card">
+      <div id="avatarPreview" class="image-preview">
+        <div id="avatarPlaceholder" class="image-placeholder"><span>◇</span><strong>Imagem do personagem</strong><small>Opcional por enquanto</small></div>
+        <img id="avatarImage" class="avatar-image" alt="Pré-visualização" hidden>
+      </div>
+      <div class="image-actions">
+        <label class="button button-secondary" for="avatarInput">Escolher imagem</label>
+        <button type="button" class="button button-ghost" id="removeAvatarButton" disabled>Remover</button>
+      </div>
+      <input id="avatarInput" type="file" accept="image/png,image/jpeg,image/webp,image/avif" hidden>
+      <p class="field-hint">A imagem será enviada do dispositivo quando a ficha for salva.</p>
+    </article>
+    <div class="form-stack">
+      <label class="field"><span class="field-label">Nome do aventureiro <b>*</b></span>
+        <input id="characterName" name="name" type="text" maxlength="60" autocomplete="off" placeholder="Ex.: Aeriom" required>
+        <small id="nameError" class="field-error" hidden>Informe um nome para continuar.</small>
+      </label>
+      <label class="field"><span class="field-label">Idade</span><input id="characterAge" name="age" type="number" min="0" max="9999" inputmode="numeric" placeholder="Opcional"></label>
+      <label class="field"><span class="field-label">Descrição</span><textarea id="characterDescription" name="description" rows="6" maxlength="1000" placeholder="Conte brevemente quem é esse aventureiro..."></textarea></label>
+      <div class="gender-field"><span class="field-label">Gênero</span>
+        <div class="choice-grid choice-grid-2">
+          <label class="choice-card"><input type="radio" name="gender" value="masculino"><span class="choice-card-content"><strong>Masculino</strong><small>Forma masculina</small></span></label>
+          <label class="choice-card"><input type="radio" name="gender" value="feminino"><span class="choice-card-content"><strong>Feminino</strong><small>Forma feminina</small></span></label>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="creation-panel" data-panel="race" hidden>
+  <div class="section-heading"><span class="eyebrow">SEGUNDA ETAPA</span><h2>Escolha sua raça</h2><p>Explore as raças e toque no card para conhecer os detalhes.</p></div>
+  <div class="carousel-shell">
+    <button type="button" class="carousel-arrow" id="racePrevious" aria-label="Raça anterior">‹</button>
+    <article id="raceCard" class="race-card" tabindex="0">
+      <div class="race-image-wrap"><img id="raceImage" class="race-image" src="" alt=""></div>
+      <div class="race-card-info"><span id="raceGenderLabel" class="eyebrow">RAÇA</span><h3 id="raceName">Humano</h3><p id="raceShortDescription">Selecione uma raça para começar.</p></div>
+      <div class="race-select-indicator"><span id="raceSelectedText">Selecionar</span></div>
+    </article>
+    <button type="button" class="carousel-arrow" id="raceNext" aria-label="Próxima raça">›</button>
+  </div>
+  <div id="raceDots" class="carousel-dots" aria-label="Raças"></div>
+  <div id="raceDescription" class="race-description" hidden><span class="eyebrow">SOBRE A RAÇA</span><h3 id="raceDescriptionTitle"></h3><p id="raceDescriptionText"></p></div>
+</section>
+
+<section class="creation-panel" data-panel="class" hidden>
+  <div class="section-heading"><span class="eyebrow">TERCEIRA ETAPA</span><h2>Escolha sua classe</h2><p>A classe define a identidade de atuação do aventureiro.</p></div>
+  <div id="classGrid" class="class-grid">
+    <button type="button" class="class-card" data-class="guerreiro"><span class="class-image"><img data-class-image="guerreiro" alt=""></span><span class="class-card-info"><strong>Guerreiro</strong><small>Combatente</small></span></button>
+    <button type="button" class="class-card" data-class="feiticeiro"><span class="class-image"><img data-class-image="feiticeiro" alt=""></span><span class="class-card-info"><strong>Feiticeiro</strong><small>Mágico</small></span></button>
+    <button type="button" class="class-card" data-class="curandeiro"><span class="class-image"><img data-class-image="curandeiro" alt=""></span><span class="class-card-info"><strong>Curandeiro</strong><small>Suporte</small></span></button>
+    <button type="button" class="class-card" data-class="monge"><span class="class-image"><img data-class-image="monge" alt=""></span><span class="class-card-info"><strong>Monge</strong><small>Marcial</small></span></button>
+  </div>
+</section>
+
+<section class="creation-panel" data-panel="attributes" hidden>
+  <div class="section-heading"><span class="eyebrow">QUARTA ETAPA</span><h2>Distribua seus atributos</h2><p>Escolha os dados disponíveis e associe cada um aos atributos.</p></div>
+  <div class="attributes-layout">
+    <div class="dice-selection"><span class="field-label">Dados disponíveis</span><div id="attributeDice" class="dice-grid">
+      <button type="button" class="dice-card" data-die="d4">D4</button><button type="button" class="dice-card" data-die="d6">D6</button><button type="button" class="dice-card" data-die="d8">D8</button><button type="button" class="dice-card" data-die="d10">D10</button><button type="button" class="dice-card" data-die="d12">D12</button><button type="button" class="dice-card" data-die="d20">D20</button>
+    </div></div>
+    <div id="attributeList" class="attribute-list">
+      <div class="attribute-row" data-attribute="forca"><div><strong>Força</strong><small>Potência física</small></div><button type="button" class="attribute-slot" data-attribute-slot="forca">Selecionar dado</button></div>
+      <div class="attribute-row" data-attribute="vigor"><div><strong>Vigor</strong><small>Resistência</small></div><button type="button" class="attribute-slot" data-attribute-slot="vigor">Selecionar dado</button></div>
+      <div class="attribute-row" data-attribute="controle"><div><strong>Controle</strong><small>Domínio e precisão</small></div><button type="button" class="attribute-slot" data-attribute-slot="controle">Selecionar dado</button></div>
+      <div class="attribute-row" data-attribute="precisao"><div><strong>Precisão</strong><small>Ações precisas</small></div><button type="button" class="attribute-slot" data-attribute-slot="precisao">Selecionar dado</button></div>
+      <div class="attribute-row" data-attribute="presenca"><div><strong>Presença</strong><small>Impacto social</small></div><button type="button" class="attribute-slot" data-attribute-slot="presenca">Selecionar dado</button></div>
+      <div class="attribute-row" data-attribute="agilidade"><div><strong>Agilidade</strong><small>Velocidade e movimento</small></div><button type="button" class="attribute-slot" data-attribute-slot="agilidade">Selecionar dado</button></div>
+      <div class="attribute-row" data-attribute="intelecto"><div><strong>Intelecto</strong><small>Raciocínio</small></div><button type="button" class="attribute-slot" data-attribute-slot="intelecto">Selecionar dado</button></div>
+      <div class="attribute-row" data-attribute="percepcao"><div><strong>Percepção</strong><small>Leitura do ambiente</small></div><button type="button" class="attribute-slot" data-attribute-slot="percepcao">Selecionar dado</button></div>
+    </div>
+  </div>
+  <div class="attribute-chart-card"><div class="section-heading compact"><span class="eyebrow">CARACTERÍSTICAS</span><h3>Perfil do aventureiro</h3></div><div id="attributeChart" class="attribute-chart"><div class="chart-placeholder">O gráfico aparecerá conforme os atributos forem definidos.</div></div></div>
+</section>
+
+<section class="creation-panel" data-panel="power" hidden>
+  <div class="section-heading"><span class="eyebrow">QUINTA ETAPA</span><h2>Defina seu poder</h2><p>O sistema de poder será conectado às regras de AERION.</p></div>
+  <label class="field"><span class="field-label">Poder</span><input id="characterPower" name="power" type="text" maxlength="100" placeholder="Nome ou conceito do poder"></label>
+  <label class="field"><span class="field-label">Origem</span><textarea id="characterOrigin" name="origin" rows="5" maxlength="1000" placeholder="De onde vem o poder deste aventureiro?"></textarea></label>
+</section>
+
+<section class="creation-panel" data-panel="mana" hidden>
+  <div class="section-heading"><span class="eyebrow">SEXTA ETAPA</span><h2>Escolha sua Mana</h2><p>A Mana Azul fica disponível por padrão. As demais dependem da campanha.</p></div>
+  <div id="manaGrid" class="mana-grid">
+    <button type="button" class="mana-card is-available is-selected" data-mana="azul"><span class="mana-icon">✦</span><strong>Mana Azul</strong><small>Comum</small><span class="mana-status">Disponível</span></button>
+    <button type="button" class="mana-card is-locked" data-mana="negra" disabled><span class="mana-icon">✦</span><strong>Mana Negra</strong><small>Bloqueada</small><span class="mana-status">🔒 Bloqueada</span></button>
+    <button type="button" class="mana-card is-locked" data-mana="boa" disabled><span class="mana-icon">✦</span><strong>Mana Boa</strong><small>Bloqueada</small><span class="mana-status">🔒 Bloqueada</span></button>
+    <button type="button" class="mana-card is-locked" data-mana="perfeita" disabled><span class="mana-icon">✦</span><strong>Mana Perfeita</strong><small>Bloqueada</small><span class="mana-status">🔒 Bloqueada</span></button>
+  </div>
+</section>
+
+<section class="creation-panel" data-panel="skills" hidden>
+  <div class="section-heading"><span class="eyebrow">SÉTIMA ETAPA</span><h2>Perícias</h2><p>Os nomes e regras das perícias serão definidos antes da ativação.</p></div>
+  <div id="skillsList" class="skills-list"><div class="empty-module"><strong>Perícias aguardando configuração</strong><p>A estrutura está pronta para receber as regras oficiais de AERION.</p></div></div>
+</section>
+
+<section class="creation-panel" data-panel="techniques" hidden>
+  <div class="section-heading"><span class="eyebrow">OITAVA ETAPA</span><h2>Técnicas</h2><p>Adicione as técnicas do aventureiro.</p></div>
+  <div id="techniquesList" class="techniques-list"></div>
+  <button type="button" class="button button-secondary" id="addTechniqueButton">+ Adicionar técnica</button>
+</section>
+
+<section class="creation-panel" data-panel="inventory" hidden>
+  <div class="section-heading"><span class="eyebrow">NONA ETAPA</span><h2>Inventário</h2><p>Registre equipamentos e itens iniciais.</p></div>
+  <div id="inventoryList" class="inventory-list"></div>
+  <button type="button" class="button button-secondary" id="addInventoryButton">+ Adicionar item</button>
+</section>
+
+<section class="creation-panel" data-panel="review" hidden>
+  <div class="section-heading"><span class="eyebrow">ÚLTIMA ETAPA</span><h2>Revise sua ficha</h2><p>Confira tudo antes de finalizar.</p></div>
+  <div id="reviewCard" class="review-card">
+    <div class="review-avatar"><img id="reviewAvatar" src="" alt="" hidden><span id="reviewAvatarFallback">◇</span></div>
+    <div class="review-main"><span class="eyebrow">AVENTUREIRO</span><h3 id="reviewName">Sem nome</h3><p id="reviewIdentity">Identidade ainda não definida.</p></div>
+  </div>
+  <div class="review-grid">
+    <div class="review-item"><span>Raça</span><strong id="reviewRace">—</strong></div>
+    <div class="review-item"><span>Classe</span><strong id="reviewClass">—</strong></div>
+    <div class="review-item"><span>Mana</span><strong id="reviewMana">Azul</strong></div>
+    <div class="review-item"><span>Gênero</span><strong id="reviewGender">—</strong></div>
+  </div>
+  <div class="review-actions"><button type="button" class="button button-secondary" id="saveDraftButton">Salvar rascunho</button><button type="button" class="button button-primary" id="finishCharacterButton">Finalizar ficha</button></div>
+</section>
+
+</main>
+
+<footer class="ficha-navigation">
+  <button type="button" class="button button-secondary" id="previousStepButton" disabled>← Anterior</button>
+  <div class="navigation-center"><span id="stepCounter">1 de 10</span></div>
+  <button type="button" class="button button-primary" id="nextStepButton">Próximo →</button>
+</footer>
+
+</div>
+
+<dialog id="raceModal" class="modal">
+  <div class="modal-content"><button type="button" class="modal-close" id="closeRaceModal" aria-label="Fechar">×</button><span class="eyebrow">RAÇA</span><h2 id="modalRaceName">Raça</h2><p id="modalRaceDescription"></p><button type="button" class="button button-primary" id="modalSelectRace">Escolher esta raça</button></div>
+</dialog>
+
+<div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+</body>
+</html>
