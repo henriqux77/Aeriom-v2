@@ -1,15 +1,22 @@
 /* =========================================================
-   AERION — FICHA
-   ficha.js
-   Lógica da tela de criação de ficha.
+   AERION — CRIAÇÃO DE FICHA
+   js/core/ficha.js
 
-   IMPORTANTE:
-   - Este arquivo não altera o banco sozinho sem configuração.
-   - Se AERION_SUPABASE_URL / AERION_SUPABASE_ANON_KEY não
-     estiverem disponíveis, o rascunho continua funcionando
-     localmente.
-   - Quando a estrutura definitiva do banco estiver confirmada,
-     a função saveToSupabase pode ser ligada à tabela final.
+   Versão atualizada:
+   - Salvamento automático local
+   - Restauração de rascunho
+   - Identidade
+   - Gênero
+   - Upload / preview de imagem
+   - Carrossel de raças
+   - Seleção de classes
+   - Distribuição correta dos dados dos atributos
+   - Gráfico de características
+   - Mana Azul
+   - Técnicas
+   - Inventário
+   - Revisão
+   - Navegação entre etapas
    ========================================================= */
 
 (() => {
@@ -20,206 +27,347 @@
   ========================================================= */
 
   const CONFIG = {
-    draftKey: "aerion:ficha:draft:v1",
+    draftKey: "aerion:ficha:draft:v2",
+    autosaveDelay: 700,
 
-    // Pode ser sobrescrito antes deste script:
-    // window.AERION_CONFIG = {
-    //   supabaseUrl: "...",
-    //   supabaseAnonKey: "..."
-    // };
     supabaseUrl:
       window.AERION_CONFIG?.supabaseUrl ||
-      document.querySelector('meta[name="aerion-supabase-url"]')?.content ||
+      document.querySelector(
+        'meta[name="aerion-supabase-url"]'
+      )?.content ||
       "",
 
     supabaseAnonKey:
       window.AERION_CONFIG?.supabaseAnonKey ||
-      document.querySelector('meta[name="aerion-supabase-anon-key"]')?.content ||
-      "",
-
-    autosaveDelay: 700
+      document.querySelector(
+        'meta[name="aerion-supabase-anon-key"]'
+      )?.content ||
+      ""
   };
 
+
+  /* =========================================================
+     ETAPAS
+  ========================================================= */
+
   const STEPS = [
-    { id: "identity", title: "Identidade" },
-    { id: "race", title: "Raça" },
-    { id: "class", title: "Classe" },
-    { id: "attributes", title: "Atributos" },
-    { id: "power", title: "Poder" },
-    { id: "mana", title: "Mana" },
-    { id: "skills", title: "Perícias" },
-    { id: "techniques", title: "Técnicas" },
-    { id: "inventory", title: "Inventário" },
-    { id: "review", title: "Revisão" }
+    {
+      id: "identity",
+      title: "Identidade"
+    },
+
+    {
+      id: "race",
+      title: "Raça"
+    },
+
+    {
+      id: "class",
+      title: "Classe"
+    },
+
+    {
+      id: "attributes",
+      title: "Atributos"
+    },
+
+    {
+      id: "power",
+      title: "Poder"
+    },
+
+    {
+      id: "mana",
+      title: "Mana"
+    },
+
+    {
+      id: "skills",
+      title: "Perícias"
+    },
+
+    {
+      id: "techniques",
+      title: "Técnicas"
+    },
+
+    {
+      id: "inventory",
+      title: "Inventário"
+    },
+
+    {
+      id: "review",
+      title: "Revisão"
+    }
   ];
 
-  /*
-   * Catálogo inicial de raças.
-   *
-   * Povo das Nuvens / Aureano ainda NÃO entra aqui,
-   * conforme decidido no projeto.
-   */
+
+  /* =========================================================
+     DISTRIBUIÇÃO OFICIAL DOS DADOS
+     
+     Livro I:
+     D4  ×1
+     D6  ×2
+     D8  ×1
+     D10 ×1
+     D12 ×1
+     D20 ×2
+     
+     Total = 8 dados
+     Total = 8 atributos
+  ========================================================= */
+
+  const DICE_LIMITS = Object.freeze({
+    d4: 1,
+    d6: 2,
+    d8: 1,
+    d10: 1,
+    d12: 1,
+    d20: 2
+  });
+
+
+  /* =========================================================
+     RAÇAS
+     
+     Povo das Nuvens / Aureano continua fora
+     conforme a decisão atual do projeto.
+  ========================================================= */
+
   const RACES = [
     {
       id: "humano",
       name: "Humano",
+
       maleImage:
         "https://i.ibb.co/TBNmfF0S/file-000000008b74820ea8b432fcf06ed975.png",
+
       femaleImage:
         "https://i.ibb.co/LdmxJ2h9/file-000000004b94820ead12a26ca92d75b7.png",
+
       description:
-        "Humanos são uma das raças clássicas de AERION, adaptáveis e presentes em diferentes regiões do mundo."
+        "Humanos são uma das raças clássicas de AERION, conhecidos por sua capacidade de adaptação."
     },
 
     {
       id: "elfo",
       name: "Elfo",
+
       maleImage:
         "https://i.ibb.co/0y8WXSr8/file-00000000495c820e99fc5de509918d90.png",
+
       femaleImage:
         "https://i.ibb.co/F1DCc3j/file-00000000dcf8820e883635d6ca9de492.png",
+
       description:
-        "Elfos possuem uma aparência distinta e uma forte identidade ligada à fantasia de AERION."
+        "Elfos possuem uma aparência característica e uma forte ligação com Mana e fenômenos mágicos."
     },
 
     {
       id: "anao",
       name: "Anão",
+
       maleImage:
         "https://i.ibb.co/CySRyjQ/file-000000001824820e952c5a665ae3496f.png",
+
       femaleImage:
         "https://i.ibb.co/hJh4XYXM/file-00000000a4fc820e9bd0551b2472e125.png",
+
       description:
-        "Anões apresentam uma constituição robusta e uma identidade própria dentro do mundo de AERION."
+        "Anões possuem constituição robusta e grande tradição ligada a materiais, estruturas e forja."
     },
 
     {
       id: "orc",
       name: "Orc",
+
       maleImage:
         "https://i.ibb.co/ch4shzym/file-00000000e724820ebbe72fa63e4e81e3.png",
+
       femaleImage:
         "https://i.ibb.co/ksjBsffv/file-00000000decc820e9cd0c4ace952b82c.png",
+
       description:
-        "Orcs possuem características físicas marcantes e uma presença facilmente reconhecível."
+        "Orcs apresentam presença física marcante e uma forte identidade guerreira."
     },
 
     {
       id: "centauro",
       name: "Centauro",
+
       maleImage:
         "https://i.ibb.co/5WckT8kZ/file-000000007e1c820ebec26e736b57ba50.png",
+
       femaleImage:
         "https://i.ibb.co/hFCDFvN2/file-00000000e5c8820ebb67aa67f2d7a1b8.png",
+
       description:
-        "Centauros combinam características humanoides e equinas em uma única anatomia."
+        "Centauros possuem anatomia humanoide e equina, com grande mobilidade terrestre."
     },
 
     {
       id: "vampiro",
       name: "Vampiro",
+
       maleImage:
         "https://i.ibb.co/PGFcNRXZ/file-0000000019dc820ea49a893a9831ffeb.png",
+
       femaleImage:
         "https://i.ibb.co/Kpx8jh0j/file-000000008cfc820e827a7b8376d3fd55.png",
+
       description:
-        "Vampiros possuem uma identidade visual própria, associada à sua natureza sobrenatural."
+        "Vampiros possuem características sobrenaturais e identidade visual própria."
     },
 
     {
       id: "duende",
       name: "Duende",
+
       maleImage:
         "https://i.ibb.co/0pCbh0Dq/file-00000000d1ec820eb0c562669244c953.png",
+
       femaleImage:
         "https://i.ibb.co/G3dGmfBg/file-000000001ce8820ea3db1f6c8da1c8dd.png",
+
       description:
-        "Duendes apresentam pele esverdeada, orelhas grandes e aparência mais primitiva."
+        "Duendes são pequenos, inteligentes e muito ligados ao comércio, contratos e finanças."
     },
 
     {
       id: "fada",
       name: "Fada",
+
       maleImage:
         "https://i.ibb.co/kVKz2xjq/file-000000008c00820ebf7da3010a79bf7c.png",
+
       femaleImage:
         "https://i.ibb.co/jPysnZz1/file-00000000f014820e954413d3d309ae96.png",
+
       description:
-        "Fadas possuem uma identidade leve e fantástica, mantendo o estilo visual estabelecido para AERION."
+        "Fadas possuem uma identidade fantástica e uma forte conexão com Mana."
     },
 
     {
       id: "povo_aquatico",
       name: "Povo Aquático",
+
       maleImage:
         "https://i.ibb.co/nsCyckYB/file-0000000089f0820e89d6953c4857240c.png",
+
       femaleImage:
         "https://i.ibb.co/SDQqHjSj/file-00000000779c820ea18c5cf3ce6529b7.png",
+
       description:
-        "O Povo Aquático possui características físicas claramente adaptadas ao ambiente aquático."
+        "O Povo Aquático possui adaptações naturais para viver dentro e fora da água."
     },
 
     {
       id: "animalha_felino",
       name: "Animalha — Felino",
+
       maleImage:
         "https://i.ibb.co/fVfFL5ds/file-00000000b344820e9e39f31e92678a13.png",
+
       femaleImage:
         "https://i.ibb.co/zW6JnjPb/file-000000007a70820ea284e54236c00052.png",
+
       description:
-        "Esta é a linhagem felina das Animalhas, com características animais integradas naturalmente à anatomia."
+        "Animalhas felinas possuem características animais integradas naturalmente ao corpo."
     },
 
     {
       id: "povo_natureza",
       name: "Povo da Natureza",
+
       maleImage:
         "https://i.ibb.co/23GdF2Py/file-000000001e48820ebbfa246147f05c6f.png",
+
       femaleImage:
         "https://i.ibb.co/gFFk7Kyv/file-00000000a170820eaf15f8650242c3c9.png",
+
       description:
-        "O Povo da Natureza possui identidade ligada aos ambientes naturais e à vida selvagem."
+        "O Povo da Natureza possui forte vínculo com ambientes naturais, plantas e animais."
     },
 
     {
       id: "neraliano",
       name: "Neraliano",
+
       maleImage:
         "https://i.ibb.co/CpkBqzkC/file-00000000dee8820eb4f157009c1ceb5b.png",
+
       femaleImage:
         "https://i.ibb.co/k2ND7Tbp/file-000000003cb0820e842b5d0997ee34f5.png",
+
       description:
-        "Neralianos possuem características humanoides integradas a adaptações próprias de ambientes aquáticos e profundos."
+        "Neralianos possuem adaptações naturais relacionadas à água, profundidade e percepção de vibrações."
     }
   ];
+
+
+  /* =========================================================
+     CLASSES
+     
+     Bônus oficiais presentes no Livro I:
+     Feiticeiro +5
+     Guerreiro +1
+     Curandeiro +2
+     Monge +7
+  ========================================================= */
 
   const CLASSES = [
     {
       id: "guerreiro",
       name: "Guerreiro",
-      description: "Combatente de linha de frente."
+      role: "Combatente",
+      bonus: "+1",
+      description:
+        "Armas e combate.",
+      image:
+        "https://i.ibb.co/Z12VGcdj/file-00000000f884820ea169d455610bbb08.png"
     },
 
     {
       id: "feiticeiro",
       name: "Feiticeiro",
-      description: "Aventureiro especializado em magia."
+      role: "Mágico",
+      bonus: "+5",
+      description:
+        "Especialista em técnicas e Mana.",
+      image:
+        "https://i.ibb.co/pBsLK1dG/file-000000004438820eb1451ab0c303400a.png"
     },
 
     {
       id: "curandeiro",
       name: "Curandeiro",
-      description: "Especialista em suporte e recuperação."
+      role: "Suporte",
+      bonus: "+2",
+      description:
+        "Cura, proteção e utilidade.",
+      image:
+        "https://i.ibb.co/MkV7gWRh/file-000000008180820e865940e8302d66ee.png"
     },
 
     {
       id: "monge",
       name: "Monge",
-      description: "Combatente marcial de grande mobilidade."
+      role: "Marcial",
+      bonus: "+7",
+      description:
+        "Mana corporal para força, defesa, movimento e objetos simples.",
+      image:
+        "https://i.ibb.co/JjgbsFKy/64403ce2-d0b6-4627-9419-b9f570e4a04c-20260829-224451-0000.png"
     }
   ];
 
-  const ATTRIBUTE_NAMES = {
+
+  /* =========================================================
+     ATRIBUTOS
+  ========================================================= */
+
+  const ATTRIBUTE_NAMES = Object.freeze({
     forca: "Força",
     vigor: "Vigor",
     controle: "Controle",
@@ -228,62 +376,105 @@
     agilidade: "Agilidade",
     intelecto: "Intelecto",
     percepcao: "Percepção"
-  };
-
-  /* =========================================================
-     ESTADO
-  ========================================================= */
-
-  const defaultState = () => ({
-    id: null,
-
-    name: "",
-    age: "",
-    description: "",
-    gender: "",
-
-    avatarDataUrl: "",
-    avatarFileName: "",
-
-    race: "",
-    raceIndex: 0,
-
-    class: "",
-
-    attributes: {
-      forca: null,
-      vigor: null,
-      controle: null,
-      precisao: null,
-      presenca: null,
-      agilidade: null,
-      intelecto: null,
-      percepcao: null
-    },
-
-    power: "",
-    origin: "",
-
-    mana: "azul",
-
-    skills: [],
-
-    techniques: [],
-
-    inventory: [],
-
-    currentStep: 0,
-
-    updatedAt: null
   });
 
-  let state = defaultState();
+
+  const ATTRIBUTE_DESCRIPTIONS = Object.freeze({
+    forca: "Potência física.",
+    vigor: "Resistência.",
+    controle: "Controle de Mana.",
+    precisao: "Mira e precisão.",
+    presenca: "Influência e interação.",
+    agilidade: "Reflexos e movimento.",
+    intelecto: "Conhecimento e raciocínio.",
+    percepcao: "Ambiente e detalhes."
+  });
+
+
+  /* =========================================================
+     ESTADO PADRÃO
+  ========================================================= */
+
+  function createDefaultState() {
+
+    return {
+
+      id: null,
+
+      name: "",
+
+      age: "",
+
+      description: "",
+
+      gender: "",
+
+      avatarDataUrl: "",
+
+      avatarFileName: "",
+
+      race: "",
+
+      raceIndex: 0,
+
+      class: "",
+
+      attributes: {
+
+        forca: null,
+
+        vigor: null,
+
+        controle: null,
+
+        precisao: null,
+
+        presenca: null,
+
+        agilidade: null,
+
+        intelecto: null,
+
+        percepcao: null
+
+      },
+
+      power: "",
+
+      origin: "",
+
+      mana: "azul",
+
+      skills: [],
+
+      techniques: [],
+
+      inventory: [],
+
+      currentStep: 0,
+
+      updatedAt: null
+
+    };
+
+  }
+
+
+  let state =
+    createDefaultState();
+
+
+  let selectedDice = null;
+
 
   let saveTimer = null;
 
+
   let toastTimer = null;
 
-  let selectedDice = null;
+
+  let initialized = false;
+
 
   /* =========================================================
      DOM
@@ -292,20 +483,28 @@
   const $ = (
     selector,
     root = document
-  ) =>
-    root.querySelector(
+  ) => {
+
+    return root.querySelector(
       selector
     );
+
+  };
+
 
   const $$ = (
     selector,
     root = document
-  ) =>
-    Array.from(
+  ) => {
+
+    return Array.from(
       root.querySelectorAll(
         selector
       )
     );
+
+  };
+
 
   /* =========================================================
      UTILITÁRIOS
@@ -315,8 +514,11 @@
     value
   ) {
 
-    return value == null
+    return value === null ||
+      value === undefined
+
       ? ""
+
       : String(
           value
         );
@@ -324,134 +526,26 @@
   }
 
 
-  function normalizeState(
-    raw
+  function clamp(
+    value,
+    min,
+    max
   ) {
 
-    const base =
-      defaultState();
-
-
-    if (
-      !raw ||
-      typeof raw !==
-        "object"
-    ) {
-
-      return base;
-    }
-
-
-    const merged = {
-
-      ...base,
-
-      ...raw,
-
-      attributes: {
-
-        ...base.attributes,
-
-        ...(raw.attributes ||
-          {})
-
-      },
-
-      skills:
-        Array.isArray(
-          raw.skills
-        )
-          ? raw.skills
-          : [],
-
-      techniques:
-        Array.isArray(
-          raw.techniques
-        )
-          ? raw.techniques
-          : [],
-
-      inventory:
-        Array.isArray(
-          raw.inventory
-        )
-          ? raw.inventory
-          : []
-
-    };
-
-
-    if (
-      !Number.isInteger(
-        merged.currentStep
-      ) ||
-      merged.currentStep <
-        0 ||
-      merged.currentStep >=
-        STEPS.length
-    ) {
-
-      merged.currentStep =
-        0;
-    }
-
-
-    if (
-      !RACES.some(
-        race =>
-          race.id ===
-          merged.race
+    return Math.max(
+      min,
+      Math.min(
+        max,
+        value
       )
-    ) {
-
-      merged.race =
-        "";
-    }
-
-
-    if (
-      !CLASSES.some(
-        item =>
-          item.id ===
-          merged.class
-      )
-    ) {
-
-      merged.class =
-        "";
-    }
-
-
-    if (
-      ![
-        "masculino",
-        "feminino"
-      ].includes(
-        merged.gender
-      )
-    ) {
-
-      merged.gender =
-        "";
-    }
-
-
-    /*
-     * Regra atual:
-     * somente Mana Azul na criação base.
-     */
-    merged.mana =
-      "azul";
-
-
-    return merged;
+    );
 
   }
 
 
   function showToast(
     message,
-    duration = 2500
+    duration = 2400
   ) {
 
     const toast =
@@ -463,11 +557,14 @@
     ) {
 
       return;
+
     }
 
 
     toast.textContent =
-      message;
+      safeText(
+        message
+      );
 
 
     toast.hidden =
@@ -480,7 +577,7 @@
 
 
     toastTimer =
-      setTimeout(
+      window.setTimeout(
         () => {
 
           toast.hidden =
@@ -498,7 +595,7 @@
     text
   ) {
 
-    const textEl =
+    const textElement =
       $("#saveStatusText");
 
 
@@ -507,11 +604,12 @@
 
 
     if (
-      textEl
+      textElement
     ) {
 
-      textEl.textContent =
+      textElement.textContent =
         text;
+
     }
 
 
@@ -520,6 +618,7 @@
     ) {
 
       return;
+
     }
 
 
@@ -535,6 +634,7 @@
         "0 0 12px rgba(197,108,99,.4)";
 
       return;
+
     }
 
 
@@ -550,6 +650,7 @@
         "0 0 12px rgba(131,173,121,.4)";
 
       return;
+
     }
 
 
@@ -561,25 +662,474 @@
 
   }
 
+
   /* =========================================================
-     RASCUNHO LOCAL
+     NORMALIZAÇÃO DO ESTADO
+  ========================================================= */
+
+  function normalizeState(
+    raw
+  ) {
+
+    const base =
+      createDefaultState();
+
+
+    if (
+      !raw ||
+      typeof raw !==
+      "object"
+    ) {
+
+      return base;
+
+    }
+
+
+    const merged = {
+
+      ...base,
+
+      ...raw,
+
+      attributes: {
+
+        ...base.attributes,
+
+        ...(
+          raw.attributes &&
+          typeof raw.attributes ===
+            "object"
+
+            ? raw.attributes
+
+            : {}
+
+        )
+
+      },
+
+      skills:
+        Array.isArray(
+          raw.skills
+        )
+
+          ? raw.skills
+
+          : [],
+
+      techniques:
+        Array.isArray(
+          raw.techniques
+        )
+
+          ? raw.techniques
+
+          : [],
+
+      inventory:
+        Array.isArray(
+          raw.inventory
+        )
+
+          ? raw.inventory
+
+          : []
+
+    };
+
+
+    if (
+      !Number.isInteger(
+        merged.currentStep
+      )
+    ) {
+
+      merged.currentStep =
+        0;
+
+    }
+
+
+    merged.currentStep =
+      clamp(
+        merged.currentStep,
+        0,
+        STEPS.length - 1
+      );
+
+
+    if (
+      !Number.isInteger(
+        merged.raceIndex
+      )
+    ) {
+
+      merged.raceIndex =
+        0;
+
+    }
+
+
+    merged.raceIndex =
+      clamp(
+        merged.raceIndex,
+        0,
+        RACES.length - 1
+      );
+
+
+    if (
+      !RACES.some(
+        race =>
+          race.id ===
+          merged.race
+      )
+    ) {
+
+      merged.race =
+        "";
+
+    }
+
+
+    if (
+      !CLASSES.some(
+        item =>
+          item.id ===
+          merged.class
+      )
+    ) {
+
+      merged.class =
+        "";
+
+    }
+
+
+    if (
+      ![
+        "masculino",
+        "feminino"
+      ].includes(
+        merged.gender
+      )
+    ) {
+
+      merged.gender =
+        "";
+
+    }
+
+
+    /*
+     * Regra atual:
+     * somente Mana Azul é permitida na ficha-base.
+     */
+    merged.mana =
+      "azul";
+
+
+    /*
+     * Corrige dados inválidos antigos.
+     * Também garante que apenas os dados permitidos
+     * existam nos atributos.
+     */
+    merged.attributes =
+      normalizeAttributes(
+        merged.attributes
+      );
+
+
+    return merged;
+
+  }
+
+
+  function normalizeAttributes(
+    attributes
+  ) {
+
+    const output = {
+
+      forca:
+        null,
+
+      vigor:
+        null,
+
+      controle:
+        null,
+
+      precisao:
+        null,
+
+      presenca:
+        null,
+
+      agilidade:
+        null,
+
+      intelecto:
+        null,
+
+      percepcao:
+        null
+
+    };
+
+
+    if (
+      !attributes ||
+      typeof attributes !==
+      "object"
+    ) {
+
+      return output;
+
+    }
+
+
+    /*
+     * Reconstrói respeitando os limites.
+     *
+     * Isso também protege a aplicação caso um rascunho
+     * antigo tenha valores inválidos.
+     */
+    const used =
+      {
+        d4: 0,
+        d6: 0,
+        d8: 0,
+        d10: 0,
+        d12: 0,
+        d20: 0
+      };
+
+
+    Object.keys(
+      output
+    )
+      .forEach(
+        attribute => {
+
+          const raw =
+            safeText(
+              attributes[
+                attribute
+              ]
+            )
+            .toLowerCase();
+
+
+          if (
+            !Object.prototype.hasOwnProperty.call(
+              DICE_LIMITS,
+              raw
+            )
+          ) {
+
+            output[
+              attribute
+            ] =
+              null;
+
+            return;
+
+          }
+
+
+          if (
+            used[
+              raw
+            ] >=
+            DICE_LIMITS[
+              raw
+            ]
+          ) {
+
+            output[
+              attribute
+            ] =
+              null;
+
+            return;
+
+          }
+
+
+          output[
+            attribute
+          ] =
+            raw;
+
+
+          used[
+            raw
+          ]++;
+
+        }
+      );
+
+
+    return output;
+
+  }
+
+
+  /* =========================================================
+     CONTAGEM DOS DADOS
+  ========================================================= */
+
+  function getDiceUsage() {
+
+    const usage = {
+
+      d4: 0,
+
+      d6: 0,
+
+      d8: 0,
+
+      d10: 0,
+
+      d12: 0,
+
+      d20: 0
+
+    };
+
+
+    Object.values(
+      state.attributes
+    )
+      .forEach(
+        die => {
+
+          if (
+            Object.prototype.hasOwnProperty.call(
+              usage,
+              die
+            )
+          ) {
+
+            usage[
+              die
+            ]++;
+
+          }
+
+        }
+      );
+
+
+    return usage;
+
+  }
+
+
+  function getRemainingDice(
+    die
+  ) {
+
+    const normalized =
+      safeText(
+        die
+      )
+      .toLowerCase();
+
+
+    const max =
+      DICE_LIMITS[
+        normalized
+      ] || 0;
+
+
+    const usage =
+      getDiceUsage();
+
+
+    return Math.max(
+      0,
+      max -
+      (
+        usage[
+          normalized
+        ] || 0
+      )
+    );
+
+  }
+
+
+  function getAttributeCount() {
+
+    return Object.values(
+      state.attributes
+    )
+      .filter(
+        Boolean
+      )
+      .length;
+
+  }
+
+
+  function areAllAttributesAssigned() {
+
+    return (
+      getAttributeCount() ===
+      Object.keys(
+        ATTRIBUTE_NAMES
+      ).length
+    );
+
+  }
+
+
+  /* =========================================================
+     RASCUNHO
   ========================================================= */
 
   function saveLocalDraft() {
 
     try {
 
-      const copy = {
+      const draft = {
 
         ...state,
 
+        attributes: {
+          ...state.attributes
+        },
+
+        skills: [
+          ...state.skills
+        ],
+
+        techniques:
+          state.techniques.map(
+            technique =>
+              ({
+                ...technique
+              })
+          ),
+
+        inventory:
+          state.inventory.map(
+            item =>
+              ({
+                ...item
+              })
+          ),
+
         /*
-         * Evita transformar localStorage em um depósito
-         * de imagens enormes.
+         * Imagens muito grandes não devem
+         * explodir o localStorage.
          */
         avatarDataUrl:
           state.avatarDataUrl &&
-          state.avatarDataUrl.length <
+          state.avatarDataUrl.length <=
             2_000_000
 
             ? state.avatarDataUrl
@@ -595,13 +1145,13 @@
       localStorage.setItem(
         CONFIG.draftKey,
         JSON.stringify(
-          copy
+          draft
         )
       );
 
 
       state.updatedAt =
-        copy.updatedAt;
+        draft.updatedAt;
 
 
       setSaveStatus(
@@ -617,14 +1167,14 @@
     ) {
 
       console.error(
-        "[AERION][FICHA] Falha ao salvar rascunho:",
+        "[AERION][FICHA] Erro ao salvar rascunho:",
         error
       );
 
 
       setSaveStatus(
         "error",
-        "Não foi possível salvar"
+        "Erro ao salvar"
       );
 
 
@@ -650,14 +1200,19 @@
       ) {
 
         return false;
+
       }
+
+
+      const parsed =
+        JSON.parse(
+          raw
+        );
 
 
       state =
         normalizeState(
-          JSON.parse(
-            raw
-          )
+          parsed
         );
 
 
@@ -699,7 +1254,7 @@
 
 
     saveTimer =
-      setTimeout(
+      window.setTimeout(
         () => {
 
           saveLocalDraft();
@@ -732,6 +1287,7 @@
 
   }
 
+
   /* =========================================================
      SUPABASE
   ========================================================= */
@@ -744,17 +1300,15 @@
     ) {
 
       return null;
+
     }
 
 
     if (
-      !window.supabase?.createClient
+      !window.supabase ||
+      typeof window.supabase.createClient !==
+      "function"
     ) {
-
-      console.warn(
-        "[AERION][FICHA] Supabase carregou, mas createClient não está disponível."
-      );
-
 
       return null;
 
@@ -780,11 +1334,10 @@
 
 
   /*
-   * Deliberadamente sem INSERT/UPDATE definitivo ainda.
+   * Ainda não executa INSERT/UPDATE definitivo.
    *
-   * A estrutura final de ficha-base + instância de campanha
-   * precisa ser ligada ao schema aprovado antes da gravação
-   * definitiva no banco.
+   * Isso é intencional: a arquitetura de ficha-base
+   * e instância de campanha precisa permanecer separada.
    */
   async function saveToSupabase() {
 
@@ -817,15 +1370,135 @@
       skipped: true,
 
       reason:
-        "Tabela final de fichas ainda não configurada neste módulo."
+        "Persistência definitiva da ficha ainda não ligada."
 
     };
 
   }
 
+
   /* =========================================================
      PROGRESSO
   ========================================================= */
+
+  function getStepCompletion(
+    stepId
+  ) {
+
+    switch (
+      stepId
+    ) {
+
+      case "identity":
+
+        return Boolean(
+          state.name.trim()
+        );
+
+
+      case "race":
+
+        return Boolean(
+          state.race
+        );
+
+
+      case "class":
+
+        return Boolean(
+          state.class
+        );
+
+
+      case "attributes":
+
+        return areAllAttributesAssigned();
+
+
+      case "power":
+
+        return Boolean(
+          state.power.trim()
+        );
+
+
+      case "mana":
+
+        return state.mana ===
+          "azul";
+
+
+      case "skills":
+
+        return (
+          state.skills.length >
+          0
+        );
+
+
+      case "techniques":
+
+        return (
+          state.techniques.length >
+          0
+        );
+
+
+      case "inventory":
+
+        return (
+          state.inventory.length >
+          0
+        );
+
+
+      case "review":
+
+        return isMinimumCharacterReady();
+
+
+      default:
+
+        return false;
+
+    }
+
+  }
+
+
+  function getProgressPercent() {
+
+    let completed =
+      0;
+
+
+    STEPS.forEach(
+      step => {
+
+        if (
+          getStepCompletion(
+            step.id
+          )
+        ) {
+
+          completed++;
+
+        }
+
+      }
+    );
+
+
+    return Math.round(
+      (
+        completed /
+        STEPS.length
+      ) *
+      100
+    );
+
+  }
+
 
   function updateProgress() {
 
@@ -833,24 +1506,19 @@
       state.currentStep;
 
 
+    /*
+     * A barra mostra progresso de etapas concluídas,
+     * enquanto o contador continua indicando a etapa atual.
+     */
     const percent =
-      Math.round(
-        (
-          currentIndex /
-          (
-            STEPS.length -
-            1
-          )
-        ) *
-        100
-      );
+      getProgressPercent();
 
 
     const fill =
       $("#progressFill");
 
 
-    const percentEl =
+    const percentElement =
       $("#progressPercent");
 
 
@@ -867,19 +1535,16 @@
     ) {
 
       fill.style.width =
-        `${Math.max(
-          0,
-          percent
-        )}%`;
+        `${percent}%`;
 
     }
 
 
     if (
-      percentEl
+      percentElement
     ) {
 
-      percentEl.textContent =
+      percentElement.textContent =
         `${percent}%`;
 
     }
@@ -915,28 +1580,36 @@
           index
         ) => {
 
-          const active =
+          const isCurrent =
             index ===
             currentIndex;
 
 
-          const complete =
+          const isComplete =
             index <
-            currentIndex;
+            currentIndex &&
+            getStepCompletion(
+              STEPS[index].id
+            );
 
 
           button.classList.toggle(
             "is-active",
-            active
+            isCurrent
           );
 
 
           button.classList.toggle(
             "is-complete",
-            complete
+            isComplete
           );
 
 
+          /*
+           * O histórico anterior pode ser revisitado.
+           * A próxima etapa só abre quando seus pré-requisitos
+           * estiverem cumpridos.
+           */
           button.disabled =
             index >
               currentIndex &&
@@ -971,13 +1644,20 @@
       next
     ) {
 
-      next.textContent =
+      if (
         currentIndex ===
         STEPS.length - 1
+      ) {
 
-          ? "Finalizar →"
+        next.textContent =
+          "Finalizar →";
 
-          : "Próximo →";
+      } else {
+
+        next.textContent =
+          "Próximo →";
+
+      }
 
     }
 
@@ -994,9 +1674,13 @@
     ) {
 
       return true;
+
     }
 
 
+    /*
+     * Raça só depois da identidade.
+     */
     if (
       index >=
         1 &&
@@ -1004,9 +1688,13 @@
     ) {
 
       return false;
+
     }
 
 
+    /*
+     * Classe só depois da raça.
+     */
     if (
       index >=
         2 &&
@@ -1014,9 +1702,13 @@
     ) {
 
       return false;
+
     }
 
 
+    /*
+     * Atributos só depois da classe.
+     */
     if (
       index >=
         3 &&
@@ -1024,6 +1716,39 @@
     ) {
 
       return false;
+
+    }
+
+
+    /*
+     * Poder só depois de 8/8 atributos.
+     */
+    if (
+      index >=
+        4 &&
+      !areAllAttributesAssigned()
+    ) {
+
+      return false;
+
+    }
+
+
+    /*
+     * Mana só depois de poder.
+     *
+     * O poder pode ficar temporariamente vazio durante a
+     * montagem do sistema, mas para liberar a etapa seguinte
+     * exigimos o preenchimento.
+     */
+    if (
+      index >=
+        5 &&
+      !state.power.trim()
+    ) {
+
+      return false;
+
     }
 
 
@@ -1037,18 +1762,19 @@
   ) {
 
     const safeIndex =
-      Math.max(
+      clamp(
+        Number(index) || 0,
         0,
-        Math.min(
-          STEPS.length - 1,
-          index
-        )
+        STEPS.length - 1
       );
 
 
+    /*
+     * Permite voltar normalmente.
+     */
     if (
       safeIndex >
-        state.currentStep &&
+      state.currentStep &&
       !canEnterStep(
         safeIndex
       )
@@ -1114,20 +1840,75 @@
 
     window.scrollTo(
       {
-        top:
-          0,
-
-        behavior:
-          "smooth"
+        top: 0,
+        behavior: "smooth"
       }
     );
 
 
     if (
-      STEPS[
-        safeIndex
-      ].id ===
-      "review"
+      safeIndex ===
+      1
+    ) {
+
+      renderRace();
+
+    }
+
+
+    if (
+      safeIndex ===
+      2
+    ) {
+
+      renderClass();
+
+    }
+
+
+    if (
+      safeIndex ===
+      3
+    ) {
+
+      renderAttributes();
+
+    }
+
+
+    if (
+      safeIndex ===
+      5
+    ) {
+
+      renderMana();
+
+    }
+
+
+    if (
+      safeIndex ===
+      7
+    ) {
+
+      renderTechniques();
+
+    }
+
+
+    if (
+      safeIndex ===
+      8
+    ) {
+
+      renderInventory();
+
+    }
+
+
+    if (
+      safeIndex ===
+      9
     ) {
 
       updateReview();
@@ -1154,11 +1935,17 @@
       );
 
 
+      goToStep(
+        0
+      );
+
+
       $("#characterName")
         ?.focus();
 
 
       return false;
+
     }
 
 
@@ -1177,6 +1964,7 @@
 
 
       return false;
+
     }
 
 
@@ -1195,6 +1983,45 @@
 
 
       return false;
+
+    }
+
+
+    if (
+      !areAllAttributesAssigned()
+    ) {
+
+      showToast(
+        `Preencha os 8 atributos. Atualmente: ${getAttributeCount()}/8.`
+      );
+
+
+      goToStep(
+        3
+      );
+
+
+      return false;
+
+    }
+
+
+    if (
+      !state.power.trim()
+    ) {
+
+      showToast(
+        "Defina o poder antes de continuar."
+      );
+
+
+      goToStep(
+        4
+      );
+
+
+      return false;
+
     }
 
 
@@ -1305,12 +2132,23 @@
         event => {
 
           state.name =
-            event.target.value;
+            safeText(
+              event.target.value
+            );
 
 
-          $("#nameError")
-            .hidden =
-            true;
+          const error =
+            $("#nameError");
+
+
+          if (
+            error
+          ) {
+
+            error.hidden =
+              true;
+
+          }
 
 
           updateState(
@@ -1330,7 +2168,9 @@
         event => {
 
           state.age =
-            event.target.value;
+            safeText(
+              event.target.value
+            );
 
 
           updateState(
@@ -1350,7 +2190,9 @@
         event => {
 
           state.description =
-            event.target.value;
+            safeText(
+              event.target.value
+            );
 
 
           updateState(
@@ -1370,7 +2212,9 @@
         event => {
 
           state.power =
-            event.target.value;
+            safeText(
+              event.target.value
+            );
 
 
           updateState(
@@ -1390,7 +2234,9 @@
         event => {
 
           state.origin =
-            event.target.value;
+            safeText(
+              event.target.value
+            );
 
 
           updateState(
@@ -1502,21 +2348,20 @@
     ) {
 
       return;
+
     }
 
 
-    const allowed = [
-
+    const allowedTypes = [
       "image/png",
       "image/jpeg",
       "image/webp",
       "image/avif"
-
     ];
 
 
     if (
-      !allowed.includes(
+      !allowedTypes.includes(
         file.type
       )
     ) {
@@ -1531,6 +2376,7 @@
 
 
       return;
+
     }
 
 
@@ -1551,6 +2397,7 @@
 
 
       return;
+
     }
 
 
@@ -1616,6 +2463,7 @@
     ) {
 
       return;
+
     }
 
 
@@ -1700,27 +2548,34 @@
     ) {
 
       return "";
-    }
-
-
-    if (
-      state.gender ===
-        "feminino" &&
-      race.femaleImage
-    ) {
-
-      return race.femaleImage;
 
     }
 
 
     if (
       state.gender ===
-        "masculino" &&
-      race.maleImage
+        "feminino"
     ) {
 
-      return race.maleImage;
+      return (
+        race.femaleImage ||
+        race.maleImage ||
+        ""
+      );
+
+    }
+
+
+    if (
+      state.gender ===
+        "masculino"
+    ) {
+
+      return (
+        race.maleImage ||
+        race.femaleImage ||
+        ""
+      );
 
     }
 
@@ -1745,6 +2600,7 @@
     ) {
 
       return;
+
     }
 
 
@@ -1771,7 +2627,9 @@
         button.className =
           index ===
           state.raceIndex
+
             ? "is-active"
+
             : "";
 
 
@@ -1781,9 +2639,21 @@
         );
 
 
+        button.setAttribute(
+          "aria-current",
+          index ===
+            state.raceIndex
+            ? "true"
+            : "false"
+        );
+
+
         button.addEventListener(
           "click",
-          () => {
+          event => {
+
+            event.stopPropagation();
+
 
             state.raceIndex =
               index;
@@ -1816,6 +2686,7 @@
     ) {
 
       return;
+
     }
 
 
@@ -1843,14 +2714,10 @@
       image
     ) {
 
-      const src =
+      image.src =
         getRaceImage(
           race
         );
-
-
-      image.src =
-        src;
 
 
       image.alt =
@@ -1938,6 +2805,7 @@
     ) {
 
       return;
+
     }
 
 
@@ -1962,7 +2830,7 @@
 
 
     showToast(
-      `${race.name} selecionado.`
+      `${race.name} selecionada.`
     );
 
   }
@@ -1984,17 +2852,36 @@
     ) {
 
       return;
+
     }
 
 
-    $("#modalRaceName")
-      .textContent =
-      race.name;
+    const modalName =
+      $("#modalRaceName");
 
 
-    $("#modalRaceDescription")
-      .textContent =
-      race.description;
+    const modalDescription =
+      $("#modalRaceDescription");
+
+
+    if (
+      modalName
+    ) {
+
+      modalName.textContent =
+        race.name;
+
+    }
+
+
+    if (
+      modalDescription
+    ) {
+
+      modalDescription.textContent =
+        race.description;
+
+    }
 
 
     if (
@@ -2002,7 +2889,13 @@
       "function"
     ) {
 
-      modal.showModal();
+      if (
+        !modal.open
+      ) {
+
+        modal.showModal();
+
+      }
 
     } else {
 
@@ -2027,6 +2920,7 @@
     ) {
 
       return;
+
     }
 
 
@@ -2035,7 +2929,13 @@
       "function"
     ) {
 
-      modal.close();
+      if (
+        modal.open
+      ) {
+
+        modal.close();
+
+      }
 
     } else {
 
@@ -2053,7 +2953,10 @@
     $("#racePrevious")
       ?.addEventListener(
         "click",
-        () => {
+        event => {
+
+          event.stopPropagation();
+
 
           state.raceIndex =
             (
@@ -2066,6 +2969,8 @@
 
           renderRace();
 
+          scheduleAutosave();
+
         }
       );
 
@@ -2073,7 +2978,10 @@
     $("#raceNext")
       ?.addEventListener(
         "click",
-        () => {
+        event => {
+
+          event.stopPropagation();
+
 
           state.raceIndex =
             (
@@ -2085,10 +2993,16 @@
 
           renderRace();
 
+          scheduleAutosave();
+
         }
       );
 
 
+    /*
+     * No card da raça, clicar no indicador seleciona.
+     * Clicar na área principal abre a descrição.
+     */
     $("#raceCard")
       ?.addEventListener(
         "click",
@@ -2184,8 +3098,15 @@
       .forEach(
         card => {
 
+          const classId =
+            safeText(
+              card.dataset.class
+            )
+            .toLowerCase();
+
+
           const selected =
-            card.dataset.class ===
+            classId ===
             state.class;
 
 
@@ -2202,70 +3123,253 @@
             )
           );
 
+
+          const selection =
+            card.querySelector(
+              ".class-selection span"
+            );
+
+
+          if (
+            selection
+          ) {
+
+            selection.textContent =
+              selected
+
+                ? "✓ Selecionada"
+
+                : "Selecionar";
+
+          }
+
+        }
+      );
+
+
+    /*
+     * Se a estrutura antiga do HTML ainda estiver usando
+     * imagens/classes dentro do card, não tentamos reconstruí-la.
+     * O data-class continua sendo a fonte principal.
+     */
+    $$(".class-card img")
+      .forEach(
+        image => {
+
+          const card =
+            image.closest(
+              ".class-card"
+            );
+
+
+          if (
+            !card
+          ) {
+
+            return;
+
+          }
+
+
+          const classId =
+            card.dataset.class;
+
+
+          const classData =
+            CLASSES.find(
+              item =>
+                item.id ===
+                classId
+            );
+
+
+          if (
+            !classData
+          ) {
+
+            return;
+
+          }
+
+
+          /*
+           * Só substitui a imagem se o HTML não tiver
+           * uma URL explícita diferente.
+           */
+          if (
+            !image.getAttribute(
+              "src"
+            ) ||
+            image.getAttribute(
+              "src"
+            ) ===
+              ""
+          ) {
+
+            image.src =
+              classData.image;
+
+          }
+
         }
       );
 
   }
 
 
+  function selectClass(
+    classId
+  ) {
+
+    const normalized =
+      safeText(
+        classId
+      )
+      .trim()
+      .toLowerCase();
+
+
+    const classData =
+      CLASSES.find(
+        item =>
+          item.id ===
+          normalized
+      );
+
+
+    if (
+      !classData
+    ) {
+
+      console.warn(
+        "[AERION][FICHA] Classe desconhecida:",
+        classId
+      );
+
+
+      return false;
+
+    }
+
+
+    state.class =
+      classData.id;
+
+
+    updateState(
+      {
+        class:
+          classData.id
+      }
+    );
+
+
+    renderClass();
+
+
+    showToast(
+      `${classData.name} selecionado.`
+    );
+
+
+    return true;
+
+  }
+
+
   function bindClasses() {
 
-    $$(".class-card")
-      .forEach(
-        card => {
+    /*
+     * O listener fica no document para funcionar tanto
+     * com o HTML novo quanto com cards antigos que possuam
+     * data-class.
+     */
+    document.addEventListener(
+      "click",
+      event => {
 
-          card.addEventListener(
-            "click",
-            () => {
-
-              const classId =
-                card.dataset.class;
-
-
-              if (
-                !CLASSES.some(
-                  item =>
-                    item.id ===
-                    classId
-                )
-              ) {
-
-                return;
-              }
-
-
-              state.class =
-                classId;
-
-
-              updateState(
-                {
-                  class:
-                    classId
-                }
-              );
-
-
-              renderClass();
-
-
-              const selected =
-                CLASSES.find(
-                  item =>
-                    item.id ===
-                    classId
-                );
-
-
-              showToast(
-                `${selected?.name || "Classe"} selecionada.`
-              );
-
-            }
+        const card =
+          event.target.closest(
+            ".class-card[data-class]"
           );
 
+
+        if (
+          !card
+        ) {
+
+          return;
+
         }
-      );
+
+
+        /*
+         * Botões internos continuam podendo funcionar
+         * normalmente, mas o card inteiro seleciona.
+         */
+        if (
+          event.target.closest(
+            "a"
+          )
+        ) {
+
+          return;
+
+        }
+
+
+        const classId =
+          card.dataset.class;
+
+
+        selectClass(
+          classId
+        );
+
+      }
+    );
+
+
+    document.addEventListener(
+      "keydown",
+      event => {
+
+        const card =
+          event.target.closest(
+            ".class-card[data-class]"
+          );
+
+
+        if (
+          !card
+        ) {
+
+          return;
+
+        }
+
+
+        if (
+          event.key !==
+            "Enter" &&
+          event.key !==
+            " "
+        ) {
+
+          return;
+
+        }
+
+
+        event.preventDefault();
+
+
+        selectClass(
+          card.dataset.class
+        );
+
+      }
+    );
 
   }
 
@@ -2273,7 +3377,123 @@
      ATRIBUTOS
   ========================================================= */
 
-  function renderAttributes() {
+  function updateDiceUI() {
+
+    const usage =
+      getDiceUsage();
+
+
+    $$(".dice-card[data-die]")
+      .forEach(
+        card => {
+
+          const die =
+            safeText(
+              card.dataset.die
+            )
+            .toLowerCase();
+
+
+          const max =
+            DICE_LIMITS[
+              die
+            ] || 0;
+
+
+          const used =
+            usage[
+              die
+            ] || 0;
+
+
+          const remaining =
+            Math.max(
+              0,
+              max -
+              used
+            );
+
+
+          const remainingElement =
+            card.querySelector(
+              ".dice-remaining"
+            );
+
+
+          if (
+            remainingElement
+          ) {
+
+            if (
+              remaining ===
+              1
+            ) {
+
+              remainingElement.textContent =
+                "1 disponível";
+
+            } else {
+
+              remainingElement.textContent =
+                `${remaining} disponíveis`;
+
+            }
+
+          }
+
+
+          const exhausted =
+            remaining <=
+            0;
+
+
+          card.classList.toggle(
+            "is-exhausted",
+            exhausted
+          );
+
+
+          card.setAttribute(
+            "aria-disabled",
+            String(
+              exhausted
+            )
+          );
+
+
+          card.disabled =
+            exhausted;
+
+
+          card.title =
+            exhausted
+
+              ? `${die.toUpperCase()} esgotado`
+
+              : `${remaining} ${die.toUpperCase()} disponível(is)`;
+
+        }
+      );
+
+
+    /*
+     * Se algum dado estiver atualmente selecionado,
+     * mantém selecionável apenas quando ainda houver
+     * disponibilidade.
+     */
+    if (
+      selectedDice &&
+      getRemainingDice(
+        selectedDice
+      ) <=
+      0
+    ) {
+
+      selectedDice =
+        null;
+
+    }
+
 
     $$(".dice-card")
       .forEach(
@@ -2281,20 +3501,45 @@
 
           card.classList.toggle(
             "is-selected",
-            card.dataset.die ===
-              selectedDice
+            safeText(
+              card.dataset.die
+            )
+            .toLowerCase() ===
+            selectedDice
           );
 
         }
       );
 
+  }
 
-    $$(".attribute-slot")
+
+  function renderAttributes() {
+
+    updateDiceUI();
+
+
+    $$(".attribute-row")
       .forEach(
-        button => {
+        row => {
 
           const attribute =
-            button.dataset.attributeSlot;
+            row.dataset.attribute;
+
+
+          const slot =
+            row.querySelector(
+              ".attribute-slot"
+            );
+
+
+          if (
+            !slot
+          ) {
+
+            return;
+
+          }
 
 
           const die =
@@ -2307,22 +3552,33 @@
             die
           ) {
 
-            button.textContent =
+            slot.textContent =
               die.toUpperCase();
 
 
-            button.classList.add(
+            slot.classList.add(
               "is-filled"
+            );
+
+
+            slot.setAttribute(
+              "aria-label",
+              `${ATTRIBUTE_NAMES[attribute]} usando ${die.toUpperCase()}`
             );
 
           } else {
 
-            button.textContent =
+            slot.textContent =
               "Selecionar dado";
 
 
-            button.classList.remove(
+            slot.classList.remove(
               "is-filled"
+            );
+
+
+            slot.removeAttribute(
+              "aria-label"
             );
 
           }
@@ -2331,93 +3587,490 @@
       );
 
 
+    updateAttributeCountUI();
+
+
     renderAttributeChart();
+
+  }
+
+
+  function updateAttributeCountUI() {
+
+    const list =
+      $("#attributeList");
+
+
+    if (
+      !list
+    ) {
+
+      return;
+
+    }
+
+
+    let indicator =
+      list.querySelector(
+        ".attribute-count-indicator"
+      );
+
+
+    if (
+      !indicator
+    ) {
+
+      indicator =
+        document.createElement(
+          "div"
+        );
+
+
+      indicator.className =
+        "attribute-count-indicator";
+
+
+      indicator.style.margin =
+        "0 0 12px";
+
+
+      indicator.style.color =
+        "var(--muted)";
+
+
+      indicator.style.fontSize =
+        "12px";
+
+
+      list.prepend(
+        indicator
+      );
+
+    }
+
+
+    const count =
+      getAttributeCount();
+
+
+    indicator.textContent =
+      areAllAttributesAssigned()
+
+        ? "✓ 8/8 atributos definidos"
+
+        : `${count}/8 atributos definidos`;
+
+  }
+
+
+  function selectDice(
+    die
+  ) {
+
+    const normalized =
+      safeText(
+        die
+      )
+      .toLowerCase();
+
+
+    if (
+      !Object.prototype.hasOwnProperty.call(
+        DICE_LIMITS,
+        normalized
+      )
+    ) {
+
+      return false;
+
+    }
+
+
+    const remaining =
+      getRemainingDice(
+        normalized
+      );
+
+
+    if (
+      remaining <=
+      0
+    ) {
+
+      showToast(
+        `${normalized.toUpperCase()} já atingiu o limite permitido.`
+      );
+
+
+      selectedDice =
+        null;
+
+
+      updateDiceUI();
+
+
+      return false;
+
+    }
+
+
+    selectedDice =
+      normalized;
+
+
+    updateDiceUI();
+
+
+    showToast(
+      `${normalized.toUpperCase()} selecionado. Agora escolha o atributo.`
+    );
+
+
+    return true;
+
+  }
+
+
+  function assignSelectedDiceToAttribute(
+    attribute
+  ) {
+
+    if (
+      !Object.prototype.hasOwnProperty.call(
+        state.attributes,
+        attribute
+      )
+    ) {
+
+      return false;
+
+    }
+
+
+    if (
+      !selectedDice
+    ) {
+
+      showToast(
+        "Escolha um dado primeiro."
+      );
+
+
+      return false;
+
+    }
+
+
+    const currentDie =
+      state.attributes[
+        attribute
+      ];
+
+
+    /*
+     * Se o atributo já possui exatamente esse dado,
+     * não há consumo adicional.
+     */
+    if (
+      currentDie ===
+      selectedDice
+    ) {
+
+      selectedDice =
+        null;
+
+
+      updateDiceUI();
+
+
+      return true;
+
+    }
+
+
+    /*
+     * Se o atributo já possuía outro dado,
+     * esse dado volta ao estoque antes da nova atribuição.
+     */
+    if (
+      currentDie
+    ) {
+
+      /*
+       * Como getRemainingDice conta o estado atual,
+       * precisamos temporariamente remover o dado antigo.
+       */
+      state.attributes[
+        attribute
+      ] =
+        null;
+
+    }
+
+
+    /*
+     * Agora checamos o novo dado com o atributo antigo
+     * já liberado.
+     */
+    const remaining =
+      getRemainingDice(
+        selectedDice
+      );
+
+
+    if (
+      remaining <=
+      0
+    ) {
+
+      /*
+       * Restaura o valor antigo se não houver espaço.
+       */
+      state.attributes[
+        attribute
+      ] =
+        currentDie;
+
+
+      showToast(
+        `${selectedDice.toUpperCase()} já está esgotado.`
+      );
+
+
+      updateDiceUI();
+
+
+      return false;
+
+    }
+
+
+    state.attributes[
+      attribute
+    ] =
+      selectedDice;
+
+
+    const assigned =
+      selectedDice;
+
+
+    selectedDice =
+      null;
+
+
+    updateState(
+      {
+        attributes:
+          {
+            ...state.attributes
+          }
+      }
+    );
+
+
+    renderAttributes();
+
+
+    showToast(
+      `${assigned.toUpperCase()} colocado em ${ATTRIBUTE_NAMES[attribute]}.`
+    );
+
+
+    return true;
+
+  }
+
+
+  function clearAttribute(
+    attribute
+  ) {
+
+    if (
+      !Object.prototype.hasOwnProperty.call(
+        state.attributes,
+        attribute
+      )
+    ) {
+
+      return;
+
+    }
+
+
+    const current =
+      state.attributes[
+        attribute
+      ];
+
+
+    if (
+      !current
+    ) {
+
+      return;
+
+    }
+
+
+    state.attributes[
+      attribute
+    ] =
+      null;
+
+
+    updateState(
+      {
+        attributes:
+          {
+            ...state.attributes
+          }
+      }
+    );
+
+
+    renderAttributes();
+
+
+    showToast(
+      `${current.toUpperCase()} devolvido aos dados disponíveis.`
+    );
 
   }
 
 
   function bindAttributes() {
 
-    $$(".dice-card")
-      .forEach(
-        card => {
+    /*
+     * NÃO usa apenas querySelectorAll fixo para os dados.
+     * O listener delegado funciona mesmo depois de a UI
+     * ser redesenhada.
+     */
+    document.addEventListener(
+      "click",
+      event => {
 
-          card.addEventListener(
-            "click",
-            () => {
-
-              selectedDice =
-                card.dataset.die;
+        const diceCard =
+          event.target.closest(
+            ".dice-card[data-die]"
+          );
 
 
-              renderAttributes();
+        if (
+          diceCard
+        ) {
+
+          const die =
+            safeText(
+              diceCard.dataset.die
+            )
+            .toLowerCase();
 
 
-              showToast(
-                `${selectedDice.toUpperCase()} selecionado. Agora escolha o atributo.`
-              );
+          /*
+           * Atualiza a disponibilidade em tempo real.
+           */
+          if (
+            getRemainingDice(
+              die
+            ) <=
+            0
+          ) {
 
-            }
+            event.preventDefault();
+            event.stopPropagation();
+
+
+            showToast(
+              `${die.toUpperCase()} já foi usado o número máximo de vezes.`
+            );
+
+
+            updateDiceUI();
+
+
+            return;
+
+          }
+
+
+          selectDice(
+            die
+          );
+
+
+          return;
+
+        }
+
+
+        const attributeSlot =
+          event.target.closest(
+            ".attribute-slot[data-attribute-slot]"
+          );
+
+
+        if (
+          attributeSlot
+        ) {
+
+          assignSelectedDiceToAttribute(
+            attributeSlot.dataset.attributeSlot
+          );
+
+          return;
+
+        }
+
+      },
+      true
+    );
+
+
+    /*
+     * Clique secundário em um atributo preenchido:
+     * remove o dado e devolve ao estoque.
+     *
+     * Útil no celular: toque normal continua atribuindo.
+     * Para remover, o JS também expõe clearAttribute().
+     */
+    document.addEventListener(
+      "dblclick",
+      event => {
+
+        const slot =
+          event.target.closest(
+            ".attribute-slot[data-attribute-slot]"
+          );
+
+
+        if (
+          !slot
+        ) {
+
+          return;
+
+        }
+
+
+        const attribute =
+          slot.dataset.attributeSlot;
+
+
+        if (
+          state.attributes[
+            attribute
+          ]
+        ) {
+
+          clearAttribute(
+            attribute
           );
 
         }
-      );
 
-
-    $$(".attribute-slot")
-      .forEach(
-        button => {
-
-          button.addEventListener(
-            "click",
-            () => {
-
-              const attribute =
-                button.dataset.attributeSlot;
-
-
-              if (
-                !selectedDice
-              ) {
-
-                showToast(
-                  "Escolha um dado primeiro."
-                );
-
-
-                return;
-              }
-
-
-              state.attributes[
-                attribute
-              ] =
-                selectedDice;
-
-
-              updateState(
-                {
-
-                  attributes:
-                    {
-                      ...state.attributes
-                    }
-
-                }
-              );
-
-
-              selectedDice =
-                null;
-
-
-              renderAttributes();
-
-            }
-          );
-
-        }
-      );
+      }
+    );
 
   }
 
@@ -2433,6 +4086,7 @@
     ) {
 
       return;
+
     }
 
 
@@ -2448,12 +4102,17 @@
 
             const sides =
               die
+
                 ? Number(
-                    die.replace(
+                    safeText(
+                      die
+                    )
+                    .replace(
                       "d",
                       ""
                     )
                   )
+
                 : 0;
 
 
@@ -2464,8 +4123,7 @@
               label:
                 ATTRIBUTE_NAMES[
                   id
-                ] ||
-                id,
+                ],
 
               sides
 
@@ -2475,7 +4133,7 @@
         );
 
 
-    const hasAny =
+    const hasValues =
       values.some(
         item =>
           item.sides >
@@ -2484,7 +4142,7 @@
 
 
     if (
-      !hasAny
+      !hasValues
     ) {
 
       container.innerHTML =
@@ -2500,29 +4158,32 @@
     }
 
 
-    const max =
-      20;
-
-
+    /*
+     * Este é o gráfico provisório da primeira implementação.
+     *
+     * Ele representa visualmente a força relativa de cada
+     * atributo e pode ser trocado pelo radar de 8 pontas
+     * quando refinarmos a interface.
+     */
     container.innerHTML =
       "";
 
 
-    const list =
+    const chart =
       document.createElement(
         "div"
       );
 
 
-    list.style.width =
+    chart.style.width =
       "100%";
 
 
-    list.style.display =
+    chart.style.display =
       "grid";
 
 
-    list.style.gap =
+    chart.style.gap =
       "10px";
 
 
@@ -2540,7 +4201,7 @@
 
 
         row.style.gridTemplateColumns =
-          "95px 1fr 42px";
+          "95px 1fr 48px";
 
 
         row.style.alignItems =
@@ -2548,7 +4209,7 @@
 
 
         row.style.gap =
-          "9px";
+          "10px";
 
 
         const label =
@@ -2561,12 +4222,12 @@
           item.label;
 
 
-        label.style.color =
-          "#bdb7ac";
-
-
         label.style.fontSize =
           "12px";
+
+
+        label.style.color =
+          "#bdb7ac";
 
 
         const track =
@@ -2576,52 +4237,63 @@
 
 
         track.style.height =
-          "7px";
-
-
-        track.style.overflow =
-          "hidden";
+          "8px";
 
 
         track.style.borderRadius =
           "999px";
 
 
+        track.style.overflow =
+          "hidden";
+
+
         track.style.background =
           "rgba(255,255,255,.07)";
 
 
-        const fill =
+        const bar =
           document.createElement(
             "div"
           );
 
 
-        fill.style.width =
+        const percentage =
+          item.sides
+            ? (
+                item.sides /
+                20
+              ) *
+              100
+            : 0;
+
+
+        bar.style.width =
           `${Math.min(
             100,
-            (
-              item.sides /
-              max
-            ) *
-            100
+            percentage
           )}%`;
 
 
-        fill.style.height =
+        bar.style.height =
           "100%";
 
 
-        fill.style.borderRadius =
-          "inherit";
-
-
-        fill.style.background =
+        bar.style.background =
           "linear-gradient(90deg,#a47d29,#edd58d)";
 
 
-        fill.style.transition =
-          "width .25s ease";
+        bar.style.borderRadius =
+          "inherit";
+
+
+        bar.style.transition =
+          "width .3s ease";
+
+
+        track.appendChild(
+          bar
+        );
 
 
         const value =
@@ -2632,27 +4304,24 @@
 
         value.textContent =
           item.sides
-            ? item.sides
+            ? `D${item.sides}`
             : "—";
-
-
-        value.style.color =
-          item.sides
-            ? "var(--gold-soft)"
-            : "#67635c";
 
 
         value.style.textAlign =
           "right";
 
 
+        value.style.color =
+          item.sides
+
+            ? "var(--gold-soft)"
+
+            : "#67635c";
+
+
         value.style.fontFamily =
           "Georgia, serif";
-
-
-        track.appendChild(
-          fill
-        );
 
 
         row.append(
@@ -2662,7 +4331,7 @@
         );
 
 
-        list.appendChild(
+        chart.appendChild(
           row
         );
 
@@ -2671,7 +4340,7 @@
 
 
     container.appendChild(
-      list
+      chart
     );
 
   }
@@ -2680,42 +4349,32 @@
      MANA
   ========================================================= */
 
-  function bindMana() {
+  function renderMana() {
 
     $$(".mana-card")
       .forEach(
         card => {
 
-          card.addEventListener(
-            "click",
-            () => {
-
-              if (
-                card.disabled ||
-                card.dataset.mana !==
-                  "azul"
-              ) {
-
-                return;
-              }
+          const selected =
+            card.dataset.mana ===
+            "azul";
 
 
-              state.mana =
-                "azul";
-
-
-              updateState(
-                {
-                  mana:
-                    "azul"
-                }
-              );
-
-
-              renderMana();
-
-            }
+          card.classList.toggle(
+            "is-selected",
+            selected
           );
+
+
+          if (
+            card.dataset.mana !==
+            "azul"
+          ) {
+
+            card.disabled =
+              true;
+
+          }
 
         }
       );
@@ -2723,20 +4382,66 @@
   }
 
 
-  function renderMana() {
+  function bindMana() {
 
-    $$(".mana-card")
-      .forEach(
-        card => {
+    document.addEventListener(
+      "click",
+      event => {
 
-          card.classList.toggle(
-            "is-selected",
-            card.dataset.mana ===
-              state.mana
+        const card =
+          event.target.closest(
+            ".mana-card[data-mana]"
           );
 
+
+        if (
+          !card
+        ) {
+
+          return;
+
         }
-      );
+
+
+        if (
+          card.disabled
+        ) {
+
+          return;
+
+        }
+
+
+        if (
+          card.dataset.mana !==
+          "azul"
+        ) {
+
+          return;
+
+        }
+
+
+        state.mana =
+          "azul";
+
+
+        updateState(
+          {
+            mana:
+              "azul"
+          }
+        );
+
+
+        renderMana();
+
+        showToast(
+          "Mana Azul selecionada."
+        );
+
+      }
+    );
 
   }
 
@@ -2767,51 +4472,131 @@
 
     wrapper.innerHTML =
       `
-      <div style="display:grid;gap:12px;text-align:left">
+      <div style="
+        display:grid;
+        gap:12px;
+        text-align:left;
+      ">
 
         <label class="field">
-          <span class="field-label">Nome</span>
+
+          <span class="field-label">
+            Nome
+          </span>
 
           <input
             type="text"
             data-technique-field="name"
             maxlength="100"
+            placeholder="Nome da técnica"
           >
+
         </label>
 
+
         <label class="field">
-          <span class="field-label">Descrição</span>
+
+          <span class="field-label">
+            Descrição
+          </span>
 
           <textarea
             data-technique-field="description"
             rows="4"
             maxlength="1000"
+            placeholder="O que essa técnica faz?"
           ></textarea>
+
         </label>
 
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+
+        <div style="
+          display:grid;
+          grid-template-columns:1fr 1fr;
+          gap:10px;
+        ">
 
           <label class="field">
-            <span class="field-label">Alcance</span>
+
+            <span class="field-label">
+              Alcance
+            </span>
 
             <input
               type="text"
               data-technique-field="range"
               maxlength="80"
+              placeholder="Ex.: 10 m"
             >
+
           </label>
 
+
           <label class="field">
-            <span class="field-label">Dano</span>
+
+            <span class="field-label">
+              Dano / Efeito
+            </span>
 
             <input
               type="text"
               data-technique-field="damage"
-              maxlength="80"
+              maxlength="100"
+              placeholder="Ex.: 1D8"
             >
+
           </label>
 
         </div>
+
+
+        <label class="field">
+
+          <span class="field-label">
+            Custo
+          </span>
+
+          <input
+            type="text"
+            data-technique-field="cost"
+            maxlength="80"
+            placeholder="Custo da técnica"
+          >
+
+        </label>
+
+
+        <label class="field">
+
+          <span class="field-label">
+            Teste
+          </span>
+
+          <input
+            type="text"
+            data-technique-field="test"
+            maxlength="100"
+            placeholder="Teste utilizado"
+          >
+
+        </label>
+
+
+        <label class="field">
+
+          <span class="field-label">
+            Limitação
+          </span>
+
+          <textarea
+            data-technique-field="limitation"
+            rows="3"
+            maxlength="500"
+            placeholder="Limitações da técnica"
+          ></textarea>
+
+        </label>
+
 
         <button
           type="button"
@@ -2848,6 +4633,17 @@
             "input",
             () => {
 
+              if (
+                !state.techniques[
+                  index
+                ]
+              ) {
+
+                return;
+
+              }
+
+
               state.techniques[
                 index
               ][key] =
@@ -2855,8 +4651,6 @@
 
 
               scheduleAutosave();
-
-              updateReview();
 
             }
           );
@@ -2881,7 +4675,11 @@
 
           renderTechniques();
 
+
           scheduleAutosave();
+
+
+          updateProgress();
 
         }
       );
@@ -2903,6 +4701,7 @@
     ) {
 
       return;
+
     }
 
 
@@ -2944,6 +4743,15 @@
           "",
 
         damage:
+          "",
+
+        cost:
+          "",
+
+        test:
+          "",
+
+        limitation:
           ""
 
       }
@@ -2952,20 +4760,36 @@
 
     renderTechniques();
 
+
     scheduleAutosave();
 
 
-    const inputs =
+    updateProgress();
+
+
+    const firstEmpty =
       $$(
         "[data-technique-field]",
         $("#techniquesList")
+      )
+        .find(
+          input =>
+            !input.value
+        );
+
+
+    firstEmpty?.focus();
+
+  }
+
+
+  function bindTechniques() {
+
+    $("#addTechniqueButton")
+      ?.addEventListener(
+        "click",
+        addTechnique
       );
-
-
-    inputs[
-      inputs.length -
-      4
-    ]?.focus();
 
   }
 
@@ -2996,27 +4820,43 @@
 
     wrapper.innerHTML =
       `
-      <div style="display:grid;gap:12px;text-align:left">
+      <div style="
+        display:grid;
+        gap:12px;
+        text-align:left;
+      ">
 
         <label class="field">
-          <span class="field-label">Item</span>
+
+          <span class="field-label">
+            Item
+          </span>
 
           <input
             type="text"
             data-inventory-field="name"
             maxlength="100"
+            placeholder="Nome do item"
           >
+
         </label>
 
+
         <label class="field">
-          <span class="field-label">Descrição</span>
+
+          <span class="field-label">
+            Descrição
+          </span>
 
           <textarea
             data-inventory-field="description"
             rows="3"
             maxlength="500"
+            placeholder="Descrição do item"
           ></textarea>
+
         </label>
+
 
         <button
           type="button"
@@ -3053,6 +4893,17 @@
             "input",
             () => {
 
+              if (
+                !state.inventory[
+                  index
+                ]
+              ) {
+
+                return;
+
+              }
+
+
               state.inventory[
                 index
               ][key] =
@@ -3060,6 +4911,8 @@
 
 
               scheduleAutosave();
+
+              updateProgress();
 
             }
           );
@@ -3084,7 +4937,11 @@
 
           renderInventory();
 
+
           scheduleAutosave();
+
+
+          updateProgress();
 
         }
       );
@@ -3106,6 +4963,7 @@
     ) {
 
       return;
+
     }
 
 
@@ -3149,7 +5007,36 @@
 
     renderInventory();
 
+
     scheduleAutosave();
+
+
+    updateProgress();
+
+
+    const firstEmpty =
+      $$(
+        "[data-inventory-field]",
+        $("#inventoryList")
+      )
+        .find(
+          input =>
+            !input.value
+        );
+
+
+    firstEmpty?.focus();
+
+  }
+
+
+  function bindInventory() {
+
+    $("#addInventoryButton")
+      ?.addEventListener(
+        "click",
+        addInventoryItem
+      );
 
   }
 
@@ -3185,37 +5072,52 @@
   }
 
 
+  function isMinimumCharacterReady() {
+
+    return Boolean(
+      state.name.trim() &&
+      state.race &&
+      state.class &&
+      areAllAttributesAssigned() &&
+      state.power.trim() &&
+      state.mana ===
+        "azul"
+    );
+
+  }
+
+
   function updateReview() {
 
-    const name =
+    const reviewName =
       $("#reviewName");
 
 
-    const identity =
+    const reviewIdentity =
       $("#reviewIdentity");
 
 
-    const race =
+    const reviewRace =
       $("#reviewRace");
 
 
-    const classEl =
+    const reviewClass =
       $("#reviewClass");
 
 
-    const mana =
+    const reviewMana =
       $("#reviewMana");
 
 
-    const gender =
+    const reviewGender =
       $("#reviewGender");
 
 
     if (
-      name
+      reviewName
     ) {
 
-      name.textContent =
+      reviewName.textContent =
         state.name.trim() ||
         "Sem nome";
 
@@ -3223,10 +5125,10 @@
 
 
     if (
-      identity
+      reviewIdentity
     ) {
 
-      const parts =
+      const pieces =
         [];
 
 
@@ -3234,7 +5136,7 @@
         state.age
       ) {
 
-        parts.push(
+        pieces.push(
           `${state.age} anos`
         );
 
@@ -3245,63 +5147,65 @@
         state.gender
       ) {
 
-        parts.push(
+        pieces.push(
           state.gender ===
             "masculino"
 
             ? "Masculino"
 
             : "Feminino"
-
         );
 
       }
 
 
-      identity.textContent =
-        parts.join(
-          " · "
-        ) ||
-        "Identidade ainda não definida.";
+      reviewIdentity.textContent =
+        pieces.length
+
+          ? pieces.join(
+              " · "
+            )
+
+          : "Identidade ainda não definida.";
 
     }
 
 
     if (
-      race
+      reviewRace
     ) {
 
-      race.textContent =
+      reviewRace.textContent =
         getRaceName();
 
     }
 
 
     if (
-      classEl
+      reviewClass
     ) {
 
-      classEl.textContent =
+      reviewClass.textContent =
         getClassName();
 
     }
 
 
     if (
-      mana
+      reviewMana
     ) {
 
-      mana.textContent =
+      reviewMana.textContent =
         "Mana Azul";
 
     }
 
 
     if (
-      gender
+      reviewGender
     ) {
 
-      gender.textContent =
+      reviewGender.textContent =
         state.gender ===
           "masculino"
 
@@ -3390,7 +5294,7 @@
     ) {
 
       showToast(
-        "Falta escolher a raça."
+        "Falta escolher uma raça."
       );
 
 
@@ -3409,7 +5313,7 @@
     ) {
 
       showToast(
-        "Falta escolher a classe."
+        "Falta escolher uma classe."
       );
 
 
@@ -3424,11 +5328,39 @@
 
 
     if (
-      !state.mana
+      !areAllAttributesAssigned()
     ) {
 
-      state.mana =
-        "azul";
+      showToast(
+        `Complete os atributos: ${getAttributeCount()}/8.`
+      );
+
+
+      goToStep(
+        3
+      );
+
+
+      return false;
+
+    }
+
+
+    if (
+      !state.power.trim()
+    ) {
+
+      showToast(
+        "Defina o poder do personagem."
+      );
+
+
+      goToStep(
+        4
+      );
+
+
+      return false;
 
     }
 
@@ -3445,6 +5377,7 @@
     ) {
 
       return;
+
     }
 
 
@@ -3466,6 +5399,7 @@
 
 
       return;
+
     }
 
 
@@ -3477,10 +5411,6 @@
       result.skipped
     ) {
 
-      /*
-       * Ainda é um rascunho local porque a estrutura final
-       * do banco será conectada depois.
-       */
       showToast(
         "Ficha salva como rascunho neste dispositivo."
       );
@@ -3496,7 +5426,7 @@
     ) {
 
       showToast(
-        "Ficha salva localmente; banco não foi atualizado."
+        "Ficha salva localmente; banco ainda não atualizado."
       );
 
 
@@ -3538,10 +5468,12 @@
 
           if (
             state.currentStep ===
-            STEPS.length - 1
+            STEPS.length -
+            1
           ) {
 
             finishCharacter();
+
 
             return;
 
@@ -3553,6 +5485,7 @@
           ) {
 
             return;
+
           }
 
 
@@ -3581,6 +5514,7 @@
               ) {
 
                 return;
+
               }
 
 
@@ -3628,20 +5562,6 @@
 
   function bindGeneralEvents() {
 
-    $("#addTechniqueButton")
-      ?.addEventListener(
-        "click",
-        addTechnique
-      );
-
-
-    $("#addInventoryButton")
-      ?.addEventListener(
-        "click",
-        addInventoryItem
-      );
-
-
     window.addEventListener(
       "beforeunload",
       () => {
@@ -3676,18 +5596,37 @@
 
   function init() {
 
+    if (
+      initialized
+    ) {
+
+      return;
+
+    }
+
+
+    initialized =
+      true;
+
+
     const restored =
       loadLocalDraft();
 
 
+    /*
+     * IMPORTANTE:
+     * Um rascunho antigo pode ter uma etapa de atributos
+     * incompleta. Nesse caso, não permitimos que ele pule
+     * para uma etapa inválida.
+     */
     if (
-      restored
+      !canEnterStep(
+        state.currentStep
+      )
     ) {
 
-      showToast(
-        "Rascunho anterior restaurado.",
-        1800
-      );
+      state.currentStep =
+        0;
 
     }
 
@@ -3702,12 +5641,17 @@
 
     bindMana();
 
+    bindTechniques();
+
+    bindInventory();
+
     bindNavigation();
 
     bindGeneralEvents();
 
 
     hydrateIdentity();
+
 
     renderRace();
 
@@ -3726,21 +5670,21 @@
     updateProgress();
 
 
-    if (
-      !canEnterStep(
-        state.currentStep
-      )
-    ) {
-
-      state.currentStep =
-        0;
-
-    }
-
-
     goToStep(
       state.currentStep
     );
+
+
+    if (
+      restored
+    ) {
+
+      showToast(
+        "Rascunho anterior restaurado.",
+        1800
+      );
+
+    }
 
 
     console.info(
@@ -3755,6 +5699,14 @@
         classes:
           CLASSES.length,
 
+        diceLimits:
+          {
+            ...DICE_LIMITS
+          },
+
+        attributes:
+          getAttributeCount(),
+
         supabaseConfigured:
           Boolean(
             CONFIG.supabaseUrl &&
@@ -3766,6 +5718,97 @@
 
   }
 
+
+  /* =========================================================
+     API PÚBLICA
+  ========================================================= */
+
+  window.AERIONFicha =
+    Object.freeze({
+
+      getState() {
+
+        try {
+
+          return structuredClone(
+            state
+          );
+
+        } catch {
+
+          return JSON.parse(
+            JSON.stringify(
+              state
+            )
+          );
+
+        }
+
+      },
+
+
+      saveDraft:
+        saveLocalDraft,
+
+
+      goToStep,
+
+
+      getDiceUsage:
+        () =>
+          ({
+            ...getDiceUsage()
+          }),
+
+
+      getRemainingDice,
+
+
+      assignDice(
+        attribute,
+        die
+      ) {
+
+        if (
+          die !==
+          undefined &&
+          die !==
+          null
+        ) {
+
+          if (
+            !selectDice(
+              die
+            )
+          ) {
+
+            return false;
+
+          }
+
+        }
+
+
+        return assignSelectedDiceToAttribute(
+          attribute
+        );
+
+      },
+
+
+      clearAttribute,
+
+
+      areAllAttributesAssigned,
+
+      getAttributeCount
+
+    });
+
+
+  /* =========================================================
+     INICIAR
+  ========================================================= */
 
   if (
     document.readyState ===
@@ -3786,26 +5829,5 @@
     init();
 
   }
-
-
-  /* =========================================================
-     API PÚBLICA
-  ========================================================= */
-
-  window.AERIONFicha =
-    Object.freeze({
-
-      getState:
-        () =>
-          structuredClone(
-            state
-          ),
-
-      saveDraft:
-        saveLocalDraft,
-
-      goToStep
-
-    });
 
 })();
