@@ -3330,4 +3330,1961 @@
     renderAll();
 
     return true;
+  }  /* =========================================================
+     NAVEGAÇÃO
+  ========================================================= */
+
+  function isStepComplete(
+    stepIndex
+  ) {
+    switch (stepIndex) {
+      case 0:
+        return Boolean(
+          safeText(
+            state.name
+          ).trim()
+        ) &&
+          Boolean(
+            safeText(
+              state.gender
+            ).trim()
+          );
+
+      case 1:
+        return Boolean(
+          state.race
+        );
+
+      case 2:
+        return Boolean(
+          state.appearance &&
+          Number.isFinite(
+            Number(
+              state.appearance.heightCm
+            )
+          )
+        );
+
+      case 3:
+        return Boolean(
+          state.class
+        );
+
+      case 4:
+        /*
+         * Os atributos precisam possuir
+         * os dados definidos pela regra.
+         */
+        return ATTRIBUTE_ORDER.every(
+          attribute =>
+            Boolean(
+              state.attributes[
+                attribute
+              ]
+            )
+        );
+
+      case 5:
+        return Boolean(
+          state.power
+        );
+
+      case 6:
+        return (
+          state.mana ===
+          "azul"
+        );
+
+      case 7:
+        return true;
+
+      case 8:
+        return true;
+
+      case 9:
+        return true;
+
+      case 10:
+        return true;
+
+      default:
+        return false;
+    }
+  }
+
+  function getFirstIncompleteStep() {
+    for (
+      let i = 0;
+      i < STEPS.length;
+      i++
+    ) {
+      if (
+        !isStepComplete(
+          i
+        )
+      ) {
+        return i;
+      }
+    }
+
+    return STEPS.length - 1;
+  }
+
+  function canEnterStep(
+    stepIndex
+  ) {
+    if (
+      stepIndex <=
+      0
+    ) {
+      return true;
+    }
+
+    /*
+     * Uma etapa só é liberada quando
+     * a anterior estiver completa.
+     */
+    return isStepComplete(
+      stepIndex - 1
+    );
+  }
+
+  function goToStep(
+    stepIndex
+  ) {
+    const target =
+      Number(
+        stepIndex
+      );
+
+    if (
+      !Number.isInteger(
+        target
+      )
+    ) {
+      return false;
+    }
+
+    if (
+      target < 0 ||
+      target >=
+        STEPS.length
+    ) {
+      return false;
+    }
+
+    if (
+      !canEnterStep(
+        target
+      )
+    ) {
+      showToast(
+        `Complete "${STEPS[target - 1]?.title || "a etapa anterior"}" primeiro.`
+      );
+
+      return false;
+    }
+
+    state.currentStep =
+      target;
+
+    saveDraft();
+
+    renderAll();
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth"
+    });
+
+    return true;
+  }
+
+  function nextStep() {
+    const current =
+      state.currentStep;
+
+    if (
+      !isStepComplete(
+        current
+      )
+    ) {
+      showToast(
+        `Complete "${STEPS[current].title}" para continuar.`
+      );
+
+      highlightIncompleteFields();
+
+      return false;
+    }
+
+    if (
+      current >=
+      STEPS.length - 1
+    ) {
+      return false;
+    }
+
+    return goToStep(
+      current + 1
+    );
+  }
+
+  function previousStep() {
+    const current =
+      state.currentStep;
+
+    if (
+      current <=
+      0
+    ) {
+      return false;
+    }
+
+    return goToStep(
+      current - 1
+    );
+  }
+
+  /* =========================================================
+     PROGRESSO
+  ========================================================= */
+
+  function getProgressPercent() {
+    let completed = 0;
+
+    STEPS.forEach(
+      (_, index) => {
+        if (
+          isStepComplete(
+            index
+          )
+        ) {
+          completed++;
+        }
+      }
+    );
+
+    return Math.round(
+      (
+        completed /
+        STEPS.length
+      ) *
+        100
+    );
+  }
+
+  function updateProgressUI() {
+    const progress =
+      getProgressPercent();
+
+    const bar =
+      $(
+        "#progressBar"
+      );
+
+    const value =
+      $(
+        "#progressPercent"
+      );
+
+    if (bar) {
+      bar.style.width =
+        `${progress}%`;
+
+      bar.setAttribute(
+        "aria-valuenow",
+        String(
+          progress
+        )
+      );
+    }
+
+    if (value) {
+      value.textContent =
+        `${progress}%`;
+    }
+
+    $$(".progress-step")
+      .forEach(
+        (element, index) => {
+          const complete =
+            isStepComplete(
+              index
+            );
+
+          const active =
+            index ===
+            state.currentStep;
+
+          element.classList.toggle(
+            "active",
+            active
+          );
+
+          element.classList.toggle(
+            "complete",
+            complete
+          );
+
+          element.classList.toggle(
+            "locked",
+            !canEnterStep(
+              index
+            )
+          );
+
+          element.setAttribute(
+            "aria-current",
+            active
+              ? "step"
+              : "false"
+          );
+        }
+      );
+  }
+
+  /* =========================================================
+     DESTAQUE DE ERROS
+  ========================================================= */
+
+  function highlightIncompleteFields() {
+    const step =
+      state.currentStep;
+
+    if (step === 0) {
+      const name =
+        $(
+          '[name="name"], #name, #characterName'
+        );
+
+      if (
+        name &&
+        !safeText(
+          name.value
+        ).trim()
+      ) {
+        name.classList.add(
+          "field-error"
+        );
+
+        name.focus();
+      }
+
+      const gender =
+        $(
+          '[name="gender"], #gender'
+        );
+
+      if (
+        gender &&
+        !safeText(
+          gender.value
+        ).trim()
+      ) {
+        gender.classList.add(
+          "field-error"
+        );
+      }
+
+      return;
+    }
+
+    if (step === 1) {
+      $(
+        ".race-grid, .race-carousel, [data-race-list]"
+      )?.classList.add(
+        "field-error"
+      );
+
+      return;
+    }
+
+    if (step === 2) {
+      $(
+        '[name="heightCm"], #heightCm, #heightRange'
+      )?.classList.add(
+        "field-error"
+      );
+
+      return;
+    }
+
+    if (step === 3) {
+      $(
+        ".class-grid, .class-carousel, [data-class-list]"
+      )?.classList.add(
+        "field-error"
+      );
+
+      return;
+    }
+
+    if (step === 4) {
+      $$(".attribute-card")
+        .forEach(
+          card => {
+            const attribute =
+              card.dataset
+                .attribute;
+
+            if (
+              attribute &&
+              !state.attributes[
+                attribute
+              ]
+            ) {
+              card.classList.add(
+                "field-error"
+              );
+            }
+          }
+        );
+    }
+
+    window.setTimeout(
+      () => {
+        $$(".field-error")
+          .forEach(
+            element =>
+              element.classList.remove(
+                "field-error"
+              )
+          );
+      },
+      1800
+    );
+  }
+
+  /* =========================================================
+     AUTOSAVE
+  ========================================================= */
+
+  function getSerializableState() {
+    return JSON.parse(
+      JSON.stringify(
+        state
+      )
+    );
+  }
+
+  function saveDraft() {
+    state.updatedAt =
+      new Date().toISOString();
+
+    setSaveStatus(
+      "saving",
+      "Salvando..."
+    );
+
+    clearTimeout(
+      saveTimer
+    );
+
+    saveTimer =
+      window.setTimeout(
+        () => {
+          try {
+            localStorage.setItem(
+              CONFIG.draftKey,
+              JSON.stringify(
+                getSerializableState()
+              )
+            );
+
+            setSaveStatus(
+              "saved",
+              "Salvo automaticamente"
+            );
+          } catch (
+            error
+          ) {
+            console.error(
+              "AERION: erro ao salvar rascunho",
+              error
+            );
+
+            setSaveStatus(
+              "error",
+              "Erro ao salvar"
+            );
+          }
+        },
+        CONFIG.autosaveDelay
+      );
+  }
+
+  function loadDraft() {
+    try {
+      const raw =
+        localStorage.getItem(
+          CONFIG.draftKey
+        );
+
+      if (!raw) {
+        return false;
+      }
+
+      const parsed =
+        JSON.parse(
+          raw
+        );
+
+      if (
+        !parsed ||
+        typeof parsed !==
+          "object"
+      ) {
+        return false;
+      }
+
+      const defaults =
+        createDefaultState();
+
+      state = {
+        ...defaults,
+        ...parsed,
+
+        appearance: {
+          ...defaults.appearance,
+          ...(parsed.appearance ||
+            {})
+        },
+
+        attributes: {
+          ...defaults.attributes,
+          ...(parsed.attributes ||
+            {})
+        }
+      };
+
+      ensureSkills();
+
+      if (
+        !Array.isArray(
+          state.techniques
+        )
+      ) {
+        state.techniques =
+          [];
+      }
+
+      if (
+        !Array.isArray(
+          state.inventory
+        )
+      ) {
+        state.inventory =
+          [];
+      }
+
+      if (
+        !Array.isArray(
+          state.dicePool
+        )
+      ) {
+        state.dicePool =
+          createDicePool();
+
+        rebuildDiceAssignments();
+      }
+
+      ensureValidHeight();
+
+      return true;
+    } catch (
+      error
+    ) {
+      console.error(
+        "AERION: erro ao carregar rascunho",
+        error
+      );
+
+      return false;
+    }
+  }
+
+  function clearDraft() {
+    try {
+      localStorage.removeItem(
+        CONFIG.draftKey
+      );
+    } catch (
+      error
+    ) {
+      console.error(
+        "AERION: erro ao limpar rascunho",
+        error
+      );
+    }
+  }
+
+  /* =========================================================
+     RECONSTRUÇÃO DA PISCINA DE DADOS
+  ========================================================= */
+
+  function rebuildDiceAssignments() {
+    if (
+      !Array.isArray(
+        state.dicePool
+      )
+    ) {
+      state.dicePool =
+        createDicePool();
+    }
+
+    state.dicePool.forEach(
+      die => {
+        die.assignedTo =
+          null;
+      }
+    );
+
+    ATTRIBUTE_ORDER.forEach(
+      attribute => {
+        const dieType =
+          normalizeDie(
+            state.attributes[
+              attribute
+            ]
+          );
+
+        if (!dieType) {
+          return;
+        }
+
+        const die =
+          state.dicePool.find(
+            item =>
+              item.die ===
+                dieType &&
+              !item.assignedTo
+          );
+
+        if (die) {
+          die.assignedTo =
+            attribute;
+        }
+      }
+    );
+  }
+
+  /* =========================================================
+     NORMALIZAÇÃO DO ESTADO
+  ========================================================= */
+
+  function normalizeState() {
+    const defaults =
+      createDefaultState();
+
+    state = {
+      ...defaults,
+      ...state,
+
+      appearance: {
+        ...defaults.appearance,
+        ...(state.appearance ||
+          {})
+      },
+
+      attributes: {
+        ...defaults.attributes,
+        ...(state.attributes ||
+          {})
+      }
+    };
+
+    if (
+      !Array.isArray(
+        state.techniques
+      )
+    ) {
+      state.techniques =
+        [];
+    }
+
+    if (
+      !Array.isArray(
+        state.inventory
+      )
+    ) {
+      state.inventory =
+        [];
+    }
+
+    if (
+      !Array.isArray(
+        state.dicePool
+      )
+    ) {
+      state.dicePool =
+        createDicePool();
+
+      rebuildDiceAssignments();
+    }
+
+    ensureSkills();
+    ensureValidHeight();
+  }
+
+  /* =========================================================
+     UPLOAD DE IMAGEM
+  ========================================================= */
+
+  function handleAvatarFile(
+    file
+  ) {
+    if (!file) {
+      return;
+    }
+
+    if (
+      !file.type.startsWith(
+        "image/"
+      )
+    ) {
+      showToast(
+        "Selecione um arquivo de imagem."
+      );
+
+      return;
+    }
+
+    if (
+      file.size >
+      CONFIG.maxAvatarSize
+    ) {
+      showToast(
+        "A imagem deve ter no máximo 6 MB."
+      );
+
+      return;
+    }
+
+    const reader =
+      new FileReader();
+
+    reader.onload =
+      event => {
+        state.avatarDataUrl =
+          safeText(
+            event.target.result
+          );
+
+        state.avatarFileName =
+          file.name;
+
+        saveDraft();
+
+        renderAll();
+
+        showToast(
+          "Imagem adicionada."
+        );
+      };
+
+    reader.onerror =
+      () => {
+        showToast(
+          "Não foi possível carregar a imagem."
+        );
+      };
+
+    reader.readAsDataURL(
+      file
+    );
+  }
+
+  /* =========================================================
+     EVENTOS DE FORMULÁRIO
+  ========================================================= */
+
+  function handleInput(
+    event
+  ) {
+    const target =
+      event.target;
+
+    if (!target) {
+      return;
+    }
+
+    const field =
+      target.dataset.field ||
+      target.name ||
+      target.id;
+
+    const value =
+      target.type ===
+      "checkbox"
+        ? target.checked
+        : target.value;
+
+    /*
+     * Identidade
+     */
+    if (
+      [
+        "name",
+        "characterName",
+        "age",
+        "gender",
+        "description"
+      ].includes(
+        field
+      )
+    ) {
+      updateIdentity(
+        field ===
+          "characterName"
+          ? "name"
+          : field,
+        value
+      );
+
+      renderProgressOnly();
+
+      return;
+    }
+
+    /*
+     * Aparência
+     */
+    if (
+      [
+        "heightCm",
+        "heightRange",
+        "sizeCategory",
+        "hair",
+        "eyes",
+        "skin",
+        "clothing",
+        "scars",
+        "tattoos",
+        "physicalNotes"
+      ].includes(
+        field
+      )
+    ) {
+      updateAppearance(
+        field ===
+          "heightRange"
+          ? "heightCm"
+          : field,
+        value
+      );
+
+      return;
+    }
+
+    /*
+     * Perícia
+     */
+    if (
+      target.dataset
+        .skillBonus
+    ) {
+      setSkillBonus(
+        target.dataset
+          .skillBonus,
+        value
+      );
+
+      return;
+    }
+
+    /*
+     * Técnica
+     */
+    if (
+      target.dataset
+        .techniqueId &&
+      target.dataset
+        .techniqueField
+    ) {
+      updateTechnique(
+        target.dataset
+          .techniqueId,
+        target.dataset
+          .techniqueField,
+        value
+      );
+
+      return;
+    }
+
+    /*
+     * Inventário
+     */
+    if (
+      target.dataset
+        .inventoryId &&
+      target.dataset
+        .inventoryField
+    ) {
+      updateInventoryItem(
+        target.dataset
+          .inventoryId,
+        target.dataset
+          .inventoryField,
+        value
+      );
+
+      return;
+    }
+
+    saveDraft();
+  }
+
+  function handleChange(
+    event
+  ) {
+    const target =
+      event.target;
+
+    if (!target) {
+      return;
+    }
+
+    if (
+      target.type ===
+      "file"
+    ) {
+      const file =
+        target.files?.[0];
+
+      handleAvatarFile(
+        file
+      );
+
+      return;
+    }
+
+    if (
+      target.dataset
+        .raceSelect
+    ) {
+      selectRace(
+        target.value
+      );
+
+      return;
+    }
+
+    if (
+      target.dataset
+        .animalhaVariant
+    ) {
+      selectAnimalhaVariant(
+        target.value
+      );
+
+      return;
+    }
+
+    if (
+      target.dataset
+        .classSelect
+    ) {
+      selectClass(
+        target.value
+      );
+
+      return;
+    }
+
+    if (
+      target.dataset
+        .mana
+    ) {
+      selectMana(
+        target.dataset
+          .mana
+      );
+
+      return;
+    }
+
+    handleInput(
+      event
+    );
+  }
+
+  /* =========================================================
+     CLICK
+  ========================================================= */
+
+  function handleClick(
+    event
+  ) {
+    const target =
+      event.target.closest(
+        "[data-action]"
+      );
+
+    if (!target) {
+      return;
+    }
+
+    const action =
+      target.dataset.action;
+
+    switch (
+      action
+    ) {
+      case "next":
+        event.preventDefault();
+        nextStep();
+        break;
+
+      case "previous":
+        event.preventDefault();
+        previousStep();
+        break;
+
+      case "go-step":
+        event.preventDefault();
+
+        goToStep(
+          Number(
+            target.dataset
+              .step
+          )
+        );
+
+        break;
+
+      case "select-race":
+        event.preventDefault();
+
+        selectRace(
+          target.dataset
+            .race
+        );
+
+        break;
+
+      case "select-animalha":
+        event.preventDefault();
+
+        selectAnimalhaVariant(
+          target.dataset
+            .animalha
+        );
+
+        break;
+
+      case "select-class":
+        event.preventDefault();
+
+        selectClass(
+          target.dataset
+            .class
+        );
+
+        break;
+
+      case "select-mana":
+        event.preventDefault();
+
+        selectMana(
+          target.dataset
+            .mana
+        );
+
+        break;
+
+      case "roll-power":
+        event.preventDefault();
+
+        rollPrimaryPower();
+
+        break;
+
+      case "select-parallel-power":
+        event.preventDefault();
+
+        selectParallelPower(
+          target.dataset
+            .power
+        );
+
+        break;
+
+      case "roll-attribute":
+        event.preventDefault();
+
+        rollAssignedAttribute(
+          target.dataset
+            .attribute
+        );
+
+        break;
+
+      case "return-die":
+        event.preventDefault();
+
+        returnDie(
+          target.dataset
+            .dieId
+        );
+
+        break;
+
+      case "remove-die":
+        event.preventDefault();
+
+        removeDieFromAttribute(
+          target.dataset
+            .attribute
+        );
+
+        break;
+
+      case "train-skill":
+        event.preventDefault();
+
+        toggleSkillTraining(
+          target.dataset
+            .skill
+        );
+
+        break;
+
+      case "add-technique":
+        event.preventDefault();
+
+        addTechnique();
+
+        break;
+
+      case "remove-technique":
+        event.preventDefault();
+
+        removeTechnique(
+          target.dataset
+            .techniqueId
+        );
+
+        break;
+
+      case "add-inventory":
+        event.preventDefault();
+
+        addInventoryItem();
+
+        break;
+
+      case "remove-inventory":
+        event.preventDefault();
+
+        removeInventoryItem(
+          target.dataset
+            .inventoryId
+        );
+
+        break;
+
+      case "remove-avatar":
+        event.preventDefault();
+
+        state.avatarDataUrl =
+          "";
+
+        state.avatarFileName =
+          "";
+
+        saveDraft();
+
+        renderAll();
+
+        break;
+
+      case "new-draft":
+        event.preventDefault();
+
+        resetCharacter();
+
+        break;
+
+      case "finish":
+        event.preventDefault();
+
+        finishCharacter();
+
+        break;
+
+      default:
+        break;
+    }
+  }
+
+  /* =========================================================
+     DRAG & DROP — DADOS
+  ========================================================= */
+
+  function handleDragStart(
+    event
+  ) {
+    const die =
+      event.target.closest(
+        "[data-die-id]"
+      );
+
+    if (!die) {
+      return;
+    }
+
+    const dieId =
+      die.dataset.dieId;
+
+    event.dataTransfer.effectAllowed =
+      "move";
+
+    event.dataTransfer.setData(
+      "text/plain",
+      dieId
+    );
+
+    selectedDice =
+      dieId;
+
+    die.classList.add(
+      "dragging"
+    );
+  }
+
+  function handleDragEnd(
+    event
+  ) {
+    const die =
+      event.target.closest(
+        "[data-die-id]"
+      );
+
+    if (die) {
+      die.classList.remove(
+        "dragging"
+      );
+    }
+
+    selectedDice =
+      null;
+
+    $$(".drag-over")
+      .forEach(
+        element =>
+          element.classList.remove(
+            "drag-over"
+          )
+      );
+  }
+
+  function handleDragOver(
+    event
+  ) {
+    const zone =
+      event.target.closest(
+        "[data-attribute-drop]"
+      );
+
+    if (!zone) {
+      return;
+    }
+
+    event.preventDefault();
+
+    event.dataTransfer.dropEffect =
+      "move";
+
+    zone.classList.add(
+      "drag-over"
+    );
+  }
+
+  function handleDragLeave(
+    event
+  ) {
+    const zone =
+      event.target.closest(
+        "[data-attribute-drop]"
+      );
+
+    if (!zone) {
+      return;
+    }
+
+    zone.classList.remove(
+      "drag-over"
+    );
+  }
+
+  function handleDrop(
+    event
+  ) {
+    const zone =
+      event.target.closest(
+        "[data-attribute-drop]"
+      );
+
+    if (!zone) {
+      return;
+    }
+
+    event.preventDefault();
+
+    zone.classList.remove(
+      "drag-over"
+    );
+
+    const dieId =
+      event.dataTransfer.getData(
+        "text/plain"
+      );
+
+    const attribute =
+      zone.dataset
+        .attributeDrop;
+
+    if (
+      dieId &&
+      attribute
+    ) {
+      moveDie(
+        dieId,
+        attribute
+      );
+    }
+  }
+
+  /* =========================================================
+     SELEÇÃO DE DADOS POR CLIQUE
+  ========================================================= */
+
+  function handleDieClick(
+    event
+  ) {
+    const die =
+      event.target.closest(
+        "[data-die-id]"
+      );
+
+    if (!die) {
+      return;
+    }
+
+    const dieId =
+      die.dataset.dieId;
+
+    /*
+     * Primeiro clique seleciona.
+     *
+     * Segundo clique em um atributo
+     * é tratado pela zona correspondente.
+     */
+    selectedDice =
+      dieId;
+
+    $$(".dice-selected")
+      .forEach(
+        element =>
+          element.classList.remove(
+            "dice-selected"
+          )
+      );
+
+    die.classList.add(
+      "dice-selected"
+    );
+
+    showToast(
+      `${die.dataset.die || "Dado"} selecionado. Escolha um atributo.`
+    );
+  }
+
+  function handleAttributeClick(
+    event
+  ) {
+    const zone =
+      event.target.closest(
+        "[data-attribute-drop]"
+      );
+
+    if (!zone) {
+      return;
+    }
+
+    if (!selectedDice) {
+      return;
+    }
+
+    const attribute =
+      zone.dataset
+        .attributeDrop;
+
+    if (
+      !attribute
+    ) {
+      return;
+    }
+
+    moveDie(
+      selectedDice,
+      attribute
+    );
+
+    selectedDice =
+      null;
+  }
+
+  /* =========================================================
+     RENDER — ELEMENTOS GENÉRICOS
+  ========================================================= */
+
+  function setValue(
+    selectors,
+    value
+  ) {
+    const list =
+      Array.isArray(
+        selectors
+      )
+        ? selectors
+        : [selectors];
+
+    for (
+      const selector of list
+    ) {
+      const element =
+        $(selector);
+
+      if (!element) {
+        continue;
+      }
+
+      if (
+        "value" in
+        element
+      ) {
+        element.value =
+          safeText(
+            value
+          );
+      } else {
+        element.textContent =
+          safeText(
+            value
+          );
+      }
+
+      break;
+    }
+  }
+
+  function setChecked(
+    selectors,
+    checked
+  ) {
+    const list =
+      Array.isArray(
+        selectors
+      )
+        ? selectors
+        : [selectors];
+
+    for (
+      const selector of list
+    ) {
+      const element =
+        $(selector);
+
+      if (
+        element &&
+        "checked" in
+          element
+      ) {
+        element.checked =
+          Boolean(
+            checked
+          );
+      }
+    }
+  }
+
+  function renderIdentity() {
+    setValue(
+      [
+        "#name",
+        "#characterName",
+        '[name="name"]'
+      ],
+      state.name
+    );
+
+    setValue(
+      [
+        "#age",
+        '[name="age"]'
+      ],
+      state.age
+    );
+
+    setValue(
+      [
+        "#gender",
+        '[name="gender"]'
+      ],
+      state.gender
+    );
+
+    setValue(
+      [
+        "#description",
+        '[name="description"]'
+      ],
+      state.description
+    );
+
+    $$(".gender-option")
+      .forEach(
+        element => {
+          const value =
+            element.dataset
+              .gender;
+
+          element.classList.toggle(
+            "selected",
+            value ===
+              state.gender
+          );
+        }
+      );
+  }
+
+  function renderAvatar() {
+    const images =
+      $$(
+        "[data-character-avatar]"
+      );
+
+    images.forEach(
+      image => {
+        if (
+          state.avatarDataUrl
+        ) {
+          image.src =
+            state.avatarDataUrl;
+
+          image.hidden =
+            false;
+        } else {
+          image.removeAttribute(
+            "src"
+          );
+
+          image.hidden =
+            true;
+        }
+      }
+    );
+
+    const previews =
+      $$(
+        ".avatar-preview"
+      );
+
+    previews.forEach(
+      preview => {
+        if (
+          state.avatarDataUrl
+        ) {
+          preview.style.backgroundImage =
+            `url("${state.avatarDataUrl}")`;
+
+          preview.classList.add(
+            "has-image"
+          );
+        } else {
+          preview.style.backgroundImage =
+            "";
+
+          preview.classList.remove(
+            "has-image"
+          );
+        }
+      }
+    );
+  }
+
+  function renderRace() {
+    const race =
+      getSelectedRace();
+
+    if (!race) {
+      return;
+    }
+
+    const gender =
+      state.gender ===
+      "feminino"
+        ? "femaleImage"
+        : "maleImage";
+
+    const image =
+      race[
+        gender
+      ] ||
+      race.maleImage ||
+      race.femaleImage;
+
+    $$(
+      "[data-race-name]"
+    ).forEach(
+      element =>
+        element.textContent =
+          race.name
+    );
+
+    $$(
+      "[data-race-description]"
+    ).forEach(
+      element =>
+        element.textContent =
+          race.description
+    );
+
+    $$(
+      "[data-race-profile]"
+    ).forEach(
+      element =>
+        element.textContent =
+          race.profile
+    );
+
+    $$(
+      "[data-race-feature]"
+    ).forEach(
+      element =>
+        element.textContent =
+          race.feature
+    );
+
+    $$(
+      "[data-race-image]"
+    ).forEach(
+      element => {
+        if (image) {
+          element.src =
+            image;
+
+          element.hidden =
+            false;
+        } else {
+          element.removeAttribute(
+            "src"
+          );
+
+          element.hidden =
+            true;
+        }
+      }
+    );
+
+    $$(".race-card")
+      .forEach(
+        card => {
+          card.classList.toggle(
+            "selected",
+            card.dataset
+              .race ===
+              state.race
+          );
+        }
+      );
+
+    $(
+      "[data-current-race]"
+    )?.setAttribute(
+      "data-current-race",
+      state.race
+    );
+
+    renderAnimalhaVariants();
+  }
+
+  function renderAnimalhaVariants() {
+    const container =
+      $(
+        "[data-animalha-variants]"
+      );
+
+    if (!container) {
+      return;
+    }
+
+    if (
+      state.race !==
+      "animalha"
+    ) {
+      container.hidden =
+        true;
+
+      return;
+    }
+
+    container.hidden =
+      false;
+
+    container.innerHTML =
+      ANIMALHA_VARIANTS
+        .map(
+          variant => `
+            <button
+              type="button"
+              class="animalha-variant-card ${
+                state.animalhaVariant ===
+                variant.id
+                  ? "selected"
+                  : ""
+              }"
+              data-action="select-animalha"
+              data-animalha="${escapeHtml(
+                variant.id
+              )}"
+            >
+              <span class="animalha-variant-name">
+                ${escapeHtml(
+                  variant.name
+                )}
+              </span>
+
+              <span class="animalha-variant-category">
+                ${escapeHtml(
+                  variant.category
+                )}
+              </span>
+
+              <span class="animalha-variant-profile">
+                ${escapeHtml(
+                  variant.profile
+                )}
+              </span>
+            </button>
+          `
+        )
+        .join("");
+  }
+
+  function renderAppearance() {
+    ensureValidHeight();
+
+    const limits =
+      getHeightLimits();
+
+    const height =
+      state.appearance
+        .heightCm;
+
+    setValue(
+      [
+        "#heightCm",
+        '[name="heightCm"]',
+        "#heightRange",
+        '[name="heightRange"]'
+      ],
+      height
+    );
+
+    $$(
+      "[data-height-min]"
+    ).forEach(
+      element =>
+        element.textContent =
+          `${limits.min} cm`
+    );
+
+    $$(
+      "[data-height-max]"
+    ).forEach(
+      element =>
+        element.textContent =
+          `${limits.max} cm`
+    );
+
+    $$(
+      "[data-height-value]"
+    ).forEach(
+      element =>
+        element.textContent =
+          formatHeight(
+            height
+          )
+    );
+
+    Object.entries(
+      state.appearance
+    ).forEach(
+      ([field, value]) => {
+        setValue(
+          [
+            `#${field}`,
+            `[name="${field}"]`
+          ],
+          value
+        );
+      }
+    );
+
+    const race =
+      getEffectiveRaceData();
+
+    $$(
+      "[data-size-category]"
+    ).forEach(
+      element =>
+        element.textContent =
+          race
+            ? (
+                SIZE_DATA[
+                  race.size
+                ]?.label ||
+                race.size ||
+                "Médio"
+              )
+            : "Médio"
+    );
+
+    $$(
+      "[data-flight-status]"
+    ).forEach(
+      element => {
+        element.textContent =
+          canFly()
+            ? "Voo disponível"
+            : "Voo indisponível";
+
+        element.classList.toggle(
+          "available",
+          canFly()
+        );
+      }
+    );
+  }
+
+  function renderClass() {
+    const selected =
+      CLASSES.find(
+        item =>
+          item.id ===
+          state.class
+      );
+
+    $$(".class-card")
+      .forEach(
+        card => {
+          card.classList.toggle(
+            "selected",
+            card.dataset
+              .class ===
+              state.class
+          );
+        }
+      );
+
+    $$(
+      "[data-class-name]"
+    ).forEach(
+      element =>
+        element.textContent =
+          selected
+            ?.name ||
+          "—"
+    );
+
+    $$(
+      "[data-class-role]"
+    ).forEach(
+      element =>
+        element.textContent =
+          selected
+            ?.role ||
+          "—"
+    );
+
+    $$(
+      "[data-class-bonus]"
+    ).forEach(
+      element => {
+        if (
+          !selected
+        ) {
+          element.textContent =
+            "";
+
+          return;
+        }
+
+        const bonuses =
+          Object.entries(
+            selected.skillModifiers ||
+              {}
+          )
+            .map(
+              ([id, value]) => {
+                const skill =
+                  SKILLS.find(
+                    item =>
+                      item.id ===
+                      id
+                  );
+
+                return skill
+                  ? `${skill.name} +${value}`
+                  : null;
+              }
+            )
+            .filter(
+              Boolean
+            );
+
+        element.textContent =
+          bonuses.join(
+            " • "
+          );
+      }
+    );
+  }
+
+  function renderMana() {
+    $$(".mana-card")
+      .forEach(
+        card => {
+          const mana =
+            card.dataset
+              .mana;
+
+          card.classList.toggle(
+            "selected",
+            mana ===
+              state.mana
+          );
+
+          card.classList.toggle(
+            "locked",
+            mana !==
+              "azul"
+          );
+
+          const locked =
+            mana !==
+            "azul";
+
+          card.setAttribute(
+            "aria-disabled",
+            String(
+              locked
+            )
+          );
+        }
+      );
   }
