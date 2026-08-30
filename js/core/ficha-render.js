@@ -3,15 +3,13 @@
    js/core/ficha-render.js
 
    RESPONSABILIDADE:
-   - Renderização visual
-   - Imagens
-   - Raça
+   - Renderização visual da ficha
+   - Interface
+   - Raças
    - Animalha
    - Aparência
    - Modelo 2D
-   - Altura
    - Classes
-   - Dados
    - Atributos
    - Radar
    - Poder
@@ -21,20 +19,38 @@
    - Inventário
    - Combate
    - Revisão
-   - Progresso
+   - Navegação
 
-   O estado e as regras ficam em:
-   js/core/ficha.js
+   IMPORTANTE:
+   A lógica dos dados pertence ao ficha.js.
+   Este arquivo apenas DESENHA os dados.
+
+   Cada dado possui ID individual:
+   - d4-1
+   - d6-1
+   - d6-2
+   - d8-1
+   - d10-1
+   - d12-1
+   - d20-1
+   - d20-2
+
    ========================================================= */
 
 (() => {
   "use strict";
 
+
+  /* =========================================================
+     ESTADO LOCAL
+     ========================================================= */
+
   let lastState = null;
 
-  /* =======================================================
+
+  /* =========================================================
      DOM
-     ======================================================= */
+     ========================================================= */
 
   function $(selector, root = document) {
     return root.querySelector(selector);
@@ -44,9 +60,10 @@
     return [...root.querySelectorAll(selector)];
   }
 
-  /* =======================================================
-     SEGURANÇA / FORMATAÇÃO
-     ======================================================= */
+
+  /* =========================================================
+     UTILITÁRIOS
+     ========================================================= */
 
   function escapeHtml(value) {
     return String(value ?? "")
@@ -82,22 +99,35 @@
   }
 
   function getConstants(name) {
-    return getCore()?.constants?.[name] || [];
+    return (
+      getCore()?.constants?.[name] ||
+      []
+    );
   }
 
-  /* =======================================================
-     TOAST
-     ======================================================= */
 
-  function toast(message, duration = 2200) {
-    let element = $("#toast");
+  /* =========================================================
+     TOAST
+     ========================================================= */
+
+  function toast(
+    message,
+    duration = 2200
+  ) {
+    let element =
+      $("#toast");
 
     if (!element) {
       element =
-        document.createElement("div");
+        document.createElement(
+          "div"
+        );
 
-      element.id = "toast";
-      element.className = "toast";
+      element.id =
+        "toast";
+
+      element.className =
+        "toast";
 
       document.body.appendChild(
         element
@@ -107,28 +137,36 @@
     element.textContent =
       String(message);
 
-    element.hidden = false;
+    element.hidden =
+      false;
 
     clearTimeout(
       element.__aerionTimer
     );
 
     element.__aerionTimer =
-      setTimeout(() => {
-        element.hidden = true;
-      }, duration);
+      setTimeout(
+        () => {
+          element.hidden =
+            true;
+        },
+
+        duration
+      );
   }
 
-  /* =======================================================
+
+  /* =========================================================
      RENDER GERAL
-     ======================================================= */
+     ========================================================= */
 
   function render(state) {
     if (!state) {
       return;
     }
 
-    lastState = state;
+    lastState =
+      state;
 
     renderProgress();
     renderPanels();
@@ -155,11 +193,14 @@
     renderReview();
 
     renderNavigation();
+
+    initializeDynamicVisuals();
   }
 
-  /* =======================================================
+
+  /* =========================================================
      PROGRESSO
-     ======================================================= */
+     ========================================================= */
 
   function renderProgress() {
     const progress =
@@ -201,13 +242,15 @@
         `${percent}%`;
     }
 
-    const step =
+    const currentStep =
       Number(
         lastState.step
       ) || 0;
 
     const title =
-      lastState.steps?.[step]?.name ||
+      lastState.steps?.[
+        currentStep
+      ]?.name ||
       "Identidade";
 
     const progressTitle =
@@ -225,7 +268,8 @@
           index
         ) => {
           const active =
-            index === step;
+            index ===
+            currentStep;
 
           const complete =
             isStepCompleteVisual(
@@ -265,12 +309,16 @@
           button.disabled =
             !unlocked;
 
-          button.setAttribute(
-            "aria-current",
-            active
-              ? "step"
-              : "false"
-          );
+          if (active) {
+            button.setAttribute(
+              "aria-current",
+              "step"
+            );
+          } else {
+            button.removeAttribute(
+              "aria-current"
+            );
+          }
         }
       );
   }
@@ -292,14 +340,17 @@
 
     switch (index) {
       case 0:
-        return Boolean(
-          String(
-            lastState.name || ""
-          ).trim()
-        ) &&
+        return (
+          Boolean(
+            String(
+              lastState.name ||
+                ""
+            ).trim()
+          ) &&
           Boolean(
             lastState.gender
-          );
+          )
+        );
 
       case 1:
         return Boolean(
@@ -360,7 +411,10 @@
   function isStepUnlockedVisual(
     index
   ) {
-    if (index <= 0) {
+    if (
+      index <=
+      0
+    ) {
       return true;
     }
 
@@ -369,9 +423,10 @@
     );
   }
 
-  /* =======================================================
+
+  /* =========================================================
      PAINÉIS
-     ======================================================= */
+     ========================================================= */
 
   function renderPanels() {
     const current =
@@ -394,7 +449,8 @@
         }
 
         const active =
-          index === current;
+          index ===
+          current;
 
         panel.hidden =
           !active;
@@ -407,9 +463,10 @@
     );
   }
 
-  /* =======================================================
+
+  /* =========================================================
      IDENTIDADE
-     ======================================================= */
+     ========================================================= */
 
   function renderIdentity() {
     setInputValue(
@@ -463,6 +520,7 @@
       );
   }
 
+
   function setInputValue(
     selector,
     value
@@ -482,9 +540,10 @@
       value || "";
   }
 
-  /* =======================================================
+
+  /* =========================================================
      AVATAR
-     ======================================================= */
+     ========================================================= */
 
   function renderAvatar() {
     const avatar =
@@ -564,18 +623,12 @@
     }
   }
 
-  /* =======================================================
+
+  /* =========================================================
      RAÇA
-     ======================================================= */
+     ========================================================= */
 
   function renderRace() {
-    /*
-     * Aqui usamos previewRace, não raceData.
-     *
-     * Isso é importante:
-     * navegar pelo carrossel NÃO seleciona a raça.
-     * A raça só é escolhida ao clicar em Selecionar.
-     */
     const race =
       lastState.previewRace;
 
@@ -587,7 +640,8 @@
       lastState.gender;
 
     const image =
-      gender === "feminino"
+      gender ===
+      "feminino"
         ? race.female
         : race.male;
 
@@ -666,7 +720,8 @@
       $("#raceDescriptionText");
 
     if (descText) {
-      const parts = [];
+      const parts =
+        [];
 
       if (
         race.description
@@ -693,7 +748,9 @@
       }
 
       descText.textContent =
-        parts.join(" ");
+        parts.join(
+          " "
+        );
     }
 
     const selectedText =
@@ -707,26 +764,9 @@
           : "Selecionar";
     }
 
-    const descriptionPanel =
-      $("#raceDescription");
-
-    if (descriptionPanel) {
-      /*
-       * Continua fechado por padrão.
-       * O clique na imagem pode ser tratado
-       * depois pelo HTML/UI.
-       */
-      if (
-        descriptionPanel.dataset
-          .open === "true"
-      ) {
-        descriptionPanel.hidden =
-          false;
-      }
-    }
-
     renderRaceDots();
   }
+
 
   function renderRaceDots() {
     const container =
@@ -772,10 +812,17 @@
           "go-race-index";
 
         button.dataset.raceIndex =
-          String(index);
+          String(
+            index
+          );
 
         button.setAttribute(
           "aria-label",
+          race.name
+        );
+
+        button.setAttribute(
+          "title",
           race.name
         );
 
@@ -786,9 +833,10 @@
     );
   }
 
-  /* =======================================================
+
+  /* =========================================================
      ANIMALHA
-     ======================================================= */
+     ========================================================= */
 
   function renderAnimalha() {
     const container =
@@ -826,7 +874,9 @@
       false;
 
     container.innerHTML = `
-      <div class="section-heading compact">
+      <div
+        class="section-heading compact"
+      >
 
         <span class="eyebrow">
           ANIMALHA
@@ -843,7 +893,9 @@
 
       </div>
 
-      <div class="animalha-grid">
+      <div
+        class="animalha-grid"
+      >
 
         ${variants.map(
           variant => `
@@ -896,6 +948,7 @@
     `;
   }
 
+
   function getAnimalIcon(
     category
   ) {
@@ -931,9 +984,10 @@
     return "✦";
   }
 
-  /* =======================================================
+
+  /* =========================================================
      APARÊNCIA
-     ======================================================= */
+     ========================================================= */
 
   function renderAppearance() {
     const appearance =
@@ -965,13 +1019,13 @@
       range.min =
         String(
           min ||
-            100
+          100
         );
 
       range.max =
         String(
           max ||
-            400
+          400
         );
 
       range.value =
@@ -1029,28 +1083,29 @@
     renderAppearanceFields();
     renderAnimalhaEditor();
 
-    const movementStatus =
+    const flight =
       $(
         "[data-flight-status]"
       );
 
-    if (movementStatus) {
+    if (flight) {
       const canFly =
         Boolean(
           race?.flight
         );
 
-      movementStatus.textContent =
+      flight.textContent =
         canFly
           ? "Voo disponível"
           : "Voo indisponível";
 
-      movementStatus.classList.toggle(
+      flight.classList.toggle(
         "available",
         canFly
       );
     }
   }
+
 
   function renderAppearanceFields() {
     const appearance =
@@ -1074,6 +1129,7 @@
       }
     );
   }
+
 
   function renderAnimalhaEditor() {
     const section =
@@ -1132,9 +1188,10 @@
     `;
   }
 
-  /* =======================================================
+
+  /* =========================================================
      MODELO 2D
-     ======================================================= */
+     ========================================================= */
 
   function renderCharacterModel() {
     const container =
@@ -1177,6 +1234,7 @@
         0,
         Math.min(
           1,
+
           (
             height -
             min
@@ -1190,11 +1248,9 @@
       );
 
     /*
-     * Escala visual.
+     * Escala visual somente.
      *
-     * Não tenta representar centímetros físicos.
-     * Apenas preserva proporção visual entre mínimo
-     * e máximo da raça.
+     * Não representa centímetros diretamente.
      */
     const visualScale =
       0.88 +
@@ -1218,18 +1274,6 @@
       `${visualHeight}px`
     );
 
-    container.classList.toggle(
-      "appearance-figure--female",
-      lastState.gender ===
-        "feminino"
-    );
-
-    container.classList.toggle(
-      "appearance-figure--male",
-      lastState.gender !==
-        "feminino"
-    );
-
     container.dataset.race =
       lastState.race ||
       "";
@@ -1238,19 +1282,31 @@
       lastState.animalha ||
       "";
 
-    /*
-     * Adapta visualmente o modelo ao porte.
-     */
-    const size =
+    container.dataset.gender =
+      lastState.gender ||
+      "";
+
+    container.dataset.size =
       race?.size ||
       "medio";
 
-    container.dataset.size =
-      size;
+    container.classList.toggle(
+      "appearance-figure--female",
+      lastState.gender ===
+      "feminino"
+    );
+
+    container.classList.toggle(
+      "appearance-figure--male",
+      lastState.gender !==
+      "feminino"
+    );
 
     /*
-     * Características especiais.
+     * As partes especiais podem existir
+     * no SVG/HTML modular.
      */
+
     const wings =
       container.querySelector(
         '[data-character-feature="wings"]'
@@ -1275,9 +1331,10 @@
     }
   }
 
-  /* =======================================================
+
+  /* =========================================================
      CLASSES
-     ======================================================= */
+     ========================================================= */
 
   function renderClasses() {
     const classes =
@@ -1336,24 +1393,18 @@
                     skillId,
                     amount
                   ]) => {
-                    const skill =
+                    const skills =
                       getConstants(
                         "SKILLS"
-                      )?.[
+                      );
+
+                    const skill =
+                      skills[
                         skillId
                       ];
 
                     if (
-                      Array.isArray(
-                        skill
-                      )
-                    ) {
-                      return `${skill[0]} +${amount}`;
-                    }
-
-                    if (
-                      skill &&
-                      skill.name
+                      skill?.name
                     ) {
                       return `${skill.name} +${amount}`;
                     }
@@ -1364,7 +1415,9 @@
                 .filter(
                   Boolean
                 )
-                .join(" • ");
+                .join(
+                  " • "
+                );
           }
         }
       );
@@ -1396,21 +1449,26 @@
     }
   }
 
-  /* =======================================================
+
+  /* =========================================================
      ATRIBUTOS
-     ======================================================= */
+     ========================================================= */
 
   function renderAttributes() {
-    renderDice();
+    renderDicePool();
     renderAttributeCards();
     renderRadar();
   }
 
-  /* =======================================================
-     DADOS
-     ======================================================= */
 
-  function renderDice() {
+  /* =========================================================
+     POOL DE DADOS
+     
+     O ficha.js é a autoridade.
+     Aqui só desenhamos.
+     ========================================================= */
+
+  function renderDicePool() {
     const root =
       $(
         "[data-dice-pool]"
@@ -1429,24 +1487,24 @@
       lastState.effectiveAttributes ||
       {};
 
-    const used =
-      {};
+    /*
+     * Conjunto dos IDs realmente usados.
+     */
+    const assignedIds =
+      new Set();
 
     Object.values(
       attributes
     ).forEach(
       attribute => {
         if (
+          attribute?.dieId ||
           attribute?.die
         ) {
-          used[
+          assignedIds.add(
+            attribute.dieId ||
             attribute.die
-          ] =
-            (
-              used[
-                attribute.die
-              ] || 0
-            ) + 1;
+          );
         }
       }
     );
@@ -1454,102 +1512,114 @@
     root.innerHTML =
       "";
 
-    Object.entries(
-      dice
-    ).forEach(
-      ([
-        die,
-        data
-      ]) => {
-        const amount =
-          Number(
-            data.amount
-          ) || 0;
-
-        const availableCount =
-          Math.max(
-            0,
-            amount -
-              (
-                used[die] ||
-                0
-              )
+    /*
+     * Cada dado individual possui seu
+     * próprio ID.
+     */
+    dice.forEach(
+      die => {
+        const assigned =
+          assignedIds.has(
+            die.id
           );
 
         /*
-         * O pool só mostra dados ainda disponíveis.
-         * Os dados usados aparecem dentro dos atributos.
+         * Dados já usados não desaparecem
+         * silenciosamente.
+         *
+         * Eles continuam registrados no
+         * estado, mas o pool mostra somente
+         * os disponíveis.
          */
-        for (
-          let index = 0;
-          index <
-          availableCount;
-          index++
+        if (
+          assigned
         ) {
-          const button =
-            document.createElement(
-              "button"
-            );
+          return;
+        }
 
-          button.type =
-            "button";
-
-          button.className =
-            `dice-card ${
-              lastState.selectedDie ===
-              die
-                ? "dice-selected"
-                : ""
-            }`;
-
-          button.dataset.die =
-            die;
-
-          button.draggable =
-            true;
-
-          button.setAttribute(
-            "aria-label",
-            `D${data.sides}`
+        const button =
+          document.createElement(
+            "button"
           );
 
-          button.innerHTML = `
-            <span
-              class="dice-icon"
-              aria-hidden="true"
+        button.type =
+          "button";
+
+        button.className =
+          `dice-card ${
+            lastState.selectedDie ===
+            die.id
+              ? "dice-selected"
+              : ""
+          }`;
+
+        button.dataset.die =
+          die.id;
+
+        button.dataset.dieType =
+          die.type;
+
+        button.dataset.dieSides =
+          String(
+            die.sides
+          );
+
+        button.draggable =
+          true;
+
+        button.setAttribute(
+          "aria-label",
+          `D${die.sides}`
+        );
+
+        button.setAttribute(
+          "title",
+          `D${die.sides}`
+        );
+
+        button.innerHTML = `
+          <span
+            class="dice-icon"
+            aria-hidden="true"
+          >
+
+            <svg
+              class="dice-svg"
+              viewBox="0 0 100 100"
             >
 
-              <svg
-                class="dice-svg"
-                viewBox="0 0 100 100"
-              >
+              <polygon
+                points="
+                  50,5
+                  90,28
+                  90,72
+                  50,95
+                  10,72
+                  10,28
+                "
+                fill="none"
+                stroke="currentColor"
+                stroke-width="5"
+                stroke-linejoin="round"
+              />
 
-                <polygon
-                  points="50,5 90,28 90,72 50,95 10,72 10,28"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="5"
-                  stroke-linejoin="round"
-                />
+            </svg>
 
-              </svg>
-
-              <span>
-                D${data.sides}
-              </span>
-
+            <span>
+              D${die.sides}
             </span>
-          `;
 
-          root.appendChild(
-            button
-          );
-        }
+          </span>
+        `;
+
+        root.appendChild(
+          button
+        );
       }
     );
 
     /*
-     * Mostra estado vazio se tudo estiver atribuído.
+     * Caso não exista mais nenhum dado disponível.
      */
     if (
       root.children.length ===
@@ -1564,7 +1634,7 @@
         "dice-pool-empty";
 
       empty.textContent =
-        "Todos os dados foram distribuídos.";
+        "Todos os dados estão atribuídos.";
 
       root.appendChild(
         empty
@@ -1572,9 +1642,10 @@
     }
   }
 
-  /* =======================================================
+
+  /* =========================================================
      CARDS DOS ATRIBUTOS
-     ======================================================= */
+     ========================================================= */
 
   function renderAttributeCards() {
     const attributes =
@@ -1609,47 +1680,116 @@
             )
           );
 
+          /*
+           * Descobrimos o ID individual
+           * do dado.
+           */
+          const dieId =
+            data.dieId ||
+            data.die ||
+            null;
+
           const die =
+            dieId
+              ? (
+                  getConstants(
+                    "DICE"
+                  ).find(
+                    item =>
+                      item.id ===
+                      dieId
+                  ) ||
+                  null
+                )
+              : null;
+
+          const dieElement =
             card.querySelector(
               "[data-attribute-die]"
             );
 
-          if (die) {
-            if (
-              data.die
-            ) {
-              die.innerHTML = `
-                <span
-                  class="attribute-die-icon"
-                  aria-hidden="true"
+          if (dieElement) {
+
+            /*
+             * O atributo recebe o ID individual.
+             *
+             * Isso permite clicar nele para devolver.
+             */
+            dieElement.dataset.die =
+              dieId ||
+              "";
+
+            dieElement.dataset.attribute =
+              id;
+
+            if (die) {
+              dieElement.innerHTML = `
+                <button
+                  type="button"
+                  class="attribute-die-button"
+                  data-action="return-die"
+                  data-attribute="${escapeHtml(
+                    id
+                  )}"
+                  aria-label="Devolver D${die.sides} de ${escapeHtml(
+                    data.name
+                  )}"
+                  title="Devolver D${die.sides}"
                 >
 
-                  <svg
-                    viewBox="0 0 100 100"
-                    class="dice-svg"
+                  <span
+                    class="attribute-die-icon"
+                    aria-hidden="true"
                   >
 
-                    <polygon
-                      points="50,5 90,28 90,72 50,95 10,72 10,28"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="5"
-                      stroke-linejoin="round"
-                    />
+                    <svg
+                      viewBox="0 0 100 100"
+                      class="dice-svg"
+                    >
 
-                  </svg>
+                      <polygon
+                        points="
+                          50,5
+                          90,28
+                          90,72
+                          50,95
+                          10,72
+                          10,28
+                        "
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="5"
+                        stroke-linejoin="round"
+                      />
 
-                  <span>
-                    D${data.sides}
+                    </svg>
+
+                    <span>
+                      D${die.sides}
+                    </span>
+
                   </span>
 
-                </span>
+                </button>
               `;
             } else {
-              die.textContent =
-                "Nenhum dado";
+              dieElement.innerHTML = `
+                <span
+                  class="attribute-empty-die"
+                >
+                  Nenhum dado
+                </span>
+              `;
             }
           }
+
+          /*
+           * Também atualiza o fallback,
+           * caso o botão não use data-attribute-die.
+           */
+          card.dataset.dieId =
+            dieId ||
+            "";
 
           const value =
             card.querySelector(
@@ -1675,14 +1815,16 @@
 
             modifier.classList.toggle(
               "positive",
-              data.racialModifier >
-                0
+              Number(
+                data.racialModifier
+              ) > 0
             );
 
             modifier.classList.toggle(
               "negative",
-              data.racialModifier <
-                0
+              Number(
+                data.racialModifier
+              ) < 0
             );
           }
 
@@ -1707,15 +1849,31 @@
 
           if (rollButton) {
             rollButton.disabled =
-              !data.die;
+              !dieId;
+          }
+
+          /*
+           * Texto auxiliar opcional.
+           */
+          const dieLabel =
+            card.querySelector(
+              "[data-attribute-die-label]"
+            );
+
+          if (dieLabel) {
+            dieLabel.textContent =
+              die
+                ? `D${die.sides}`
+                : "";
           }
         }
       );
   }
 
-  /* =======================================================
-     RADAR DOS ATRIBUTOS
-     ======================================================= */
+
+  /* =========================================================
+     RADAR
+     ========================================================= */
 
   function renderRadar() {
     const root =
@@ -1736,11 +1894,21 @@
       lastState.effectiveAttributes ||
       {};
 
+    if (
+      !definitions.length
+    ) {
+      root.innerHTML =
+        "";
+
+      return;
+    }
+
     const values =
       definitions.map(
         attribute =>
           Math.max(
             0,
+
             Number(
               attributes[
                 attribute.id
@@ -1789,13 +1957,13 @@
           Math.cos(
             radians
           ) *
-          distance,
+            distance,
 
         center +
           Math.sin(
             radians
           ) *
-          distance
+            distance
       ];
     }
 
@@ -1803,7 +1971,7 @@
       "";
 
     /*
-     * 4 níveis de grade.
+     * Grades.
      */
     for (
       let level = 1;
@@ -1819,6 +1987,7 @@
             ) =>
               point(
                 index,
+
                 radius *
                   (
                     level /
@@ -1840,7 +2009,7 @@
     }
 
     /*
-     * Linhas de cada atributo.
+     * Eixos.
      */
     definitions.forEach(
       (
@@ -1870,6 +2039,9 @@
       }
     );
 
+    /*
+     * Polígono do personagem.
+     */
     const polygon =
       values
         .map(
@@ -1879,6 +2051,7 @@
           ) =>
             point(
               index,
+
               radius *
                 (
                   value /
@@ -1888,6 +2061,9 @@
         )
         .join(" ");
 
+    /*
+     * Labels.
+     */
     const labels =
       definitions
         .map(
@@ -1943,9 +2119,10 @@
     `;
   }
 
-  /* =======================================================
+
+  /* =========================================================
      PODER
-     ======================================================= */
+     ========================================================= */
 
   function renderPower() {
     const current =
@@ -2006,6 +2183,11 @@
           selected
         );
 
+        button.classList.toggle(
+          "active",
+          selected
+        );
+
         button.setAttribute(
           "aria-pressed",
           String(
@@ -2015,6 +2197,7 @@
       }
     );
   }
+
 
   function setPowerMode(
     mode
@@ -2042,9 +2225,10 @@
     }
   }
 
-  /* =======================================================
+
+  /* =========================================================
      MANA
-     ======================================================= */
+     ========================================================= */
 
   function renderMana() {
     $$(".mana-card")
@@ -2052,18 +2236,10 @@
         card => {
           const mana =
             String(
-              card.dataset
-                .mana ||
+              card.dataset.mana ||
                 ""
             ).toLowerCase();
 
-          /*
-           * Nesta criação de ficha apenas Azul
-           * fica liberada.
-           *
-           * As outras permanecem reservadas
-           * para a liberação dentro da campanha.
-           */
           const available =
             mana ===
             "azul";
@@ -2105,9 +2281,10 @@
       );
   }
 
-  /* =======================================================
+
+  /* =========================================================
      PERÍCIAS
-     ======================================================= */
+     ========================================================= */
 
   function renderSkills() {
     const root =
@@ -2137,10 +2314,16 @@
         skill
       ]) => {
         const data =
-          effective[id] || {
-            trained: false,
-            bonus: 0,
-            effectiveBonus: 0
+          effective[id] ||
+          {
+            trained:
+              false,
+
+            bonus:
+              0,
+
+            effectiveBonus:
+              0
           };
 
         const trained =
@@ -2164,22 +2347,22 @@
             ]
           ) || 0;
 
-        const card =
+        const article =
           document.createElement(
             "article"
           );
 
-        card.className =
+        article.className =
           `skill-card ${
             trained
               ? "trained"
               : ""
           }`;
 
-        card.dataset.skill =
+        article.dataset.skill =
           id;
 
-        card.innerHTML = `
+        article.innerHTML = `
           <div
             class="skill-card-main"
           >
@@ -2273,15 +2456,16 @@
         `;
 
         root.appendChild(
-          card
+          article
         );
       }
     );
   }
 
-  /* =======================================================
+
+  /* =========================================================
      TÉCNICAS
-     ======================================================= */
+     ========================================================= */
 
   function renderTechniques() {
     const root =
@@ -2308,7 +2492,9 @@
       0
     ) {
       root.innerHTML = `
-        <div class="empty-state">
+        <div
+          class="empty-state"
+        >
 
           <span>
             Nenhuma técnica adicionada.
@@ -2458,9 +2644,10 @@
     );
   }
 
-  /* =======================================================
+
+  /* =========================================================
      INVENTÁRIO
-     ======================================================= */
+     ========================================================= */
 
   function renderInventory() {
     const root =
@@ -2487,7 +2674,9 @@
       0
     ) {
       root.innerHTML = `
-        <div class="empty-state">
+        <div
+          class="empty-state"
+        >
 
           <span>
             Inventário vazio.
@@ -2575,9 +2764,10 @@
     );
   }
 
-  /* =======================================================
+
+  /* =========================================================
      COMBATE
-     ======================================================= */
+     ========================================================= */
 
   function renderCombat() {
     const combat =
@@ -2603,7 +2793,7 @@
     if (movement) {
       movement.textContent =
         combat.movement ==
-          null
+        null
           ? "—"
           : `${combat.movement} m`;
     }
@@ -2616,7 +2806,7 @@
     if (air) {
       air.textContent =
         combat.air ==
-          null
+        null
           ? "—"
           : `${combat.air} m`;
     }
@@ -2629,7 +2819,7 @@
     if (aquatic) {
       aquatic.textContent =
         combat.aquatic ==
-          null
+        null
           ? "—"
           : `${combat.aquatic} m`;
     }
@@ -2647,9 +2837,10 @@
     }
   }
 
-  /* =======================================================
+
+  /* =========================================================
      REVISÃO
-     ======================================================= */
+     ========================================================= */
 
   function renderReview() {
     const race =
@@ -2735,11 +2926,11 @@
     ).forEach(
       element => {
         const appearance =
-          lastState
-            .appearance ||
+          lastState.appearance ||
           {};
 
-        const lines = [];
+        const lines =
+          [];
 
         if (
           appearance.hair
@@ -2820,8 +3011,7 @@
         );
 
       const attributes =
-        lastState
-          .effectiveAttributes ||
+        lastState.effectiveAttributes ||
         {};
 
       attributesRoot.innerHTML =
@@ -2832,6 +3022,20 @@
                 attributes[
                   attribute.id
                 ];
+
+              const dieId =
+                data?.dieId ||
+                data?.die ||
+                null;
+
+              const die =
+                getConstants(
+                  "DICE"
+                ).find(
+                  item =>
+                    item.id ===
+                    dieId
+                );
 
               return `
                 <div
@@ -2846,8 +3050,8 @@
 
                   <strong>
                     ${
-                      data?.die
-                        ? `D${data.sides}`
+                      die
+                        ? `D${die.sides}`
                         : "—"
                     }
                   </strong>
@@ -2868,26 +3072,12 @@
           )
           .join("");
     }
-
-    renderReviewAvatarText();
   }
 
-  function renderReviewAvatarText() {
-    const name =
-      $(
-        '[data-review="name"]'
-      );
 
-    if (name) {
-      name.title =
-        lastState.name ||
-        "Sem nome";
-    }
-  }
-
-  /* =======================================================
+  /* =========================================================
      NAVEGAÇÃO
-     ======================================================= */
+     ========================================================= */
 
   function renderNavigation() {
     const current =
@@ -2920,16 +3110,158 @@
     ).forEach(
       button => {
         button.textContent =
-          current >= 10
+          current >=
+          10
             ? "Finalizar"
             : "Próximo →";
       }
     );
   }
 
-  /* =======================================================
+
+  /* =========================================================
+     INTERAÇÕES VISUAIS
+     ========================================================= */
+
+  function initializeDynamicVisuals() {
+    initializeRaceDescription();
+    initializeAttributeDropZones();
+  }
+
+
+  /* =========================================================
+     DESCRIÇÃO DA RAÇA
+     ========================================================= */
+
+  function initializeRaceDescription() {
+    const raceCard =
+      $("#raceCard");
+
+    if (
+      !raceCard ||
+      raceCard.dataset
+        .rendererBound ===
+        "true"
+    ) {
+      return;
+    }
+
+    raceCard.dataset
+      .rendererBound =
+      "true";
+
+    raceCard.addEventListener(
+      "click",
+      event => {
+        /*
+         * Botões internos pertencem ao
+         * sistema principal.
+         */
+        if (
+          event.target.closest(
+            "button"
+          )
+        ) {
+          return;
+        }
+
+        const description =
+          $(
+            "#raceDescription"
+          );
+
+        if (!description) {
+          return;
+        }
+
+        const isClosed =
+          description.hidden;
+
+        description.hidden =
+          !isClosed;
+
+        description.dataset.open =
+          isClosed
+            ? "true"
+            : "false";
+      }
+    );
+  }
+
+
+  /* =========================================================
+     DROP ZONES
+     ========================================================= */
+
+  function initializeAttributeDropZones() {
+    /*
+     * O CSS pode usar .drag-over.
+     * A lógica real de drop fica no ficha.js.
+     *
+     * Aqui somente garantimos feedback visual.
+     */
+    $(
+      "[data-attribute-drop]"
+    );
+
+    $(
+      "[data-attribute-drop]"
+    ).forEach(
+      element => {
+        if (
+          element.dataset
+            .rendererDropBound ===
+          "true"
+        ) {
+          return;
+        }
+
+        element.dataset
+          .rendererDropBound =
+          "true";
+
+        element.addEventListener(
+          "dragenter",
+          () => {
+            element.classList.add(
+              "drag-over"
+            );
+          }
+        );
+
+        element.addEventListener(
+          "dragleave",
+          event => {
+            if (
+              element.contains(
+                event.relatedTarget
+              )
+            ) {
+              return;
+            }
+
+            element.classList.remove(
+              "drag-over"
+            );
+          }
+        );
+
+        element.addEventListener(
+          "drop",
+          () => {
+            element.classList.remove(
+              "drag-over"
+            );
+          }
+        );
+      }
+    );
+  }
+
+
+  /* =========================================================
      ACESSIBILIDADE
-     ======================================================= */
+     ========================================================= */
 
   function announce(
     message
@@ -2946,6 +3278,9 @@
       live.id =
         "aerionLiveRegion";
 
+      live.className =
+        "visually-hidden";
+
       live.setAttribute(
         "aria-live",
         "polite"
@@ -2956,89 +3291,23 @@
         "true"
       );
 
-      live.className =
-        "visually-hidden";
-
       document.body.appendChild(
         live
       );
     }
 
     live.textContent =
-      message;
+      String(message);
   }
 
-  /* =======================================================
-     EVENTOS VISUAIS DO RENDERER
-     ======================================================= */
 
-  function initRendererEvents() {
-    /*
-     * Clique na imagem da raça:
-     * abre/fecha a descrição.
-     */
-    const raceCard =
-      $("#raceCard");
-
-    if (
-      raceCard &&
-      !raceCard.dataset
-        .rendererBound
-    ) {
-      raceCard.dataset
-        .rendererBound =
-        "true";
-
-      raceCard.addEventListener(
-        "click",
-        event => {
-          /*
-           * Não intercepta botões internos.
-           */
-          if (
-            event.target.closest(
-              "button"
-            )
-          ) {
-            return;
-          }
-
-          const description =
-            $(
-              "#raceDescription"
-            );
-
-          if (!description) {
-            return;
-          }
-
-          const open =
-            description.hidden;
-
-          description.hidden =
-            !open;
-
-          description.dataset.open =
-            open
-              ? "true"
-              : "false";
-
-          announce(
-            open
-              ? "Descrição da raça aberta."
-              : "Descrição da raça fechada."
-          );
-        }
-      );
-    }
-  }
-
-  /* =======================================================
+  /* =========================================================
      API
-     ======================================================= */
+     ========================================================= */
 
   window.AERIONFichaRender =
     Object.freeze({
+
       render,
 
       toast,
@@ -3064,7 +3333,7 @@
       renderClasses,
 
       renderAttributes,
-      renderDice,
+      renderDicePool,
       renderAttributeCards,
       renderRadar,
 
@@ -3080,12 +3349,14 @@
 
       renderNavigation,
 
-      initRendererEvents
+      initializeDynamicVisuals
+
     });
 
-  /* =======================================================
-     INICIALIZAÇÃO DO RENDERER
-     ======================================================= */
+
+  /* =========================================================
+     INICIALIZAÇÃO
+     ========================================================= */
 
   if (
     document.readyState ===
@@ -3093,14 +3364,16 @@
   ) {
     document.addEventListener(
       "DOMContentLoaded",
-      initRendererEvents,
+      initializeDynamicVisuals,
       {
-        once: true
+        once:
+          true
       }
     );
   } else {
-    initRendererEvents();
+    initializeDynamicVisuals();
   }
+
 
   console.info(
     "[AERION] ficha-render.js carregado."
