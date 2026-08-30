@@ -3,15 +3,15 @@
    js/core/ficha-render.js
 
    RESPONSABILIDADE:
-   - Renderização visual da ficha
-   - Interface
-   - Raças
+   - Apenas renderização visual da ficha
+   - Atualização de textos
+   - Cards
+   - Raça
    - Animalha
    - Aparência
-   - Modelo 2D
-   - Classes
-   - Atributos
-   - Radar
+   - Classe
+   - ATRIBUTOS
+   - RADAR
    - Poder
    - Mana
    - Perícias
@@ -21,19 +21,17 @@
    - Revisão
    - Navegação
 
-   IMPORTANTE:
-   A lógica dos dados pertence ao ficha.js.
-   Este arquivo apenas DESENHA os dados.
+   NÃO RESPONSÁVEL POR:
+   - Regras dos dados
+   - Controle dos dados
+   - IDs dos dados
+   - Distribuição dos dados
+   - Seleção de dados
+   - Devolução de dados
+   - Validação dos dados
 
-   Cada dado possui ID individual:
-   - d4-1
-   - d6-1
-   - d6-2
-   - d8-1
-   - d10-1
-   - d12-1
-   - d20-1
-   - d20-2
+   Toda a lógica dos dados pertence ao:
+   js/core/ficha.js
 
    ========================================================= */
 
@@ -57,7 +55,9 @@
   }
 
   function $$(selector, root = document) {
-    return [...root.querySelectorAll(selector)];
+    return Array.from(
+      root.querySelectorAll(selector)
+    );
   }
 
 
@@ -99,10 +99,7 @@
   }
 
   function getConstants(name) {
-    return (
-      getCore()?.constants?.[name] ||
-      []
-    );
+    return getCore()?.constants?.[name] || [];
   }
 
 
@@ -114,20 +111,14 @@
     message,
     duration = 2200
   ) {
-    let element =
-      $("#toast");
+    let element = $("#toast");
 
     if (!element) {
       element =
-        document.createElement(
-          "div"
-        );
+        document.createElement("div");
 
-      element.id =
-        "toast";
-
-      element.className =
-        "toast";
+      element.id = "toast";
+      element.className = "toast";
 
       document.body.appendChild(
         element
@@ -137,27 +128,21 @@
     element.textContent =
       String(message);
 
-    element.hidden =
-      false;
+    element.hidden = false;
 
     clearTimeout(
       element.__aerionTimer
     );
 
     element.__aerionTimer =
-      setTimeout(
-        () => {
-          element.hidden =
-            true;
-        },
-
-        duration
-      );
+      setTimeout(() => {
+        element.hidden = true;
+      }, duration);
   }
 
 
   /* =========================================================
-     RENDER GERAL
+     RENDER PRINCIPAL
      ========================================================= */
 
   function render(state) {
@@ -165,8 +150,7 @@
       return;
     }
 
-    lastState =
-      state;
+    lastState = state;
 
     renderProgress();
     renderPanels();
@@ -194,7 +178,7 @@
 
     renderNavigation();
 
-    initializeDynamicVisuals();
+    initializeVisualBindings();
   }
 
 
@@ -205,9 +189,9 @@
   function renderProgress() {
     const progress =
       lastState.progress || {
-        percent: 0,
         completed: 0,
-        total: 11
+        total: 11,
+        percent: 0
       };
 
     const percent =
@@ -234,11 +218,11 @@
       );
     }
 
-    const percentage =
+    const percentElement =
       $("#progressPercent");
 
-    if (percentage) {
-      percentage.textContent =
+    if (percentElement) {
+      percentElement.textContent =
         `${percent}%`;
     }
 
@@ -253,11 +237,11 @@
       ]?.name ||
       "Identidade";
 
-    const progressTitle =
+    const titleElement =
       $("#progressTitle");
 
-    if (progressTitle) {
-      progressTitle.textContent =
+    if (titleElement) {
+      titleElement.textContent =
         title;
     }
 
@@ -323,17 +307,18 @@
       );
   }
 
+
   function isStepCompleteVisual(
     index
   ) {
-    const step =
+    const currentStep =
       Number(
         lastState.step
       ) || 0;
 
     if (
       index <
-      step
+      currentStep
     ) {
       return true;
     }
@@ -369,14 +354,15 @@
         );
 
       case 4:
-        return Boolean(
+        return (
           lastState.effectiveAttributes &&
           Object.values(
             lastState.effectiveAttributes
           ).every(
             attribute =>
               Boolean(
-                attribute?.die
+                attribute?.die ||
+                attribute?.dieId
               )
           )
         );
@@ -408,12 +394,12 @@
     }
   }
 
+
   function isStepUnlockedVisual(
     index
   ) {
     if (
-      index <=
-      0
+      index <= 0
     ) {
       return true;
     }
@@ -434,7 +420,10 @@
         lastState.step
       ) || 0;
 
-    lastState.steps?.forEach(
+    (
+      lastState.steps ||
+      []
+    ).forEach(
       (
         step,
         index
@@ -537,7 +526,7 @@
     }
 
     element.value =
-      value || "";
+      value ?? "";
   }
 
 
@@ -556,7 +545,7 @@
     const placeholder =
       $("#avatarPlaceholder");
 
-    const remove =
+    const removeButton =
       $("#removeAvatarButton");
 
     if (image) {
@@ -583,41 +572,41 @@
         );
     }
 
-    if (remove) {
-      remove.disabled =
+    if (removeButton) {
+      removeButton.disabled =
         !Boolean(
           avatar
         );
     }
 
-    const reviewAvatar =
+    const reviewImage =
       $("#reviewAvatar");
 
-    const fallback =
+    const reviewFallback =
       $("#reviewAvatarFallback");
 
     if (
-      reviewAvatar &&
-      fallback
+      reviewImage &&
+      reviewFallback
     ) {
       if (avatar) {
-        reviewAvatar.src =
+        reviewImage.src =
           avatar;
 
-        reviewAvatar.hidden =
+        reviewImage.hidden =
           false;
 
-        fallback.hidden =
+        reviewFallback.hidden =
           true;
       } else {
-        reviewAvatar.removeAttribute(
+        reviewImage.removeAttribute(
           "src"
         );
 
-        reviewAvatar.hidden =
+        reviewImage.hidden =
           true;
 
-        fallback.hidden =
+        reviewFallback.hidden =
           false;
       }
     }
@@ -636,6 +625,9 @@
       return;
     }
 
+    const imageElement =
+      $("#raceImage");
+
     const gender =
       lastState.gender;
 
@@ -645,54 +637,39 @@
         ? race.female
         : race.male;
 
-    const imageElement =
-      $("#raceImage");
-
     if (imageElement) {
-      if (image) {
-        imageElement.src =
-          image;
-
-        imageElement.alt =
-          `${race.name}${
-            gender
-              ? ` — ${gender}`
-              : ""
-          }`;
-
-        imageElement.hidden =
-          false;
-      } else {
-        imageElement.removeAttribute(
-          "src"
-        );
-
-        imageElement.hidden =
-          true;
-      }
+      updateImageSource(
+        imageElement,
+        image,
+        `${race.name}${
+          gender
+            ? ` — ${gender}`
+            : ""
+        }`
+      );
     }
 
-    const name =
+    const nameElement =
       $("#raceName");
 
-    if (name) {
-      name.textContent =
+    if (nameElement) {
+      nameElement.textContent =
         race.name;
     }
 
-    const short =
+    const shortDescription =
       $("#raceShortDescription");
 
-    if (short) {
-      short.textContent =
+    if (shortDescription) {
+      shortDescription.textContent =
         race.description ||
         "";
     }
 
-    const label =
+    const genderLabel =
       $("#raceGenderLabel");
 
-    if (label) {
+    if (genderLabel) {
       const genderText =
         gender ===
         "feminino"
@@ -702,24 +679,24 @@
             ? "Masculino"
             : "";
 
-      label.textContent =
+      genderLabel.textContent =
         genderText
           ? `${race.name} · ${genderText}`
           : race.name;
     }
 
-    const descTitle =
+    const descriptionTitle =
       $("#raceDescriptionTitle");
 
-    if (descTitle) {
-      descTitle.textContent =
+    if (descriptionTitle) {
+      descriptionTitle.textContent =
         race.name;
     }
 
-    const descText =
+    const descriptionText =
       $("#raceDescriptionText");
 
-    if (descText) {
+    if (descriptionText) {
       const parts =
         [];
 
@@ -747,7 +724,7 @@
         );
       }
 
-      descText.textContent =
+      descriptionText.textContent =
         parts.join(
           " "
         );
@@ -812,25 +789,141 @@
           "go-race-index";
 
         button.dataset.raceIndex =
-          String(
-            index
-          );
+          String(index);
 
         button.setAttribute(
           "aria-label",
           race.name
         );
 
-        button.setAttribute(
-          "title",
-          race.name
-        );
+        button.title =
+          race.name;
 
         container.appendChild(
           button
         );
       }
     );
+  }
+
+
+  /* =========================================================
+     CARREGAMENTO DE IMAGENS
+     ========================================================= */
+
+  function updateImageSource(
+    imageElement,
+    source,
+    alt = ""
+  ) {
+    if (!imageElement) {
+      return;
+    }
+
+    imageElement.alt =
+      alt;
+
+    if (!source) {
+      imageElement.removeAttribute(
+        "src"
+      );
+
+      imageElement.hidden =
+        true;
+
+      imageElement.classList.remove(
+        "image-loading",
+        "image-loaded",
+        "image-error"
+      );
+
+      imageElement.removeAttribute(
+        "data-image-loading"
+      );
+
+      return;
+    }
+
+    /*
+     * Evita reiniciar o carregamento
+     * se a mesma imagem já está na tela.
+     */
+    if (
+      imageElement.dataset
+        .loadedSrc ===
+      source
+    ) {
+      return;
+    }
+
+    imageElement.classList.remove(
+      "image-error"
+    );
+
+    imageElement.classList.add(
+      "image-loading"
+    );
+
+    imageElement.dataset
+      .imageLoading =
+      "true";
+
+    imageElement.hidden =
+      false;
+
+    imageElement.src =
+      source;
+
+    imageElement.dataset
+      .loadedSrc =
+      source;
+
+    if (
+      imageElement.dataset
+        .aerionImageBound !==
+      "true"
+    ) {
+      imageElement.dataset
+        .aerionImageBound =
+        "true";
+
+      imageElement.addEventListener(
+        "load",
+        () => {
+          imageElement.classList.remove(
+            "image-loading"
+          );
+
+          imageElement.classList.add(
+            "image-loaded"
+          );
+
+          imageElement.dataset
+            .imageLoading =
+            "false";
+        }
+      );
+
+      imageElement.addEventListener(
+        "error",
+        () => {
+          imageElement.classList.remove(
+            "image-loading"
+          );
+
+          imageElement.classList.add(
+            "image-error"
+          );
+
+          imageElement.dataset
+            .imageLoading =
+            "false";
+
+          imageElement.hidden =
+            false;
+        }
+      );
+    }
   }
 
 
@@ -893,9 +986,7 @@
 
       </div>
 
-      <div
-        class="animalha-grid"
-      >
+      <div class="animalha-grid">
 
         ${variants.map(
           variant => `
@@ -954,7 +1045,8 @@
   ) {
     const value =
       String(
-        category || ""
+        category ||
+          ""
       ).toLowerCase();
 
     if (
@@ -1007,10 +1099,22 @@
         race?.height?.max
       ) || 0;
 
-    const height =
+    const currentHeight =
       Number(
         appearance.height
-      ) || 0;
+      ) ||
+      (
+        min &&
+        max
+          ? Math.round(
+              (
+                min +
+                max
+              ) /
+                2
+            )
+          : 0
+      );
 
     const range =
       $("#heightRange");
@@ -1030,17 +1134,17 @@
 
       range.value =
         String(
-          height
+          currentHeight
         );
     }
 
-    const value =
+    const heightValue =
       $("#appearanceHeightValue");
 
-    if (value) {
-      value.textContent =
+    if (heightValue) {
+      heightValue.textContent =
         formatHeight(
-          height
+          currentHeight
         );
     }
 
@@ -1083,23 +1187,23 @@
     renderAppearanceFields();
     renderAnimalhaEditor();
 
-    const flight =
+    const flightStatus =
       $(
         "[data-flight-status]"
       );
 
-    if (flight) {
+    if (flightStatus) {
       const canFly =
         Boolean(
           race?.flight
         );
 
-      flight.textContent =
+      flightStatus.textContent =
         canFly
           ? "Voo disponível"
           : "Voo indisponível";
 
-      flight.classList.toggle(
+      flightStatus.classList.toggle(
         "available",
         canFly
       );
@@ -1190,7 +1294,7 @@
 
 
   /* =========================================================
-     MODELO 2D
+     MODELO 2D TEMPORÁRIO
      ========================================================= */
 
   function renderCharacterModel() {
@@ -1226,7 +1330,8 @@
         (
           min +
           max
-        ) / 2
+        ) /
+          2
       );
 
     const normalized =
@@ -1247,11 +1352,6 @@
         )
       );
 
-    /*
-     * Escala visual somente.
-     *
-     * Não representa centímetros diretamente.
-     */
     const visualScale =
       0.88 +
       normalized *
@@ -1293,19 +1393,14 @@
     container.classList.toggle(
       "appearance-figure--female",
       lastState.gender ===
-      "feminino"
+        "feminino"
     );
 
     container.classList.toggle(
       "appearance-figure--male",
       lastState.gender !==
-      "feminino"
+        "feminino"
     );
-
-    /*
-     * As partes especiais podem existir
-     * no SVG/HTML modular.
-     */
 
     const wings =
       container.querySelector(
@@ -1393,23 +1488,16 @@
                     skillId,
                     amount
                   ]) => {
-                    const skills =
+                    const skill =
                       getConstants(
                         "SKILLS"
-                      );
-
-                    const skill =
-                      skills[
+                      )[
                         skillId
                       ];
 
-                    if (
-                      skill?.name
-                    ) {
-                      return `${skill.name} +${amount}`;
-                    }
-
-                    return "";
+                    return skill?.name
+                      ? `${skill.name} +${amount}`
+                      : "";
                   }
                 )
                 .filter(
@@ -1455,20 +1543,26 @@
      ========================================================= */
 
   function renderAttributes() {
-    renderDicePool();
+    renderDice();
+
     renderAttributeCards();
+
     renderRadar();
   }
 
 
   /* =========================================================
-     POOL DE DADOS
+     DADOS
      
-     O ficha.js é a autoridade.
-     Aqui só desenhamos.
+     ATENÇÃO:
+     Este código NÃO decide disponibilidade.
+     O ficha.js já entrega exatamente quais dados
+     existem e onde estão.
+
+     Aqui apenas mostramos.
      ========================================================= */
 
-  function renderDicePool() {
+  function renderDice() {
     const root =
       $(
         "[data-dice-pool]"
@@ -1479,60 +1573,36 @@
     }
 
     const dice =
-      getConstants(
-        "DICE"
-      );
-
-    const attributes =
-      lastState.effectiveAttributes ||
-      {};
-
-    /*
-     * Conjunto dos IDs realmente usados.
-     */
-    const assignedIds =
-      new Set();
-
-    Object.values(
-      attributes
-    ).forEach(
-      attribute => {
-        if (
-          attribute?.dieId ||
-          attribute?.die
-        ) {
-          assignedIds.add(
-            attribute.dieId ||
-            attribute.die
-          );
-        }
-      }
-    );
+      Array.isArray(
+        lastState.dice
+      )
+        ? lastState.dice
+        : [];
 
     root.innerHTML =
       "";
 
     /*
-     * Cada dado individual possui seu
-     * próprio ID.
+     * O estado recebido pelo ficha.js
+     * já contém:
+     *
+     * id
+     * type
+     * sides
+     * available
+     * assigned
+     * assignedTo
+     *
+     * Portanto não recalculamos nada aqui.
      */
     dice.forEach(
       die => {
-        const assigned =
-          assignedIds.has(
-            die.id
-          );
-
         /*
-         * Dados já usados não desaparecem
-         * silenciosamente.
-         *
-         * Eles continuam registrados no
-         * estado, mas o pool mostra somente
-         * os disponíveis.
+         * Mostramos somente o que está
+         * disponível para seleção.
          */
         if (
-          assigned
+          die.assigned
         ) {
           return;
         }
@@ -1546,22 +1616,28 @@
           "button";
 
         button.className =
-          `dice-card ${
-            lastState.selectedDie ===
-            die.id
-              ? "dice-selected"
-              : ""
-          }`;
+          "dice-card";
+
+        if (
+          lastState.selectedDie ===
+          die.id
+        ) {
+          button.classList.add(
+            "dice-selected"
+          );
+        }
 
         button.dataset.die =
           die.id;
 
         button.dataset.dieType =
-          die.type;
+          die.type ||
+          "";
 
         button.dataset.dieSides =
           String(
-            die.sides
+            die.sides ||
+              ""
           );
 
         button.draggable =
@@ -1572,10 +1648,8 @@
           `D${die.sides}`
         );
 
-        button.setAttribute(
-          "title",
-          `D${die.sides}`
-        );
+        button.title =
+          `D${die.sides}`;
 
         button.innerHTML = `
           <span
@@ -1618,9 +1692,6 @@
       }
     );
 
-    /*
-     * Caso não exista mais nenhum dado disponível.
-     */
     if (
       root.children.length ===
       0
@@ -1644,7 +1715,7 @@
 
 
   /* =========================================================
-     CARDS DOS ATRIBUTOS
+     CARDS DE ATRIBUTOS
      ========================================================= */
 
   function renderAttributeCards() {
@@ -1666,10 +1737,20 @@
             return;
           }
 
+          const dieId =
+            data.dieId ||
+            data.die ||
+            null;
+
+          const sides =
+            Number(
+              data.sides
+            ) || 0;
+
           card.classList.toggle(
             "has-die",
             Boolean(
-              data.die
+              dieId
             )
           );
 
@@ -1680,29 +1761,14 @@
             )
           );
 
+          card.dataset.dieId =
+            dieId ||
+            "";
+
           /*
-           * Descobrimos o ID individual
-           * do dado.
+           * Mantém a área de dado existente
+           * como alvo visual.
            */
-          const dieId =
-            data.dieId ||
-            data.die ||
-            null;
-
-          const die =
-            dieId
-              ? (
-                  getConstants(
-                    "DICE"
-                  ).find(
-                    item =>
-                      item.id ===
-                      dieId
-                  ) ||
-                  null
-                )
-              : null;
-
           const dieElement =
             card.querySelector(
               "[data-attribute-die]"
@@ -1710,19 +1776,17 @@
 
           if (dieElement) {
 
-            /*
-             * O atributo recebe o ID individual.
-             *
-             * Isso permite clicar nele para devolver.
-             */
+            dieElement.dataset.attribute =
+              id;
+
             dieElement.dataset.die =
               dieId ||
               "";
 
-            dieElement.dataset.attribute =
-              id;
-
-            if (die) {
+            if (
+              dieId &&
+              sides
+            ) {
               dieElement.innerHTML = `
                 <button
                   type="button"
@@ -1731,10 +1795,11 @@
                   data-attribute="${escapeHtml(
                     id
                   )}"
-                  aria-label="Devolver D${die.sides} de ${escapeHtml(
-                    data.name
+                  aria-label="Devolver D${sides} de ${escapeHtml(
+                    data.name ||
+                    id
                   )}"
-                  title="Devolver D${die.sides}"
+                  title="Devolver D${sides}"
                 >
 
                   <span
@@ -1765,7 +1830,7 @@
                     </svg>
 
                     <span>
-                      D${die.sides}
+                      D${sides}
                     </span>
 
                   </span>
@@ -1777,19 +1842,11 @@
                 <span
                   class="attribute-empty-die"
                 >
-                  Nenhum dado
+                  Solte um dado aqui
                 </span>
               `;
             }
           }
-
-          /*
-           * Também atualiza o fallback,
-           * caso o botão não use data-attribute-die.
-           */
-          card.dataset.dieId =
-            dieId ||
-            "";
 
           const value =
             card.querySelector(
@@ -1808,23 +1865,26 @@
             );
 
           if (modifier) {
+            const racialModifier =
+              Number(
+                data.racialModifier
+              ) || 0;
+
             modifier.textContent =
               formatSigned(
-                data.racialModifier
+                racialModifier
               );
 
             modifier.classList.toggle(
               "positive",
-              Number(
-                data.racialModifier
-              ) > 0
+              racialModifier >
+                0
             );
 
             modifier.classList.toggle(
               "negative",
-              Number(
-                data.racialModifier
-              ) < 0
+              racialModifier <
+                0
             );
           }
 
@@ -1852,9 +1912,6 @@
               !dieId;
           }
 
-          /*
-           * Texto auxiliar opcional.
-           */
           const dieLabel =
             card.querySelector(
               "[data-attribute-die-label]"
@@ -1862,8 +1919,8 @@
 
           if (dieLabel) {
             dieLabel.textContent =
-              die
-                ? `D${die.sides}`
+              sides
+                ? `D${sides}`
                 : "";
           }
         }
@@ -1930,10 +1987,7 @@
       150;
 
     const count =
-      Math.max(
-        definitions.length,
-        1
-      );
+      definitions.length;
 
     function point(
       index,
@@ -1970,9 +2024,6 @@
     let grid =
       "";
 
-    /*
-     * Grades.
-     */
     for (
       let level = 1;
       level <= 4;
@@ -2008,9 +2059,6 @@
       `;
     }
 
-    /*
-     * Eixos.
-     */
     definitions.forEach(
       (
         _attribute,
@@ -2039,9 +2087,6 @@
       }
     );
 
-    /*
-     * Polígono do personagem.
-     */
     const polygon =
       values
         .map(
@@ -2061,9 +2106,6 @@
         )
         .join(" ");
 
-    /*
-     * Labels.
-     */
     const labels =
       definitions
         .map(
@@ -2103,7 +2145,7 @@
         class="radar-svg"
         viewBox="0 0 420 420"
         role="img"
-        aria-label="Perfil dos oito atributos"
+        aria-label="Perfil dos atributos"
       >
 
         ${grid}
@@ -2236,7 +2278,8 @@
         card => {
           const mana =
             String(
-              card.dataset.mana ||
+              card.dataset
+                .mana ||
                 ""
             ).toLowerCase();
 
@@ -2403,9 +2446,7 @@
                 )}
               </strong>
 
-              <small
-                data-class-skill-bonus
-              >
+              <small>
                 ${
                   classBonus
                     ? `Classe +${classBonus}`
@@ -2793,7 +2834,7 @@
     if (movement) {
       movement.textContent =
         combat.movement ==
-        null
+          null
           ? "—"
           : `${combat.movement} m`;
     }
@@ -2806,7 +2847,7 @@
     if (air) {
       air.textContent =
         combat.air ==
-        null
+          null
           ? "—"
           : `${combat.air} m`;
     }
@@ -2819,7 +2860,7 @@
     if (aquatic) {
       aquatic.textContent =
         combat.aquatic ==
-        null
+          null
           ? "—"
           : `${combat.aquatic} m`;
     }
@@ -3014,6 +3055,13 @@
         lastState.effectiveAttributes ||
         {};
 
+      const dice =
+        Array.isArray(
+          lastState.dice
+        )
+          ? lastState.dice
+          : [];
+
       attributesRoot.innerHTML =
         definitions
           .map(
@@ -3029,9 +3077,7 @@
                 null;
 
               const die =
-                getConstants(
-                  "DICE"
-                ).find(
+                dice.find(
                   item =>
                     item.id ===
                     dieId
@@ -3120,12 +3166,12 @@
 
 
   /* =========================================================
-     INTERAÇÕES VISUAIS
+     LIGAÇÕES VISUAIS
      ========================================================= */
 
-  function initializeDynamicVisuals() {
+  function initializeVisualBindings() {
     initializeRaceDescription();
-    initializeAttributeDropZones();
+    initializeImageLoading();
   }
 
 
@@ -3140,14 +3186,14 @@
     if (
       !raceCard ||
       raceCard.dataset
-        .rendererBound ===
-        "true"
+        .descriptionBound ===
+      "true"
     ) {
       return;
     }
 
     raceCard.dataset
-      .rendererBound =
+      .descriptionBound =
       "true";
 
     raceCard.addEventListener(
@@ -3155,7 +3201,7 @@
       event => {
         /*
          * Botões internos pertencem ao
-         * sistema principal.
+         * sistema de eventos principal.
          */
         if (
           event.target.closest(
@@ -3174,14 +3220,14 @@
           return;
         }
 
-        const isClosed =
+        const open =
           description.hidden;
 
         description.hidden =
-          !isClosed;
+          !open;
 
         description.dataset.open =
-          isClosed
+          open
             ? "true"
             : "false";
       }
@@ -3190,67 +3236,51 @@
 
 
   /* =========================================================
-     DROP ZONES
+     IMAGENS
      ========================================================= */
 
-  function initializeAttributeDropZones() {
-    /*
-     * O CSS pode usar .drag-over.
-     * A lógica real de drop fica no ficha.js.
-     *
-     * Aqui somente garantimos feedback visual.
-     */
-    $(
-      "[data-attribute-drop]"
-    );
+  function initializeImageLoading() {
+    const images =
+      $$(
+        "img"
+      );
 
-    $(
-      "[data-attribute-drop]"
-    ).forEach(
-      element => {
+    images.forEach(
+      image => {
         if (
-          element.dataset
-            .rendererDropBound ===
+          image.dataset
+            .imageLoadingBound ===
           "true"
         ) {
           return;
         }
 
-        element.dataset
-          .rendererDropBound =
+        image.dataset
+          .imageLoadingBound =
           "true";
 
-        element.addEventListener(
-          "dragenter",
+        image.addEventListener(
+          "load",
           () => {
-            element.classList.add(
-              "drag-over"
+            image.classList.remove(
+              "image-loading"
+            );
+
+            image.classList.add(
+              "image-loaded"
             );
           }
         );
 
-        element.addEventListener(
-          "dragleave",
-          event => {
-            if (
-              element.contains(
-                event.relatedTarget
-              )
-            ) {
-              return;
-            }
-
-            element.classList.remove(
-              "drag-over"
-            );
-          }
-        );
-
-        element.addEventListener(
-          "drop",
+        image.addEventListener(
+          "error",
           () => {
-            element.classList.remove(
-              "drag-over"
+            image.classList.remove(
+              "image-loading"
+            );
+
+            image.classList.add(
+              "image-error"
             );
           }
         );
@@ -3333,7 +3363,7 @@
       renderClasses,
 
       renderAttributes,
-      renderDicePool,
+      renderDice,
       renderAttributeCards,
       renderRadar,
 
@@ -3349,8 +3379,7 @@
 
       renderNavigation,
 
-      initializeDynamicVisuals
-
+      initializeVisualBindings
     });
 
 
@@ -3364,14 +3393,14 @@
   ) {
     document.addEventListener(
       "DOMContentLoaded",
-      initializeDynamicVisuals,
+      initializeVisualBindings,
       {
         once:
           true
       }
     );
   } else {
-    initializeDynamicVisuals();
+    initializeVisualBindings();
   }
 
 
