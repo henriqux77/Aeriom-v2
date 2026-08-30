@@ -3193,14 +3193,13 @@
           card.disabled =
             exhausted;
 
-
-          card.setAttribute(
-            "aria-disabled",
-            String(
-              exhausted
-            );
-
-          });
+          
+card.setAttribute(
+  "aria-disabled",
+  String(
+    exhausted
+  )
+);
 
 
           card.classList.toggle(
@@ -6007,3 +6006,4 @@
   }
 
 })();
+
