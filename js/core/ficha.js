@@ -119,7 +119,31 @@
     d12: 1,
     d20: 2
   });
+/* =========================================================
+   DADOS INDIVIDUAIS DA FICHA
+========================================================= */
 
+const ATTRIBUTE_ORDER = Object.freeze([
+  "forca",
+  "vigor",
+  "agilidade",
+  "precisao",
+  "intelecto",
+  "controle",
+  "presenca",
+  "percepcao"
+]);
+
+const DICE_POOL = Object.freeze([
+  { id: "d4-1", sides: 4 },
+  { id: "d6-1", sides: 6 },
+  { id: "d6-2", sides: 6 },
+  { id: "d8-1", sides: 8 },
+  { id: "d10-1", sides: 10 },
+  { id: "d12-1", sides: 12 },
+  { id: "d20-1", sides: 20 },
+  { id: "d20-2", sides: 20 }
+]);
 
   /* =========================================================
      RAÇAS
@@ -517,7 +541,24 @@
 
   }
 
+function getDieById(dieId) {
+  return DICE_POOL.find(
+    die => die.id === dieId
+  ) || null;
+}
+  function getUsedDieIds() {
+  const used = new Set();
 
+  Object.values(state.attributes || {}).forEach(
+    dieId => {
+      if (dieId) {
+        used.add(dieId);
+      }
+    }
+  );
+
+  return used;
+}
   function clamp(
     value,
     min,
@@ -3121,112 +3162,265 @@
   }
 
 
-  function updateDiceCards() {
+ function updateDiceCards() {
+  const container =
+    $("#dicePool");
 
-    const usage =
-      getDiceUsage();
+  if (!container) {
+    return;
+  }
 
+  const usedDice =
+    getUsedDieIds();
 
-    $$(".dice-card[data-die]")
-      .forEach(
-        card => {
+  container.innerHTML = "";
 
-          const die =
-            safeText(
-              card.dataset.die
-            )
-            .toLowerCase();
+  DICE_POOL.forEach(die => {
+    if (usedDice.has(die.id)) {
+      return;
+    }
 
+    const card =
+      document.createElement("button");
 
-          const max =
-            DICE_LIMITS[
-              die
-            ] || 0;
+    card.type = "button";
+    card.className = "attribute-die";
+    card.draggable = true;
 
+    card.dataset.dieId =
+      die.id;
 
-          const used =
-            usage[
-              die
-            ] || 0;
+    card.dataset.sides =
+      String(die.sides);
 
+    card.textContent =
+      `D${die.sides}`;
 
-          const remaining =
-            Math.max(
-              0,
-              max -
-              used
-            );
+    card.addEventListener(
+      "click",
+      () => {
+        openAttributePicker(
+          die.id
+        );
+      }
+    );
+function assignDieToAttribute(
+  dieId,
+  attribute
+) {
+  const die =
+    getDieById(dieId);
 
+  if (!die) {
+    return false;
+  }
 
-          const remainingElement =
-            card.querySelector(
-              ".dice-remaining"
-            );
+  if (
+    !ATTRIBUTE_ORDER.includes(
+      attribute
+    )
+  ) {
+    return false;
+  }
 
+  /*
+   * Se o atributo já possui um dado,
+   * não substituímos automaticamente.
+   */
+  if (
+    state.attributes[attribute]
+  ) {
+    showToast(
+      "Esse atributo já possui um dado."
+    );
 
-          if (
-            remainingElement
-          ) {
+    return false;
+  }
 
-            remainingElement.textContent =
-              remaining ===
-              1
+  /*
+   * O mesmo dado não pode existir
+   * em dois atributos.
+   */
+  const alreadyUsed =
+    Object.entries(
+      state.attributes
+    ).some(
+      ([key, value]) =>
+        key !== attribute &&
+        value === dieId
+    );
 
-                ? "1 disponível"
+  if (alreadyUsed) {
+    return false;
+  }
 
-                : `${remaining} disponíveis`;
+  state.attributes[attribute] =
+    dieId;
 
-          }
+  selectedDice = null;
 
+  updateDiceCards();
+  renderAttributeSlots();
+  renderAttributeChart();
 
-          const exhausted =
-            remaining ===
-            0;
+  scheduleSave();
 
+  return true;
+}
+    function removeDieFromAttribute(
+  attribute
+) {
+  if (
+    !ATTRIBUTE_ORDER.includes(
+      attribute
+    )
+  ) {
+    return;
+  }
 
-          card.classList.toggle(
-            "is-exhausted",
-            exhausted
+  state.attributes[attribute] =
+    null;
+
+  updateDiceCards();
+  renderAttributeSlots();
+  renderAttributeChart();
+
+  scheduleSave();
+}
+    card.addEventListener(
+      "dragstart",
+      event => {
+        event.dataTransfer.effectAllowed =
+          "move";
+
+        event.dataTransfer.setData(
+          "text/plain",
+          die.id
+        );
+
+        card.classList.add(
+          "is-dragging"
+        );
+      }
+    );
+function setupAttributeDropZones() {
+  $$(".attribute-slot").forEach(
+    slot => {
+
+      slot.addEventListener(
+        "dragover",
+        event => {
+          event.preventDefault();
+
+          slot.classList.add(
+            "is-drag-over"
           );
-
-
-          card.disabled =
-            exhausted;
-
-          
-card.setAttribute(
-  "aria-disabled",
-  String(
-    exhausted
-  )
-);
-
-
-          card.classList.toggle(
-            "is-selected",
-            selectedDice ===
-            die
-          );
-
         }
       );
 
+      slot.addEventListener(
+        "dragleave",
+        () => {
+          slot.classList.remove(
+            "is-drag-over"
+          );
+        }
+      );
 
-    if (
-      selectedDice &&
-      getRemainingDice(
-        selectedDice
-      ) <=
-      0
-    ) {
+      slot.addEventListener(
+        "drop",
+        event => {
+          event.preventDefault();
 
-      selectedDice =
-        null;
+          slot.classList.remove(
+            "is-drag-over"
+          );
 
+          const dieId =
+            event.dataTransfer.getData(
+              "text/plain"
+            );
+
+          const attribute =
+            slot.dataset.attribute;
+
+          if (!dieId || !attribute) {
+            return;
+          }
+
+          assignDieToAttribute(
+            dieId,
+            attribute
+          );
+        }
+      );
     }
+  );
+}
+    function renderAttributeSlots() {
+  $$(".attribute-slot").forEach(
+    slot => {
 
-  }
+      const attribute =
+        slot.dataset.attribute;
 
+      const dieId =
+        state.attributes[
+          attribute
+        ];
+
+      const die =
+        dieId
+          ? getDieById(dieId)
+          : null;
+
+      const value =
+        slot.querySelector(
+          ".attribute-die-value"
+        );
+
+      if (!value) {
+        return;
+      }
+
+      if (die) {
+        value.textContent =
+          `D${die.sides}`;
+
+        slot.classList.add(
+          "has-die"
+        );
+
+        slot.dataset.dieId =
+          die.id;
+
+      } else {
+        value.textContent =
+          "D?";
+
+        slot.classList.remove(
+          "has-die"
+        );
+
+        delete slot.dataset.dieId;
+      }
+    }
+  );
+}
+    card.addEventListener(
+      "dragend",
+      () => {
+        card.classList.remove(
+          "is-dragging"
+        );
+      }
+    );
+
+    container.appendChild(
+      card
+    );
+  });
+}
 
   function selectDice(
     die
