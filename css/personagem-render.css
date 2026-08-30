@@ -1,0 +1,1016 @@
+/* =========================================================
+   AERION — PERSONAGEM RENDER CSS
+   personagem-render.css
+
+   Estilo visual do editor 2D de personagem.
+   ========================================================= */
+
+
+/* =========================================================
+   CONTAINER
+   ========================================================= */
+
+#appearanceFigure {
+  --character-scale: 1;
+  --character-height: 280px;
+
+  position: relative;
+
+  width: min(
+    100%,
+    430px
+  );
+
+  min-height: 380px;
+
+  display: flex;
+
+  align-items: flex-end;
+
+  justify-content: center;
+
+  padding:
+    24px
+    24px
+    30px;
+
+  margin:
+    0 auto;
+
+  overflow: hidden;
+
+  isolation: isolate;
+
+  border-radius:
+    28px;
+
+  background:
+    radial-gradient(
+      circle at 50% 28%,
+      rgba(
+        255,
+        255,
+        255,
+        .08
+      ),
+      transparent 48%
+    ),
+
+    linear-gradient(
+      180deg,
+      #191817 0%,
+      #100f0e 100%
+    );
+
+  border:
+    1px solid
+    rgba(
+      255,
+      255,
+      255,
+      .08
+    );
+
+  box-shadow:
+    0 22px 55px
+    rgba(
+      0,
+      0,
+      0,
+      .28
+    );
+
+  transition:
+    min-height .3s ease,
+    border-color .25s ease,
+    box-shadow .25s ease;
+}
+
+
+/* =========================================================
+   ATMOSFERA
+   ========================================================= */
+
+#appearanceFigure::before {
+  content: "";
+
+  position: absolute;
+
+  inset:
+    12% 10% 12%;
+
+  z-index: -1;
+
+  border-radius:
+    50%;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(
+        255,
+        255,
+        255,
+        .055
+      ),
+      transparent 68%
+    );
+
+  filter:
+    blur(18px);
+
+  pointer-events:
+    none;
+}
+
+
+#appearanceFigure::after {
+  content: "";
+
+  position: absolute;
+
+  left: 12%;
+  right: 12%;
+  bottom: 16px;
+
+  height: 1px;
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      rgba(
+        255,
+        255,
+        255,
+        .12
+      ),
+      transparent
+    );
+
+  pointer-events:
+    none;
+}
+
+
+/* =========================================================
+   SVG
+   ========================================================= */
+
+#appearanceFigure
+.aerion-character-svg {
+
+  width:
+    100%;
+
+  height:
+    auto;
+
+  max-height:
+    470px;
+
+  display:
+    block;
+
+  overflow:
+    visible;
+
+  transform-origin:
+    center bottom;
+
+  animation:
+    characterAppear
+    .45s
+    cubic-bezier(
+      .2,
+      .8,
+      .2,
+      1
+    );
+
+  filter:
+    drop-shadow(
+      0 18px 18px
+      rgba(
+        0,
+        0,
+        0,
+        .24
+      )
+    );
+}
+
+
+/* =========================================================
+   ANIMAÇÃO DE ENTRADA
+   ========================================================= */
+
+@keyframes characterAppear {
+
+  from {
+    opacity: 0;
+
+    transform:
+      translateY(12px)
+      scale(.97);
+  }
+
+  to {
+    opacity: 1;
+
+    transform:
+      translateY(0)
+      scale(1);
+  }
+
+}
+
+
+/* =========================================================
+   SOMBRA
+   ========================================================= */
+
+.character-shadow {
+
+  fill:
+    rgba(
+      0,
+      0,
+      0,
+      .38
+    );
+
+  filter:
+    blur(4px);
+
+  transform-origin:
+    center;
+
+  animation:
+    shadowBreath
+    3.5s
+    ease-in-out
+    infinite;
+}
+
+
+@keyframes shadowBreath {
+
+  0%,
+  100% {
+    transform:
+      scaleX(1);
+  }
+
+  50% {
+    transform:
+      scaleX(.92);
+  }
+
+}
+
+
+/* =========================================================
+   CORPO
+   ========================================================= */
+
+.character-body {
+
+  transform-origin:
+    center bottom;
+
+  transition:
+    transform .25s ease;
+}
+
+
+.character-body path {
+
+  vector-effect:
+    non-scaling-stroke;
+
+}
+
+
+/* =========================================================
+   MEMBROS
+   ========================================================= */
+
+.character-limb {
+
+  fill:
+    none;
+
+  stroke:
+    currentColor;
+
+  stroke-linecap:
+    round;
+
+  stroke-linejoin:
+    round;
+
+  vector-effect:
+    non-scaling-stroke;
+
+  color:
+    #b99f8b;
+}
+
+
+.character-leg {
+
+  fill:
+    #34312d;
+
+  stroke:
+    #11100e;
+
+  stroke-width:
+    2;
+
+}
+
+
+.character-foot {
+
+  fill:
+    #24211e;
+
+  stroke:
+    #11100e;
+
+  stroke-width:
+    2;
+
+}
+
+
+/* =========================================================
+   ROSTO
+   ========================================================= */
+
+.character-head {
+
+  transform-origin:
+    center;
+
+  transition:
+    transform .25s ease;
+}
+
+
+.character-face-line {
+
+  fill:
+    none;
+
+  stroke:
+    #3c302b;
+
+  stroke-width:
+    1.6;
+
+  stroke-linecap:
+    round;
+
+  stroke-linejoin:
+    round;
+
+  opacity:
+    .82;
+}
+
+
+/* =========================================================
+   CABELO
+   ========================================================= */
+
+.character-head
+path[fill] {
+
+  vector-effect:
+    non-scaling-stroke;
+}
+
+
+/* =========================================================
+   ASAS
+   ========================================================= */
+
+.character-wings {
+
+  transform-origin:
+    center;
+
+  opacity:
+    .92;
+
+  animation:
+    wingFloat
+    4.5s
+    ease-in-out
+    infinite;
+}
+
+
+@keyframes wingFloat {
+
+  0%,
+  100% {
+    transform:
+      translateY(0);
+  }
+
+  50% {
+    transform:
+      translateY(-2px);
+  }
+
+}
+
+
+/* =========================================================
+   CAUDA
+   ========================================================= */
+
+.character-tail {
+
+  opacity:
+    .95;
+
+  transform-origin:
+    center;
+}
+
+
+/* =========================================================
+   ELEMENTOS RACIAIS
+   ========================================================= */
+
+.character-racial,
+.character-racial-detail {
+
+  vector-effect:
+    non-scaling-stroke;
+
+  transition:
+    opacity .2s ease,
+    transform .2s ease;
+}
+
+
+/* =========================================================
+   CICATRIZES
+   ========================================================= */
+
+.character-scars {
+
+  pointer-events:
+    none;
+
+  opacity:
+    .9;
+}
+
+
+/* =========================================================
+   TATUAGENS
+   ========================================================= */
+
+.character-tattoos {
+
+  pointer-events:
+    none;
+
+  opacity:
+    .85;
+}
+
+
+/* =========================================================
+   RAÇAS PEQUENAS
+   ========================================================= */
+
+#appearanceFigure.is-animalha[data-size="pequeno"] {
+
+  min-height:
+    340px;
+}
+
+
+/* =========================================================
+   RAÇAS GRANDES
+   ========================================================= */
+
+#appearanceFigure[data-size="grande"] {
+
+  min-height:
+    410px;
+}
+
+
+/* =========================================================
+   COLOSSO
+   ========================================================= */
+
+#appearanceFigure[data-size="colossal"] {
+
+  min-height:
+    460px;
+}
+
+
+/* =========================================================
+   PERSONAGEM COM ASAS
+   ========================================================= */
+
+#appearanceFigure.has-wings {
+
+  background:
+    radial-gradient(
+      circle at 50% 40%,
+      rgba(
+        255,
+        255,
+        255,
+        .065
+      ),
+      transparent 55%
+    ),
+
+    linear-gradient(
+      180deg,
+      #191817 0%,
+      #0e0d0c 100%
+    );
+}
+
+
+/* =========================================================
+   ESTADO FEMININO
+   ========================================================= */
+
+#appearanceFigure.is-female
+.character-head {
+
+  transform:
+    scaleX(.96);
+}
+
+
+/* =========================================================
+   HOVER
+   ========================================================= */
+
+#appearanceFigure:hover {
+
+  border-color:
+    rgba(
+      255,
+      255,
+      255,
+      .13
+    );
+
+  box-shadow:
+    0 25px 65px
+    rgba(
+      0,
+      0,
+      0,
+      .34
+    );
+}
+
+
+/* =========================================================
+   CONTROLES DE ALTURA
+   ========================================================= */
+
+.appearance-height-control {
+
+  display:
+    grid;
+
+  grid-template-columns:
+    auto
+    1fr
+    auto;
+
+  align-items:
+    center;
+
+  gap:
+    12px;
+
+  width:
+    min(
+      100%,
+      430px
+    );
+
+  margin:
+    14px auto 0;
+}
+
+
+.appearance-height-control
+input[type="range"] {
+
+  width:
+    100%;
+
+  margin:
+    0;
+
+  appearance:
+    none;
+
+  height:
+    6px;
+
+  border-radius:
+    999px;
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      .12
+    );
+
+  cursor:
+    pointer;
+
+  outline:
+    none;
+}
+
+
+.appearance-height-control
+input[type="range"]::-webkit-slider-thumb {
+
+  appearance:
+    none;
+
+  width:
+    19px;
+
+  height:
+    19px;
+
+  border-radius:
+    50%;
+
+  background:
+    #e6e0d7;
+
+  border:
+    3px solid
+    #2a2825;
+
+  box-shadow:
+    0 3px 10px
+    rgba(
+      0,
+      0,
+      0,
+      .35
+    );
+
+  cursor:
+    grab;
+
+  transition:
+    transform .15s ease;
+}
+
+
+.appearance-height-control
+input[type="range"]::-webkit-slider-thumb:hover {
+
+  transform:
+    scale(1.12);
+}
+
+
+.appearance-height-control
+input[type="range"]::-moz-range-thumb {
+
+  width:
+    19px;
+
+  height:
+    19px;
+
+  border-radius:
+    50%;
+
+  background:
+    #e6e0d7;
+
+  border:
+    3px solid
+    #2a2825;
+
+  box-shadow:
+    0 3px 10px
+    rgba(
+      0,
+      0,
+      0,
+      .35
+    );
+
+  cursor:
+    grab;
+}
+
+
+.appearance-height-value {
+
+  min-width:
+    54px;
+
+  text-align:
+    center;
+
+  font-size:
+    .9rem;
+
+  font-weight:
+    700;
+
+  font-variant-numeric:
+    tabular-nums;
+
+  color:
+    rgba(
+      255,
+      255,
+      255,
+      .82
+    );
+}
+
+
+/* =========================================================
+   PAINEL DE OPÇÕES
+   ========================================================= */
+
+.appearance-options {
+
+  display:
+    grid;
+
+  grid-template-columns:
+    repeat(
+      2,
+      minmax(
+        0,
+        1fr
+      )
+    );
+
+  gap:
+    10px;
+
+  width:
+    min(
+      100%,
+      430px
+    );
+
+  margin:
+    18px auto 0;
+}
+
+
+.appearance-option {
+
+  display:
+    flex;
+
+  flex-direction:
+    column;
+
+  gap:
+    5px;
+
+  padding:
+    12px 14px;
+
+  border:
+    1px solid
+    rgba(
+      255,
+      255,
+      255,
+      .08
+    );
+
+  border-radius:
+    14px;
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      .035
+    );
+
+  transition:
+    border-color .2s ease,
+    background .2s ease,
+    transform .2s ease;
+}
+
+
+.appearance-option:hover {
+
+  transform:
+    translateY(-1px);
+
+  border-color:
+    rgba(
+      255,
+      255,
+      255,
+      .14
+    );
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      .055
+    );
+}
+
+
+.appearance-option
+label {
+
+  font-size:
+    .75rem;
+
+  font-weight:
+    700;
+
+  text-transform:
+    uppercase;
+
+  letter-spacing:
+    .06em;
+
+  color:
+    rgba(
+      255,
+      255,
+      255,
+      .48
+    );
+}
+
+
+.appearance-option
+input,
+.appearance-option
+select {
+
+  width:
+    100%;
+
+  min-height:
+    36px;
+
+  border:
+    0;
+
+  outline:
+    none;
+
+  background:
+    transparent;
+
+  color:
+    rgba(
+      255,
+      255,
+      255,
+      .9
+    );
+
+  font:
+    inherit;
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (
+  max-width: 600px
+) {
+
+  #appearanceFigure {
+
+    width:
+      100%;
+
+    min-height:
+      350px;
+
+    border-radius:
+      22px;
+
+    padding:
+      18px
+      14px
+      24px;
+  }
+
+
+  #appearanceFigure[data-size="grande"] {
+
+    min-height:
+      385px;
+  }
+
+
+  #appearanceFigure[data-size="colossal"] {
+
+    min-height:
+      430px;
+  }
+
+
+  #appearanceFigure
+  .aerion-character-svg {
+
+    max-height:
+      430px;
+  }
+
+
+  .appearance-options {
+
+    grid-template-columns:
+      1fr;
+  }
+
+}
+
+
+/* =========================================================
+   ACESSIBILIDADE
+   ========================================================= */
+
+@media (
+  prefers-reduced-motion: reduce
+) {
+
+  #appearanceFigure
+  .aerion-character-svg,
+
+  .character-wings,
+
+  .character-shadow {
+
+    animation:
+      none !important;
+  }
+
+  * {
+
+    scroll-behavior:
+      auto !important;
+  }
+
+}
+
+
+/* =========================================================
+   FOCO
+   ========================================================= */
+
+.appearance-height-control
+input[type="range"]:focus-visible {
+
+  outline:
+    2px solid
+    rgba(
+      255,
+      255,
+      255,
+      .65
+    );
+
+  outline-offset:
+    4px;
+}
