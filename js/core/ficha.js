@@ -14,7 +14,7 @@
    - Aparência
    - Classe
    - Atributos
-   - SISTEMA INDIVIDUAL DOS DADOS
+   - Sistema individual dos dados
    - Poder
    - Mana
    - Perícias
@@ -24,35 +24,20 @@
    - Autosave
    - Finalização
 
-   Renderização:
-   js/core/ficha-render.js
-
-   IMPORTANTE:
-   Os dados da criação de ficha ficam inteiramente
-   controlados aqui. Cada dado possui identidade própria.
-
    ========================================================= */
 
 (() => {
   "use strict";
-
 
   /* =========================================================
      CONFIGURAÇÃO
      ========================================================= */
 
   const CONFIG = Object.freeze({
-    storageKey:
-      "aerion:ficha:draft:v11",
-
-    lastCharacterKey:
-      "aerion:ficha:last:v11",
-
-    autosaveDelay:
-      450,
-
-    maxImageSize:
-      6 * 1024 * 1024
+    storageKey: "aerion:ficha:draft:v12",
+    lastCharacterKey: "aerion:ficha:last:v12",
+    autosaveDelay: 450,
+    maxImageSize: 6 * 1024 * 1024
   });
 
 
@@ -65,52 +50,42 @@
       id: "identity",
       name: "Identidade"
     },
-
     {
       id: "race",
       name: "Raça"
     },
-
     {
       id: "appearance",
       name: "Aparência"
     },
-
     {
       id: "class",
       name: "Classe"
     },
-
     {
       id: "attributes",
       name: "Atributos"
     },
-
     {
       id: "power",
       name: "Poder"
     },
-
     {
       id: "mana",
       name: "Mana"
     },
-
     {
       id: "skills",
       name: "Perícias"
     },
-
     {
       id: "techniques",
       name: "Técnicas"
     },
-
     {
       id: "inventory",
       name: "Inventário"
     },
-
     {
       id: "review",
       name: "Revisão"
@@ -127,37 +102,30 @@
       id: "forca",
       name: "Força"
     },
-
     {
       id: "vigor",
       name: "Vigor"
     },
-
     {
       id: "agilidade",
       name: "Agilidade"
     },
-
     {
       id: "precisao",
       name: "Precisão"
     },
-
     {
       id: "intelecto",
       name: "Intelecto"
     },
-
     {
       id: "controle",
       name: "Controle"
     },
-
     {
       id: "presenca",
       name: "Presença"
     },
-
     {
       id: "percepcao",
       name: "Percepção"
@@ -168,21 +136,28 @@
   /* =========================================================
      DADOS DA CRIAÇÃO DE FICHA
      
-     CADA DADO É INDIVIDUAL.
+     CADA DADO POSSUI IDENTIDADE PRÓPRIA.
+     
+     D4:
+       d4-1
 
-     NÃO EXISTE:
-       d20 = "dois dados iguais"
+     D6:
+       d6-1
+       d6-2
 
-     EXISTE:
+     D8:
+       d8-1
+
+     D10:
+       d10-1
+
+     D12:
+       d12-1
+
+     D20:
        d20-1
        d20-2
 
-     Isso permite:
-       - selecionar só um D20
-       - usar o outro separadamente
-       - devolver apenas um
-       - arrastar um sem afetar o outro
-       - trocar posições sem conflito
      ========================================================= */
 
   const DICE = Object.freeze([
@@ -191,54 +166,42 @@
       type: "d4",
       sides: 4
     },
-
     {
       id: "d6-1",
       type: "d6",
       sides: 6
     },
-
     {
       id: "d6-2",
       type: "d6",
       sides: 6
     },
-
     {
       id: "d8-1",
       type: "d8",
       sides: 8
     },
-
     {
       id: "d10-1",
       type: "d10",
       sides: 10
     },
-
     {
       id: "d12-1",
       type: "d12",
       sides: 12
     },
-
     {
       id: "d20-1",
       type: "d20",
       sides: 20
     },
-
     {
       id: "d20-2",
       type: "d20",
       sides: 20
     }
   ]);
-
-
-  /* =========================================================
-     MAPAS AUXILIARES DOS DADOS
-     ========================================================= */
 
   const DICE_BY_ID = Object.freeze(
     Object.fromEntries(
@@ -282,7 +245,6 @@
       id: "guerreiro",
       name: "Guerreiro",
       role: "Combatente",
-
       skillBonuses: {
         atletismo: 1,
         tatica: 1
@@ -293,7 +255,6 @@
       id: "feiticeiro",
       name: "Feiticeiro",
       role: "Mágico",
-
       skillBonuses: {
         conhecimento: 1,
         controle_mana: 1
@@ -304,7 +265,6 @@
       id: "curandeiro",
       name: "Curandeiro",
       role: "Suporte",
-
       skillBonuses: {
         medicina: 1,
         intuicao: 1
@@ -315,7 +275,6 @@
       id: "monge",
       name: "Monge",
       role: "Marcial",
-
       skillBonuses: {
         atletismo: 1,
         controle_mana: 1
@@ -1022,7 +981,7 @@
 
 
   /* =========================================================
-     ANIMALHA
+     ANIMALHA — VARIANTES
      ========================================================= */
 
   const ANIMALHA_VARIANTS = Object.freeze([
@@ -1565,7 +1524,7 @@
 
 
   /* =========================================================
-     PORTE
+     REGRAS DE PORTE
      ========================================================= */
 
   const SIZE_RULES = Object.freeze({
@@ -1626,20 +1585,6 @@
 
       class: "",
 
-      /*
-       * Aqui ficam os IDs INDIVIDUAIS dos dados.
-       *
-       * Exemplo:
-       *
-       * forca: "d20-1"
-       * vigor: "d20-2"
-       *
-       * Nunca:
-       *
-       * forca: "d20"
-       * vigor: "d20"
-       */
-
       attributes: {
         forca: null,
         vigor: null,
@@ -1696,8 +1641,7 @@
     if (
       window.AERIONFichaRender &&
       typeof
-        window.AERIONFichaRender
-          .render ===
+        window.AERIONFichaRender.render ===
         "function"
     ) {
       window.AERIONFichaRender.render(
@@ -1710,8 +1654,7 @@
     if (
       window.AERIONFichaRender &&
       typeof
-        window.AERIONFichaRender
-          .toast ===
+        window.AERIONFichaRender.toast ===
         "function"
     ) {
       window.AERIONFichaRender.toast(
@@ -1746,7 +1689,6 @@
           try {
             localStorage.setItem(
               CONFIG.storageKey,
-
               JSON.stringify(
                 state
               )
@@ -1782,7 +1724,6 @@
     try {
       localStorage.setItem(
         CONFIG.storageKey,
-
         JSON.stringify(
           state
         )
@@ -1803,7 +1744,7 @@
 
 
   /* =========================================================
-     CARREGAMENTO
+     LOAD
      ========================================================= */
 
   function load() {
@@ -1813,9 +1754,7 @@
           CONFIG.storageKey
         );
 
-      if (
-        !raw
-      ) {
+      if (!raw) {
         return false;
       }
 
@@ -1880,8 +1819,10 @@
       state.step =
         Math.max(
           0,
+
           Math.min(
-            STEPS.length - 1,
+            STEPS.length -
+              1,
 
             Number(
               state.step
@@ -1979,8 +1920,10 @@
       state.raceIndex =
         Math.max(
           0,
+
           Math.min(
-            RACES.length - 1,
+            RACES.length -
+              1,
 
             Number(
               state.raceIndex
@@ -2184,7 +2127,9 @@
     index
   ) {
     index =
-      Number(index);
+      Number(
+        index
+      );
 
     if (
       !Number.isInteger(
@@ -2195,7 +2140,8 @@
     }
 
     if (
-      index < 0 ||
+      index <
+        0 ||
       index >=
         RACES.length
     ) {
@@ -2428,10 +2374,13 @@
       field
     ] =
       String(
-        value ?? ""
+        value ??
+          ""
       );
 
     save();
+
+    render();
 
     return true;
   }
@@ -2469,7 +2418,7 @@
 
 
   /* =========================================================
-     DADOS — ESTADO
+     DADOS — VALIDAÇÃO
      ========================================================= */
 
   function ensureAttributes() {
@@ -2492,11 +2441,9 @@
             attribute.id
           ];
 
-        /*
-         * Somente IDs reais de dados são aceitos.
-         */
         if (
-          dieId !== null &&
+          dieId !==
+            null &&
           !DICE_BY_ID[
             dieId
           ]
@@ -2510,28 +2457,29 @@
     );
 
     /*
-     * Corrige duplicação de um mesmo
-     * dado individual no estado.
+     * Um mesmo dado físico não pode
+     * aparecer em dois atributos.
      */
+
     const used =
       new Set();
 
     ATTRIBUTES.forEach(
       attribute => {
-        const id =
+        const dieId =
           state.attributes[
             attribute.id
           ];
 
         if (
-          !id
+          !dieId
         ) {
           return;
         }
 
         if (
           used.has(
-            id
+            dieId
           )
         ) {
           state.attributes[
@@ -2539,11 +2487,15 @@
           ] =
             null;
 
+          delete state.rolls[
+            attribute.id
+          ];
+
           return;
         }
 
         used.add(
-          id
+          dieId
         );
       }
     );
@@ -2559,6 +2511,41 @@
       state.rolls =
         {};
     }
+
+    /*
+     * Limpa rolls que apontam para
+     * dados que já não estão atribuídos.
+     */
+
+    Object.keys(
+      state.rolls
+    ).forEach(
+      attributeId => {
+        const dieId =
+          state.attributes[
+            attributeId
+          ];
+
+        const roll =
+          state.rolls[
+            attributeId
+          ];
+
+        if (
+          !dieId ||
+          !DICE_BY_ID[
+            dieId
+          ] ||
+          !roll ||
+          roll.dieId !==
+            dieId
+        ) {
+          delete state.rolls[
+            attributeId
+          ];
+        }
+      }
+    );
   }
 
 
@@ -2569,7 +2556,7 @@
   function getAssignedAttributeForDie(
     dieId
   ) {
-    const entry =
+    const result =
       ATTRIBUTES.find(
         attribute =>
           state.attributes[
@@ -2579,7 +2566,7 @@
       );
 
     return (
-      entry?.id ||
+      result?.id ||
       null
     );
   }
@@ -2643,6 +2630,12 @@
   function selectDie(
     dieId
   ) {
+    dieId =
+      String(
+        dieId ??
+          ""
+      );
+
     if (
       !DICE_BY_ID[
         dieId
@@ -2651,16 +2644,15 @@
       return false;
     }
 
-    /*
-     * Um dado já usado não pode ser selecionado.
-     */
     if (
       !isDieAvailable(
         dieId
       )
     ) {
       toast(
-        "Esse dado já está atribuído a um atributo."
+        `${formatDieName(
+          dieId
+        )} já está atribuído.`
       );
 
       return false;
@@ -2683,13 +2675,25 @@
 
 
   /* =========================================================
-     DADOS — ATRIBUIÇÃO
+     DADOS — ATRIBUIR
      ========================================================= */
 
   function assignDie(
     attribute,
     dieId
   ) {
+    attribute =
+      String(
+        attribute ??
+          ""
+      );
+
+    dieId =
+      String(
+        dieId ??
+          ""
+      );
+
     if (
       !ATTRIBUTES.some(
         item =>
@@ -2709,9 +2713,10 @@
     }
 
     /*
-     * Clicar no mesmo dado que já está
-     * naquele atributo = devolver.
+     * Clicar no próprio dado já colocado
+     * devolve o dado para a piscina.
      */
+
     if (
       state.attributes[
         attribute
@@ -2724,25 +2729,25 @@
     }
 
     /*
-     * Se o dado já estiver em qualquer
-     * outro atributo, NÃO REMOVE.
-     *
-     * Esse é o comportamento fundamental
-     * da nova arquitetura.
+     * Se o dado já pertence a outro
+     * atributo, ele NÃO é movido.
      */
-    const currentOwner =
+
+    const owner =
       getAssignedAttributeForDie(
         dieId
       );
 
     if (
-      currentOwner
+      owner &&
+      owner !==
+        attribute
     ) {
       toast(
         `${formatDieName(
           dieId
         )} já está em ${getAttributeName(
-          currentOwner
+          owner
         )}.`
       );
 
@@ -2750,18 +2755,21 @@
     }
 
     /*
-     * O atributo pode estar ocupado por
-     * OUTRO dado. Nesse caso NÃO sobrescreve.
+     * O atributo precisa estar vazio.
      *
-     * Isso evita troca acidental.
+     * Não substituímos outro dado
+     * automaticamente.
      */
+
     const currentDie =
       state.attributes[
         attribute
       ];
 
     if (
-      currentDie
+      currentDie &&
+      currentDie !==
+        dieId
     ) {
       toast(
         `${getAttributeName(
@@ -2775,14 +2783,9 @@
     }
 
     /*
-     * Agora sim:
-     *
-     * dado livre
-     * +
-     * atributo livre
-     *
-     * = atribuição.
+     * Atribuição definitiva.
      */
+
     state.attributes[
       attribute
     ] =
@@ -2803,7 +2806,7 @@
 
 
   /* =========================================================
-     DADOS — ATRIBUIÇÃO POR SELEÇÃO
+     DADOS — ATRIBUIR O SELECIONADO
      ========================================================= */
 
   function assignSelectedDie(
@@ -2819,10 +2822,16 @@
       return false;
     }
 
-    return assignDie(
-      attribute,
-      selectedDie
-    );
+    const dieId =
+      selectedDie;
+
+    const success =
+      assignDie(
+        attribute,
+        dieId
+      );
+
+    return success;
   }
 
 
@@ -2833,6 +2842,12 @@
   function returnDie(
     attribute
   ) {
+    attribute =
+      String(
+        attribute ??
+          ""
+      );
+
     if (
       !ATTRIBUTES.some(
         item =>
@@ -2864,9 +2879,10 @@
     ];
 
     /*
-     * Se o usuário estava com esse
-     * mesmo dado selecionado, limpa.
+     * Só limpa a seleção se for justamente
+     * o dado que estava selecionado.
      */
+
     if (
       selectedDie ===
       dieId
@@ -2889,13 +2905,25 @@
 
 
   /* =========================================================
-     DADOS — TROCA DE ATRIBUTOS
+     DADOS — TROCAR ATRIBUTOS
      ========================================================= */
 
   function swapAttributes(
     first,
     second
   ) {
+    first =
+      String(
+        first ??
+          ""
+      );
+
+    second =
+      String(
+        second ??
+          ""
+      );
+
     if (
       first ===
       second
@@ -2928,10 +2956,6 @@
         second
       ];
 
-    /*
-     * Como os IDs são individuais,
-     * a troca é segura.
-     */
     state.attributes[
       first
     ] =
@@ -2960,7 +2984,13 @@
       state.rolls[
         first
       ] =
-        secondRoll;
+        {
+          ...secondRoll,
+          dieId:
+            state.attributes[
+              first
+            ]
+        };
     } else {
       delete state.rolls[
         first
@@ -2973,7 +3003,13 @@
       state.rolls[
         second
       ] =
-        firstRoll;
+        {
+          ...firstRoll,
+          dieId:
+            state.attributes[
+              second
+            ]
+        };
     } else {
       delete state.rolls[
         second
@@ -2991,7 +3027,7 @@
 
 
   /* =========================================================
-     DADOS — FORMATAÇÃO
+     FORMATAÇÃO DE DADO
      ========================================================= */
 
   function formatDieName(
@@ -3013,7 +3049,7 @@
 
 
   /* =========================================================
-     ATRIBUTOS
+     ATRIBUTOS — LEITURA
      ========================================================= */
 
   function getRaceModifier(
@@ -3182,7 +3218,9 @@
     state.rolls[
       attribute
     ] = {
-      dieId,
+      dieId:
+
+        dieId,
 
       dieType:
         die.type,
@@ -3680,6 +3718,7 @@
 
     const technique = {
       ...createTechnique(),
+
       ...data
     };
 
@@ -3804,6 +3843,7 @@
 
     const item = {
       ...createInventoryItem(),
+
       ...data
     };
 
@@ -3961,18 +4001,10 @@
     ) {
       return {
         hp: null,
-
-        movement:
-          null,
-
-        air:
-          null,
-
-        aquatic:
-          null,
-
-        canFly:
-          false
+        movement: null,
+        air: null,
+        aquatic: null,
+        canFly: false
       };
     }
 
@@ -4110,10 +4142,6 @@
           "azul"
         );
 
-      /*
-       * Essas etapas podem ficar opcionais
-       * durante a criação.
-       */
       case 7:
       case 8:
       case 9:
@@ -4121,27 +4149,13 @@
 
       case 10:
         return (
-          isStepComplete(
-            0
-          ) &&
-          isStepComplete(
-            1
-          ) &&
-          isStepComplete(
-            2
-          ) &&
-          isStepComplete(
-            3
-          ) &&
-          isStepComplete(
-            4
-          ) &&
-          isStepComplete(
-            5
-          ) &&
-          isStepComplete(
-            6
-          )
+          isStepComplete(0) &&
+          isStepComplete(1) &&
+          isStepComplete(2) &&
+          isStepComplete(3) &&
+          isStepComplete(4) &&
+          isStepComplete(5) &&
+          isStepComplete(6)
         );
 
       default:
@@ -4348,6 +4362,8 @@
       );
 
     save();
+
+    render();
   }
 
   function setGender(
@@ -4381,6 +4397,8 @@
       );
 
     save();
+
+    render();
   }
 
   function setOrigin(
@@ -4393,6 +4411,8 @@
       );
 
     save();
+
+    render();
   }
 
 
@@ -4580,7 +4600,7 @@
         getCombatData(),
 
       version:
-        11,
+        12,
 
       exportedAt:
         new Date().toISOString()
@@ -4640,6 +4660,19 @@
 
   /* =========================================================
      CLICK
+     
+     IMPORTANTE:
+     AQUI está a correção principal do bug.
+
+     Agora:
+       1. seleciona um dado na piscina;
+       2. clica no atributo vazio;
+       3. o dado selecionado é atribuído.
+
+     Também:
+       - clicar no dado dentro do atributo devolve;
+       - dado ocupado não pode ser roubado;
+       - D20-1 e D20-2 são independentes.
      ========================================================= */
 
   function onClick(
@@ -4656,34 +4689,64 @@
 
 
     /* -------------------------------------------------------
-       DEVOLVER DADO CLICANDO NO DADO DO ATRIBUTO
+       1. DEVOLVER DADO CLICANDO NO DADO DO ATRIBUTO
        ------------------------------------------------------- */
 
-    const attributeDie =
+    const attributeDieElement =
       target.closest(
         "[data-attribute-die]"
       );
 
     if (
-      attributeDie
+      attributeDieElement
     ) {
-      const card =
-        attributeDie.closest(
-          "[data-attribute]"
-        ) ||
-        attributeDie.closest(
-          ".attribute-card"
+      /*
+       * Não usamos o [data-die] do elemento
+       * para selecionar novamente.
+       *
+       * Esse bloco é exclusivamente para
+       * devolver o dado.
+       */
+
+      const actionButton =
+        target.closest(
+          '[data-action="return-die"]'
         );
 
-      const attribute =
-        attributeDie.dataset
-          .attribute ||
+      if (
+        actionButton
+      ) {
+        const attribute =
+          actionButton.dataset
+            .attribute ||
+          attributeDieElement.dataset
+            .attribute;
 
-        card?.dataset
-          ?.attribute;
+        if (
+          attribute
+        ) {
+          returnDie(
+            attribute
+          );
+
+          return;
+        }
+      }
+
+      /*
+       * Também aceita clicar diretamente
+       * no container do dado atribuído.
+       */
+
+      const attribute =
+        attributeDieElement.dataset
+          .attribute;
 
       if (
-        attribute
+        attribute &&
+        !target.closest(
+          "button"
+        )
       ) {
         returnDie(
           attribute
@@ -4695,26 +4758,91 @@
 
 
     /* -------------------------------------------------------
-       DADO DA PISCINA
+       2. ATRIBUTO — USAR DADO SELECIONADO
        ------------------------------------------------------- */
 
-    const die =
+    const attributeDrop =
+      target.closest(
+        "[data-attribute-drop]"
+      );
+
+    if (
+      attributeDrop
+    ) {
+      const attribute =
+        attributeDrop.dataset
+          .attributeDrop ||
+        attributeDrop.dataset
+          .attribute;
+
+      if (
+        attribute
+      ) {
+        /*
+         * A principal correção:
+         *
+         * selecionou o dado
+         * +
+         * clicou no atributo
+         * =
+         * atribui o dado.
+         */
+
+        if (
+          selectedDie
+        ) {
+          assignSelectedDie(
+            attribute
+          );
+
+          return;
+        }
+
+        /*
+         * Sem dado selecionado,
+         * não fazemos nada silencioso.
+         */
+
+        toast(
+          "Selecione um dado primeiro."
+        );
+
+        return;
+      }
+    }
+
+
+    /* -------------------------------------------------------
+       3. SELECIONAR DADO DA PISCINA
+       ------------------------------------------------------- */
+
+    const dieElement =
       target.closest(
         "[data-die]"
       );
 
     if (
-      die &&
-      !attributeDie
+      dieElement
     ) {
-      const dieId =
-        die.dataset.die;
-
       /*
-       * Só seleciona dados livres.
+       * Se estiver dentro de um atributo,
+       * não é dado de piscina.
        */
+
+      if (
+        dieElement.closest(
+          "[data-attribute-die]"
+        ) ||
+        dieElement.closest(
+          ".attribute-card"
+        )
+      ) {
+        return;
+      }
+
       selectDie(
-        dieId
+        dieElement.dataset
+          .die
       );
 
       return;
@@ -4722,7 +4850,7 @@
 
 
     /* -------------------------------------------------------
-       AÇÃO GERAL
+       4. AÇÕES GERAIS
        ------------------------------------------------------- */
 
     const action =
@@ -4750,7 +4878,8 @@
 
       case "go-step":
         goToStep(
-          action.dataset.step
+          action.dataset
+            .step
         );
         break;
 
@@ -4798,6 +4927,21 @@
         clearDieSelection();
         break;
 
+      case "return-die":
+      case "remove-die":
+        returnDie(
+          action.dataset
+            .attribute
+        );
+        break;
+
+      case "roll-attribute":
+        rollAttribute(
+          action.dataset
+            .attribute
+        );
+        break;
+
       case "power-mode":
         window.AERIONFichaRender?.setPowerMode?.(
           action.dataset
@@ -4820,21 +4964,6 @@
         selectMana(
           action.dataset
             .mana
-        );
-        break;
-
-      case "roll-attribute":
-        rollAttribute(
-          action.dataset
-            .attribute
-        );
-        break;
-
-      case "return-die":
-      case "remove-die":
-        returnDie(
-          action.dataset
-            .attribute
         );
         break;
 
@@ -4902,15 +5031,16 @@
       element.id
     ) {
       case "characterName":
+
         state.name =
           element.value;
 
         save();
-        render();
 
         return;
 
       case "characterAge":
+
         state.age =
           element.value;
 
@@ -4919,6 +5049,7 @@
         return;
 
       case "characterDescription":
+
         state.description =
           element.value;
 
@@ -4927,6 +5058,7 @@
         return;
 
       case "characterOrigin":
+
         state.origin =
           element.value;
 
@@ -4935,6 +5067,7 @@
         return;
 
       case "heightRange":
+
         setHeight(
           element.value
         );
@@ -4948,6 +5081,7 @@
       case "scars":
       case "tattoos":
       case "physicalNotes":
+
         state.appearance[
           element.id
         ] =
@@ -5084,19 +5218,29 @@
     }
 
     /*
-     * Dado de atributo não participa
-     * da seleção da piscina.
+     * Dado atribuído não deve poder
+     * ser arrastado como dado da piscina.
      */
+
     if (
       element.closest(
         "[data-attribute-die]"
+      ) ||
+      element.closest(
+        ".attribute-card"
       )
     ) {
+      event.preventDefault();
+
       return;
     }
 
     const dieId =
-      element.dataset.die;
+      String(
+        element.dataset
+          .die ||
+          ""
+      );
 
     if (
       !isDieAvailable(
@@ -5126,6 +5270,8 @@
         dieId
       );
     }
+
+    render();
   }
 
 
@@ -5240,24 +5386,41 @@
       "drag-over"
     );
 
-    const dieId =
-      String(
-        event.dataTransfer?.getData(
+    let dieId = "";
+
+    if (
+      event.dataTransfer
+    ) {
+      dieId =
+        event.dataTransfer.getData(
           "text/plain"
-        ) ||
-          selectedDie ||
-          ""
-      );
+        );
+    }
 
     if (
       !dieId
     ) {
+      dieId =
+        selectedDie ||
+        "";
+    }
+
+    if (
+      !dieId
+    ) {
+      toast(
+        "Selecione ou arraste um dado primeiro."
+      );
+
       return;
     }
 
     assignDie(
       target.dataset
-        .attributeDrop,
+        .attributeDrop ||
+
+        target.dataset
+          .attribute,
 
       dieId
     );
@@ -5265,7 +5428,7 @@
 
 
   /* =========================================================
-     SALVAMENTO DO CICLO DE VIDA
+     SALVAMENTO NO CICLO DE VIDA
      ========================================================= */
 
   function installLifecycleSaving() {
@@ -5297,8 +5460,11 @@
       load();
 
     ensureAttributes();
+
     ensureSkills();
+
     ensureTechniques();
+
     ensureInventory();
 
     ensureRaceIndex();
@@ -5306,6 +5472,7 @@
     resetAppearanceHeight();
 
     validatePower();
+
     validateMana();
 
     document.addEventListener(
@@ -5352,232 +5519,6 @@
 
     render();
 
-
-    /* =======================================================
-       API GLOBAL
-       ======================================================= */
-
-    window.AERIONFicha =
-      Object.freeze({
-        /* ---------------------------------------------------
-           CONSTANTES
-           --------------------------------------------------- */
-
-        constants: {
-          CONFIG,
-
-          STEPS,
-
-          ATTRIBUTES,
-
-          DICE,
-
-          DICE_BY_ID,
-
-          PRIMARY_POWERS,
-
-          PARALLEL_POWERS,
-
-          CLASSES,
-
-          SKILLS,
-
-          RACES,
-
-          ANIMALHA_VARIANTS,
-
-          SIZE_RULES
-        },
-
-
-        /* ---------------------------------------------------
-           ESTADO
-           --------------------------------------------------- */
-
-        getState:
-          getPublicState,
-
-        getCharacter:
-          buildCharacter,
-
-
-        /* ---------------------------------------------------
-           SALVAMENTO
-           --------------------------------------------------- */
-
-        save:
-          forceSave,
-
-
-        /* ---------------------------------------------------
-           RESET / FINALIZAÇÃO
-           --------------------------------------------------- */
-
-        reset,
-
-        finish,
-
-
-        /* ---------------------------------------------------
-           NAVEGAÇÃO
-           --------------------------------------------------- */
-
-        next:
-          nextStep,
-
-        previous:
-          previousStep,
-
-        goToStep,
-
-
-        /* ---------------------------------------------------
-           RAÇA
-           --------------------------------------------------- */
-
-        selectRace,
-
-        selectCurrentRace,
-
-        nextRace,
-
-        previousRace,
-
-        setRaceIndex,
-
-        selectAnimalha,
-
-
-        /* ---------------------------------------------------
-           APARÊNCIA
-           --------------------------------------------------- */
-
-        setHeight,
-
-        setAppearanceField,
-
-
-        /* ---------------------------------------------------
-           CLASSE
-           --------------------------------------------------- */
-
-        selectClass,
-
-
-        /* ---------------------------------------------------
-           DADOS
-           --------------------------------------------------- */
-
-        selectDie,
-
-        clearDieSelection,
-
-        assignDie,
-
-        assignSelectedDie,
-
-        returnDie,
-
-        swapAttributes,
-
-        isDieAvailable,
-
-        isDieAssigned,
-
-        getDiceState,
-
-        getAssignedAttributeForDie,
-
-        getAttribute,
-
-        getEffectiveAttributes,
-
-        rollAttribute,
-
-
-        /* ---------------------------------------------------
-           PODER
-           --------------------------------------------------- */
-
-        rollPower,
-
-        selectParallelPower,
-
-
-        /* ---------------------------------------------------
-           MANA
-           --------------------------------------------------- */
-
-        selectMana,
-
-
-        /* ---------------------------------------------------
-           PERÍCIAS
-           --------------------------------------------------- */
-
-        trainSkill,
-
-        setSkillBonus,
-
-        getEffectiveSkillBonus,
-
-        getEffectiveSkills,
-
-
-        /* ---------------------------------------------------
-           TÉCNICAS
-           --------------------------------------------------- */
-
-        addTechnique,
-
-        updateTechnique,
-
-        removeTechnique,
-
-
-        /* ---------------------------------------------------
-           INVENTÁRIO
-           --------------------------------------------------- */
-
-        addInventoryItem,
-
-        updateInventoryItem,
-
-        removeInventoryItem,
-
-
-        /* ---------------------------------------------------
-           IDENTIDADE
-           --------------------------------------------------- */
-
-        setName,
-
-        setAge,
-
-        setGender,
-
-        setDescription,
-
-        setOrigin,
-
-
-        /* ---------------------------------------------------
-           AVATAR
-           --------------------------------------------------- */
-
-        setAvatar,
-
-        removeAvatar
-      });
-
-
-    window.dispatchEvent(
-      new CustomEvent(
-        "aerion:ficha:ready"
-      )
-    );
-
-
     console.info(
       "[AERION] ficha.js inicializado.",
       recovered
@@ -5588,7 +5529,7 @@
 
 
   /* =========================================================
-     START
+     API GLOBAL
      ========================================================= */
 
   if (
@@ -5605,5 +5546,226 @@
   } else {
     init();
   }
+
+
+  /* =========================================================
+     API PÚBLICA
+     ========================================================= */
+
+  window.AERIONFicha =
+    Object.freeze({
+
+      constants: {
+        CONFIG,
+
+        STEPS,
+
+        ATTRIBUTES,
+
+        DICE,
+
+        DICE_BY_ID,
+
+        PRIMARY_POWERS,
+
+        PARALLEL_POWERS,
+
+        CLASSES,
+
+        SKILLS,
+
+        RACES,
+
+        ANIMALHA_VARIANTS,
+
+        SIZE_RULES
+      },
+
+
+      /* ---------------------------------------------
+         Estado
+         --------------------------------------------- */
+
+      getState:
+        getPublicState,
+
+      getCharacter:
+        buildCharacter,
+
+      save:
+        forceSave,
+
+
+      /* ---------------------------------------------
+         Ficha
+         --------------------------------------------- */
+
+      reset,
+
+      finish,
+
+
+      /* ---------------------------------------------
+         Navegação
+         --------------------------------------------- */
+
+      next:
+        nextStep,
+
+      previous:
+        previousStep,
+
+      goToStep,
+
+
+      /* ---------------------------------------------
+         Raça
+         --------------------------------------------- */
+
+      selectRace,
+
+      selectCurrentRace,
+
+      nextRace,
+
+      previousRace,
+
+      setRaceIndex,
+
+      selectAnimalha,
+
+
+      /* ---------------------------------------------
+         Aparência
+         --------------------------------------------- */
+
+      setHeight,
+
+      setAppearanceField,
+
+
+      /* ---------------------------------------------
+         Classe
+         --------------------------------------------- */
+
+      selectClass,
+
+
+      /* ---------------------------------------------
+         Dados
+         --------------------------------------------- */
+
+      selectDie,
+
+      clearDieSelection,
+
+      assignDie,
+
+      assignSelectedDie,
+
+      returnDie,
+
+      swapAttributes,
+
+      isDieAvailable,
+
+      isDieAssigned,
+
+      getDiceState,
+
+      getAssignedAttributeForDie,
+
+      getAttribute,
+
+      getEffectiveAttributes,
+
+      rollAttribute,
+
+
+      /* ---------------------------------------------
+         Poder
+         --------------------------------------------- */
+
+      rollPower,
+
+      selectParallelPower,
+
+
+      /* ---------------------------------------------
+         Mana
+         --------------------------------------------- */
+
+      selectMana,
+
+
+      /* ---------------------------------------------
+         Perícias
+         --------------------------------------------- */
+
+      trainSkill,
+
+      setSkillBonus,
+
+      getEffectiveSkillBonus,
+
+      getEffectiveSkills,
+
+
+      /* ---------------------------------------------
+         Técnicas
+         --------------------------------------------- */
+
+      addTechnique,
+
+      updateTechnique,
+
+      removeTechnique,
+
+
+      /* ---------------------------------------------
+         Inventário
+         --------------------------------------------- */
+
+      addInventoryItem,
+
+      updateInventoryItem,
+
+      removeInventoryItem,
+
+
+      /* ---------------------------------------------
+         Identidade
+         --------------------------------------------- */
+
+      setName,
+
+      setAge,
+
+      setGender,
+
+      setDescription,
+
+      setOrigin,
+
+
+      /* ---------------------------------------------
+         Avatar
+         --------------------------------------------- */
+
+      setAvatar,
+
+      removeAvatar
+    });
+
+
+  /* =========================================================
+     EVENTO DE READY
+     ========================================================= */
+
+  window.dispatchEvent(
+    new CustomEvent(
+      "aerion:ficha:ready"
+    )
+  );
 
 })();
