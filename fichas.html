@@ -1,6 +1,5 @@
 <!doctype html>
 <html lang="pt-BR">
-
 <head>
   <meta charset="utf-8">
 
@@ -27,16 +26,10 @@
   >
 
   <script
-    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
-    defer
-  ></script>
-
-  <script
     src="./js/core/ficha.js"
     defer
   ></script>
 </head>
-
 
 <body>
 
@@ -44,7 +37,6 @@
   id="app"
   class="ficha-app"
 >
-
 
   <!-- =====================================================
        CABEÇALHO
@@ -54,40 +46,33 @@
 
     <a
       class="ficha-back"
-      href="./fichas.html"
-      aria-label="Voltar para fichas"
+      href="./"
+      aria-label="Voltar"
     >
       ←
     </a>
 
-
     <div class="ficha-brand">
-
       <span>AERION</span>
 
       <h1>
         Criar Ficha
       </h1>
-
     </div>
-
 
     <div
       id="saveStatus"
       class="ficha-save-status"
       aria-live="polite"
     >
-
       <span class="save-dot"></span>
 
       <span id="saveStatusText">
         Salvamento automático
       </span>
-
     </div>
 
   </header>
-
 
 
   <!-- =====================================================
@@ -102,7 +87,6 @@
     <div class="progress-topline">
 
       <div>
-
         <span class="eyebrow">
           NOVA AVENTURA
         </span>
@@ -110,9 +94,7 @@
         <h2 id="progressTitle">
           Identidade
         </h2>
-
       </div>
-
 
       <strong id="progressPercent">
         0%
@@ -121,7 +103,10 @@
     </div>
 
 
-    <div class="progress-track">
+    <div
+      class="progress-track"
+      aria-hidden="true"
+    >
 
       <div
         id="progressFill"
@@ -147,7 +132,6 @@
         <b>Identidade</b>
       </button>
 
-
       <button
         type="button"
         class="creation-step"
@@ -157,7 +141,6 @@
         <span>02</span>
         <b>Raça</b>
       </button>
-
 
       <button
         type="button"
@@ -169,7 +152,6 @@
         <b>Classe</b>
       </button>
 
-
       <button
         type="button"
         class="creation-step"
@@ -179,7 +161,6 @@
         <span>04</span>
         <b>Atributos</b>
       </button>
-
 
       <button
         type="button"
@@ -191,7 +172,6 @@
         <b>Poder</b>
       </button>
 
-
       <button
         type="button"
         class="creation-step"
@@ -201,7 +181,6 @@
         <span>06</span>
         <b>Mana</b>
       </button>
-
 
       <button
         type="button"
@@ -213,7 +192,6 @@
         <b>Perícias</b>
       </button>
 
-
       <button
         type="button"
         class="creation-step"
@@ -224,7 +202,6 @@
         <b>Técnicas</b>
       </button>
 
-
       <button
         type="button"
         class="creation-step"
@@ -234,7 +211,6 @@
         <span>09</span>
         <b>Inventário</b>
       </button>
-
 
       <button
         type="button"
@@ -251,13 +227,11 @@
   </section>
 
 
-
   <!-- =====================================================
-       CONTEÚDO PRINCIPAL
+       CONTEÚDO
   ====================================================== -->
 
   <main class="ficha-main">
-
 
 
     <!-- ===================================================
@@ -280,7 +254,7 @@
         </h2>
 
         <p>
-          Comece pela identidade básica da ficha.
+          Defina a identidade básica do personagem.
         </p>
 
       </div>
@@ -315,7 +289,6 @@
 
             </div>
 
-
             <img
               id="avatarImage"
               class="avatar-image"
@@ -334,7 +307,6 @@
             >
               Escolher imagem
             </label>
-
 
             <button
               type="button"
@@ -355,26 +327,22 @@
             hidden
           >
 
-
           <p class="field-hint">
-            A imagem será enviada do dispositivo quando a ficha for salva.
+            A imagem é escolhida diretamente do dispositivo.
           </p>
 
         </article>
-
 
 
         <!-- FORMULÁRIO -->
 
         <div class="form-stack">
 
-
           <label class="field">
 
             <span class="field-label">
               Nome do aventureiro <b>*</b>
             </span>
-
 
             <input
               id="characterName"
@@ -385,7 +353,6 @@
               placeholder="Ex.: Aeriom"
               required
             >
-
 
             <small
               id="nameError"
@@ -398,13 +365,11 @@
           </label>
 
 
-
           <label class="field">
 
             <span class="field-label">
               Idade
             </span>
-
 
             <input
               id="characterAge"
@@ -419,13 +384,11 @@
           </label>
 
 
-
           <label class="field">
 
             <span class="field-label">
               Descrição
             </span>
-
 
             <textarea
               id="characterDescription"
@@ -438,7 +401,6 @@
           </label>
 
 
-
           <div class="gender-field">
 
             <span class="field-label">
@@ -448,7 +410,6 @@
 
             <div class="choice-grid choice-grid-2">
 
-
               <label class="choice-card">
 
                 <input
@@ -456,7 +417,6 @@
                   name="gender"
                   value="masculino"
                 >
-
 
                 <span class="choice-card-content">
 
@@ -473,7 +433,6 @@
               </label>
 
 
-
               <label class="choice-card">
 
                 <input
@@ -481,7 +440,6 @@
                   name="gender"
                   value="feminino"
                 >
-
 
                 <span class="choice-card-content">
 
@@ -497,18 +455,15 @@
 
               </label>
 
-
             </div>
 
           </div>
-
 
         </div>
 
       </div>
 
     </section>
-
 
 
     <!-- ===================================================
@@ -532,14 +487,13 @@
         </h2>
 
         <p>
-          Explore as raças e toque no card para conhecer os detalhes.
+          Navegue entre as raças e abra o card para ver a descrição.
         </p>
 
       </div>
 
 
       <div class="carousel-shell">
-
 
         <button
           type="button"
@@ -549,7 +503,6 @@
         >
           ‹
         </button>
-
 
 
         <article
@@ -581,14 +534,12 @@
               RAÇA
             </span>
 
-
             <h3 id="raceName">
               Humano
             </h3>
 
-
             <p id="raceShortDescription">
-              Selecione uma raça para começar.
+              Selecione uma raça.
             </p>
 
           </div>
@@ -605,7 +556,6 @@
         </article>
 
 
-
         <button
           type="button"
           class="carousel-arrow"
@@ -614,7 +564,6 @@
         >
           ›
         </button>
-
 
       </div>
 
@@ -642,8 +591,44 @@
 
       </div>
 
-    </section>
 
+      <dialog
+        id="raceModal"
+        class="race-modal"
+      >
+
+        <div class="race-modal-content">
+
+          <button
+            type="button"
+            class="modal-close"
+            id="closeRaceModal"
+            aria-label="Fechar"
+          >
+            ×
+          </button>
+
+          <span class="eyebrow">
+            RAÇA
+          </span>
+
+          <h3 id="modalRaceName"></h3>
+
+          <p id="modalRaceDescription"></p>
+
+          <button
+            type="button"
+            class="button button-primary"
+            id="modalSelectRace"
+          >
+            Escolher esta raça
+          </button>
+
+        </div>
+
+      </dialog>
+
+    </section>
 
 
     <!-- ===================================================
@@ -667,20 +652,17 @@
         </h2>
 
         <p>
-          Escolha a especialização do seu aventureiro.
+          Toque no card inteiro para selecionar.
         </p>
 
       </div>
 
 
-
       <div
-        class="classes-container"
         id="classesContainer"
+        class="classes-container"
       >
 
-
-        <!-- GUERREIRO -->
 
         <article
           class="class-card"
@@ -692,14 +674,11 @@
 
           <div class="class-image-wrap">
 
-            <img
-              src="https://i.ibb.co/Z12VGcdj/file-00000000f884820ea169d455610bbb08.png"
-              alt="Equipamento da classe Guerreiro"
-              loading="lazy"
-            >
+            <div class="class-image-placeholder">
+              ⚔
+            </div>
 
           </div>
-
 
           <div class="class-info">
 
@@ -717,7 +696,6 @@
 
           </div>
 
-
           <div class="class-selection">
 
             <span>
@@ -729,9 +707,6 @@
         </article>
 
 
-
-        <!-- FEITICEIRO -->
-
         <article
           class="class-card"
           data-class="feiticeiro"
@@ -742,14 +717,11 @@
 
           <div class="class-image-wrap">
 
-            <img
-              src="https://i.ibb.co/pBsLK1dG/file-000000004438820eb1451ab0c303400a.png"
-              alt="Equipamento da classe Feiticeiro"
-              loading="lazy"
-            >
+            <div class="class-image-placeholder">
+              ✦
+            </div>
 
           </div>
-
 
           <div class="class-info">
 
@@ -767,7 +739,6 @@
 
           </div>
 
-
           <div class="class-selection">
 
             <span>
@@ -779,9 +750,6 @@
         </article>
 
 
-
-        <!-- CURANDEIRO -->
-
         <article
           class="class-card"
           data-class="curandeiro"
@@ -792,14 +760,11 @@
 
           <div class="class-image-wrap">
 
-            <img
-              src="https://i.ibb.co/MkV7gWRh/file-000000008180820e865940e8302d66ee.png"
-              alt="Equipamento da classe Curandeiro"
-              loading="lazy"
-            >
+            <div class="class-image-placeholder">
+              ✚
+            </div>
 
           </div>
-
 
           <div class="class-info">
 
@@ -817,7 +782,6 @@
 
           </div>
 
-
           <div class="class-selection">
 
             <span>
@@ -829,9 +793,6 @@
         </article>
 
 
-
-        <!-- MONGE -->
-
         <article
           class="class-card"
           data-class="monge"
@@ -842,14 +803,11 @@
 
           <div class="class-image-wrap">
 
-            <img
-              src="https://i.ibb.co/JjgbsFKy/64403ce2-d0b6-4627-9419-b9f570e4a04c-20260829-224451-0000.png"
-              alt="Equipamento da classe Monge"
-              loading="lazy"
-            >
+            <div class="class-image-placeholder">
+              ◈
+            </div>
 
           </div>
-
 
           <div class="class-info">
 
@@ -862,11 +820,10 @@
             </h3>
 
             <p>
-              Mestre das artes marciais e da disciplina corporal.
+              Especialista em Mana corporal e combate marcial.
             </p>
 
           </div>
-
 
           <div class="class-selection">
 
@@ -878,11 +835,9 @@
 
         </article>
 
-
       </div>
 
     </section>
-
 
 
     <!-- ===================================================
@@ -902,189 +857,138 @@
         </span>
 
         <h2>
-          Distribua seus atributos
+          Distribua seus dados
         </h2>
 
         <p>
-          Distribua exatamente os dados disponíveis entre os oito atributos.
+          Arraste um dado para um atributo ou toque no dado e depois no atributo.
         </p>
 
       </div>
 
 
+      <div class="dice-pool-card">
 
-      <!-- DADOS -->
-
-      <div class="dice-selection">
-
-        <div class="dice-heading">
+        <div class="dice-pool-title">
 
           <div>
 
-            <span class="field-label">
-              Dados disponíveis
+            <span class="eyebrow">
+              PISCINA DE DADOS
             </span>
 
-            <small>
-              Cada dado possui uma quantidade limitada.
-            </small>
+            <h3>
+              Seus 8 dados
+            </h3>
 
           </div>
+
+          <span
+            id="attributeCount"
+            class="attribute-count-badge"
+          >
+            0/8
+          </span>
 
         </div>
 
 
-
         <div
-          id="attributeDice"
-          class="dice-grid"
+          id="dicePool"
+          class="dice-pool"
         >
-
-
-          <!-- D4 ×1 -->
 
           <button
             type="button"
             class="dice-card"
             data-die="d4"
-            data-max-uses="1"
-            aria-label="D4 — 1 disponível"
+            draggable="true"
           >
-
-            <span class="dice-name">
-              D4
-            </span>
-
-            <span class="dice-remaining">
+            <strong>D4</strong>
+            <small class="dice-remaining">
               1 disponível
-            </span>
-
+            </small>
           </button>
 
-
-
-          <!-- D6 ×2 -->
 
           <button
             type="button"
             class="dice-card"
             data-die="d6"
-            data-max-uses="2"
-            aria-label="D6 — 2 disponíveis"
+            draggable="true"
           >
-
-            <span class="dice-name">
-              D6
-            </span>
-
-            <span class="dice-remaining">
+            <strong>D6</strong>
+            <small class="dice-remaining">
               2 disponíveis
-            </span>
-
+            </small>
           </button>
 
-
-
-          <!-- D8 ×1 -->
 
           <button
             type="button"
             class="dice-card"
             data-die="d8"
-            data-max-uses="1"
-            aria-label="D8 — 1 disponível"
+            draggable="true"
           >
-
-            <span class="dice-name">
-              D8
-            </span>
-
-            <span class="dice-remaining">
+            <strong>D8</strong>
+            <small class="dice-remaining">
               1 disponível
-            </span>
-
+            </small>
           </button>
 
-
-
-          <!-- D10 ×1 -->
 
           <button
             type="button"
             class="dice-card"
             data-die="d10"
-            data-max-uses="1"
-            aria-label="D10 — 1 disponível"
+            draggable="true"
           >
-
-            <span class="dice-name">
-              D10
-            </span>
-
-            <span class="dice-remaining">
+            <strong>D10</strong>
+            <small class="dice-remaining">
               1 disponível
-            </span>
-
+            </small>
           </button>
 
-
-
-          <!-- D12 ×1 -->
 
           <button
             type="button"
             class="dice-card"
             data-die="d12"
-            data-max-uses="1"
-            aria-label="D12 — 1 disponível"
+            draggable="true"
           >
-
-            <span class="dice-name">
-              D12
-            </span>
-
-            <span class="dice-remaining">
+            <strong>D12</strong>
+            <small class="dice-remaining">
               1 disponível
-            </span>
-
+            </small>
           </button>
 
-
-
-          <!-- D20 ×2 -->
 
           <button
             type="button"
             class="dice-card"
             data-die="d20"
-            data-max-uses="2"
-            aria-label="D20 — 2 disponíveis"
+            draggable="true"
           >
-
-            <span class="dice-name">
-              D20
-            </span>
-
-            <span class="dice-remaining">
+            <strong>D20</strong>
+            <small class="dice-remaining">
               2 disponíveis
-            </span>
-
+            </small>
           </button>
-
 
         </div>
 
+
+        <small class="dice-rules">
+          D4 ×1 · D6 ×2 · D8 ×1 · D10 ×1 · D12 ×1 · D20 ×2
+        </small>
+
       </div>
 
-
-
-      <!-- ATRIBUTOS -->
 
       <div
         id="attributeList"
         class="attribute-list"
       >
-
 
         <div
           class="attribute-row"
@@ -1092,28 +996,21 @@
         >
 
           <div>
-
-            <strong>
-              Força
-            </strong>
-
-            <small>
-              Potência física
-            </small>
-
+            <strong>FORÇA</strong>
+            <small>Potência física</small>
           </div>
-
 
           <button
             type="button"
             class="attribute-slot"
-            data-attribute-slot="forca"
+            data-attribute="forca"
           >
-            Selecionar dado
+            <span class="attribute-die-value">
+              D?
+            </span>
           </button>
 
         </div>
-
 
 
         <div
@@ -1122,118 +1019,21 @@
         >
 
           <div>
-
-            <strong>
-              Vigor
-            </strong>
-
-            <small>
-              Resistência
-            </small>
-
+            <strong>VIGOR</strong>
+            <small>Resistência</small>
           </div>
-
 
           <button
             type="button"
             class="attribute-slot"
-            data-attribute-slot="vigor"
+            data-attribute="vigor"
           >
-            Selecionar dado
+            <span class="attribute-die-value">
+              D?
+            </span>
           </button>
 
         </div>
-
-
-
-        <div
-          class="attribute-row"
-          data-attribute="controle"
-        >
-
-          <div>
-
-            <strong>
-              Controle
-            </strong>
-
-            <small>
-              Domínio e precisão
-            </small>
-
-          </div>
-
-
-          <button
-            type="button"
-            class="attribute-slot"
-            data-attribute-slot="controle"
-          >
-            Selecionar dado
-          </button>
-
-        </div>
-
-
-
-        <div
-          class="attribute-row"
-          data-attribute="precisao"
-        >
-
-          <div>
-
-            <strong>
-              Precisão
-            </strong>
-
-            <small>
-              Ações precisas
-            </small>
-
-          </div>
-
-
-          <button
-            type="button"
-            class="attribute-slot"
-            data-attribute-slot="precisao"
-          >
-            Selecionar dado
-          </button>
-
-        </div>
-
-
-
-        <div
-          class="attribute-row"
-          data-attribute="presenca"
-        >
-
-          <div>
-
-            <strong>
-              Presença
-            </strong>
-
-            <small>
-              Impacto social
-            </small>
-
-          </div>
-
-
-          <button
-            type="button"
-            class="attribute-slot"
-            data-attribute-slot="presenca"
-          >
-            Selecionar dado
-          </button>
-
-        </div>
-
 
 
         <div
@@ -1242,28 +1042,44 @@
         >
 
           <div>
-
-            <strong>
-              Agilidade
-            </strong>
-
-            <small>
-              Velocidade e movimento
-            </small>
-
+            <strong>AGILIDADE</strong>
+            <small>Reflexos e movimento</small>
           </div>
-
 
           <button
             type="button"
             class="attribute-slot"
-            data-attribute-slot="agilidade"
+            data-attribute="agilidade"
           >
-            Selecionar dado
+            <span class="attribute-die-value">
+              D?
+            </span>
           </button>
 
         </div>
 
+
+        <div
+          class="attribute-row"
+          data-attribute="precisao"
+        >
+
+          <div>
+            <strong>PRECISÃO</strong>
+            <small>Mira e precisão</small>
+          </div>
+
+          <button
+            type="button"
+            class="attribute-slot"
+            data-attribute="precisao"
+          >
+            <span class="attribute-die-value">
+              D?
+            </span>
+          </button>
+
+        </div>
 
 
         <div
@@ -1272,28 +1088,67 @@
         >
 
           <div>
-
-            <strong>
-              Intelecto
-            </strong>
-
-            <small>
-              Raciocínio
-            </small>
-
+            <strong>INTELECTO</strong>
+            <small>Conhecimento e raciocínio</small>
           </div>
-
 
           <button
             type="button"
             class="attribute-slot"
-            data-attribute-slot="intelecto"
+            data-attribute="intelecto"
           >
-            Selecionar dado
+            <span class="attribute-die-value">
+              D?
+            </span>
           </button>
 
         </div>
 
+
+        <div
+          class="attribute-row"
+          data-attribute="controle"
+        >
+
+          <div>
+            <strong>CONTROLE</strong>
+            <small>Controle de Mana</small>
+          </div>
+
+          <button
+            type="button"
+            class="attribute-slot"
+            data-attribute="controle"
+          >
+            <span class="attribute-die-value">
+              D?
+            </span>
+          </button>
+
+        </div>
+
+
+        <div
+          class="attribute-row"
+          data-attribute="presenca"
+        >
+
+          <div>
+            <strong>PRESENÇA</strong>
+            <small>Influência e presença</small>
+          </div>
+
+          <button
+            type="button"
+            class="attribute-slot"
+            data-attribute="presenca"
+          >
+            <span class="attribute-die-value">
+              D?
+            </span>
+          </button>
+
+        </div>
 
 
         <div
@@ -1302,66 +1157,42 @@
         >
 
           <div>
-
-            <strong>
-              Percepção
-            </strong>
-
-            <small>
-              Leitura do ambiente
-            </small>
-
+            <strong>PERCEPÇÃO</strong>
+            <small>Leitura do ambiente</small>
           </div>
-
 
           <button
             type="button"
             class="attribute-slot"
-            data-attribute-slot="percepcao"
+            data-attribute="percepcao"
           >
-            Selecionar dado
+            <span class="attribute-die-value">
+              D?
+            </span>
           </button>
 
         </div>
 
-
       </div>
 
 
+      <div class="attribute-chart-wrapper">
 
-      <!-- GRÁFICO -->
+        <span class="eyebrow">
+          DISTRIBUIÇÃO DOS ATRIBUTOS
+        </span>
 
-      <div class="attribute-chart-card">
-
-        <div class="section-heading compact">
-
-          <span class="eyebrow">
-            CARACTERÍSTICAS
-          </span>
-
-          <h3>
-            Perfil do aventureiro
-          </h3>
-
-        </div>
-
-
-        <div
+        <svg
           id="attributeChart"
           class="attribute-chart"
-        >
-
-          <div class="chart-placeholder">
-            O gráfico aparecerá conforme os atributos forem definidos.
-          </div>
-
-        </div>
+          viewBox="0 0 360 360"
+          role="img"
+          aria-label="Gráfico radial dos atributos"
+        ></svg>
 
       </div>
 
-
     </section>
-
 
 
     <!-- ===================================================
@@ -1385,51 +1216,148 @@
         </h2>
 
         <p>
-          Registre o conceito principal do poder do aventureiro.
+          Escolha manualmente ou gire o D100.
         </p>
 
       </div>
 
 
-      <div class="form-stack">
+      <div class="power-system">
 
-        <label class="field">
+        <div class="power-mode-buttons">
 
-          <span class="field-label">
-            Poder
-          </span>
-
-          <input
-            id="characterPower"
-            name="power"
-            type="text"
-            maxlength="100"
-            placeholder="Nome ou conceito do poder"
+          <button
+            type="button"
+            class="button button-secondary"
+            data-power-mode="manual"
           >
+            Escolher poder
+          </button>
 
-        </label>
+          <button
+            type="button"
+            class="button button-secondary"
+            data-power-mode="roll"
+          >
+            🎲 Girar D100
+          </button>
+
+        </div>
 
 
-        <label class="field">
+        <div
+          class="power-section"
+          data-power-section="manual"
+          hidden
+        >
 
           <span class="field-label">
-            Origem
+            Poderes
           </span>
 
-          <textarea
-            id="characterOrigin"
-            name="origin"
-            rows="5"
-            maxlength="1000"
-            placeholder="De onde vem o poder deste aventureiro?"
-          ></textarea>
+          <div class="power-options">
 
-        </label>
+            <button type="button" class="button button-secondary" data-power-value="Fogo">
+              Fogo
+            </button>
+
+            <button type="button" class="button button-secondary" data-power-value="Ar">
+              Ar
+            </button>
+
+            <button type="button" class="button button-secondary" data-power-value="Terra">
+              Terra
+            </button>
+
+            <button type="button" class="button button-secondary" data-power-value="Água">
+              Água
+            </button>
+
+            <button type="button" class="button button-secondary" data-power-value="Gelo">
+              Gelo
+            </button>
+
+            <button type="button" class="button button-secondary" data-power-value="Magnetismo">
+              Magnetismo
+            </button>
+
+            <button type="button" class="button button-secondary" data-power-value="Vegetação">
+              Vegetação
+            </button>
+
+            <button type="button" class="button button-secondary" data-power-value="Tecnologia">
+              Tecnologia
+            </button>
+
+            <button type="button" class="button button-secondary" data-power-value="Gravidade">
+              Gravidade
+            </button>
+
+            <button type="button" class="button button-secondary" data-power-value="Som">
+              Som
+            </button>
+
+          </div>
+
+        </div>
+
+
+        <div
+          class="power-section"
+          data-power-section="roll"
+          hidden
+        >
+
+          <div class="power-roll-result">
+
+            <span class="eyebrow">
+              RESULTADO DO D100
+            </span>
+
+            <strong data-power-result>
+              —
+            </strong>
+
+            <p data-power-result-note>
+              Gire o D100 para sortear seu poder.
+            </p>
+
+          </div>
+
+
+          <button
+            type="button"
+            class="button button-primary"
+            data-roll-power
+          >
+            🎲 Girar D100
+          </button>
+
+        </div>
+
+
+        <div class="power-selected">
+
+          <span class="eyebrow">
+            PODER ESCOLHIDO
+          </span>
+
+          <strong data-power-current>
+            Nenhum poder escolhido
+          </strong>
+
+        </div>
 
       </div>
 
-    </section>
 
+      <input
+        id="characterPower"
+        type="hidden"
+        value=""
+      >
+
+    </section>
 
 
     <!-- ===================================================
@@ -1453,27 +1381,22 @@
         </h2>
 
         <p>
-          A Mana Azul está disponível por padrão. As demais dependem da campanha.
+          Na criação inicial, somente a Mana Azul está disponível.
         </p>
 
       </div>
 
 
-
-      <div
-        id="manaGrid"
-        class="mana-grid"
-      >
-
+      <div class="mana-grid">
 
         <button
           type="button"
-          class="mana-card is-available is-selected"
+          class="mana-card"
           data-mana="azul"
         >
 
           <span class="mana-icon">
-            ✦
+            ●
           </span>
 
           <strong>
@@ -1491,7 +1414,6 @@
         </button>
 
 
-
         <button
           type="button"
           class="mana-card is-locked"
@@ -1500,7 +1422,7 @@
         >
 
           <span class="mana-icon">
-            ✦
+            ◇
           </span>
 
           <strong>
@@ -1518,34 +1440,6 @@
         </button>
 
 
-
-        <button
-          type="button"
-          class="mana-card is-locked"
-          data-mana="boa"
-          disabled
-        >
-
-          <span class="mana-icon">
-            ✦
-          </span>
-
-          <strong>
-            Mana Boa
-          </strong>
-
-          <small>
-            Bloqueada
-          </small>
-
-          <span class="mana-status">
-            🔒 Bloqueada
-          </span>
-
-        </button>
-
-
-
         <button
           type="button"
           class="mana-card is-locked"
@@ -1554,7 +1448,7 @@
         >
 
           <span class="mana-icon">
-            ✦
+            ◇
           </span>
 
           <strong>
@@ -1571,11 +1465,9 @@
 
         </button>
 
-
       </div>
 
     </section>
-
 
 
     <!-- ===================================================
@@ -1599,37 +1491,30 @@
         </h2>
 
         <p>
-          Registre as perícias e especializações do aventureiro.
+          Configure as perícias e o treinamento do aventureiro.
         </p>
 
       </div>
 
 
-      <div
-        id="skillsList"
-        class="skills-list"
-      >
+      <div class="empty-module">
 
-        <div class="empty-module">
+        <span class="empty-module-icon">
+          ✦
+        </span>
 
-          <span class="empty-module-icon">
-            ✦
-          </span>
+        <strong>
+          Sistema de Perícias
+        </strong>
 
-          <strong>
-            Perícias
-          </strong>
-
-          <p>
-            As perícias poderão ser adicionadas aqui conforme a ficha for configurada.
-          </p>
-
-        </div>
+        <p>
+          A estrutura desta etapa está preparada para receber as perícias,
+          níveis de treinamento e bônus definidos pelas regras.
+        </p>
 
       </div>
 
     </section>
-
 
 
     <!-- ===================================================
@@ -1649,11 +1534,11 @@
         </span>
 
         <h2>
-          Técnicas
+          Suas técnicas
         </h2>
 
         <p>
-          Crie as técnicas especiais do seu aventureiro.
+          Adicione as técnicas do personagem.
         </p>
 
       </div>
@@ -1667,14 +1552,13 @@
 
       <button
         type="button"
-        class="button button-secondary"
+        class="button button-primary"
         id="addTechniqueButton"
       >
         + Adicionar técnica
       </button>
 
     </section>
-
 
 
     <!-- ===================================================
@@ -1698,7 +1582,7 @@
         </h2>
 
         <p>
-          Registre os equipamentos e itens iniciais do aventureiro.
+          Adicione os itens iniciais do aventureiro.
         </p>
 
       </div>
@@ -1712,14 +1596,13 @@
 
       <button
         type="button"
-        class="button button-secondary"
+        class="button button-primary"
         id="addInventoryButton"
       >
         + Adicionar item
       </button>
 
     </section>
-
 
 
     <!-- ===================================================
@@ -1735,7 +1618,7 @@
       <div class="section-heading">
 
         <span class="eyebrow">
-          DÉCIMA ETAPA
+          ÚLTIMA ETAPA
         </span>
 
         <h2>
@@ -1749,9 +1632,7 @@
       </div>
 
 
-
-      <article class="review-card">
-
+      <div class="review-card">
 
         <div class="review-avatar">
 
@@ -1761,15 +1642,14 @@
             hidden
           >
 
-          <div
+          <span
             id="reviewAvatarFallback"
             class="review-avatar-fallback"
           >
             ◇
-          </div>
+          </span>
 
         </div>
-
 
 
         <div class="review-main">
@@ -1778,11 +1658,9 @@
             AVENTUREIRO
           </span>
 
-
           <h3 id="reviewName">
             Sem nome
           </h3>
-
 
           <p id="reviewIdentity">
             Identidade ainda não definida.
@@ -1790,7 +1668,6 @@
 
 
           <div class="review-grid">
-
 
             <div class="review-item">
 
@@ -1803,7 +1680,6 @@
               </strong>
 
             </div>
-
 
 
             <div class="review-item">
@@ -1819,7 +1695,6 @@
             </div>
 
 
-
             <div class="review-item">
 
               <span>
@@ -1831,7 +1706,6 @@
               </strong>
 
             </div>
-
 
 
             <div class="review-item">
@@ -1846,42 +1720,28 @@
 
             </div>
 
-
           </div>
 
         </div>
 
-      </article>
-
+      </div>
 
 
       <div class="review-note">
 
         <span class="eyebrow">
-          ÚLTIMA CONFERÊNCIA
+          ATRIBUTOS
         </span>
 
         <p>
-          Depois de finalizar, a ficha poderá ser adicionada a uma campanha
-          sem alterar a ficha-base original.
+          Os oito dados serão mantidos conforme a distribuição realizada na etapa de atributos.
         </p>
 
       </div>
 
-
-      <button
-        type="button"
-        class="button button-primary button-large"
-        id="finishCharacterButton"
-      >
-        Criar ficha →
-      </button>
-
     </section>
 
-
   </main>
-
 
 
   <!-- =====================================================
@@ -1894,18 +1754,17 @@
       type="button"
       class="button button-secondary"
       id="previousStepButton"
-      disabled
     >
       ← Anterior
     </button>
 
 
-    <div
-      class="step-counter"
+    <span
       id="stepCounter"
+      class="step-counter"
     >
       1 de 10
-    </div>
+    </span>
 
 
     <button
@@ -1919,57 +1778,6 @@
   </footer>
 
 
-
-  <!-- =====================================================
-       MODAL DA RAÇA
-  ====================================================== -->
-
-  <dialog
-    id="raceModal"
-    class="race-modal"
-  >
-
-    <div class="race-modal-content">
-
-      <button
-        type="button"
-        class="modal-close"
-        id="closeRaceModal"
-        aria-label="Fechar"
-      >
-        ×
-      </button>
-
-
-      <span class="eyebrow">
-        SOBRE A RAÇA
-      </span>
-
-
-      <h3 id="modalRaceName">
-        Raça
-      </h3>
-
-
-      <p id="modalRaceDescription">
-        Descrição da raça.
-      </p>
-
-
-      <button
-        type="button"
-        class="button button-primary"
-        id="modalSelectRace"
-      >
-        Selecionar raça
-      </button>
-
-    </div>
-
-  </dialog>
-
-
-
   <!-- =====================================================
        TOAST
   ====================================================== -->
@@ -1977,362 +1785,12 @@
   <div
     id="toast"
     class="toast"
+    hidden
     role="status"
     aria-live="polite"
-    hidden
   ></div>
-
-
 
 </div>
 
-
-
-<!-- =======================================================
-     PROTEÇÃO DOS LIMITES DOS DADOS
-     
-     A regra dos dados fica declarada no HTML:
-       D4  ×1
-       D6  ×2
-       D8  ×1
-       D10 ×1
-       D12 ×1
-       D20 ×2
-
-     Este pequeno controlador impede que o usuário selecione
-     um dado que já tenha atingido o limite.
-======================================================== -->
-
-<script>
-
-(function () {
-
-  "use strict";
-
-
-  const LIMITS = {
-
-    d4: 1,
-    d6: 2,
-    d8: 1,
-    d10: 1,
-    d12: 1,
-    d20: 2
-
-  };
-
-
-  function getState() {
-
-    try {
-
-      if (
-        window.AERIONFicha &&
-        typeof window.AERIONFicha.getState === "function"
-      ) {
-
-        return window.AERIONFicha.getState();
-
-      }
-
-    } catch (error) {
-
-      console.warn(
-        "[AERION] Não foi possível consultar o estado da ficha.",
-        error
-      );
-
-    }
-
-
-    return null;
-
-  }
-
-
-  function countDieUsage(
-    die,
-    state
-  ) {
-
-    if (
-      !state ||
-      !state.attributes
-    ) {
-
-      return 0;
-
-    }
-
-
-    return Object.values(
-      state.attributes
-    )
-      .filter(
-        value =>
-          String(value).toLowerCase() ===
-          die.toLowerCase()
-      )
-      .length;
-
-  }
-
-
-  function updateDiceUI() {
-
-    const state =
-      getState();
-
-
-    document
-      .querySelectorAll(
-        ".dice-card[data-die]"
-      )
-      .forEach(
-        card => {
-
-          const die =
-            card.dataset.die;
-
-
-          const max =
-            Number(
-              card.dataset.maxUses ||
-              LIMITS[die] ||
-              0
-            );
-
-
-          const used =
-            countDieUsage(
-              die,
-              state
-            );
-
-
-          const remaining =
-            Math.max(
-              0,
-              max - used
-            );
-
-
-          const remainingElement =
-            card.querySelector(
-              ".dice-remaining"
-            );
-
-
-          if (
-            remainingElement
-          ) {
-
-            remainingElement.textContent =
-              remaining === 1
-
-                ? "1 disponível"
-
-                : `${remaining} disponíveis`;
-
-          }
-
-
-          const exhausted =
-            remaining <= 0;
-
-
-          card.classList.toggle(
-            "is-exhausted",
-            exhausted
-          );
-
-
-          card.setAttribute(
-            "aria-disabled",
-            String(
-              exhausted
-            )
-          );
-
-
-          if (
-            exhausted
-          ) {
-
-            card.title =
-              `${die.toUpperCase()} esgotado`;
-
-          } else {
-
-            card.title =
-              `${remaining} ${die.toUpperCase()} disponível(is)`;
-
-          }
-
-        }
-      );
-
-  }
-
-
-  function setupDiceProtection() {
-
-    updateDiceUI();
-
-
-    /*
-     * Captura o clique ANTES do ficha.js.
-     * Se o dado já acabou, o clique é bloqueado.
-     */
-
-    document.addEventListener(
-      "click",
-      function (event) {
-
-        const diceCard =
-          event.target.closest(
-            ".dice-card[data-die]"
-          );
-
-
-        if (
-          diceCard
-        ) {
-
-          const die =
-            diceCard.dataset.die;
-
-
-          const max =
-            Number(
-              diceCard.dataset.maxUses ||
-              LIMITS[die] ||
-              0
-            );
-
-
-          const state =
-            getState();
-
-
-          const used =
-            countDieUsage(
-              die,
-              state
-            );
-
-
-          if (
-            used >= max
-          ) {
-
-            event.preventDefault();
-
-            event.stopImmediatePropagation();
-
-
-            const toast =
-              document.querySelector(
-                "#toast"
-              );
-
-
-            if (
-              toast
-            ) {
-
-              toast.textContent =
-                `${die.toUpperCase()} já foi usado ${max} vez(es).`;
-
-
-              toast.hidden =
-                false;
-
-
-              setTimeout(
-                () => {
-
-                  toast.hidden =
-                    true;
-
-                },
-                2200
-              );
-
-            }
-
-
-            return;
-
-          }
-
-        }
-
-
-        /*
-         * Depois de uma atribuição, atualiza os contadores.
-         */
-
-        setTimeout(
-          updateDiceUI,
-          0
-        );
-
-      },
-      true
-    );
-
-
-    /*
-     * Também atualiza caso a navegação da ficha provoque
-     * uma alteração no estado.
-     */
-
-    document.addEventListener(
-      "click",
-      function () {
-
-        setTimeout(
-          updateDiceUI,
-          100
-        );
-
-      }
-    );
-
-
-    window.addEventListener(
-      "pageshow",
-      updateDiceUI
-    );
-
-  }
-
-
-  if (
-    document.readyState ===
-    "loading"
-  ) {
-
-    document.addEventListener(
-      "DOMContentLoaded",
-      setupDiceProtection,
-      {
-        once: true
-      }
-    );
-
-  } else {
-
-    setupDiceProtection();
-
-  }
-
-})();
-
-</script>
-
-
 </body>
-
 </html>
