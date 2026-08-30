@@ -2,22 +2,25 @@
    AERION — CRIAÇÃO DE FICHA
    js/core/ficha.js
 
-   Sistema:
-   - Salvamento automático
-   - Restauração de rascunho
+   FUNÇÕES:
    - Identidade
    - Gênero
    - Imagem
    - Raças
    - Classes
-   - Atributos com estoque limitado de dados
-   - Troca/devolução de dados
+   - Atributos
+   - Dados limitados
+   - Clique para atribuir
+   - Drag & Drop
+   - Troca de dados
+   - Devolução de dados
+   - Gráfico radial de 8 eixos
    - Poder com D100
    - Mana Azul
-   - Perícias
    - Técnicas
    - Inventário
    - Revisão
+   - Autosave
    ========================================================= */
 
 (() => {
@@ -28,87 +31,29 @@
   ========================================================= */
 
   const CONFIG = {
-    draftKey: "aerion:ficha:draft:v3",
-    autosaveDelay: 700,
-
-    supabaseUrl:
-      window.AERION_CONFIG?.supabaseUrl ||
-      document.querySelector(
-        'meta[name="aerion-supabase-url"]'
-      )?.content ||
-      "",
-
-    supabaseAnonKey:
-      window.AERION_CONFIG?.supabaseAnonKey ||
-      document.querySelector(
-        'meta[name="aerion-supabase-anon-key"]'
-      )?.content ||
-      ""
+    draftKey: "aerion:ficha:draft:v5",
+    autosaveDelay: 700
   };
-
 
   /* =========================================================
      ETAPAS
   ========================================================= */
 
   const STEPS = [
-    {
-      id: "identity",
-      title: "Identidade"
-    },
-    {
-      id: "race",
-      title: "Raça"
-    },
-    {
-      id: "class",
-      title: "Classe"
-    },
-    {
-      id: "attributes",
-      title: "Atributos"
-    },
-    {
-      id: "power",
-      title: "Poder"
-    },
-    {
-      id: "mana",
-      title: "Mana"
-    },
-    {
-      id: "skills",
-      title: "Perícias"
-    },
-    {
-      id: "techniques",
-      title: "Técnicas"
-    },
-    {
-      id: "inventory",
-      title: "Inventário"
-    },
-    {
-      id: "review",
-      title: "Revisão"
-    }
+    { id: "identity", title: "Identidade" },
+    { id: "race", title: "Raça" },
+    { id: "class", title: "Classe" },
+    { id: "attributes", title: "Atributos" },
+    { id: "power", title: "Poder" },
+    { id: "mana", title: "Mana" },
+    { id: "skills", title: "Perícias" },
+    { id: "techniques", title: "Técnicas" },
+    { id: "inventory", title: "Inventário" },
+    { id: "review", title: "Revisão" }
   ];
 
-
   /* =========================================================
-     DADOS DOS ATRIBUTOS
-
-     REGRA DEFINIDA:
-
-     D4  ×1
-     D6  ×2
-     D8  ×1
-     D10 ×1
-     D12 ×1
-     D20 ×2
-
-     TOTAL = 8 DADOS
-     TOTAL = 8 ATRIBUTOS
+     DADOS OFICIAIS DA PISCINA
   ========================================================= */
 
   const DICE_LIMITS = Object.freeze({
@@ -119,31 +64,28 @@
     d12: 1,
     d20: 2
   });
-/* =========================================================
-   DADOS INDIVIDUAIS DA FICHA
-========================================================= */
 
-const ATTRIBUTE_ORDER = Object.freeze([
-  "forca",
-  "vigor",
-  "agilidade",
-  "precisao",
-  "intelecto",
-  "controle",
-  "presenca",
-  "percepcao"
-]);
+  const ATTRIBUTE_ORDER = [
+    "forca",
+    "vigor",
+    "agilidade",
+    "precisao",
+    "intelecto",
+    "controle",
+    "presenca",
+    "percepcao"
+  ];
 
-const DICE_POOL = Object.freeze([
-  { id: "d4-1", sides: 4 },
-  { id: "d6-1", sides: 6 },
-  { id: "d6-2", sides: 6 },
-  { id: "d8-1", sides: 8 },
-  { id: "d10-1", sides: 10 },
-  { id: "d12-1", sides: 12 },
-  { id: "d20-1", sides: 20 },
-  { id: "d20-2", sides: 20 }
-]);
+  const ATTRIBUTE_NAMES = Object.freeze({
+    forca: "Força",
+    vigor: "Vigor",
+    agilidade: "Agilidade",
+    precisao: "Precisão",
+    intelecto: "Intelecto",
+    controle: "Controle",
+    presenca: "Presença",
+    percepcao: "Percepção"
+  });
 
   /* =========================================================
      RAÇAS
@@ -153,13 +95,10 @@ const DICE_POOL = Object.freeze([
     {
       id: "humano",
       name: "Humano",
-
       maleImage:
         "https://i.ibb.co/TBNmfF0S/file-000000008b74820ea8b432fcf06ed975.png",
-
       femaleImage:
         "https://i.ibb.co/LdmxJ2h9/file-000000004b94820ead12a26ca92d75b7.png",
-
       description:
         "Humanos são uma das raças clássicas de AERION, conhecidos por sua capacidade de adaptação."
     },
@@ -167,13 +106,10 @@ const DICE_POOL = Object.freeze([
     {
       id: "elfo",
       name: "Elfo",
-
       maleImage:
         "https://i.ibb.co/0y8WXSr8/file-00000000495c820e99fc5de509918d90.png",
-
       femaleImage:
         "https://i.ibb.co/F1DCc3j/file-00000000dcf8820e883635d6ca9de492.png",
-
       description:
         "Elfos possuem uma aparência característica e forte identidade ligada à fantasia de AERION."
     },
@@ -181,13 +117,10 @@ const DICE_POOL = Object.freeze([
     {
       id: "anao",
       name: "Anão",
-
       maleImage:
         "https://i.ibb.co/CySRyjQ/file-000000001824820e952c5a665ae3496f.png",
-
       femaleImage:
         "https://i.ibb.co/hJh4XYXM/file-00000000a4fc820e9bd0551b2472e125.png",
-
       description:
         "Anões possuem constituição robusta e tradição ligada a materiais, estruturas e forja."
     },
@@ -195,13 +128,10 @@ const DICE_POOL = Object.freeze([
     {
       id: "orc",
       name: "Orc",
-
       maleImage:
         "https://i.ibb.co/ch4shzym/file-00000000e724820ebbe72fa63e4e81e3.png",
-
       femaleImage:
         "https://i.ibb.co/ksjBsffv/file-00000000decc820e9cd0c4ace952b82c.png",
-
       description:
         "Orcs apresentam características físicas marcantes e presença facilmente reconhecível."
     },
@@ -209,13 +139,10 @@ const DICE_POOL = Object.freeze([
     {
       id: "centauro",
       name: "Centauro",
-
       maleImage:
         "https://i.ibb.co/5WckT8kZ/file-000000007e1c820ebec26e736b57ba50.png",
-
       femaleImage:
         "https://i.ibb.co/hFCDFvN2/file-00000000e5c8820ebb67aa67f2d7a1b8.png",
-
       description:
         "Centauros combinam características humanoides e equinas em uma única anatomia."
     },
@@ -223,13 +150,10 @@ const DICE_POOL = Object.freeze([
     {
       id: "vampiro",
       name: "Vampiro",
-
       maleImage:
         "https://i.ibb.co/PGFcNRXZ/file-0000000019dc820ea49a893a9831ffeb.png",
-
       femaleImage:
         "https://i.ibb.co/Kpx8jh0j/file-000000008cfc820e827a7b8376d3fd55.png",
-
       description:
         "Vampiros possuem identidade sobrenatural e características visuais próprias."
     },
@@ -237,13 +161,10 @@ const DICE_POOL = Object.freeze([
     {
       id: "duende",
       name: "Duende",
-
       maleImage:
         "https://i.ibb.co/0pCbh0Dq/file-00000000d1ec820eb0c562669244c953.png",
-
       femaleImage:
         "https://i.ibb.co/G3dGmfBg/file-000000001ce8820ea3db1f6c8da1c8dd.png",
-
       description:
         "Duendes possuem aparência distinta e forte identidade ligada a comércio e contratos."
     },
@@ -251,13 +172,10 @@ const DICE_POOL = Object.freeze([
     {
       id: "fada",
       name: "Fada",
-
       maleImage:
         "https://i.ibb.co/kVKz2xjq/file-000000008c00820ebf7da3010a79bf7c.png",
-
       femaleImage:
         "https://i.ibb.co/jPysnZz1/file-00000000f014820e954413d3d309ae96.png",
-
       description:
         "Fadas possuem uma identidade fantástica e visual delicado."
     },
@@ -265,13 +183,10 @@ const DICE_POOL = Object.freeze([
     {
       id: "povo_aquatico",
       name: "Povo Aquático",
-
       maleImage:
         "https://i.ibb.co/nsCyckYB/file-0000000089f0820e89d6953c4857240c.png",
-
       femaleImage:
         "https://i.ibb.co/SDQqHjSj/file-00000000779c820ea18c5cf3ce6529b7.png",
-
       description:
         "O Povo Aquático possui características naturalmente adaptadas ao ambiente aquático."
     },
@@ -279,13 +194,10 @@ const DICE_POOL = Object.freeze([
     {
       id: "animalha_felino",
       name: "Animalha — Felino",
-
       maleImage:
         "https://i.ibb.co/fVfFL5ds/file-00000000b344820e9e39f31e92678a13.png",
-
       femaleImage:
         "https://i.ibb.co/zW6JnjPb/file-000000007a70820ea284e54236c00052.png",
-
       description:
         "Animalhas felinas possuem características animais integradas ao corpo humanoide."
     },
@@ -293,13 +205,10 @@ const DICE_POOL = Object.freeze([
     {
       id: "povo_natureza",
       name: "Povo da Natureza",
-
       maleImage:
         "https://i.ibb.co/23GdF2Py/file-000000001e48820ebbfa246147f05c6f.png",
-
       femaleImage:
         "https://i.ibb.co/gFFk7Kyv/file-00000000a170820eaf15f8650242c3c9.png",
-
       description:
         "O Povo da Natureza possui identidade ligada aos ambientes naturais."
     },
@@ -307,18 +216,14 @@ const DICE_POOL = Object.freeze([
     {
       id: "neraliano",
       name: "Neraliano",
-
       maleImage:
         "https://i.ibb.co/CpkBqzkC/file-00000000dee8820eb4f157009c1ceb5b.png",
-
       femaleImage:
         "https://i.ibb.co/k2ND7Tbp/file-000000003cb0820e842b5d0997ee34f5.png",
-
       description:
         "Neralianos possuem adaptações relacionadas à água, profundidade e vibrações."
     }
   ];
-
 
   /* =========================================================
      CLASSES
@@ -329,174 +234,113 @@ const DICE_POOL = Object.freeze([
       id: "guerreiro",
       name: "Guerreiro",
       role: "Combatente",
-      bonus: "+1",
-      description:
-        "Especialista em armas e combate.",
-      image:
-        "https://i.ibb.co/Z12VGcdj/file-00000000f884820ea169d455610bbb08.png"
+      bonus: "+1"
     },
 
     {
       id: "feiticeiro",
       name: "Feiticeiro",
       role: "Mágico",
-      bonus: "+5",
-      description:
-        "Especialista em magia, técnicas e Mana.",
-      image:
-        "https://i.ibb.co/pBsLK1dG/file-000000004438820eb1451ab0c303400a.png"
+      bonus: "+5"
     },
 
     {
       id: "curandeiro",
       name: "Curandeiro",
       role: "Suporte",
-      bonus: "+2",
-      description:
-        "Especialista em cura e suporte.",
-      image:
-        "https://i.ibb.co/MkV7gWRh/file-000000008180820e865940e8302d66ee.png"
+      bonus: "+2"
     },
 
     {
       id: "monge",
       name: "Monge",
       role: "Marcial",
-      bonus: "+7",
-      description:
-        "Especialista em Mana corporal e combate marcial.",
-      image:
-        "https://i.ibb.co/JjgbsFKy/64403ce2-d0b6-4627-9419-b9f570e4a04c-20260829-224451-0000.png"
+      bonus: "+7"
     }
   ];
 
-
-  /* =========================================================
-     ATRIBUTOS
-  ========================================================= */
-
-  const ATTRIBUTE_NAMES = Object.freeze({
-    forca: "Força",
-    vigor: "Vigor",
-    controle: "Controle",
-    precisao: "Precisão",
-    presenca: "Presença",
-    agilidade: "Agilidade",
-    intelecto: "Intelecto",
-    percepcao: "Percepção"
-  });
-
-
-  const ATTRIBUTE_DESCRIPTIONS = Object.freeze({
-    forca: "Potência física",
-    vigor: "Resistência",
-    controle: "Controle de Mana",
-    precisao: "Mira e precisão",
-    presenca: "Influência e presença",
-    agilidade: "Reflexos e movimento",
-    intelecto: "Conhecimento e raciocínio",
-    percepcao: "Leitura do ambiente"
-  });
-
-
   /* =========================================================
      PODERES
-     
-     IMPORTANTE:
-     O D100 gera um resultado 1–100.
-     Não colocamos uma tabela inventada de poderes porque
-     ela ainda não foi definida oficialmente no material.
+
+     LISTA PROVISÓRIA.
+
+     O D100 funciona agora.
+     Quando definirmos a tabela oficial 1–100,
+     substituímos somente este bloco.
   ========================================================= */
 
-  const POWER_CENTRAL_ELEMENTS = [
+  const POWER_POOL = [
     "Fogo",
     "Ar",
     "Terra",
-    "Água"
+    "Água",
+    "Gelo",
+    "Magnetismo",
+    "Vegetação",
+    "Tecnologia",
+    "Gravidade",
+    "Som"
   ];
-
 
   /* =========================================================
      ESTADO
   ========================================================= */
 
   function createDefaultState() {
-
     return {
-
       id: null,
 
       name: "",
-
       age: "",
-
       description: "",
-
       gender: "",
 
       avatarDataUrl: "",
-
       avatarFileName: "",
 
       race: "",
-
       raceIndex: 0,
 
       class: "",
-
       classBonus: "",
 
       attributes: {
-
         forca: null,
         vigor: null,
-        controle: null,
-        precisao: null,
-        presenca: null,
         agilidade: null,
+        precisao: null,
         intelecto: null,
+        controle: null,
+        presenca: null,
         percepcao: null
-
       },
 
       power: "",
-
       powerRoll: null,
-
       origin: "",
 
       mana: "azul",
 
       skills: [],
-
       techniques: [],
-
       inventory: [],
 
       currentStep: 0,
 
       updatedAt: null
-
     };
-
   }
-
 
   let state =
     createDefaultState();
 
-
   let selectedDice = null;
-
 
   let saveTimer = null;
 
-
   let toastTimer = null;
 
-
   let initialized = false;
-
 
   /* =========================================================
      DOM
@@ -510,7 +354,6 @@ const DICE_POOL = Object.freeze([
       selector
     );
 
-
   const $$ = (
     selector,
     root = document
@@ -521,50 +364,22 @@ const DICE_POOL = Object.freeze([
       )
     );
 
-
   /* =========================================================
      UTILITÁRIOS
   ========================================================= */
 
   function safeText(value) {
-
-    if (
-      value === null ||
+    return value === null ||
       value === undefined
-    ) {
-
-      return "";
-
-    }
-
-    return String(value);
-
+      ? ""
+      : String(value);
   }
 
-function getDieById(dieId) {
-  return DICE_POOL.find(
-    die => die.id === dieId
-  ) || null;
-}
-  function getUsedDieIds() {
-  const used = new Set();
-
-  Object.values(state.attributes || {}).forEach(
-    dieId => {
-      if (dieId) {
-        used.add(dieId);
-      }
-    }
-  );
-
-  return used;
-}
   function clamp(
     value,
     min,
     max
   ) {
-
     return Math.max(
       min,
       Math.min(
@@ -572,15 +387,12 @@ function getDieById(dieId) {
         value
       )
     );
-
   }
-
 
   function showToast(
     message,
     duration = 2400
   ) {
-
     const toast =
       $("#toast");
 
@@ -589,7 +401,9 @@ function getDieById(dieId) {
     }
 
     toast.textContent =
-      safeText(message);
+      safeText(
+        message
+      );
 
     toast.hidden =
       false;
@@ -601,73 +415,52 @@ function getDieById(dieId) {
     toastTimer =
       window.setTimeout(
         () => {
-
           toast.hidden =
             true;
-
         },
         duration
       );
-
   }
-
 
   function setSaveStatus(
     type,
     text
   ) {
-
     const textElement =
       $("#saveStatusText");
 
     const dot =
       $(".save-dot");
 
-    if (
-      textElement
-    ) {
-
+    if (textElement) {
       textElement.textContent =
         text;
-
     }
 
-    if (
-      !dot
-    ) {
-
+    if (!dot) {
       return;
-
     }
 
     if (
       type ===
       "error"
     ) {
-
       dot.style.background =
         "var(--danger)";
-
       dot.style.boxShadow =
         "0 0 12px rgba(197,108,99,.4)";
-
       return;
-
     }
 
     if (
       type ===
       "saved"
     ) {
-
       dot.style.background =
         "var(--success)";
-
       dot.style.boxShadow =
         "0 0 12px rgba(131,173,121,.4)";
-
       return;
-
     }
 
     dot.style.background =
@@ -675,142 +468,115 @@ function getDieById(dieId) {
 
     dot.style.boxShadow =
       "0 0 12px rgba(216,180,90,.4)";
-
   }
 
-
   /* =========================================================
-     ATRIBUTOS — NORMALIZAÇÃO
+     NORMALIZAÇÃO
   ========================================================= */
 
-  function normalizeAttributes(
-    rawAttributes
+  function normalizeDieType(
+    value
   ) {
-
-    const output = {
-
-      forca: null,
-      vigor: null,
-      controle: null,
-      precisao: null,
-      presenca: null,
-      agilidade: null,
-      intelecto: null,
-      percepcao: null
-
-    };
-
+    const raw =
+      safeText(
+        value
+      )
+      .toLowerCase();
 
     if (
-      !rawAttributes ||
-      typeof rawAttributes !==
-      "object"
+      Object.prototype.hasOwnProperty.call(
+        DICE_LIMITS,
+        raw
+      )
     ) {
-
-      return output;
-
+      return raw;
     }
 
+    const match =
+      raw.match(
+        /^d(4|6|8|10|12|20)/
+      );
 
-    const used = {
+    return match
+      ? `d${match[1]}`
+      : null;
+  }
 
+  function normalizeAttributes(
+    raw
+  ) {
+    const result = {
+      forca: null,
+      vigor: null,
+      agilidade: null,
+      precisao: null,
+      intelecto: null,
+      controle: null,
+      presenca: null,
+      percepcao: null
+    };
+
+    if (
+      !raw ||
+      typeof raw !==
+        "object"
+    ) {
+      return result;
+    }
+
+    const usage = {
       d4: 0,
       d6: 0,
       d8: 0,
       d10: 0,
       d12: 0,
       d20: 0
-
     };
 
+    ATTRIBUTE_ORDER.forEach(
+      attribute => {
+        const die =
+          normalizeDieType(
+            raw[attribute]
+          );
 
-    Object.keys(
-      output
-    )
-      .forEach(
-        attribute => {
-
-          const die =
-            safeText(
-              rawAttributes[
-                attribute
-              ]
-            )
-            .toLowerCase();
-
-
-          if (
-            !Object.prototype.hasOwnProperty.call(
-              DICE_LIMITS,
-              die
-            )
-          ) {
-
-            return;
-
-          }
-
-
-          if (
-            used[
-              die
-            ] >=
-            DICE_LIMITS[
-              die
-            ]
-          ) {
-
-            return;
-
-          }
-
-
-          output[
-            attribute
-          ] =
-            die;
-
-
-          used[
-            die
-          ]++;
-
+        if (!die) {
+          return;
         }
-      );
 
+        if (
+          usage[die] >=
+          DICE_LIMITS[die]
+        ) {
+          return;
+        }
 
-    return output;
+        result[attribute] =
+          die;
 
+        usage[die]++;
+      }
+    );
+
+    return result;
   }
-
-
-  /* =========================================================
-     NORMALIZAÇÃO COMPLETA
-  ========================================================= */
 
   function normalizeState(
     raw
   ) {
-
     const base =
       createDefaultState();
-
 
     if (
       !raw ||
       typeof raw !==
-      "object"
+        "object"
     ) {
-
       return base;
-
     }
 
-
-    const merged = {
-
+    const result = {
       ...base,
-
       ...raw,
 
       attributes:
@@ -838,128 +604,75 @@ function getDieById(dieId) {
         )
           ? raw.inventory
           : []
-
     };
 
-
-    if (
-      !Number.isInteger(
-        merged.currentStep
-      )
-    ) {
-
-      merged.currentStep =
-        0;
-
-    }
-
-
-    merged.currentStep =
+    result.currentStep =
       clamp(
-        merged.currentStep,
+        Number(
+          result.currentStep
+        ) || 0,
         0,
         STEPS.length - 1
       );
 
-
-    if (
-      !Number.isInteger(
-        merged.raceIndex
-      )
-    ) {
-
-      merged.raceIndex =
-        0;
-
-    }
-
-
-    merged.raceIndex =
+    result.raceIndex =
       clamp(
-        merged.raceIndex,
+        Number(
+          result.raceIndex
+        ) || 0,
         0,
         RACES.length - 1
       );
-
 
     if (
       !RACES.some(
         race =>
           race.id ===
-          merged.race
+          result.race
       )
     ) {
-
-      merged.race =
-        "";
-
+      result.race = "";
     }
-
 
     const classData =
       CLASSES.find(
         item =>
           item.id ===
-          merged.class
+          result.class
       );
 
-
-    if (
-      !classData
-    ) {
-
-      merged.class =
-        "";
-
-      merged.classBonus =
-        "";
-
-    } else {
-
-      merged.classBonus =
+    if (classData) {
+      result.classBonus =
         classData.bonus;
-
+    } else {
+      result.class = "";
+      result.classBonus = "";
     }
-
 
     if (
       ![
         "masculino",
         "feminino"
       ].includes(
-        merged.gender
+        result.gender
       )
     ) {
-
-      merged.gender =
-        "";
-
+      result.gender = "";
     }
 
-
-    /*
-     * Ficha-base:
-     * Mana Azul somente.
-     */
-    merged.mana =
+    result.mana =
       "azul";
 
-
-    return merged;
-
+    return result;
   }
 
-
   /* =========================================================
-     SALVAMENTO LOCAL
+     AUTOSAVE
   ========================================================= */
 
   function saveLocalDraft() {
-
     try {
-
-      const draft = {
-
+      const data = {
         ...state,
 
         attributes: {
@@ -984,84 +697,58 @@ function getDieById(dieId) {
             })
           ),
 
-        /*
-         * Data URL só permanece se for pequena.
-         * A persistência definitiva da imagem ficará no Storage.
-         */
         avatarDataUrl:
           state.avatarDataUrl &&
           state.avatarDataUrl.length <=
-          2_000_000
-
+            2_000_000
             ? state.avatarDataUrl
-
             : "",
 
         updatedAt:
           new Date().toISOString()
-
       };
-
 
       localStorage.setItem(
         CONFIG.draftKey,
         JSON.stringify(
-          draft
+          data
         )
       );
 
-
       state.updatedAt =
-        draft.updatedAt;
-
+        data.updatedAt;
 
       setSaveStatus(
         "saved",
         "Salvo automaticamente"
       );
 
-
       return true;
-
-    } catch (
-      error
-    ) {
-
+    } catch (error) {
       console.error(
         "[AERION][FICHA] Erro ao salvar:",
         error
       );
-
 
       setSaveStatus(
         "error",
         "Erro ao salvar"
       );
 
-
       return false;
-
     }
-
   }
 
-
   function loadLocalDraft() {
-
     try {
-
       const raw =
         localStorage.getItem(
           CONFIG.draftKey
         );
 
-
       if (!raw) {
-
         return false;
-
       }
-
 
       state =
         normalizeState(
@@ -1070,290 +757,139 @@ function getDieById(dieId) {
           )
         );
 
-
       return true;
-
-    } catch (
-      error
-    ) {
-
+    } catch (error) {
       console.warn(
         "[AERION][FICHA] Rascunho inválido:",
         error
       );
 
-
       localStorage.removeItem(
         CONFIG.draftKey
       );
 
-
       return false;
-
     }
-
   }
 
-
   function scheduleAutosave() {
-
     setSaveStatus(
       "saving",
       "Salvando..."
     );
 
-
     clearTimeout(
       saveTimer
     );
-
 
     saveTimer =
       window.setTimeout(
         saveLocalDraft,
         CONFIG.autosaveDelay
       );
-
   }
-
 
   /* =========================================================
-     SUPABASE
-     
-     A persistência definitiva não é ativada aqui ainda,
-     para não escrever em uma tabela incorreta.
-  ========================================================= */
-
-  function getSupabaseClient() {
-
-    if (
-      !CONFIG.supabaseUrl ||
-      !CONFIG.supabaseAnonKey
-    ) {
-
-      return null;
-
-    }
-
-
-    if (
-      !window.supabase ||
-      typeof window.supabase.createClient !==
-      "function"
-    ) {
-
-      return null;
-
-    }
-
-
-    if (
-      !window.__AERION_SUPABASE_CLIENT__
-    ) {
-
-      window.__AERION_SUPABASE_CLIENT__ =
-        window.supabase.createClient(
-          CONFIG.supabaseUrl,
-          CONFIG.supabaseAnonKey
-        );
-
-    }
-
-
-    return window.__AERION_SUPABASE_CLIENT__;
-
-  }
-
-
-  async function saveToSupabase() {
-
-    const client =
-      getSupabaseClient();
-
-
-    if (
-      !client
-    ) {
-
-      return {
-
-        ok: false,
-        skipped: true
-
-      };
-
-    }
-
-
-    /*
-     * Não executa operação destrutiva ou especulativa.
-     * A estrutura definitiva de ficha-base + campanha
-     * será conectada quando o schema estiver fechado.
-     */
-    return {
-
-      ok: false,
-
-      skipped: true,
-
-      reason:
-        "Persistência definitiva ainda não conectada."
-
-    };
-
-  }
-
-
-  /* =========================================================
-     PROGRESSO
+     PROGRESSO / ETAPAS
   ========================================================= */
 
   function isIdentityComplete() {
-
     return Boolean(
       state.name.trim()
     );
-
   }
 
-
   function isRaceComplete() {
-
     return Boolean(
       state.race
     );
-
   }
 
-
   function isClassComplete() {
-
     return Boolean(
       state.class
     );
-
   }
 
+  function getAttributeCount() {
+    return Object.values(
+      state.attributes
+    ).filter(
+      Boolean
+    ).length;
+  }
 
   function areAllAttributesAssigned() {
-
     return (
-      Object.values(
-        state.attributes
-      )
-      .filter(
-        Boolean
-      )
-      .length ===
-      Object.keys(
-        ATTRIBUTE_NAMES
-      ).length
+      getAttributeCount() ===
+      ATTRIBUTE_ORDER.length
     );
-
   }
 
-
   function isPowerComplete() {
-
     return Boolean(
       state.power.trim()
     );
-
   }
 
-
   function isManaComplete() {
-
     return (
       state.mana ===
       "azul"
     );
-
   }
-
 
   function canEnterStep(
     index
   ) {
-
-    if (
-      index <=
-      0
-    ) {
-
+    if (index <= 0) {
       return true;
-
     }
 
-
     if (
-      index >=
-      1 &&
+      index >= 1 &&
       !isIdentityComplete()
     ) {
-
       return false;
-
     }
 
-
     if (
-      index >=
-      2 &&
+      index >= 2 &&
       !isRaceComplete()
     ) {
-
       return false;
-
     }
 
-
     if (
-      index >=
-      3 &&
+      index >= 3 &&
       !isClassComplete()
     ) {
-
       return false;
-
     }
 
-
     if (
-      index >=
-      4 &&
+      index >= 4 &&
       !areAllAttributesAssigned()
     ) {
-
       return false;
-
     }
-
 
     if (
-      index >=
-      5 &&
+      index >= 5 &&
       !isPowerComplete()
     ) {
-
       return false;
-
     }
 
-
     return true;
-
   }
-
 
   function isStepComplete(
     index
   ) {
-
     switch (
       STEPS[index]?.id
     ) {
-
       case "identity":
         return isIdentityComplete();
 
@@ -1393,116 +929,66 @@ function getDieById(dieId) {
 
       default:
         return false;
-
     }
-
   }
 
-
   function getProgressPercent() {
-
-    let completed =
-      0;
-
-
-    for (
-      let i = 0;
-      i < STEPS.length;
-      i++
-    ) {
-
-      if (
-        isStepComplete(
-          i
-        )
-      ) {
-
-        completed++;
-
-      }
-
-    }
-
+    const complete =
+      STEPS.filter(
+        (_, index) =>
+          isStepComplete(
+            index
+          )
+      ).length;
 
     return Math.round(
       (
-        completed /
+        complete /
         STEPS.length
       ) *
       100
     );
-
   }
 
-
   function updateProgress() {
-
     const index =
       state.currentStep;
-
 
     const percent =
       getProgressPercent();
 
-
     const fill =
       $("#progressFill");
 
-
-    const percentage =
+    const percentEl =
       $("#progressPercent");
-
 
     const title =
       $("#progressTitle");
 
-
     const counter =
       $("#stepCounter");
 
-
-    if (
-      fill
-    ) {
-
+    if (fill) {
       fill.style.width =
         `${percent}%`;
-
     }
 
-
-    if (
-      percentage
-    ) {
-
-      percentage.textContent =
+    if (percentEl) {
+      percentEl.textContent =
         `${percent}%`;
-
     }
 
-
-    if (
-      title
-    ) {
-
+    if (title) {
       title.textContent =
-        STEPS[
-          index
-        ]?.title ||
+        STEPS[index]?.title ||
         "Identidade";
-
     }
 
-
-    if (
-      counter
-    ) {
-
+    if (counter) {
       counter.textContent =
         `${index + 1} de ${STEPS.length}`;
-
     }
-
 
     $$(".creation-step")
       .forEach(
@@ -1510,169 +996,98 @@ function getDieById(dieId) {
           button,
           buttonIndex
         ) => {
-
           button.classList.toggle(
             "is-active",
             buttonIndex ===
-            index
+              index
           );
-
 
           button.classList.toggle(
             "is-complete",
-            isStepComplete(
-              buttonIndex
-            )
+            buttonIndex <
+              index &&
+              isStepComplete(
+                buttonIndex
+              )
           );
-
 
           button.disabled =
             buttonIndex >
-            index &&
+              index &&
             !canEnterStep(
               buttonIndex
             );
-
         }
       );
-
 
     const previous =
       $("#previousStepButton");
 
-
-    if (
-      previous
-    ) {
-
+    if (previous) {
       previous.disabled =
-        index ===
-        0;
-
+        index === 0;
     }
-
 
     const next =
       $("#nextStepButton");
 
-
-    if (
-      next
-    ) {
-
+    if (next) {
       next.textContent =
         index ===
         STEPS.length - 1
-
           ? "Finalizar →"
-
           : "Próximo →";
-
     }
-
   }
 
-
   function goToStep(
-    targetIndex
+    target
   ) {
-
     const index =
       clamp(
         Number(
-          targetIndex
+          target
         ) || 0,
-
         0,
-
         STEPS.length - 1
       );
 
-
     if (
       index >
-      state.currentStep &&
+        state.currentStep &&
       !canEnterStep(
         index
       )
     ) {
-
       validateBeforeNext();
-
       return false;
-
     }
-
 
     state.currentStep =
       index;
 
-
     $$(".creation-panel")
       .forEach(
         panel => {
-
           const active =
             panel.dataset.panel ===
-            STEPS[
-              index
-            ].id;
-
+            STEPS[index].id;
 
           panel.hidden =
             !active;
-
 
           panel.classList.toggle(
             "is-active",
             active
           );
-
         }
       );
 
-
     updateProgress();
 
-
-    const stepButton =
-      $(
-        `.creation-step[data-step="${STEPS[index].id}"]`
-      );
-
-
-    stepButton?.scrollIntoView(
-      {
-        behavior:
-          "smooth",
-
-        block:
-          "nearest",
-
-        inline:
-          "center"
-      }
-    );
-
-
-    window.scrollTo(
-      {
-        top:
-          0,
-
-        behavior:
-          "smooth"
-      }
-    );
-
-
-    /*
-     * Atualiza a etapa individual.
-     */
     switch (
       STEPS[index].id
     ) {
-
       case "race":
         renderRace();
         break;
@@ -1704,129 +1119,82 @@ function getDieById(dieId) {
       case "review":
         updateReview();
         break;
-
     }
 
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth"
+    });
 
     scheduleAutosave();
 
-
     return true;
-
   }
 
-
   function validateBeforeNext() {
-
     if (
       !isIdentityComplete()
     ) {
-
       showToast(
         "Digite o nome do aventureiro."
       );
-
-
-      goToStep(
-        0
-      );
-
-
-      $("#characterName")
-        ?.focus();
-
-
+      goToStep(0);
+      $("#characterName")?.focus();
       return false;
-
     }
-
 
     if (
       !isRaceComplete()
     ) {
-
       showToast(
         "Escolha uma raça."
       );
-
-
-      goToStep(
-        1
-      );
-
-
+      goToStep(1);
       return false;
-
     }
-
 
     if (
       !isClassComplete()
     ) {
-
       showToast(
         "Escolha uma classe."
       );
-
-
-      goToStep(
-        2
-      );
-
-
+      goToStep(2);
       return false;
-
     }
-
 
     if (
       !areAllAttributesAssigned()
     ) {
-
       showToast(
         `Complete os atributos: ${getAttributeCount()}/8.`
       );
-
-
-      goToStep(
-        3
-      );
-
-
+      goToStep(3);
       return false;
-
     }
-
 
     if (
       !isPowerComplete()
     ) {
-
       showToast(
-        "Defina o poder do aventureiro."
+        "Defina o poder."
       );
-
-
-      goToStep(
-        4
-      );
-
-
+      goToStep(4);
       return false;
-
     }
 
-
     return true;
-
   }
-
 
   /* =========================================================
      IDENTIDADE
   ========================================================= */
 
   function hydrateIdentity() {
+    $("#characterName")?.setAttribute(
+      "value",
+      state.name
+    );
 
     const name =
       $("#characterName");
@@ -1837,211 +1205,102 @@ function getDieById(dieId) {
     const description =
       $("#characterDescription");
 
-    const power =
-      $("#characterPower");
-
-    const origin =
-      $("#characterOrigin");
-
-
-    if (
-      name
-    ) {
-
+    if (name) {
       name.value =
         state.name;
-
     }
 
-
-    if (
-      age
-    ) {
-
+    if (age) {
       age.value =
         state.age;
-
     }
 
-
-    if (
-      description
-    ) {
-
+    if (description) {
       description.value =
         state.description;
-
     }
-
-
-    if (
-      power
-    ) {
-
-      power.value =
-        state.power;
-
-    }
-
-
-    if (
-      origin
-    ) {
-
-      origin.value =
-        state.origin;
-
-    }
-
 
     $$(
       'input[name="gender"]'
-    )
-      .forEach(
-        radio => {
-
-          radio.checked =
-            radio.value ===
-            state.gender;
-
-        }
-      );
-
+    ).forEach(
+      radio => {
+        radio.checked =
+          radio.value ===
+          state.gender;
+      }
+    );
 
     renderAvatar();
-
   }
 
-
   function bindIdentity() {
-
     $("#characterName")
       ?.addEventListener(
         "input",
         event => {
-
           state.name =
             safeText(
               event.target.value
             );
 
+          const error =
+            $("#nameError");
 
-          $("#nameError")?.setAttribute(
-            "hidden",
-            ""
-          );
-
+          if (error) {
+            error.hidden =
+              true;
+          }
 
           updateProgress();
-
-          scheduleAutosave();
-
           updateReview();
-
+          scheduleAutosave();
         }
       );
-
 
     $("#characterAge")
       ?.addEventListener(
         "input",
         event => {
-
           state.age =
             safeText(
               event.target.value
             );
 
-
-          scheduleAutosave();
-
           updateReview();
-
+          scheduleAutosave();
         }
       );
-
 
     $("#characterDescription")
       ?.addEventListener(
         "input",
         event => {
-
           state.description =
             safeText(
               event.target.value
             );
 
-
           scheduleAutosave();
-
         }
       );
-
-
-    $("#characterPower")
-      ?.addEventListener(
-        "input",
-        event => {
-
-          state.power =
-            safeText(
-              event.target.value
-            );
-
-
-          scheduleAutosave();
-
-          updateProgress();
-
-          updateReview();
-
-        }
-      );
-
-
-    $("#characterOrigin")
-      ?.addEventListener(
-        "input",
-        event => {
-
-          state.origin =
-            safeText(
-              event.target.value
-            );
-
-
-          scheduleAutosave();
-
-        }
-      );
-
 
     $$(
       'input[name="gender"]'
-    )
-      .forEach(
-        radio => {
+    ).forEach(
+      radio => {
+        radio.addEventListener(
+          "change",
+          () => {
+            state.gender =
+              radio.value;
 
-          radio.addEventListener(
-            "change",
-            () => {
-
-              state.gender =
-                radio.value;
-
-
-              renderRace();
-
-              updateReview();
-
-              scheduleAutosave();
-
-            }
-          );
-
-        }
-      );
-
+            renderRace();
+            updateReview();
+            scheduleAutosave();
+          }
+        );
+      }
+    );
 
     $("#avatarInput")
       ?.addEventListener(
@@ -2049,667 +1308,431 @@ function getDieById(dieId) {
         handleAvatarUpload
       );
 
-
     $("#removeAvatarButton")
       ?.addEventListener(
         "click",
         () => {
-
           state.avatarDataUrl =
             "";
 
           state.avatarFileName =
             "";
 
-
           const input =
             $("#avatarInput");
 
-
-          if (
-            input
-          ) {
-
+          if (input) {
             input.value =
               "";
-
           }
 
-
           renderAvatar();
-
           scheduleAutosave();
-
         }
       );
-
   }
-
 
   function handleAvatarUpload(
     event
   ) {
-
     const file =
       event.target.files?.[0];
 
-
-    if (
-      !file
-    ) {
-
+    if (!file) {
       return;
-
     }
 
-
-    const validTypes = [
-
+    const allowed = [
       "image/png",
-
       "image/jpeg",
-
       "image/webp",
-
       "image/avif"
-
     ];
 
-
     if (
-      !validTypes.includes(
+      !allowed.includes(
         file.type
       )
     ) {
-
       showToast(
         "Formato de imagem não suportado."
       );
-
-
       event.target.value =
         "";
-
-
       return;
-
     }
-
 
     if (
       file.size >
-      6 *
-      1024 *
-      1024
+      6 * 1024 * 1024
     ) {
-
       showToast(
         "A imagem deve ter no máximo 6 MB."
       );
-
-
       event.target.value =
         "";
-
-
       return;
-
     }
-
 
     const reader =
       new FileReader();
 
-
     reader.onload =
       () => {
-
         state.avatarDataUrl =
           safeText(
             reader.result
           );
 
-
         state.avatarFileName =
           file.name;
 
-
         renderAvatar();
-
         scheduleAutosave();
-
       };
-
 
     reader.onerror =
       () => {
-
         showToast(
           "Não foi possível carregar a imagem."
         );
-
       };
-
 
     reader.readAsDataURL(
       file
     );
-
   }
 
-
   function renderAvatar() {
-
     const image =
       $("#avatarImage");
-
 
     const placeholder =
       $("#avatarPlaceholder");
 
-
     const remove =
       $("#removeAvatarButton");
-
 
     if (
       !image ||
       !placeholder
     ) {
-
       return;
-
     }
-
 
     if (
       state.avatarDataUrl
     ) {
-
       image.src =
         state.avatarDataUrl;
-
 
       image.hidden =
         false;
 
-
       placeholder.hidden =
         true;
 
-
-      if (
-        remove
-      ) {
-
+      if (remove) {
         remove.disabled =
           false;
-
       }
-
     } else {
-
       image.hidden =
         true;
-
 
       image.removeAttribute(
         "src"
       );
 
-
       placeholder.hidden =
         false;
 
-
-      if (
-        remove
-      ) {
-
+      if (remove) {
         remove.disabled =
           true;
-
       }
-
     }
 
-
     updateReview();
-
   }
 
-
   /* =========================================================
-     RAÇAS
+     RAÇA
   ========================================================= */
 
   function getCurrentRace() {
-
     return (
       RACES[
         state.raceIndex
       ] ||
       RACES[0]
     );
-
   }
-
 
   function getRaceImage(
     race
   ) {
-
-    if (
-      !race
-    ) {
-
+    if (!race) {
       return "";
-
     }
-
 
     if (
       state.gender ===
       "feminino"
     ) {
-
       return (
         race.femaleImage ||
         race.maleImage ||
         ""
       );
-
     }
-
 
     if (
       state.gender ===
       "masculino"
     ) {
-
       return (
         race.maleImage ||
         race.femaleImage ||
         ""
       );
-
     }
-
 
     return (
       race.maleImage ||
       race.femaleImage ||
       ""
     );
-
   }
 
-
   function renderRaceDots() {
-
     const container =
       $("#raceDots");
 
-
-    if (
-      !container
-    ) {
-
+    if (!container) {
       return;
-
     }
-
 
     container.innerHTML =
       "";
 
-
     RACES.forEach(
-      (
-        race,
-        index
-      ) => {
-
+      (race, index) => {
         const button =
           document.createElement(
             "button"
           );
 
-
         button.type =
           "button";
-
 
         button.className =
           index ===
           state.raceIndex
-
             ? "is-active"
-
             : "";
-
 
         button.setAttribute(
           "aria-label",
           race.name
         );
 
-
         button.addEventListener(
           "click",
           event => {
-
             event.stopPropagation();
-
 
             state.raceIndex =
               index;
 
-
             renderRace();
-
             scheduleAutosave();
-
           }
         );
-
 
         container.appendChild(
           button
         );
-
       }
     );
-
   }
 
-
   function renderRace() {
-
     const race =
       getCurrentRace();
 
-
-    if (
-      !race
-    ) {
-
+    if (!race) {
       return;
-
     }
-
 
     const image =
       $("#raceImage");
 
-
     const name =
       $("#raceName");
-
 
     const description =
       $("#raceShortDescription");
 
-
     const selected =
       $("#raceSelectedText");
 
-
-    const genderLabel =
+    const gender =
       $("#raceGenderLabel");
 
-
-    if (
-      image
-    ) {
-
+    if (image) {
       image.src =
         getRaceImage(
           race
         );
 
-
       image.alt =
         `${race.name} — personagem`;
-
     }
 
-
-    if (
-      name
-    ) {
-
+    if (name) {
       name.textContent =
         race.name;
-
     }
 
-
-    if (
-      description
-    ) {
-
+    if (description) {
       description.textContent =
         race.description;
-
     }
 
-
-    if (
-      genderLabel
-    ) {
-
-      genderLabel.textContent =
+    if (gender) {
+      gender.textContent =
         state.gender
-
           ? `${race.name} · ${state.gender}`
-
           : race.name;
-
     }
 
-
-    if (
-      selected
-    ) {
-
+    if (selected) {
       selected.textContent =
         state.race ===
         race.id
-
           ? "✓ Selecionada"
-
           : "Selecionar raça";
-
     }
 
+    $("#raceDescriptionTitle")
+      ?.replaceChildren(
+        document.createTextNode(
+          race.name
+        )
+      );
 
-    const detailsTitle =
-      $("#raceDescriptionTitle");
-
-
-    const detailsText =
-      $("#raceDescriptionText");
-
-
-    if (
-      detailsTitle
-    ) {
-
-      detailsTitle.textContent =
-        race.name;
-
-    }
-
-
-    if (
-      detailsText
-    ) {
-
-      detailsText.textContent =
-        race.description;
-
-    }
-
+    $("#raceDescriptionText")
+      ?.replaceChildren(
+        document.createTextNode(
+          race.description
+        )
+      );
 
     renderRaceDots();
-
   }
 
-
   function selectCurrentRace() {
-
     const race =
       getCurrentRace();
 
-
-    if (
-      !race
-    ) {
-
+    if (!race) {
       return false;
-
     }
-
 
     state.race =
       race.id;
 
+    state.raceIndex =
+      RACES.findIndex(
+        item =>
+          item.id ===
+          race.id
+      );
 
-    updateStateAndRender();
-
+    renderRace();
+    updateProgress();
+    updateReview();
+    scheduleAutosave();
 
     showToast(
       `${race.name} selecionada.`
     );
 
-
     return true;
-
   }
 
-
   function openRaceModal() {
-
     const race =
       getCurrentRace();
 
-
     const modal =
       $("#raceModal");
-
 
     if (
       !race ||
       !modal
     ) {
-
       return;
-
     }
 
+    $("#modalRaceName")
+      ?.replaceChildren(
+        document.createTextNode(
+          race.name
+        )
+      );
 
-    const title =
-      $("#modalRaceName");
-
-
-    const description =
-      $("#modalRaceDescription");
-
-
-    if (
-      title
-    ) {
-
-      title.textContent =
-        race.name;
-
-    }
-
-
-    if (
-      description
-    ) {
-
-      description.textContent =
-        race.description;
-
-    }
-
+    $("#modalRaceDescription")
+      ?.replaceChildren(
+        document.createTextNode(
+          race.description
+        )
+      );
 
     if (
       typeof modal.showModal ===
       "function"
     ) {
-
-      if (
-        !modal.open
-      ) {
-
+      if (!modal.open) {
         modal.showModal();
-
       }
-
     } else {
-
       modal.setAttribute(
         "open",
         ""
       );
-
     }
-
   }
 
-
   function closeRaceModal() {
-
     const modal =
       $("#raceModal");
 
-
-    if (
-      !modal
-    ) {
-
+    if (!modal) {
       return;
-
     }
-
 
     if (
       typeof modal.close ===
       "function"
     ) {
-
-      if (
-        modal.open
-      ) {
-
+      if (modal.open) {
         modal.close();
-
       }
-
     } else {
-
       modal.removeAttribute(
         "open"
       );
-
     }
-
   }
 
-
   function bindRace() {
-
     $("#racePrevious")
       ?.addEventListener(
         "click",
         event => {
-
           event.stopPropagation();
-
 
           state.raceIndex =
             (
@@ -2719,22 +1742,16 @@ function getDieById(dieId) {
             ) %
             RACES.length;
 
-
           renderRace();
-
           scheduleAutosave();
-
         }
       );
-
 
     $("#raceNext")
       ?.addEventListener(
         "click",
         event => {
-
           event.stopPropagation();
-
 
           state.raceIndex =
             (
@@ -2743,51 +1760,36 @@ function getDieById(dieId) {
             ) %
             RACES.length;
 
-
           renderRace();
-
           scheduleAutosave();
-
         }
       );
-
 
     $("#raceCard")
       ?.addEventListener(
         "click",
         event => {
-
           if (
             event.target.closest(
               ".race-select-indicator"
             )
           ) {
-
             selectCurrentRace();
-
             return;
-
           }
 
-
           openRaceModal();
-
         }
       );
-
 
     $("#modalSelectRace")
       ?.addEventListener(
         "click",
         () => {
-
           selectCurrentRace();
-
           closeRaceModal();
-
         }
       );
-
 
     $("#closeRaceModal")
       ?.addEventListener(
@@ -2795,37 +1797,28 @@ function getDieById(dieId) {
         closeRaceModal
       );
 
-
     $("#raceModal")
       ?.addEventListener(
         "click",
         event => {
-
           if (
             event.target ===
             event.currentTarget
           ) {
-
             closeRaceModal();
-
           }
-
         }
       );
-
   }
-
 
   /* =========================================================
      CLASSES
   ========================================================= */
 
   function renderClasses() {
-
     $$(".class-card")
       .forEach(
         card => {
-
           const id =
             safeText(
               card.dataset.class
@@ -2833,17 +1826,14 @@ function getDieById(dieId) {
             .trim()
             .toLowerCase();
 
-
           const selected =
             id ===
             state.class;
-
 
           card.classList.toggle(
             "is-selected",
             selected
           );
-
 
           card.setAttribute(
             "aria-pressed",
@@ -2852,43 +1842,30 @@ function getDieById(dieId) {
             )
           );
 
-
-          const selection =
+          const indicator =
             card.querySelector(
               ".class-selection span"
             );
 
-
-          if (
-            selection
-          ) {
-
-            selection.textContent =
+          if (indicator) {
+            indicator.textContent =
               selected
-
                 ? "✓ Selecionada"
-
                 : "Selecionar";
-
           }
-
         }
       );
-
   }
-
 
   function selectClass(
     classId
   ) {
-
     const normalized =
       safeText(
         classId
       )
       .trim()
       .toLowerCase();
-
 
     const classData =
       CLASSES.find(
@@ -2897,94 +1874,58 @@ function getDieById(dieId) {
           normalized
       );
 
-
-    if (
-      !classData
-    ) {
-
+    if (!classData) {
       return false;
-
     }
-
 
     state.class =
       classData.id;
 
-
     state.classBonus =
       classData.bonus;
 
-
-    updateStateAndRender();
-
+    renderClasses();
+    updateProgress();
+    updateReview();
+    scheduleAutosave();
 
     showToast(
       `${classData.name} selecionada.`
     );
 
-
     return true;
-
   }
 
-
   function bindClasses() {
-
-    /*
-     * Funciona com o HTML atual:
-     * <article class="class-card" data-class="guerreiro">
-     *
-     * Também funciona com botão, caso o HTML seja alterado.
-     */
     document.addEventListener(
       "click",
       event => {
-
         const card =
           event.target.closest(
             ".class-card[data-class]"
           );
 
-
-        if (
-          !card
-        ) {
-
+        if (!card) {
           return;
-
         }
 
-
-        const classId =
-          card.dataset.class;
-
-
         selectClass(
-          classId
+          card.dataset.class
         );
-
       }
     );
-
 
     document.addEventListener(
       "keydown",
       event => {
-
         const card =
           event.target.closest(
             ".class-card[data-class]"
           );
 
-
-        if (
-          !card
-        ) {
-
+        if (!card) {
           return;
-
         }
-
 
         if (
           event.key !==
@@ -2992,160 +1933,73 @@ function getDieById(dieId) {
           event.key !==
             " "
         ) {
-
           return;
-
         }
 
-
         event.preventDefault();
-
 
         selectClass(
           card.dataset.class
         );
-
       }
     );
-
-
-    /*
-     * Se os cards forem criados sem imagem,
-     * preenchemos usando os dados oficiais do catálogo.
-     */
-    $$(".class-card[data-class]")
-      .forEach(
-        card => {
-
-          const id =
-            card.dataset.class;
-
-
-          const classData =
-            CLASSES.find(
-              item =>
-                item.id ===
-                id
-            );
-
-
-          if (
-            !classData
-          ) {
-
-            return;
-
-          }
-
-
-          const image =
-            card.querySelector(
-              "img"
-            );
-
-
-          if (
-            image &&
-            !image.src
-          ) {
-
-            image.src =
-              classData.image;
-
-          }
-
-        }
-      );
-
   }
-
 
   /* =========================================================
-     ATRIBUTOS
+     ATRIBUTOS — PISCINA
   ========================================================= */
 
-  function getAttributeCount() {
-
-    return Object.values(
-      state.attributes
-    )
-      .filter(
-        Boolean
-      )
-      .length;
-
-  }
-
-
   function getDiceUsage() {
-
     const usage = {
-
       d4: 0,
       d6: 0,
       d8: 0,
       d10: 0,
       d12: 0,
       d20: 0
-
     };
-
 
     Object.values(
       state.attributes
     )
       .forEach(
         die => {
+          const normalized =
+            normalizeDieType(
+              die
+            );
 
           if (
-            die &&
+            normalized &&
             Object.prototype.hasOwnProperty.call(
               usage,
-              die
+              normalized
             )
           ) {
-
             usage[
-              die
+              normalized
             ]++;
-
           }
-
         }
       );
 
-
     return usage;
-
   }
-
 
   function getRemainingDice(
     die
   ) {
-
     const normalized =
-      safeText(
+      normalizeDieType(
         die
-      )
-      .toLowerCase();
+      );
 
-
-    if (
-      !Object.prototype.hasOwnProperty.call(
-        DICE_LIMITS,
-        normalized
-      )
-    ) {
-
+    if (!normalized) {
       return 0;
-
     }
-
 
     const usage =
       getDiceUsage();
-
 
     return Math.max(
       0,
@@ -3158,1145 +2012,1231 @@ function getDieById(dieId) {
         ] || 0
       )
     );
-
   }
 
+  function renderDicePool() {
+    const cards =
+      $$(".dice-card[data-die]");
 
- function updateDiceCards() {
-  const container =
-    $("#dicePool");
+    const usage =
+      getDiceUsage();
 
-  if (!container) {
-    return;
-  }
+    cards.forEach(
+      card => {
+        const die =
+          normalizeDieType(
+            card.dataset.die
+          );
 
-  const usedDice =
-    getUsedDieIds();
+        if (!die) {
+          return;
+        }
 
-  container.innerHTML = "";
+        const remaining =
+          Math.max(
+            0,
+            DICE_LIMITS[
+              die
+            ] -
+            (
+              usage[
+                die
+              ] || 0
+            )
+          );
 
-  DICE_POOL.forEach(die => {
-    if (usedDice.has(die.id)) {
-      return;
-    }
+        const remainingText =
+          card.querySelector(
+            ".dice-remaining"
+          );
 
-    const card =
-      document.createElement("button");
+        if (
+          remainingText
+        ) {
+          remainingText.textContent =
+            remaining === 1
+              ? "1 disponível"
+              : `${remaining} disponíveis`;
+        }
 
-    card.type = "button";
-    card.className = "attribute-die";
-    card.draggable = true;
+        const exhausted =
+          remaining <= 0;
 
-    card.dataset.dieId =
-      die.id;
-
-    card.dataset.sides =
-      String(die.sides);
-
-    card.textContent =
-      `D${die.sides}`;
-
-    card.addEventListener(
-      "click",
-      () => {
-        openAttributePicker(
-          die.id
+        card.classList.toggle(
+          "is-exhausted",
+          exhausted
         );
+
+        card.classList.toggle(
+          "is-selected",
+          selectedDice ===
+          die
+        );
+
+        card.setAttribute(
+          "aria-disabled",
+          String(
+            exhausted
+          )
+        );
+
+        /*
+         * Mantemos o card no DOM para continuar
+         * mostrando a quantidade. O clique é bloqueado
+         * quando não houver estoque.
+         */
+        card.disabled =
+          false;
       }
     );
-function assignDieToAttribute(
-  dieId,
-  attribute
-) {
-  const die =
-    getDieById(dieId);
 
-  if (!die) {
-    return false;
-  }
+    /*
+     * Piscina futura #dicePool.
+     */
+    const newPool =
+      $("#dicePool");
 
-  if (
-    !ATTRIBUTE_ORDER.includes(
-      attribute
-    )
-  ) {
-    return false;
-  }
+    if (
+      newPool &&
+      !newPool.hasAttribute(
+        "data-static-pool"
+      )
+    ) {
+      newPool.innerHTML =
+        "";
 
-  /*
-   * Se o atributo já possui um dado,
-   * não substituímos automaticamente.
-   */
-  if (
-    state.attributes[attribute]
-  ) {
-    showToast(
-      "Esse atributo já possui um dado."
-    );
-
-    return false;
-  }
-
-  /*
-   * O mesmo dado não pode existir
-   * em dois atributos.
-   */
-  const alreadyUsed =
-    Object.entries(
-      state.attributes
-    ).some(
-      ([key, value]) =>
-        key !== attribute &&
-        value === dieId
-    );
-
-  if (alreadyUsed) {
-    return false;
-  }
-
-  state.attributes[attribute] =
-    dieId;
-
-  selectedDice = null;
-
-  updateDiceCards();
-  renderAttributeSlots();
-  renderAttributeChart();
-
-  scheduleSave();
-
-  return true;
-}
-    function removeDieFromAttribute(
-  attribute
-) {
-  if (
-    !ATTRIBUTE_ORDER.includes(
-      attribute
-    )
-  ) {
-    return;
-  }
-
-  state.attributes[attribute] =
-    null;
-
-  updateDiceCards();
-  renderAttributeSlots();
-  renderAttributeChart();
-
-  scheduleSave();
-}
-    card.addEventListener(
-      "dragstart",
-      event => {
-        event.dataTransfer.effectAllowed =
-          "move";
-
-        event.dataTransfer.setData(
-          "text/plain",
-          die.id
-        );
-
-        card.classList.add(
-          "is-dragging"
-        );
-      }
-    );
-function setupAttributeDropZones() {
-  $$(".attribute-slot").forEach(
-    slot => {
-
-      slot.addEventListener(
-        "dragover",
-        event => {
-          event.preventDefault();
-
-          slot.classList.add(
-            "is-drag-over"
-          );
-        }
-      );
-
-      slot.addEventListener(
-        "dragleave",
-        () => {
-          slot.classList.remove(
-            "is-drag-over"
-          );
-        }
-      );
-
-      slot.addEventListener(
-        "drop",
-        event => {
-          event.preventDefault();
-
-          slot.classList.remove(
-            "is-drag-over"
-          );
-
-          const dieId =
-            event.dataTransfer.getData(
-              "text/plain"
+      Object.entries(
+        DICE_LIMITS
+      ).forEach(
+        ([die, limit]) => {
+          const remaining =
+            Math.max(
+              0,
+              limit -
+              (
+                usage[
+                  die
+                ] || 0
+              )
             );
 
-          const attribute =
-            slot.dataset.attribute;
+          for (
+            let i = 0;
+            i < remaining;
+            i++
+          ) {
+            const item =
+              document.createElement(
+                "button"
+              );
 
-          if (!dieId || !attribute) {
-            return;
+            item.type =
+              "button";
+
+            item.className =
+              "attribute-die";
+
+            item.draggable =
+              true;
+
+            item.dataset.dieType =
+              die;
+
+            item.textContent =
+              die.toUpperCase();
+
+            newPool.appendChild(
+              item
+            );
           }
-
-          assignDieToAttribute(
-            dieId,
-            attribute
-          );
         }
       );
     }
-  );
-}
-    function renderAttributeSlots() {
-  $$(".attribute-slot").forEach(
-    slot => {
+  }
 
-      const attribute =
-        slot.dataset.attribute;
-
-      const dieId =
-        state.attributes[
-          attribute
-        ];
-
-      const die =
-        dieId
-          ? getDieById(dieId)
-          : null;
-
-      const value =
-        slot.querySelector(
-          ".attribute-die-value"
-        );
-
-      if (!value) {
-        return;
-      }
-
-      if (die) {
-        value.textContent =
-          `D${die.sides}`;
-
-        slot.classList.add(
-          "has-die"
-        );
-
-        slot.dataset.dieId =
-          die.id;
-
-      } else {
-        value.textContent =
-          "D?";
-
-        slot.classList.remove(
-          "has-die"
-        );
-
-        delete slot.dataset.dieId;
-      }
-    }
-  );
-}
-    card.addEventListener(
-      "dragend",
-      () => {
-        card.classList.remove(
-          "is-dragging"
-        );
-      }
-    );
-
-    container.appendChild(
-      card
-    );
-  });
-}
+  /* =========================================================
+     ATRIBUTOS — INTERAÇÃO
+  ========================================================= */
 
   function selectDice(
     die
   ) {
-
     const normalized =
-      safeText(
+      normalizeDieType(
         die
-      )
-      .toLowerCase();
-
-
-    if (
-      !Object.prototype.hasOwnProperty.call(
-        DICE_LIMITS,
-        normalized
-      )
-    ) {
-
-      return false;
-
-    }
-
-
-    const remaining =
-      getRemainingDice(
-        normalized
       );
 
+    if (!normalized) {
+      return false;
+    }
 
     if (
-      remaining <=
-      0
+      getRemainingDice(
+        normalized
+      ) <= 0
     ) {
-
       showToast(
         `${normalized.toUpperCase()} já está esgotado.`
       );
 
-
       selectedDice =
         null;
 
-
-      updateDiceCards();
-
+      renderDicePool();
 
       return false;
-
     }
-
 
     selectedDice =
       normalized;
 
-
-    updateDiceCards();
-
+    renderDicePool();
 
     showToast(
       `${normalized.toUpperCase()} selecionado.`
     );
 
-
     return true;
-
   }
 
-
   function clearAttribute(
-    attributeId
+    attribute
   ) {
-
     if (
       !Object.prototype.hasOwnProperty.call(
         state.attributes,
-        attributeId
+        attribute
       )
     ) {
-
       return false;
-
     }
 
-
-    const oldDie =
+    const old =
       state.attributes[
-        attributeId
+        attribute
       ];
 
-
-    if (
-      !oldDie
-    ) {
-
+    if (!old) {
       return false;
-
     }
 
-
     state.attributes[
-      attributeId
+      attribute
     ] =
       null;
-
 
     selectedDice =
       null;
 
-
-    updateStateAndRender();
-
+    renderAttributes();
+    scheduleAutosave();
 
     showToast(
-      `${oldDie.toUpperCase()} devolvido aos dados disponíveis.`
+      `${old.toUpperCase()} devolvido aos dados.`
     );
 
-
     return true;
-
   }
 
-
-  function assignSelectedDice(
-    attributeId
+  function assignDiceToAttribute(
+    attribute,
+    die
   ) {
+    const normalized =
+      normalizeDieType(
+        die
+      );
 
     if (
       !Object.prototype.hasOwnProperty.call(
         state.attributes,
-        attributeId
+        attribute
       )
     ) {
-
       return false;
-
     }
 
-
-    /*
-     * Sem dado selecionado:
-     *
-     * atributo preenchido -> devolve o dado
-     */
-    if (
-      !selectedDice
-    ) {
-
-      return clearAttribute(
-        attributeId
-      );
-
+    if (!normalized) {
+      return false;
     }
 
-
-    const newDie =
-      selectedDice;
-
-
-    const oldDie =
+    const current =
       state.attributes[
-        attributeId
+        attribute
       ];
 
-
     /*
-     * Clicou no mesmo dado:
-     *
-     * D20 em Força
-     * seleciona D20
-     * toca em Força
-     * -> D20 volta para o estoque.
+     * Caso seja o mesmo dado no mesmo atributo,
+     * devolve.
      */
     if (
-      oldDie ===
-      newDie
+      current ===
+      normalized
     ) {
-
       return clearAttribute(
-        attributeId
+        attribute
       );
-
     }
 
-
     /*
-     * Como o dado antigo fica liberado antes
-     * da nova atribuição, uma troca como:
+     * Temporariamente libera o dado antigo.
+     * Isso permite a troca:
      *
-     * Força D6
-     * D20 selecionado
+     * D6 → D20
      *
-     * resulta em:
-     *
-     * Força D20
-     * D6 devolvido ao estoque
+     * sem criar D6/D20 extras.
      */
     state.attributes[
-      attributeId
+      attribute
     ] =
       null;
 
-
     /*
-     * Confirma que ainda existe quantidade
-     * do novo dado.
+     * Agora verifica o estoque real do novo dado.
      */
     if (
       getRemainingDice(
-        newDie
-      ) <=
-      0
+        normalized
+      ) <= 0
     ) {
-
       state.attributes[
-        attributeId
+        attribute
       ] =
-        oldDie;
-
-
-      showToast(
-        `${newDie.toUpperCase()} não possui mais unidades disponíveis.`
-      );
-
+        current;
 
       selectedDice =
         null;
 
+      renderAttributes();
 
-      updateDiceCards();
-
+      showToast(
+        `${normalized.toUpperCase()} não está disponível.`
+      );
 
       return false;
-
     }
 
-
     state.attributes[
-      attributeId
+      attribute
     ] =
-      newDie;
-
+      normalized;
 
     selectedDice =
       null;
 
-
-    updateStateAndRender();
-
+    renderAttributes();
+    scheduleAutosave();
 
     showToast(
-      `${newDie.toUpperCase()} colocado em ${ATTRIBUTE_NAMES[attributeId]}.`
+      `${normalized.toUpperCase()} colocado em ${ATTRIBUTE_NAMES[attribute]}.`
     );
 
-
     return true;
-
   }
 
-
-  /*
-   * Função extra para troca direta entre DOIS atributos.
-   *
-   * Não é obrigatória para o uso normal da interface,
-   * mas deixa a API preparada para drag-and-drop depois.
-   */
-  function swapAttributes(
-    firstId,
-    secondId
+  function moveAttribute(
+    source,
+    target
   ) {
-
     if (
       !Object.prototype.hasOwnProperty.call(
         state.attributes,
-        firstId
+        source
       ) ||
       !Object.prototype.hasOwnProperty.call(
         state.attributes,
-        secondId
-      )
+        target
+      ) ||
+      source === target
     ) {
-
       return false;
-
     }
 
-
-    if (
-      firstId ===
-      secondId
-    ) {
-
-      return false;
-
-    }
-
-
-    const firstDie =
+    const sourceDie =
       state.attributes[
-        firstId
+        source
       ];
 
-
-    const secondDie =
+    const targetDie =
       state.attributes[
-        secondId
+        target
       ];
 
+    /*
+     * Troca os dois valores.
+     */
+    state.attributes[
+      source
+    ] =
+      targetDie || null;
 
     state.attributes[
-      firstId
+      target
     ] =
-      secondDie || null;
-
-
-    state.attributes[
-      secondId
-    ] =
-      firstDie || null;
-
+      sourceDie || null;
 
     selectedDice =
       null;
 
-
-    updateStateAndRender();
-
+    renderAttributes();
+    scheduleAutosave();
 
     return true;
-
   }
 
-
-  function renderAttributes() {
-
-    updateDiceCards();
-
-
-    $$(".attribute-row")
+  function renderAttributeSlots() {
+    $$(".attribute-slot")
       .forEach(
-        row => {
-
+        slot => {
           const attribute =
-            row.dataset.attribute;
+            slot.dataset.attributeSlot ||
+            slot.dataset.attribute;
 
-
-          const slot =
-            row.querySelector(
-              ".attribute-slot"
-            );
-
-
-          if (
-            !slot
-          ) {
-
+          if (!attribute) {
             return;
-
           }
-
 
           const die =
             state.attributes[
               attribute
             ];
 
-
-          if (
-            die
-          ) {
-
-            slot.textContent =
-              die.toUpperCase();
-
-
-            slot.classList.add(
-              "is-filled"
+          const value =
+            slot.querySelector(
+              ".attribute-die-value"
             );
 
-
-            slot.title =
-              "Clique sem selecionar outro dado para devolver este dado. Selecione outro dado para trocar.";
-
+          if (value) {
+            value.textContent =
+              die
+                ? die.toUpperCase()
+                : "D?";
           } else {
-
+            /*
+             * Compatibilidade com a estrutura antiga.
+             */
             slot.textContent =
-              "Selecionar dado";
-
-
-            slot.classList.remove(
-              "is-filled"
-            );
-
-
-            slot.removeAttribute(
-              "title"
-            );
-
+              die
+                ? die.toUpperCase()
+                : "Selecionar dado";
           }
 
+          slot.classList.toggle(
+            "is-filled",
+            Boolean(die)
+          );
+
+          slot.dataset.attribute =
+            attribute;
+
+          slot.draggable =
+            Boolean(die);
         }
       );
+  }
 
+  function renderAttributes() {
+    renderDicePool();
 
-    updateAttributeCountUI();
+    renderAttributeSlots();
 
     renderAttributeChart();
 
-    updateProgress();
+    updateAttributeCountUI();
 
+    updateProgress();
   }
 
-
   function updateAttributeCountUI() {
-
     const list =
       $("#attributeList");
 
-
-    if (
-      !list
-    ) {
-
+    if (!list) {
       return;
-
     }
-
 
     let indicator =
       list.querySelector(
         ".attribute-count-indicator"
       );
 
-
-    if (
-      !indicator
-    ) {
-
+    if (!indicator) {
       indicator =
         document.createElement(
           "div"
         );
 
-
       indicator.className =
         "attribute-count-indicator";
-
-
-      indicator.style.color =
-        "var(--muted)";
-
-
-      indicator.style.fontSize =
-        "12px";
-
-
-      indicator.style.marginBottom =
-        "10px";
-
 
       list.prepend(
         indicator
       );
-
     }
-
 
     const count =
       getAttributeCount();
 
-
     indicator.textContent =
       areAllAttributesAssigned()
-
         ? "✓ 8/8 atributos definidos"
-
         : `${count}/8 atributos definidos`;
-
   }
 
+  /* =========================================================
+     DRAG & DROP DOS DADOS
+  ========================================================= */
 
-  function renderAttributeChart() {
+  function setupAttributeDragAndDrop() {
+    $$(".dice-card[data-die]")
+      .forEach(
+        card => {
+          card.draggable =
+            true;
 
-    const container =
-      $("#attributeChart");
+          card.addEventListener(
+            "dragstart",
+            event => {
+              const die =
+                normalizeDieType(
+                  card.dataset.die
+                );
 
-
-    if (
-      !container
-    ) {
-
-      return;
-
-    }
-
-
-    const values =
-      Object.entries(
-        state.attributes
-      )
-      .map(
-        ([
-          id,
-          die
-        ]) => {
-
-          const numeric =
-            die
-
-              ? Number(
+              if (
+                !die ||
+                getRemainingDice(
                   die
-                    .replace(
-                      "d",
-                      ""
-                    )
-                )
+                ) <= 0
+              ) {
+                event.preventDefault();
+                return;
+              }
 
-              : 0;
+              event.dataTransfer.effectAllowed =
+                "copy";
 
+              event.dataTransfer.setData(
+                "text/plain",
+                die
+              );
 
-          return {
+              event.dataTransfer.setData(
+                "application/x-aerion-source",
+                "pool"
+              );
 
-            id,
+              card.classList.add(
+                "is-dragging"
+              );
+            }
+          );
 
-            label:
-              ATTRIBUTE_NAMES[
-                id
-              ],
-
-            sides:
-              numeric
-
-          };
-
+          card.addEventListener(
+            "dragend",
+            () => {
+              card.classList.remove(
+                "is-dragging"
+              );
+            }
+          );
         }
       );
 
+    /*
+     * Slots dos atributos.
+     */
+    $$(".attribute-slot")
+      .forEach(
+        slot => {
+          const attribute =
+            slot.dataset.attributeSlot ||
+            slot.dataset.attribute;
 
-    if (
-      !values.some(
-        item =>
-          item.sides >
-          0
-      )
-    ) {
+          if (!attribute) {
+            return;
+          }
 
-      container.innerHTML =
-        `
-        <div class="chart-placeholder">
-          O gráfico aparecerá conforme os atributos forem definidos.
-        </div>
-        `;
+          slot.dataset.attribute =
+            attribute;
 
+          slot.addEventListener(
+            "dragover",
+            event => {
+              event.preventDefault();
 
-      return;
+              slot.classList.add(
+                "is-drag-over"
+              );
 
-    }
+              if (
+                event.dataTransfer
+              ) {
+                event.dataTransfer.dropEffect =
+                  "move";
+              }
+            }
+          );
 
+          slot.addEventListener(
+            "dragleave",
+            () => {
+              slot.classList.remove(
+                "is-drag-over"
+              );
+            }
+          );
 
-    container.innerHTML =
-      "";
+          slot.addEventListener(
+            "drop",
+            event => {
+              event.preventDefault();
 
+              slot.classList.remove(
+                "is-drag-over"
+              );
 
-    const chart =
-      document.createElement(
-        "div"
+              const die =
+                normalizeDieType(
+                  event.dataTransfer.getData(
+                    "text/plain"
+                  )
+                );
+
+              const source =
+                event.dataTransfer.getData(
+                  "application/x-aerion-source"
+                );
+
+              if (!die) {
+                return;
+              }
+
+              /*
+               * Drag de um atributo para outro.
+               */
+              if (
+                source &&
+                source !== "pool" &&
+                ATTRIBUTE_ORDER.includes(
+                  source
+                )
+              ) {
+                moveAttribute(
+                  source,
+                  attribute
+                );
+
+                return;
+              }
+
+              /*
+               * Drag da piscina.
+               */
+              assignDiceToAttribute(
+                attribute,
+                die
+              );
+            }
+          );
+
+          slot.addEventListener(
+            "dragstart",
+            event => {
+              const die =
+                state.attributes[
+                  attribute
+                ];
+
+              if (!die) {
+                event.preventDefault();
+                return;
+              }
+
+              event.dataTransfer.effectAllowed =
+                "move";
+
+              event.dataTransfer.setData(
+                "text/plain",
+                die
+              );
+
+              event.dataTransfer.setData(
+                "application/x-aerion-source",
+                attribute
+              );
+
+              slot.classList.add(
+                "is-dragging"
+              );
+            }
+          );
+
+          slot.addEventListener(
+            "dragend",
+            () => {
+              slot.classList.remove(
+                "is-dragging"
+              );
+            }
+          );
+        }
       );
-
-
-    chart.style.width =
-      "100%";
-
-
-    chart.style.display =
-      "grid";
-
-
-    chart.style.gap =
-      "10px";
-
-
-    values.forEach(
-      item => {
-
-        const row =
-          document.createElement(
-            "div"
-          );
-
-
-        row.style.display =
-          "grid";
-
-
-        row.style.gridTemplateColumns =
-          "95px minmax(0,1fr) 48px";
-
-
-        row.style.alignItems =
-          "center";
-
-
-        row.style.gap =
-          "10px";
-
-
-        const label =
-          document.createElement(
-            "span"
-          );
-
-
-        label.textContent =
-          item.label;
-
-
-        label.style.color =
-          "#bdb7ac";
-
-
-        label.style.fontSize =
-          "12px";
-
-
-        const track =
-          document.createElement(
-            "div"
-          );
-
-
-        track.style.height =
-          "8px";
-
-
-        track.style.overflow =
-          "hidden";
-
-
-        track.style.borderRadius =
-          "999px";
-
-
-        track.style.background =
-          "rgba(255,255,255,.07)";
-
-
-        const fill =
-          document.createElement(
-            "div"
-          );
-
-
-        fill.style.height =
-          "100%";
-
-
-        fill.style.width =
-          `${Math.min(
-            100,
-            (
-              item.sides /
-              20
-            ) *
-            100
-          )}%`;
-
-
-        fill.style.borderRadius =
-          "inherit";
-
-
-        fill.style.background =
-          "linear-gradient(90deg,#a47d29,#edd58d)";
-
-
-        fill.style.transition =
-          "width .3s ease";
-
-
-        const value =
-          document.createElement(
-            "strong"
-          );
-
-
-        value.textContent =
-          item.sides
-
-            ? `D${item.sides}`
-
-            : "—";
-
-
-        value.style.color =
-          item.sides
-
-            ? "var(--gold-soft)"
-
-            : "#67635c";
-
-
-        value.style.textAlign =
-          "right";
-
-
-        value.style.fontFamily =
-          "Georgia,serif";
-
-
-        track.appendChild(
-          fill
-        );
-
-
-        row.append(
-          label,
-          track,
-          value
-        );
-
-
-        chart.appendChild(
-          row
-        );
-
-      }
-    );
-
-
-    container.appendChild(
-      chart
-    );
-
   }
 
-
-  function bindAttributes() {
-
-    /*
-     * Dados
-     */
+  function bindAttributeClicks() {
     document.addEventListener(
       "click",
       event => {
-
         const diceCard =
           event.target.closest(
             ".dice-card[data-die]"
           );
 
-
         if (
-          !diceCard
+          diceCard
         ) {
+          const die =
+            normalizeDieType(
+              diceCard.dataset.die
+            );
+
+          if (
+            die &&
+            getRemainingDice(
+              die
+            ) > 0
+          ) {
+            selectDice(
+              die
+            );
+          } else {
+            showToast(
+              `${die?.toUpperCase() || "DADO"} esgotado.`
+            );
+          }
 
           return;
-
         }
 
+        const newDice =
+          event.target.closest(
+            ".attribute-die[data-die-type]"
+          );
 
-        const die =
-          diceCard.dataset.die;
+        if (
+          newDice
+        ) {
+          selectDice(
+            newDice.dataset.dieType
+          );
 
-
-        selectDice(
-          die
-        );
-
-      },
-      true
-    );
-
-
-    /*
-     * Slots dos atributos
-     */
-    document.addEventListener(
-      "click",
-      event => {
+          return;
+        }
 
         const slot =
           event.target.closest(
-            ".attribute-slot[data-attribute-slot]"
+            ".attribute-slot"
           );
-
 
         if (
           !slot
         ) {
-
           return;
-
         }
 
+        const attribute =
+          slot.dataset.attributeSlot ||
+          slot.dataset.attribute;
 
-        assignSelectedDice(
-          slot.dataset.attributeSlot
+        if (!attribute) {
+          return;
+        }
+
+        if (
+          selectedDice
+        ) {
+          assignDiceToAttribute(
+            attribute,
+            selectedDice
+          );
+
+          return;
+        }
+
+        /*
+         * Sem dado selecionado:
+         * toque no atributo preenchido = devolve.
+         */
+        if (
+          state.attributes[
+            attribute
+          ]
+        ) {
+          clearAttribute(
+            attribute
+          );
+        }
+      }
+    );
+  }
+
+  /* =========================================================
+     GRÁFICO RADIAL
+  ========================================================= */
+
+  function chartValue(
+    die
+  ) {
+    const normalized =
+      normalizeDieType(
+        die
+      );
+
+    if (!normalized) {
+      return 0.08;
+    }
+
+    const number =
+      Number(
+        normalized.replace(
+          "d",
+          ""
+        )
+      );
+
+    return clamp(
+      number / 20,
+      0.08,
+      1
+    );
+  }
+
+  function createSvgElement(
+    name,
+    attributes = {}
+  ) {
+    const element =
+      document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        name
+      );
+
+    Object.entries(
+      attributes
+    ).forEach(
+      ([key, value]) => {
+        element.setAttribute(
+          key,
+          String(value)
         );
-
       }
     );
 
+    return element;
   }
 
+  function renderAttributeChart() {
+    let container =
+      $("#attributeChart");
+
+    if (!container) {
+      return;
+    }
+
+    let svg;
+
+    if (
+      container.tagName.toLowerCase() ===
+      "svg"
+    ) {
+      svg =
+        container;
+    } else {
+      svg =
+        container.querySelector(
+          "svg"
+        );
+
+      if (!svg) {
+        svg =
+          createSvgElement(
+            "svg"
+          );
+
+        container.innerHTML =
+          "";
+
+        container.appendChild(
+          svg
+        );
+      }
+    }
+
+    const width =
+      360;
+
+    const height =
+      360;
+
+    const cx =
+      180;
+
+    const cy =
+      180;
+
+    const radius =
+      112;
+
+    const total =
+      ATTRIBUTE_ORDER.length;
+
+    svg.setAttribute(
+      "viewBox",
+      `0 0 ${width} ${height}`
+    );
+
+    svg.setAttribute(
+      "aria-label",
+      "Gráfico radial dos atributos"
+    );
+
+    svg.setAttribute(
+      "role",
+      "img"
+    );
+
+    svg.innerHTML =
+      "";
+
+    /*
+     * Anéis do gráfico.
+     */
+    [0.25, 0.5, 0.75, 1]
+      .forEach(
+        scale => {
+          const points =
+            ATTRIBUTE_ORDER
+              .map(
+                (_, index) => {
+                  const angle =
+                    -Math.PI / 2 +
+                    index *
+                      (
+                        Math.PI *
+                        2 /
+                        total
+                      );
+
+                  const x =
+                    cx +
+                    Math.cos(
+                      angle
+                    ) *
+                    radius *
+                    scale;
+
+                  const y =
+                    cy +
+                    Math.sin(
+                      angle
+                    ) *
+                    radius *
+                    scale;
+
+                  return `${x},${y}`;
+                }
+              )
+              .join(
+                " "
+              );
+
+          svg.appendChild(
+            createSvgElement(
+              "polygon",
+              {
+                points,
+                class:
+                  "attribute-chart-ring"
+              }
+            )
+          );
+        }
+      );
+
+    /*
+     * Eixos.
+     */
+    ATTRIBUTE_ORDER.forEach(
+      (_, index) => {
+        const angle =
+          -Math.PI / 2 +
+          index *
+            (
+              Math.PI *
+              2 /
+              total
+            );
+
+        const x =
+          cx +
+          Math.cos(
+            angle
+          ) *
+          radius;
+
+        const y =
+          cy +
+          Math.sin(
+            angle
+          ) *
+          radius;
+
+        svg.appendChild(
+          createSvgElement(
+            "line",
+            {
+              x1: cx,
+              y1: cy,
+              x2: x,
+              y2: y,
+              class:
+                "attribute-chart-axis"
+            }
+          )
+        );
+      }
+    );
+
+    /*
+     * Polígono dos valores.
+     */
+    const points =
+      ATTRIBUTE_ORDER
+        .map(
+          (
+            attribute,
+            index
+          ) => {
+            const value =
+              chartValue(
+                state.attributes[
+                  attribute
+                ]
+              );
+
+            const angle =
+              -Math.PI / 2 +
+              index *
+                (
+                  Math.PI *
+                  2 /
+                  total
+                );
+
+            const x =
+              cx +
+              Math.cos(
+                angle
+              ) *
+              radius *
+              value;
+
+            const y =
+              cy +
+              Math.sin(
+                angle
+              ) *
+              radius *
+              value;
+
+            return {
+              x,
+              y,
+              attribute
+            };
+          }
+        );
+
+    svg.appendChild(
+      createSvgElement(
+        "polygon",
+        {
+          points:
+            points
+              .map(
+                point =>
+                  `${point.x},${point.y}`
+              )
+              .join(
+                " "
+              ),
+          class:
+            "attribute-chart-area"
+        }
+      )
+    );
+
+    /*
+     * Pontos.
+     */
+    points.forEach(
+      point => {
+        svg.appendChild(
+          createSvgElement(
+            "circle",
+            {
+              cx:
+                point.x,
+              cy:
+                point.y,
+              r:
+                5,
+              class:
+                "attribute-chart-point"
+            }
+          )
+        );
+      }
+    );
+
+    /*
+     * Nomes dos atributos.
+     */
+    points.forEach(
+      (
+        point,
+        index
+      ) => {
+        const labelRadius =
+          radius + 30;
+
+        const angle =
+          -Math.PI / 2 +
+          index *
+            (
+              Math.PI *
+              2 /
+              total
+            );
+
+        const x =
+          cx +
+          Math.cos(
+            angle
+          ) *
+          labelRadius;
+
+        const y =
+          cy +
+          Math.sin(
+            angle
+          ) *
+          labelRadius;
+
+        let anchor =
+          "middle";
+
+        if (
+          x <
+          cx - 10
+        ) {
+          anchor =
+            "end";
+        }
+
+        if (
+          x >
+          cx + 10
+        ) {
+          anchor =
+            "start";
+        }
+
+        const label =
+          createSvgElement(
+            "text",
+            {
+              x,
+              y,
+              "text-anchor":
+                anchor,
+              "dominant-baseline":
+                "middle",
+              class:
+                "attribute-chart-label"
+            }
+          );
+
+        label.textContent =
+          ATTRIBUTE_NAMES[
+            point.attribute
+          ];
+
+        svg.appendChild(
+          label
+        );
+      }
+    );
+
+    /*
+     * Centro.
+     */
+    svg.appendChild(
+      createSvgElement(
+        "circle",
+        {
+          cx,
+          cy,
+          r: 3,
+          class:
+            "attribute-chart-center"
+        }
+      )
+    );
+  }
 
   /* =========================================================
      PODER — D100
   ========================================================= */
 
   function ensurePowerInterface() {
-
     const panel =
       $(
         '.creation-panel[data-panel="power"]'
       );
 
-
-    if (
-      !panel
-    ) {
-
+    if (!panel) {
       return;
-
     }
 
-
-    /*
-     * Se o HTML futuro já possuir o sistema completo,
-     * não duplicamos.
-     */
     if (
       panel.querySelector(
         ".power-system"
       )
     ) {
-
       return;
-
     }
 
-
-    /*
-     * Apenas adiciona o núcleo interativo do D100
-     * ao painel existente.
-     */
-    const existingHeading =
+    const heading =
       panel.querySelector(
         ".section-heading"
       );
 
-
-    const container =
+    const system =
       document.createElement(
         "div"
       );
 
-
-    container.className =
+    system.className =
       "power-system";
 
-
-    container.style.display =
-      "grid";
-
-
-    container.style.gap =
-      "18px";
-
-
-    container.innerHTML =
+    system.innerHTML =
       `
       <div
-        class="power-choice-mode"
+        class="power-mode-buttons"
         style="
           display:grid;
-          grid-template-columns:repeat(2,minmax(0,1fr));
+          grid-template-columns:1fr 1fr;
           gap:12px;
         "
       >
@@ -4314,45 +3254,44 @@ function setupAttributeDropZones() {
           class="button button-secondary"
           data-power-mode="roll"
         >
-          🎲 Sortear D100
+          🎲 Girar D100
         </button>
 
       </div>
 
 
       <div
-        class="power-manual"
+        class="power-section"
         data-power-section="manual"
         hidden
       >
 
         <span class="field-label">
-          Elementos centrais
+          Poderes disponíveis
         </span>
 
         <div
+          class="power-options"
           style="
             display:grid;
-            grid-template-columns:repeat(2,minmax(0,1fr));
+            grid-template-columns:repeat(2,1fr);
             gap:10px;
-            margin-top:10px;
+            margin-top:12px;
           "
         >
 
-          ${POWER_CENTRAL_ELEMENTS
-            .map(
-              power =>
-                `
-                <button
-                  type="button"
-                  class="button button-secondary"
-                  data-power-value="${power}"
-                >
-                  ${power}
-                </button>
-                `
-            )
-            .join("")}
+          ${POWER_POOL.map(
+            power =>
+              `
+              <button
+                type="button"
+                class="button button-secondary"
+                data-power-value="${power}"
+              >
+                ${power}
+              </button>
+              `
+          ).join("")}
 
         </div>
 
@@ -4360,23 +3299,23 @@ function setupAttributeDropZones() {
 
 
       <div
-        class="power-roll"
+        class="power-section"
         data-power-section="roll"
         hidden
       >
 
         <div
+          class="power-roll-result"
           style="
-            padding:25px;
+            padding:28px;
             border:1px solid var(--line);
             border-radius:18px;
             text-align:center;
-            background:rgba(255,255,255,.015);
           "
         >
 
           <span class="eyebrow">
-            RESULTADO DO D100
+            RESULTADO
           </span>
 
           <strong
@@ -4385,7 +3324,7 @@ function setupAttributeDropZones() {
               display:block;
               margin-top:8px;
               font-family:Georgia,serif;
-              font-size:54px;
+              font-size:58px;
               color:var(--gold-soft);
             "
           >
@@ -4399,29 +3338,31 @@ function setupAttributeDropZones() {
               color:var(--muted);
             "
           >
-            Role o D100 para obter um resultado.
+            Gire o D100 para sortear seu poder.
           </p>
 
         </div>
+
 
         <button
           type="button"
           class="button button-primary"
           data-roll-power
+          style="width:100%;margin-top:12px;"
         >
-          🎲 Rolar D100
+          🎲 Girar D100
         </button>
 
       </div>
 
 
       <div
-        class="power-current"
+        class="power-selected"
         style="
           padding:18px;
           border:1px solid var(--line);
           border-radius:16px;
-          background:rgba(255,255,255,.012);
+          margin-top:4px;
         "
       >
 
@@ -4435,7 +3376,7 @@ function setupAttributeDropZones() {
             display:block;
             margin-top:6px;
             font-family:Georgia,serif;
-            font-size:27px;
+            font-size:28px;
           "
         >
           Nenhum poder escolhido
@@ -4444,410 +3385,271 @@ function setupAttributeDropZones() {
       </div>
       `;
 
-
-    /*
-     * Encontra a posição correta:
-     * depois do heading.
-     */
-    if (
-      existingHeading
-    ) {
-
-      existingHeading.after(
-        container
+    if (heading) {
+      heading.after(
+        system
       );
-
     } else {
-
       panel.prepend(
-        container
+        system
       );
-
     }
 
-
     /*
-     * Esconde os inputs antigos de poder/origem visualmente
-     * sem apagar dados que possam existir.
+     * Esconde os campos antigos.
      */
-    $("#characterPower")?.closest(
-      ".field"
-    )?.setAttribute(
-      "hidden",
-      ""
-    );
+    $("#characterPower")
+      ?.closest(
+        ".field"
+      )
+      ?.setAttribute(
+        "hidden",
+        ""
+      );
 
+    $("#characterOrigin")
+      ?.closest(
+        ".field"
+      )
+      ?.setAttribute(
+        "hidden",
+        ""
+      );
   }
 
-
   function renderPower() {
-
     ensurePowerInterface();
-
 
     const current =
       $(
         "[data-power-current]"
       );
 
-
     const result =
       $(
         "[data-power-result]"
       );
-
 
     const note =
       $(
         "[data-power-result-note]"
       );
 
-
-    if (
-      current
-    ) {
-
+    if (current) {
       current.textContent =
         state.power.trim() ||
         "Nenhum poder escolhido";
-
     }
 
-
-    if (
-      result
-    ) {
-
+    if (result) {
       result.textContent =
         state.powerRoll
           ? String(
               state.powerRoll
             )
           : "—";
-
     }
 
-
-    if (
-      note
-    ) {
-
+    if (note) {
       if (
         state.powerRoll
       ) {
-
         note.textContent =
-          "Resultado gerado pelo D100. A associação entre faixas e poderes será aplicada quando a tabela oficial estiver definida.";
-
+          `D100: ${state.powerRoll} → ${state.power || "sem poder"}`;
       } else {
-
         note.textContent =
-          "Role o D100 para obter um resultado.";
-
+          "Gire o D100 para sortear seu poder.";
       }
-
     }
-
 
     updateProgress();
-
   }
 
-
-  function selectManualPower(
-    power
+  function choosePower(
+    power,
+    roll = null
   ) {
-
-    if (
-      !POWER_CENTRAL_ELEMENTS.includes(
-        power
-      )
-    ) {
-
-      return false;
-
-    }
-
-
     state.power =
       power;
 
+    state.powerRoll =
+      roll;
 
-    updateStateAndRender();
+    const oldInput =
+      $("#characterPower");
 
+    if (oldInput) {
+      oldInput.value =
+        power;
+    }
 
     renderPower();
-
-
-    showToast(
-      `${power} selecionado como poder.`
-    );
-
-
-    return true;
-
+    updateReview();
+    updateProgress();
+    scheduleAutosave();
   }
 
-
   function rollPowerD100() {
-
-    const result =
+    const roll =
       Math.floor(
         Math.random() *
         100
-      ) +
-      1;
-
-
-    state.powerRoll =
-      result;
-
+      ) + 1;
 
     /*
-     * NÃO atribuímos automaticamente um elemento,
-     * porque a tabela 1–100 de poderes ainda não foi fechada.
+     * A lista atual é provisória até a tabela
+     * oficial 1–100 ser definida.
      */
+    const power =
+      POWER_POOL[
+        Math.floor(
+          Math.random() *
+          POWER_POOL.length
+        )
+      ];
 
-
-    const resultElement =
-      $(
-        "[data-power-result]"
-      );
-
-
-    const note =
-      $(
-        "[data-power-result-note]"
-      );
-
-
-    if (
-      resultElement
-    ) {
-
-      resultElement.textContent =
-        String(
-          result
-        );
-
-    }
-
-
-    if (
-      note
-    ) {
-
-      note.textContent =
-        `Resultado: ${result}. A tabela oficial do D100 definirá qual poder corresponde a este número.`;
-
-    }
-
-
-    scheduleAutosave();
-
-
-    showToast(
-      `D100: ${result}`
+    choosePower(
+      power,
+      roll
     );
 
+    showToast(
+      `D100: ${roll} → ${power}`
+    );
 
-    return result;
-
+    return {
+      roll,
+      power
+    };
   }
 
-
   function bindPower() {
-
-    /*
-     * O HTML pode não ter os controles ainda;
-     * eles são criados automaticamente.
-     */
     ensurePowerInterface();
-
 
     document.addEventListener(
       "click",
       event => {
-
         const mode =
           event.target.closest(
             "[data-power-mode]"
           );
 
-
-        if (
-          mode
-        ) {
-
+        if (mode) {
           const selectedMode =
             mode.dataset.powerMode;
-
 
           const manual =
             $(
               '[data-power-section="manual"]'
             );
 
-
           const roll =
             $(
               '[data-power-section="roll"]'
             );
 
-
-          if (
-            manual
-          ) {
-
+          if (manual) {
             manual.hidden =
               selectedMode !==
               "manual";
-
           }
 
-
-          if (
-            roll
-          ) {
-
+          if (roll) {
             roll.hidden =
               selectedMode !==
               "roll";
-
           }
 
-
           return;
-
         }
-
 
         const powerButton =
           event.target.closest(
             "[data-power-value]"
           );
 
-
-        if (
-          powerButton
-        ) {
-
-          selectManualPower(
+        if (powerButton) {
+          choosePower(
             powerButton.dataset.powerValue
           );
 
+          showToast(
+            `${powerButton.dataset.powerValue} escolhido.`
+          );
 
           return;
-
         }
-
 
         const rollButton =
           event.target.closest(
             "[data-roll-power]"
           );
 
-
-        if (
-          rollButton
-        ) {
-
+        if (rollButton) {
           rollPowerD100();
-
         }
-
       }
     );
-
   }
-
 
   /* =========================================================
      MANA
   ========================================================= */
 
   function renderMana() {
+    state.mana =
+      "azul";
 
     $$(".mana-card")
       .forEach(
         card => {
-
-          const azul =
+          const isBlue =
             card.dataset.mana ===
             "azul";
 
-
           card.classList.toggle(
             "is-selected",
-            azul
+            isBlue
           );
 
-
-          if (
-            !azul
-          ) {
-
+          if (!isBlue) {
             card.disabled =
               true;
-
           }
-
         }
       );
 
-
-    state.mana =
-      "azul";
-
-
     updateProgress();
-
   }
 
-
   function bindMana() {
-
     document.addEventListener(
       "click",
       event => {
-
         const card =
           event.target.closest(
             ".mana-card[data-mana]"
           );
 
-
-        if (
-          !card
-        ) {
-
+        if (!card) {
           return;
-
         }
 
-
         if (
-          card.disabled
+          card.dataset.mana !==
+          "azul"
         ) {
-
           return;
-
         }
-
 
         state.mana =
           "azul";
 
-
         renderMana();
-
         scheduleAutosave();
-
       }
     );
-
   }
-
 
   /* =========================================================
      TÉCNICAS
@@ -4857,22 +3659,13 @@ function setupAttributeDropZones() {
     index,
     technique
   ) {
-
     const wrapper =
       document.createElement(
         "div"
       );
 
-
     wrapper.className =
       "empty-module";
-
-
-    wrapper.dataset.techniqueIndex =
-      String(
-        index
-      );
-
 
     wrapper.innerHTML =
       `
@@ -4885,7 +3678,6 @@ function setupAttributeDropZones() {
       >
 
         <label class="field">
-
           <span class="field-label">
             Nome
           </span>
@@ -4896,12 +3688,10 @@ function setupAttributeDropZones() {
             maxlength="100"
             placeholder="Nome da técnica"
           >
-
         </label>
 
 
         <label class="field">
-
           <span class="field-label">
             Descrição
           </span>
@@ -4910,9 +3700,8 @@ function setupAttributeDropZones() {
             data-technique-field="description"
             rows="4"
             maxlength="1000"
-            placeholder="O que essa técnica faz?"
+            placeholder="Descrição"
           ></textarea>
-
         </label>
 
 
@@ -4925,7 +3714,6 @@ function setupAttributeDropZones() {
         >
 
           <label class="field">
-
             <span class="field-label">
               Alcance
             </span>
@@ -4934,14 +3722,11 @@ function setupAttributeDropZones() {
               type="text"
               data-technique-field="range"
               maxlength="80"
-              placeholder="Alcance"
             >
-
           </label>
 
 
           <label class="field">
-
             <span class="field-label">
               Dano / Efeito
             </span>
@@ -4950,16 +3735,13 @@ function setupAttributeDropZones() {
               type="text"
               data-technique-field="damage"
               maxlength="100"
-              placeholder="Dano ou efeito"
             >
-
           </label>
 
         </div>
 
 
         <label class="field">
-
           <span class="field-label">
             Custo
           </span>
@@ -4968,14 +3750,11 @@ function setupAttributeDropZones() {
             type="text"
             data-technique-field="cost"
             maxlength="80"
-            placeholder="Custo"
           >
-
         </label>
 
 
         <label class="field">
-
           <span class="field-label">
             Teste
           </span>
@@ -4984,14 +3763,11 @@ function setupAttributeDropZones() {
             type="text"
             data-technique-field="test"
             maxlength="100"
-            placeholder="Teste utilizado"
           >
-
         </label>
 
 
         <label class="field">
-
           <span class="field-label">
             Limitação
           </span>
@@ -5000,9 +3776,7 @@ function setupAttributeDropZones() {
             data-technique-field="limitation"
             rows="3"
             maxlength="500"
-            placeholder="Limitações"
           ></textarea>
-
         </label>
 
 
@@ -5017,44 +3791,43 @@ function setupAttributeDropZones() {
       </div>
       `;
 
-
     $$(
       "[data-technique-field]",
       wrapper
-    )
-      .forEach(
-        input => {
+    ).forEach(
+      input => {
+        const key =
+          input.dataset.techniqueField;
 
-          const key =
-            input.dataset.techniqueField;
-
-
-          input.value =
-            safeText(
-              technique?.[
-                key
-              ]
-            );
-
-
-          input.addEventListener(
-            "input",
-            () => {
-
-              state.techniques[
-                index
-              ][key] =
-                input.value;
-
-
-              scheduleAutosave();
-
-            }
+        input.value =
+          safeText(
+            technique?.[
+              key
+            ]
           );
 
-        }
-      );
+        input.addEventListener(
+          "input",
+          () => {
+            if (
+              !state.techniques[
+                index
+              ]
+            ) {
+              return;
+            }
 
+            state.techniques[
+              index
+            ][key] =
+              input.value;
+
+            scheduleAutosave();
+            updateProgress();
+          }
+        );
+      }
+    );
 
     $(
       "[data-remove-technique]",
@@ -5063,123 +3836,64 @@ function setupAttributeDropZones() {
       ?.addEventListener(
         "click",
         () => {
-
           state.techniques.splice(
             index,
             1
           );
 
-
           renderTechniques();
-
           scheduleAutosave();
-
           updateProgress();
-
         }
       );
 
-
     return wrapper;
-
   }
 
-
   function renderTechniques() {
-
     const list =
       $("#techniquesList");
 
-
-    if (
-      !list
-    ) {
-
+    if (!list) {
       return;
-
     }
-
 
     list.innerHTML =
       "";
-
 
     state.techniques.forEach(
       (
         technique,
         index
       ) => {
-
         list.appendChild(
           createTechniqueElement(
             index,
             technique
           )
         );
-
       }
     );
-
-
-    updateProgress();
-
   }
-
 
   function addTechnique() {
-
-    state.techniques.push(
-      {
-
-        name: "",
-
-        description: "",
-
-        range: "",
-
-        damage: "",
-
-        cost: "",
-
-        test: "",
-
-        limitation: ""
-
-      }
-    );
-
+    state.techniques.push({
+      name: "",
+      description: "",
+      range: "",
+      damage: "",
+      cost: "",
+      test: "",
+      limitation: ""
+    });
 
     renderTechniques();
-
     scheduleAutosave();
 
-
-    const firstEmpty =
-      $$(
-        "[data-technique-field]",
-        $("#techniquesList")
-      )
-      .find(
-        input =>
-          !input.value
-      );
-
-
-    firstEmpty?.focus();
-
+    $(
+      '[data-technique-field="name"]'
+    )?.focus();
   }
-
-
-  function bindTechniques() {
-
-    $("#addTechniqueButton")
-      ?.addEventListener(
-        "click",
-        addTechnique
-      );
-
-  }
-
 
   /* =========================================================
      INVENTÁRIO
@@ -5189,22 +3903,13 @@ function setupAttributeDropZones() {
     index,
     item
   ) {
-
     const wrapper =
       document.createElement(
         "div"
       );
 
-
     wrapper.className =
       "empty-module";
-
-
-    wrapper.dataset.inventoryIndex =
-      String(
-        index
-      );
-
 
     wrapper.innerHTML =
       `
@@ -5217,7 +3922,6 @@ function setupAttributeDropZones() {
       >
 
         <label class="field">
-
           <span class="field-label">
             Item
           </span>
@@ -5228,12 +3932,10 @@ function setupAttributeDropZones() {
             maxlength="100"
             placeholder="Nome do item"
           >
-
         </label>
 
 
         <label class="field">
-
           <span class="field-label">
             Descrição
           </span>
@@ -5244,7 +3946,6 @@ function setupAttributeDropZones() {
             maxlength="500"
             placeholder="Descrição"
           ></textarea>
-
         </label>
 
 
@@ -5259,46 +3960,43 @@ function setupAttributeDropZones() {
       </div>
       `;
 
-
     $$(
       "[data-inventory-field]",
       wrapper
-    )
-      .forEach(
-        input => {
+    ).forEach(
+      input => {
+        const key =
+          input.dataset.inventoryField;
 
-          const key =
-            input.dataset.inventoryField;
-
-
-          input.value =
-            safeText(
-              item?.[
-                key
-              ]
-            );
-
-
-          input.addEventListener(
-            "input",
-            () => {
-
-              state.inventory[
-                index
-              ][key] =
-                input.value;
-
-
-              scheduleAutosave();
-
-              updateProgress();
-
-            }
+        input.value =
+          safeText(
+            item?.[
+              key
+            ]
           );
 
-        }
-      );
+        input.addEventListener(
+          "input",
+          () => {
+            if (
+              !state.inventory[
+                index
+              ]
+            ) {
+              return;
+            }
 
+            state.inventory[
+              index
+            ][key] =
+              input.value;
+
+            scheduleAutosave();
+            updateProgress();
+          }
+        );
+      }
+    );
 
     $(
       "[data-remove-inventory]",
@@ -5307,120 +4005,65 @@ function setupAttributeDropZones() {
       ?.addEventListener(
         "click",
         () => {
-
           state.inventory.splice(
             index,
             1
           );
 
-
           renderInventory();
-
           scheduleAutosave();
-
           updateProgress();
-
         }
       );
 
-
     return wrapper;
-
   }
 
-
   function renderInventory() {
-
     const list =
       $("#inventoryList");
 
-
-    if (
-      !list
-    ) {
-
+    if (!list) {
       return;
-
     }
-
 
     list.innerHTML =
       "";
-
 
     state.inventory.forEach(
       (
         item,
         index
       ) => {
-
         list.appendChild(
           createInventoryElement(
             index,
             item
           )
         );
-
       }
     );
-
-
-    updateProgress();
-
   }
-
 
   function addInventoryItem() {
-
-    state.inventory.push(
-      {
-
-        name: "",
-
-        description: ""
-
-      }
-    );
-
+    state.inventory.push({
+      name: "",
+      description: ""
+    });
 
     renderInventory();
-
     scheduleAutosave();
 
-
-    const firstEmpty =
-      $$(
-        "[data-inventory-field]",
-        $("#inventoryList")
-      )
-      .find(
-        input =>
-          !input.value
-      );
-
-
-    firstEmpty?.focus();
-
+    $(
+      '[data-inventory-field="name"]'
+    )?.focus();
   }
-
-
-  function bindInventory() {
-
-    $("#addInventoryButton")
-      ?.addEventListener(
-        "click",
-        addInventoryItem
-      );
-
-  }
-
 
   /* =========================================================
      REVISÃO
   ========================================================= */
 
   function getRaceName() {
-
     return (
       RACES.find(
         race =>
@@ -5429,12 +4072,9 @@ function setupAttributeDropZones() {
       )?.name ||
       "—"
     );
-
   }
 
-
   function getClassName() {
-
     return (
       CLASSES.find(
         item =>
@@ -5443,422 +4083,240 @@ function setupAttributeDropZones() {
       )?.name ||
       "—"
     );
-
   }
 
-
   function updateReview() {
-
     const name =
       $("#reviewName");
-
 
     const identity =
       $("#reviewIdentity");
 
-
     const race =
       $("#reviewRace");
 
-
-    const classElement =
+    const classEl =
       $("#reviewClass");
-
 
     const gender =
       $("#reviewGender");
 
-
     const mana =
       $("#reviewMana");
 
-
-    if (
-      name
-    ) {
-
+    if (name) {
       name.textContent =
         state.name.trim() ||
         "Sem nome";
-
     }
 
-
-    if (
-      identity
-    ) {
-
+    if (identity) {
       const parts =
         [];
 
-
-      if (
-        state.age
-      ) {
-
+      if (state.age) {
         parts.push(
           `${state.age} anos`
         );
-
       }
 
-
-      if (
-        state.gender
-      ) {
-
+      if (state.gender) {
         parts.push(
           state.gender ===
             "masculino"
-
             ? "Masculino"
-
             : "Feminino"
-
         );
-
       }
-
 
       identity.textContent =
         parts.length
-
           ? parts.join(
               " · "
             )
-
           : "Identidade ainda não definida.";
-
     }
 
-
-    if (
-      race
-    ) {
-
+    if (race) {
       race.textContent =
         getRaceName();
-
     }
 
-
-    if (
-      classElement
-    ) {
-
-      classElement.textContent =
+    if (classEl) {
+      classEl.textContent =
         getClassName();
-
     }
 
-
-    if (
-      gender
-    ) {
-
+    if (gender) {
       gender.textContent =
         state.gender ===
           "masculino"
-
           ? "Masculino"
-
           : state.gender ===
               "feminino"
-
             ? "Feminino"
-
             : "—";
-
     }
 
-
-    if (
-      mana
-    ) {
-
+    if (mana) {
       mana.textContent =
         "Mana Azul";
-
     }
 
-
-    const reviewImage =
+    const image =
       $("#reviewAvatar");
-
 
     const fallback =
       $("#reviewAvatarFallback");
 
-
     if (
-      reviewImage &&
+      image &&
       fallback
     ) {
-
       if (
         state.avatarDataUrl
       ) {
-
-        reviewImage.src =
+        image.src =
           state.avatarDataUrl;
 
-
-        reviewImage.hidden =
+        image.hidden =
           false;
-
 
         fallback.hidden =
           true;
-
       } else {
-
-        reviewImage.hidden =
+        image.hidden =
           true;
-
 
         fallback.hidden =
           false;
-
       }
-
     }
-
   }
-
 
   /* =========================================================
      FINALIZAÇÃO
   ========================================================= */
 
   function validateFinal() {
-
     if (
       !isIdentityComplete()
     ) {
-
       showToast(
         "Falta o nome."
       );
-
-
-      goToStep(
-        0
-      );
-
-
+      goToStep(0);
       return false;
-
     }
-
 
     if (
       !isRaceComplete()
     ) {
-
       showToast(
-        "Falta escolher a raça."
+        "Falta a raça."
       );
-
-
-      goToStep(
-        1
-      );
-
-
+      goToStep(1);
       return false;
-
     }
-
 
     if (
       !isClassComplete()
     ) {
-
       showToast(
-        "Falta escolher a classe."
+        "Falta a classe."
       );
-
-
-      goToStep(
-        2
-      );
-
-
+      goToStep(2);
       return false;
-
     }
-
 
     if (
       !areAllAttributesAssigned()
     ) {
-
       showToast(
-        `Faltam atributos: ${getAttributeCount()}/8.`
+        `Complete os atributos: ${getAttributeCount()}/8.`
       );
-
-
-      goToStep(
-        3
-      );
-
-
+      goToStep(3);
       return false;
-
     }
-
 
     if (
       !isPowerComplete()
     ) {
-
       showToast(
-        "Falta definir o poder."
+        "Falta o poder."
       );
-
-
-      goToStep(
-        4
-      );
-
-
+      goToStep(4);
       return false;
-
     }
 
-
     return true;
-
   }
 
-
   async function finishCharacter() {
-
     if (
       !validateFinal()
     ) {
-
       return;
-
     }
 
-
-    state.updatedAt =
-      new Date().toISOString();
-
-
-    const localSaved =
-      saveLocalDraft();
-
-
     if (
-      !localSaved
+      !saveLocalDraft()
     ) {
-
       showToast(
         "Não foi possível salvar a ficha."
       );
-
-
       return;
-
     }
 
-
-    const result =
-      await saveToSupabase();
-
-
-    if (
-      result.skipped
-    ) {
-
-      showToast(
-        "Ficha salva como rascunho neste dispositivo."
-      );
-
-
-      return;
-
-    }
-
-
-    if (
-      !result.ok
-    ) {
-
-      showToast(
-        "Ficha salva localmente."
-      );
-
-
-      return;
-
-    }
-
-
+    /*
+     * O Supabase será ligado na etapa de persistência
+     * definitiva, depois de fecharmos o schema.
+     */
     showToast(
-      "Ficha criada com sucesso!"
+      "Ficha salva como rascunho neste dispositivo."
     );
-
   }
-
 
   /* =========================================================
      NAVEGAÇÃO
   ========================================================= */
 
   function bindNavigation() {
-
     $("#previousStepButton")
       ?.addEventListener(
         "click",
         () => {
-
           goToStep(
             state.currentStep -
             1
           );
-
         }
       );
-
 
     $("#nextStepButton")
       ?.addEventListener(
         "click",
         () => {
-
           if (
             state.currentStep ===
-            STEPS.length -
-            1
+            STEPS.length - 1
           ) {
-
             finishCharacter();
-
             return;
-
           }
-
 
           if (
             !validateBeforeNext()
           ) {
-
             return;
-
           }
-
 
           goToStep(
             state.currentStep +
             1
           );
-
         }
       );
-
 
     $$(".creation-step")
       .forEach(
@@ -5866,241 +4324,155 @@ function setupAttributeDropZones() {
           button,
           index
         ) => {
-
           button.addEventListener(
             "click",
             () => {
-
               if (
                 button.disabled
               ) {
-
                 return;
-
               }
-
 
               goToStep(
                 index
               );
-
             }
           );
-
         }
       );
-
 
     $("#saveDraftButton")
       ?.addEventListener(
         "click",
         () => {
-
           if (
             saveLocalDraft()
           ) {
-
             showToast(
               "Rascunho salvo."
             );
-
           }
-
         }
       );
-
 
     $("#finishCharacterButton")
       ?.addEventListener(
         "click",
         finishCharacter
       );
-
   }
-
 
   /* =========================================================
      EVENTOS GERAIS
   ========================================================= */
 
   function bindGeneralEvents() {
-
     window.addEventListener(
       "beforeunload",
-      () => {
-
-        saveLocalDraft();
-
-      }
+      saveLocalDraft
     );
-
 
     document.addEventListener(
       "visibilitychange",
       () => {
-
         if (
           document.visibilityState ===
           "hidden"
         ) {
-
           saveLocalDraft();
-
         }
-
       }
     );
-
   }
-
-
-  /* =========================================================
-     ATUALIZA ESTADO + INTERFACE
-  ========================================================= */
-
-  function updateStateAndRender() {
-
-    scheduleAutosave();
-
-    renderRace();
-
-    renderClasses();
-
-    renderAttributes();
-
-    renderPower();
-
-    renderMana();
-
-    updateReview();
-
-    updateProgress();
-
-  }
-
 
   /* =========================================================
      INICIALIZAÇÃO
   ========================================================= */
 
   function init() {
-
     if (
       initialized
     ) {
-
       return;
-
     }
-
 
     initialized =
       true;
 
-
     const restored =
       loadLocalDraft();
 
-
     bindIdentity();
-
     bindRace();
-
     bindClasses();
 
-    bindAttributes();
-
+    bindAttributeClicks();
     bindPower();
-
     bindMana();
 
-    bindTechniques();
-
-    bindInventory();
-
     bindNavigation();
-
     bindGeneralEvents();
 
+    $("#addTechniqueButton")
+      ?.addEventListener(
+        "click",
+        addTechnique
+      );
+
+    $("#addInventoryButton")
+      ?.addEventListener(
+        "click",
+        addInventoryItem
+      );
 
     hydrateIdentity();
 
-
     renderRace();
-
     renderClasses();
-
     renderAttributes();
-
     renderPower();
-
     renderMana();
-
     renderTechniques();
-
     renderInventory();
-
     updateReview();
-
     updateProgress();
 
+    setupAttributeDragAndDrop();
 
-    /*
-     * Não deixa abrir uma etapa que perdeu
-     * seus pré-requisitos.
-     */
     if (
       !canEnterStep(
         state.currentStep
       )
     ) {
-
       state.currentStep =
         0;
-
     }
-
 
     goToStep(
       state.currentStep
     );
 
-
-    if (
-      restored
-    ) {
-
+    if (restored) {
       showToast(
         "Rascunho anterior restaurado.",
         1800
       );
-
     }
-
 
     console.info(
       "[AERION][FICHA] Inicializado.",
       {
-
-        restored,
-
         races:
           RACES.length,
-
         classes:
           CLASSES.length,
-
-        attributeDice:
+        dice:
           DICE_LIMITS,
-
         attributes:
           getAttributeCount()
-
       }
     );
-
   }
-
 
   /* =========================================================
      API PÚBLICA
@@ -6108,96 +4480,69 @@ function setupAttributeDropZones() {
 
   window.AERIONFicha =
     Object.freeze({
-
       getState() {
-
         try {
-
           return structuredClone(
             state
           );
-
         } catch {
-
           return JSON.parse(
             JSON.stringify(
               state
             )
           );
-
         }
-
       },
-
 
       saveDraft:
         saveLocalDraft,
 
-
       goToStep,
 
-
       getDiceUsage:
-        () =>
-          ({
-            ...getDiceUsage()
-          }),
-
+        () => ({
+          ...getDiceUsage()
+        }),
 
       getRemainingDice,
 
-
       selectDice,
-
-
-      assignDice:
-        assignSelectedDice,
-
 
       clearAttribute,
 
+      assignDice:
+        assignDiceToAttribute,
 
-      swapAttributes,
-
+      swapAttributes:
+        moveAttribute,
 
       areAllAttributesAssigned,
 
-
       getAttributeCount,
-
 
       rollPowerD100,
 
-
       selectPower:
-        selectManualPower
-
+        choosePower
     });
 
-
   /* =========================================================
-     INICIAR
+     START
   ========================================================= */
 
   if (
     document.readyState ===
     "loading"
   ) {
-
     document.addEventListener(
       "DOMContentLoaded",
       init,
       {
-        once:
-          true
+        once: true
       }
     );
-
   } else {
-
     init();
-
   }
 
 })();
-
