@@ -5287,4 +5287,1952 @@
           );
         }
       );
+  }  /* =========================================================
+     RENDER — PERÍCIAS
+  ========================================================= */
+
+  function renderSkills() {
+    ensureSkills();
+
+    const classModifiers =
+      getClassSkillModifiers();
+
+    $$(".skill-card")
+      .forEach(
+        card => {
+          const skillId =
+            card.dataset.skill;
+
+          if (!skillId) {
+            return;
+          }
+
+          const skill =
+            getSkill(
+              skillId
+            );
+
+          if (!skill) {
+            return;
+          }
+
+          const bonus =
+            getEffectiveSkillBonus(
+              skillId
+            );
+
+          const bonusElement =
+            card.querySelector(
+              "[data-skill-value], .skill-bonus"
+            );
+
+          if (bonusElement) {
+            bonusElement.textContent =
+              bonus > 0
+                ? `+${bonus}`
+                : String(
+                    bonus
+                  );
+          }
+
+          card.classList.toggle(
+            "trained",
+            skill.trained
+          );
+
+          const trainButton =
+            card.querySelector(
+              '[data-action="train-skill"]'
+            );
+
+          if (trainButton) {
+            trainButton.classList.toggle(
+              "active",
+              skill.trained
+            );
+
+            trainButton.textContent =
+              skill.trained
+                ? "Treinado"
+                : "Treinar";
+          }
+
+          const classBonus =
+            Number(
+              classModifiers[
+                skillId
+              ]
+            ) || 0;
+
+          const classElement =
+            card.querySelector(
+              "[data-class-skill-bonus]"
+            );
+
+          if (
+            classElement
+          ) {
+            classElement.textContent =
+              classBonus
+                ? `Classe +${classBonus}`
+                : "";
+          }
+        }
+      );
   }
+
+  /* =========================================================
+     RENDER — TÉCNICAS
+  ========================================================= */
+
+  function renderTechniques() {
+    const container =
+      $(
+        "[data-techniques-list]"
+      );
+
+    if (!container) {
+      return;
+    }
+
+    if (
+      !state.techniques.length
+    ) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <span>Nenhuma técnica adicionada.</span>
+          <small>
+            Crie sua primeira técnica personalizada.
+          </small>
+        </div>
+      `;
+
+      return;
+    }
+
+    container.innerHTML =
+      state.techniques
+        .map(
+          technique => `
+            <article
+              class="technique-card"
+              data-technique-id="${escapeHtml(
+                technique.id
+              )}"
+            >
+              <div class="technique-card-header">
+                <input
+                  type="text"
+                  value="${escapeAttribute(
+                    technique.name
+                  )}"
+                  placeholder="Nome da técnica"
+                  data-technique-id="${escapeAttribute(
+                    technique.id
+                  )}"
+                  data-technique-field="name"
+                />
+
+                <button
+                  type="button"
+                  class="icon-button"
+                  data-action="remove-technique"
+                  data-technique-id="${escapeAttribute(
+                    technique.id
+                  )}"
+                  aria-label="Remover técnica"
+                  title="Remover técnica"
+                >
+                  ×
+                </button>
+              </div>
+
+              <textarea
+                placeholder="Descrição da técnica"
+                data-technique-id="${escapeAttribute(
+                  technique.id
+                )}"
+                data-technique-field="description"
+              >${escapeHtml(
+                technique.description
+              )}</textarea>
+
+              <div class="technique-fields">
+                <label>
+                  <span>Alcance</span>
+                  <input
+                    type="text"
+                    value="${escapeAttribute(
+                      technique.range
+                    )}"
+                    placeholder="Ex.: 10 m"
+                    data-technique-id="${escapeAttribute(
+                      technique.id
+                    )}"
+                    data-technique-field="range"
+                  />
+                </label>
+
+                <label>
+                  <span>Dano</span>
+                  <input
+                    type="text"
+                    value="${escapeAttribute(
+                      technique.damage
+                    )}"
+                    placeholder="Ex.: 2D8"
+                    data-technique-id="${escapeAttribute(
+                      technique.id
+                    )}"
+                    data-technique-field="damage"
+                  />
+                </label>
+              </div>
+            </article>
+          `
+        )
+        .join("");
+  }
+
+  /* =========================================================
+     RENDER — INVENTÁRIO
+  ========================================================= */
+
+  function renderInventory() {
+    const container =
+      $(
+        "[data-inventory-list]"
+      );
+
+    if (!container) {
+      return;
+    }
+
+    if (
+      !state.inventory.length
+    ) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <span>Inventário vazio.</span>
+          <small>
+            Adicione equipamentos ou objetos iniciais.
+          </small>
+        </div>
+      `;
+
+      return;
+    }
+
+    container.innerHTML =
+      state.inventory
+        .map(
+          item => `
+            <article
+              class="inventory-item"
+              data-inventory-id="${escapeHtml(
+                item.id
+              )}"
+            >
+              <input
+                type="text"
+                value="${escapeAttribute(
+                  item.name
+                )}"
+                placeholder="Nome do item"
+                data-inventory-id="${escapeAttribute(
+                  item.id
+                )}"
+                data-inventory-field="name"
+              />
+
+              <input
+                type="number"
+                min="0"
+                value="${Number(
+                  item.quantity
+                ) || 0}"
+                data-inventory-id="${escapeAttribute(
+                  item.id
+                )}"
+                data-inventory-field="quantity"
+              />
+
+              <input
+                type="text"
+                value="${escapeAttribute(
+                  item.description
+                )}"
+                placeholder="Descrição"
+                data-inventory-id="${escapeAttribute(
+                  item.id
+                )}"
+                data-inventory-field="description"
+              />
+
+              <button
+                type="button"
+                class="icon-button"
+                data-action="remove-inventory"
+                data-inventory-id="${escapeAttribute(
+                  item.id
+                )}"
+                aria-label="Remover item"
+                title="Remover item"
+              >
+                ×
+              </button>
+            </article>
+          `
+        )
+        .join("");
+  }
+
+  /* =========================================================
+     RENDER — DADOS
+  ========================================================= */
+
+  function diceShapeSvg(
+    sides
+  ) {
+    /*
+     * Ícone vetorial.
+     * Nada de emoji.
+     */
+    const polygons = {
+      4:
+        "50,4 94,76 6,76",
+
+      6:
+        "50,3 91,26 91,74 50,97 9,74 9,26",
+
+      8:
+        "50,3 93,28 76,91 24,91 7,28",
+
+      10:
+        "50,3 86,25 86,75 50,97 14,75 14,25",
+
+      12:
+        "50,3 91,22 91,78 50,97 9,78 9,22",
+
+      20:
+        "50,3 90,19 98,58 69,94 31,94 2,58 10,19"
+    };
+
+    const polygon =
+      polygons[
+        sides
+      ] ||
+      polygons[6];
+
+    return `
+      <svg
+        class="dice-svg"
+        viewBox="0 0 100 100"
+        aria-hidden="true"
+      >
+        <polygon
+          points="${polygon}"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="4"
+          stroke-linejoin="round"
+        />
+        <line
+          x1="50"
+          y1="8"
+          x2="50"
+          y2="92"
+          stroke="currentColor"
+          stroke-width="2"
+          opacity=".25"
+        />
+      </svg>
+    `;
+  }
+
+  function renderDicePool() {
+    const container =
+      $(
+        "[data-dice-pool]"
+      );
+
+    if (!container) {
+      return;
+    }
+
+    const dice =
+      getDicePool();
+
+    container.innerHTML =
+      dice
+        .map(
+          die => {
+            const assigned =
+              die.assignedTo;
+
+            const selected =
+              selectedDice ===
+              die.id;
+
+            const sides =
+              die.sides;
+
+            return `
+              <button
+                type="button"
+                class="
+                  dice-card
+                  ${assigned ? "assigned" : ""}
+                  ${selected ? "dice-selected" : ""}
+                "
+                draggable="${
+                  assigned
+                    ? "false"
+                    : "true"
+                }"
+                data-die-id="${escapeAttribute(
+                  die.id
+                )}"
+                data-die="${escapeAttribute(
+                  die.die.toUpperCase()
+                )}"
+                aria-label="${escapeAttribute(
+                  die.die.toUpperCase()
+                )}"
+                title="${
+                  assigned
+                    ? `Atribuído a ${
+                        ATTRIBUTE_NAMES[
+                          assigned
+                        ]
+                      }`
+                    : "Arraste ou clique para selecionar"
+                }"
+              >
+                ${diceShapeSvg(
+                  sides
+                )}
+
+                <span class="dice-label">
+                  D${sides}
+                </span>
+
+                ${
+                  assigned
+                    ? `
+                      <span class="dice-assigned-mark">
+                        ${escapeHtml(
+                          ATTRIBUTE_NAMES[
+                            assigned
+                          ]
+                        )}
+                      </span>
+                    `
+                    : ""
+                }
+              </button>
+            `;
+          }
+        )
+        .join("");
+  }
+
+  function renderAttributeCards() {
+    const modified =
+      getAllModifiedAttributes();
+
+    const raceMods =
+      getRaceAttributeModifiers();
+
+    $$(".attribute-card")
+      .forEach(
+        card => {
+          const attribute =
+            card.dataset
+              .attribute;
+
+          if (
+            !ATTRIBUTE_ORDER.includes(
+              attribute
+            )
+          ) {
+            return;
+          }
+
+          const dieType =
+            normalizeDie(
+              state.attributes[
+                attribute
+              ]
+            );
+
+          const die =
+            getDicePool()
+              .find(
+                item =>
+                  item.assignedTo ===
+                  attribute
+              );
+
+          const baseValue =
+            dieType
+              ? DICE_VALUES[
+                  dieType
+                ]
+              : null;
+
+          const modifier =
+            Number(
+              raceMods[
+                attribute
+              ]
+            ) || 0;
+
+          const total =
+            modified[
+              attribute
+            ];
+
+          const result =
+            state.rollResults?.[
+              attribute
+            ];
+
+          card.classList.toggle(
+            "has-die",
+            Boolean(
+              die
+            )
+          );
+
+          card.classList.toggle(
+            "has-result",
+            Boolean(
+              result
+            )
+          );
+
+          card.classList.toggle(
+            "racial-bonus",
+            modifier > 0
+          );
+
+          card.classList.toggle(
+            "racial-penalty",
+            modifier < 0
+          );
+
+          const name =
+            card.querySelector(
+              "[data-attribute-name]"
+            );
+
+          if (name) {
+            name.textContent =
+              ATTRIBUTE_NAMES[
+                attribute
+              ];
+          }
+
+          const dieElement =
+            card.querySelector(
+              "[data-attribute-die]"
+            );
+
+          if (dieElement) {
+            dieElement.innerHTML =
+              die
+                ? `
+                  ${diceShapeSvg(
+                    die.sides
+                  )}
+                  <span>
+                    D${die.sides}
+                  </span>
+                `
+                : "Nenhum dado";
+          }
+
+          const valueElement =
+            card.querySelector(
+              "[data-attribute-value]"
+            );
+
+          if (valueElement) {
+            valueElement.textContent =
+              die
+                ? String(
+                    total
+                  )
+                : "—";
+          }
+
+          const modifierElement =
+            card.querySelector(
+              "[data-attribute-modifier]"
+            );
+
+          if (
+            modifierElement
+          ) {
+            modifierElement.textContent =
+              modifier > 0
+                ? `+${modifier}`
+                : modifier < 0
+                  ? String(
+                      modifier
+                    )
+                  : "0";
+          }
+
+          const resultElement =
+            card.querySelector(
+              "[data-attribute-result]"
+            );
+
+          if (
+            resultElement
+          ) {
+            resultElement.textContent =
+              result
+                ? `${result.result}${
+                    result.racialModifier
+                      ? ` ${result.racialModifier > 0 ? "+" : ""}${result.racialModifier}`
+                      : ""
+                  } = ${result.total}`
+                : "";
+          }
+
+          const rollButton =
+            card.querySelector(
+              '[data-action="roll-attribute"]'
+            );
+
+          if (
+            rollButton
+          ) {
+            rollButton.disabled =
+              !die;
+          }
+        }
+      );
+  }
+
+  /* =========================================================
+     GRÁFICO RADIAL
+  ========================================================= */
+
+  function polarPoint(
+    cx,
+    cy,
+    radius,
+    angle
+  ) {
+    const radians =
+      (
+        angle -
+        90
+      ) *
+      (
+        Math.PI /
+        180
+      );
+
+    return {
+      x:
+        cx +
+        radius *
+          Math.cos(
+            radians
+          ),
+
+      y:
+        cy +
+        radius *
+          Math.sin(
+            radians
+          )
+    };
+  }
+
+  function createRadarPolygon(
+    values,
+    cx,
+    cy,
+    radius
+  ) {
+    const max =
+      Math.max(
+        1,
+        ...values
+      );
+
+    return values
+      .map(
+        (
+          value,
+          index
+        ) => {
+          const angle =
+            (
+              360 /
+              values.length
+            ) *
+            index;
+
+          const normalized =
+            clamp(
+              value /
+                max,
+              0,
+              1
+            );
+
+          const point =
+            polarPoint(
+              cx,
+              cy,
+              radius *
+                normalized,
+              angle
+            );
+
+          return `${point.x.toFixed(
+            2
+          )},${point.y.toFixed(
+            2
+          )}`;
+        }
+      )
+      .join(" ");
+  }
+
+  function createRadarGrid(
+    count,
+    cx,
+    cy,
+    radius,
+    levels = 4
+  ) {
+    let html =
+      "";
+
+    for (
+      let level = 1;
+      level <= levels;
+      level++
+    ) {
+      const points =
+        [];
+
+      for (
+        let i = 0;
+        i < count;
+        i++
+      ) {
+        const angle =
+          (
+            360 /
+            count
+          ) *
+          i;
+
+        const point =
+          polarPoint(
+            cx,
+            cy,
+            radius *
+              (
+                level /
+                levels
+              ),
+            angle
+          );
+
+        points.push(
+          `${point.x.toFixed(
+            2
+          )},${point.y.toFixed(
+            2
+          )}`
+        );
+      }
+
+      html += `
+        <polygon
+          points="${points.join(
+            " "
+          )}"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1"
+          opacity=".16"
+        />
+      `;
+    }
+
+    for (
+      let i = 0;
+      i < count;
+      i++
+    ) {
+      const angle =
+        (
+          360 /
+          count
+        ) *
+        i;
+
+      const point =
+        polarPoint(
+          cx,
+          cy,
+          radius,
+          angle
+        );
+
+      html += `
+        <line
+          x1="${cx}"
+          y1="${cy}"
+          x2="${point.x.toFixed(
+            2
+          )}"
+          y2="${point.y.toFixed(
+            2
+          )}"
+          stroke="currentColor"
+          stroke-width="1"
+          opacity=".13"
+        />
+      `;
+    }
+
+    return html;
+  }
+
+  function renderRadarChart() {
+    const containers =
+      $$(
+        "[data-attribute-radar]"
+      );
+
+    if (!containers.length) {
+      return;
+    }
+
+    const attributes =
+      getAllModifiedAttributes();
+
+    const rawValues =
+      ATTRIBUTE_ORDER.map(
+        attribute =>
+          Math.max(
+            0,
+            Number(
+              attributes[
+                attribute
+              ]
+            ) || 0
+          )
+      );
+
+    const maximum =
+      Math.max(
+        1,
+        ...rawValues
+      );
+
+    containers.forEach(
+      container => {
+        const width =
+          420;
+
+        const height =
+          420;
+
+        const cx =
+          210;
+
+        const cy =
+          210;
+
+        const radius =
+          155;
+
+        const values =
+          rawValues.map(
+            value =>
+              clamp(
+                value /
+                  maximum,
+                0,
+                1
+              )
+            );
+
+        const polygon =
+          createRadarPolygon(
+            values,
+            cx,
+            cy,
+            radius
+          );
+
+        const points =
+          ATTRIBUTE_ORDER.map(
+            (
+              attribute,
+              index
+            ) => {
+              const angle =
+                (
+                  360 /
+                  ATTRIBUTE_ORDER.length
+                ) *
+                index;
+
+              const point =
+                polarPoint(
+                  cx,
+                  cy,
+                  radius +
+                    22,
+                  angle
+                );
+
+              return {
+                attribute,
+                x:
+                  point.x,
+                y:
+                  point.y
+              };
+            }
+          );
+
+        container.innerHTML = `
+          <svg
+            class="radar-svg"
+            viewBox="0 0 ${width} ${height}"
+            role="img"
+            aria-label="Gráfico dos atributos"
+          >
+            <g class="radar-grid">
+              ${createRadarGrid(
+                ATTRIBUTE_ORDER.length,
+                cx,
+                cy,
+                radius
+              )}
+            </g>
+
+            <polygon
+              class="radar-value"
+              points="${polygon}"
+            />
+
+            ${points
+              .map(
+                point => `
+                  <text
+                    class="radar-label"
+                    x="${point.x.toFixed(
+                      2
+                    )}"
+                    y="${point.y.toFixed(
+                      2
+                    )}"
+                    text-anchor="middle"
+                    dominant-baseline="middle"
+                  >
+                    ${escapeHtml(
+                      ATTRIBUTE_NAMES[
+                        point.attribute
+                      ]
+                    )}
+                  </text>
+                `
+              )
+              .join("")}
+          </svg>
+        `;
+      }
+    );
+  }
+
+  /* =========================================================
+     COMBATE / RESUMO
+  ========================================================= */
+
+  function renderCombatSummary() {
+    const movement =
+      getMovementData();
+
+    const hp =
+      calculateBaseLife();
+
+    $$(
+      "[data-combat-hp]"
+    ).forEach(
+      element =>
+        element.textContent =
+          String(
+            hp
+          )
+    );
+
+    $$(
+      "[data-combat-movement]"
+    ).forEach(
+      element =>
+        element.textContent =
+          `${movement.ground} m`
+    );
+
+    $$(
+      "[data-combat-air]"
+    ).forEach(
+      element =>
+        element.textContent =
+          movement.air !==
+          null
+            ? `${movement.air} m`
+            : "—"
+    );
+
+    $$(
+      "[data-combat-aquatic]"
+    ).forEach(
+      element =>
+        element.textContent =
+          `${movement.aquatic} m`
+    );
+
+    $$(
+      "[data-combat-flight]"
+    ).forEach(
+      element => {
+        element.textContent =
+          movement.canFly
+            ? "Sim"
+            : "Não";
+      }
+    );
+  }
+
+  /* =========================================================
+     REVISÃO
+  ========================================================= */
+
+  function renderReview() {
+    const race =
+      getEffectiveRaceData();
+
+    const selectedClass =
+      CLASSES.find(
+        item =>
+          item.id ===
+          state.class
+      );
+
+    const fields = {
+      name:
+        state.name,
+
+      gender:
+        state.gender ===
+        "feminino"
+          ? "Feminino"
+          : state.gender ===
+              "masculino"
+            ? "Masculino"
+            : "—",
+
+      race:
+        race?.name ||
+        "—",
+
+      class:
+        selectedClass?.name ||
+        "—",
+
+      height:
+        formatHeight(
+          state.appearance
+            .heightCm
+        ),
+
+      power:
+        state.power ||
+        "—",
+
+      mana:
+        state.mana ===
+        "azul"
+          ? "Azul"
+          : state.mana ||
+            "—"
+    };
+
+    Object.entries(
+      fields
+    ).forEach(
+      ([field, value]) => {
+        $$(
+          `[data-review="${field}"]`
+        ).forEach(
+          element =>
+            element.textContent =
+              safeText(
+                value
+              )
+        );
+      }
+    );
+
+    const description =
+      $$(
+        '[data-review="description"]'
+      );
+
+    description.forEach(
+      element =>
+        element.textContent =
+          state.description ||
+          "Nenhuma descrição."
+    );
+
+    const appearance =
+      $$(
+        '[data-review="appearance"]'
+      );
+
+    appearance.forEach(
+      element => {
+        const values =
+          [];
+
+        if (
+          state.appearance
+            .hair
+        ) {
+          values.push(
+            `Cabelo: ${state.appearance.hair}`
+          );
+        }
+
+        if (
+          state.appearance
+            .eyes
+        ) {
+          values.push(
+            `Olhos: ${state.appearance.eyes}`
+          );
+        }
+
+        if (
+          state.appearance
+            .clothing
+        ) {
+          values.push(
+            `Vestimenta: ${state.appearance.clothing}`
+          );
+        }
+
+        if (
+          state.appearance
+            .scars
+        ) {
+          values.push(
+            `Cicatrizes: ${state.appearance.scars}`
+          );
+        }
+
+        if (
+          state.appearance
+            .tattoos
+        ) {
+          values.push(
+            `Tatuagens: ${state.appearance.tattoos}`
+          );
+        }
+
+        element.textContent =
+          values.length
+            ? values.join(
+                " • "
+              )
+            : "Nenhuma informação.";
+      }
+    );
+
+    const attributesContainer =
+      $(
+        "[data-review-attributes]"
+      );
+
+    if (
+      attributesContainer
+    ) {
+      attributesContainer.innerHTML =
+        ATTRIBUTE_ORDER
+          .map(
+            attribute => {
+              const die =
+                getDicePool()
+                  .find(
+                    item =>
+                      item.assignedTo ===
+                      attribute
+                  );
+
+              const modifier =
+                Number(
+                  getRaceAttributeModifiers()[
+                    attribute
+                  ]
+                ) || 0;
+
+              return `
+                <div class="review-attribute">
+                  <span>
+                    ${escapeHtml(
+                      ATTRIBUTE_NAMES[
+                        attribute
+                      ]
+                    )}
+                  </span>
+
+                  <strong>
+                    ${
+                      die
+                        ? `D${die.sides}`
+                        : "—"
+                    }
+                  </strong>
+
+                  <small>
+                    ${
+                      modifier > 0
+                        ? `+${modifier}`
+                        : modifier < 0
+                          ? String(
+                              modifier
+                            )
+                          : ""
+                    }
+                  </small>
+                </div>
+              `;
+            }
+          )
+          .join("");
+    }
+  }
+
+  /* =========================================================
+     PROGRESSO / TELA ATUAL
+  ========================================================= */
+
+  function renderCurrentStep() {
+    $$(".creation-step")
+      .forEach(
+        (section, index) => {
+          const isActive =
+            index ===
+            state.currentStep;
+
+          section.hidden =
+            !isActive;
+
+          section.classList.toggle(
+            "active",
+            isActive
+          );
+        }
+      );
+
+    /*
+     * Alguns projetos usam data-step
+     * diretamente no container.
+     */
+    $$(
+      "[data-step]"
+    ).forEach(
+      element => {
+        const raw =
+          element.dataset
+            .step;
+
+        const index =
+          Number(
+            raw
+          );
+
+        if (
+          !Number.isInteger(
+            index
+          )
+        ) {
+          return;
+        }
+
+        if (
+          element.matches(
+            ".creation-step"
+          )
+        ) {
+          return;
+        }
+
+        element.classList.toggle(
+          "active",
+          index ===
+            state.currentStep
+        );
+      }
+    );
+
+    const currentTitle =
+      STEPS[
+        state.currentStep
+      ]?.title;
+
+    $$(
+      "[data-current-step-title]"
+    ).forEach(
+      element =>
+        element.textContent =
+          currentTitle ||
+          ""
+    );
+  }
+
+  function updateNavigationButtons() {
+    const previous =
+      $$(
+        '[data-action="previous"]'
+      );
+
+    const next =
+      $$(
+        '[data-action="next"]'
+      );
+
+    previous.forEach(
+      button => {
+        button.disabled =
+          state.currentStep <=
+          0;
+      }
+    );
+
+    next.forEach(
+      button => {
+        button.disabled =
+          state.currentStep >=
+          STEPS.length - 1;
+      }
+    );
+  }
+
+  function renderProgressOnly() {
+    updateProgressUI();
+    updateNavigationButtons();
+  }
+
+  /* =========================================================
+     RENDER COMPLETO
+  ========================================================= */
+
+  function renderAll() {
+    normalizeState();
+
+    renderIdentity();
+    renderAvatar();
+    renderRace();
+    renderAppearance();
+    renderClass();
+    renderMana();
+
+    renderSkills();
+    renderTechniques();
+    renderInventory();
+
+    renderDicePool();
+    renderAttributeCards();
+    renderRadarChart();
+
+    renderCombatSummary();
+    renderReview();
+
+    renderCurrentStep();
+
+    updateProgressUI();
+    updateNavigationButtons();
+
+    bindDynamicElements();
+  }
+
+  /* =========================================================
+     EVENTOS DINÂMICOS
+  ========================================================= */
+
+  function bindDynamicElements() {
+    /*
+     * Alguns elementos são recriados por innerHTML.
+     *
+     * Não adicionamos listeners individuais aqui.
+     * A delegação global trata tudo.
+     */
+  }
+
+  /* =========================================================
+     * RESET
+  ========================================================= */
+
+  function resetCharacter() {
+    const confirmed =
+      window.confirm(
+        "Deseja realmente começar uma nova ficha? O rascunho atual será apagado."
+      );
+
+    if (!confirmed) {
+      return;
+    }
+
+    clearDraft();
+
+    state =
+      createDefaultState();
+
+    state.dicePool =
+      createDicePool();
+
+    selectedDice =
+      null;
+
+    saveDraft();
+
+    renderAll();
+
+    showToast(
+      "Nova ficha criada."
+    );
+  }
+
+  /* =========================================================
+     FINALIZAÇÃO
+  ========================================================= */
+
+  function buildCharacterData() {
+    const race =
+      getEffectiveRaceData();
+
+    const movement =
+      getMovementData();
+
+    return {
+      ...getSerializableState(),
+
+      raceData:
+        race
+          ? {
+              id:
+                race.id,
+
+              name:
+                race.name,
+
+              profile:
+                race.profile,
+
+              feature:
+                race.feature,
+
+              attrMods:
+                {
+                  ...(
+                    race.attrMods ||
+                    {}
+                  )
+                },
+
+              size:
+                race.size,
+
+              height:
+                {
+                  ...(
+                    race.height ||
+                    {}
+                  )
+                },
+
+              flight:
+                Boolean(
+                  race.flight
+                ),
+
+              movement:
+                {
+                  ...movement
+                }
+            }
+          : null,
+
+      modifiedAttributes:
+        getAllModifiedAttributes(),
+
+      effectiveSkills:
+        state.skills.map(
+          skill => ({
+            ...skill,
+
+            effectiveBonus:
+              getEffectiveSkillBonus(
+                skill.id
+              )
+          })
+        ),
+
+      combat:
+        {
+          baseLife:
+            calculateBaseLife(),
+
+          movement:
+            movement
+        },
+
+      version:
+        6
+    };
+  }
+
+  function finishCharacter() {
+    if (
+      !STEPS.every(
+        (_, index) =>
+          isStepComplete(
+            index
+          )
+      )
+    ) {
+      const first =
+        getFirstIncompleteStep();
+
+      state.currentStep =
+        first;
+
+      renderAll();
+
+      showToast(
+        `Ainda falta completar "${STEPS[first].title}".`
+      );
+
+      return false;
+    }
+
+    const character =
+      buildCharacterData();
+
+    /*
+     * Evento para o restante do site.
+     */
+    window.dispatchEvent(
+      new CustomEvent(
+        "aerion:ficha:complete",
+        {
+          detail:
+            character
+        }
+      )
+    );
+
+    /*
+     * Também deixa disponível para
+     * páginas que precisem capturar
+     * temporariamente a ficha.
+     */
+    window.AERION_LAST_CHARACTER =
+      character;
+
+    try {
+      localStorage.setItem(
+        "aerion:ficha:last",
+        JSON.stringify(
+          character
+        )
+      );
+    } catch (
+      error
+    ) {
+      console.warn(
+        "AERION: não foi possível salvar a ficha final localmente.",
+        error
+      );
+    }
+
+    showToast(
+      "Ficha concluída com sucesso!"
+    );
+
+    return true;
+  }
+
+  /* =========================================================
+     ESCAPE HTML
+  ========================================================= */
+
+  function escapeHtml(
+    value
+  ) {
+    return safeText(
+      value
+    )
+      .replaceAll(
+        "&",
+        "&amp;"
+      )
+      .replaceAll(
+        "<",
+        "&lt;"
+      )
+      .replaceAll(
+        ">",
+        "&gt;"
+      )
+      .replaceAll(
+        '"',
+        "&quot;"
+      )
+      .replaceAll(
+        "'",
+        "&#039;"
+      );
+  }
+
+  function escapeAttribute(
+    value
+  ) {
+    return escapeHtml(
+      value
+    );
+  }
+
+  /* =========================================================
+     INICIALIZAÇÃO
+  ========================================================= */
+
+  function initialize() {
+    if (initialized) {
+      return;
+    }
+
+    initialized =
+      true;
+
+    const loaded =
+      loadDraft();
+
+    if (!loaded) {
+      state =
+        createDefaultState();
+
+      state.dicePool =
+        createDicePool();
+
+      ensureSkills();
+
+      /*
+       * Não escolhe raça,
+       * classe ou atributo automaticamente.
+       */
+    }
+
+    normalizeState();
+
+    /*
+     * INPUT
+     */
+    document.addEventListener(
+      "input",
+      handleInput
+    );
+
+    /*
+     * CHANGE
+     */
+    document.addEventListener(
+      "change",
+      handleChange
+    );
+
+    /*
+     * CLICK
+     */
+    document.addEventListener(
+      "click",
+      event => {
+        /*
+         * Gênero.
+         */
+        const gender =
+          event.target.closest(
+            ".gender-option, [data-gender]"
+          );
+
+        if (
+          gender
+        ) {
+          const value =
+            gender.dataset
+              .gender;
+
+          if (value) {
+            state.gender =
+              value;
+
+            saveDraft();
+
+            renderAll();
+
+            return;
+          }
+        }
+
+        /*
+         * Dado.
+         */
+        const die =
+          event.target.closest(
+            "[data-die-id]"
+          );
+
+        if (
+          die
+        ) {
+          handleDieClick(
+            event
+          );
+
+          /*
+           * Se havia um dado selecionado
+           * antes deste clique e o usuário
+           * clicou em outro dado, apenas
+           * muda a seleção.
+           */
+          return;
+        }
+
+        /*
+         * Atributo.
+         */
+        const attribute =
+          event.target.closest(
+            "[data-attribute-drop]"
+          );
+
+        if (
+          attribute &&
+          selectedDice
+        ) {
+          handleAttributeClick(
+            event
+          );
+
+          return;
+        }
+
+        handleClick(
+          event
+        );
+      }
+    );
+
+    /*
+     * DRAG.
+     */
+    document.addEventListener(
+      "dragstart",
+      handleDragStart
+    );
+
+    document.addEventListener(
+      "dragend",
+      handleDragEnd
+    );
+
+    document.addEventListener(
+      "dragover",
+      handleDragOver
+    );
+
+    document.addEventListener(
+      "dragleave",
+      handleDragLeave
+    );
+
+    document.addEventListener(
+      "drop",
+      handleDrop
+    );
+
+    /*
+     * Antes de fechar/recarregar:
+     * força o salvamento.
+     */
+    window.addEventListener(
+      "beforeunload",
+      () => {
+        clearTimeout(
+          saveTimer
+        );
+
+        try {
+          localStorage.setItem(
+            CONFIG.draftKey,
+            JSON.stringify(
+              getSerializableState()
+            )
+          );
+        } catch (
+          error
+        ) {
+          console.warn(
+            "AERION: falha no salvamento final.",
+            error
+          );
+        }
+      }
+    );
+
+    renderAll();
+
+    setSaveStatus(
+      "saved",
+      loaded
+        ? "Rascunho recuperado"
+        : "Salvo automaticamente"
+    );
+
+    /*
+     * Exposição pública controlada.
+     */
+    window.AerionFicha =
+      {
+        getState: () =>
+          getSerializableState(),
+
+        getCharacter:
+          buildCharacterData,
+
+        next:
+          nextStep,
+
+        previous:
+          previousStep,
+
+        goToStep:
+          goToStep,
+
+        selectRace:
+          selectRace,
+
+        selectAnimalha:
+          selectAnimalhaVariant,
+
+        selectClass:
+          selectClass,
+
+        selectMana:
+          selectMana,
+
+        assignDie:
+          assignDieToAttribute,
+
+        returnDie:
+          returnDie,
+
+        moveDie:
+          moveDie,
+
+        swapDice:
+          swapAttributeDice,
+
+        rollAttribute:
+          rollAssignedAttribute,
+
+        rollPower:
+          rollPrimaryPower,
+
+        selectParallelPower:
+          selectParallelPower,
+
+        addTechnique:
+          addTechnique,
+
+        removeTechnique:
+          removeTechnique,
+
+        addInventory:
+          addInventoryItem,
+
+        removeInventory:
+          removeInventoryItem,
+
+        reset:
+          resetCharacter,
+
+        finish:
+          finishCharacter,
+
+        save:
+          saveDraft,
+
+        render:
+          renderAll,
+
+        constants: {
+          STEPS,
+          ATTRIBUTE_ORDER,
+          ATTRIBUTE_NAMES,
+          DICE_LIMITS,
+          DICE_VALUES,
+          RACES,
+          ANIMALHA_VARIANTS,
+          CLASSES,
+          SKILLS,
+          PRIMARY_POWERS,
+          PARALLEL_POWERS
+        }
+      };
+
+    window.dispatchEvent(
+      new CustomEvent(
+        "aerion:ficha:ready"
+      )
+    );
+  }
+
+  /* =========================================================
+     DOM READY
+  ========================================================= */
+
+  if (
+    document.readyState ===
+    "loading"
+  ) {
+    document.addEventListener(
+      "DOMContentLoaded",
+      initialize,
+      {
+        once: true
+      }
+    );
+  } else {
+    initialize();
+  }
+})();
