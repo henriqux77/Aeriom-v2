@@ -2,21 +2,22 @@
    AERION — CRIAÇÃO DE FICHA
    js/core/ficha.js
 
-   Versão atualizada:
-   - Salvamento automático local
+   Sistema:
+   - Salvamento automático
    - Restauração de rascunho
    - Identidade
    - Gênero
-   - Upload / preview de imagem
-   - Carrossel de raças
-   - Seleção de classes
-   - Distribuição correta dos dados dos atributos
-   - Gráfico de características
+   - Imagem
+   - Raças
+   - Classes
+   - Atributos com estoque limitado de dados
+   - Troca/devolução de dados
+   - Poder com D100
    - Mana Azul
+   - Perícias
    - Técnicas
    - Inventário
    - Revisão
-   - Navegação entre etapas
    ========================================================= */
 
 (() => {
@@ -27,7 +28,7 @@
   ========================================================= */
 
   const CONFIG = {
-    draftKey: "aerion:ficha:draft:v2",
+    draftKey: "aerion:ficha:draft:v3",
     autosaveDelay: 700,
 
     supabaseUrl:
@@ -55,47 +56,38 @@
       id: "identity",
       title: "Identidade"
     },
-
     {
       id: "race",
       title: "Raça"
     },
-
     {
       id: "class",
       title: "Classe"
     },
-
     {
       id: "attributes",
       title: "Atributos"
     },
-
     {
       id: "power",
       title: "Poder"
     },
-
     {
       id: "mana",
       title: "Mana"
     },
-
     {
       id: "skills",
       title: "Perícias"
     },
-
     {
       id: "techniques",
       title: "Técnicas"
     },
-
     {
       id: "inventory",
       title: "Inventário"
     },
-
     {
       id: "review",
       title: "Revisão"
@@ -104,18 +96,19 @@
 
 
   /* =========================================================
-     DISTRIBUIÇÃO OFICIAL DOS DADOS
-     
-     Livro I:
+     DADOS DOS ATRIBUTOS
+
+     REGRA DEFINIDA:
+
      D4  ×1
      D6  ×2
      D8  ×1
      D10 ×1
      D12 ×1
      D20 ×2
-     
-     Total = 8 dados
-     Total = 8 atributos
+
+     TOTAL = 8 DADOS
+     TOTAL = 8 ATRIBUTOS
   ========================================================= */
 
   const DICE_LIMITS = Object.freeze({
@@ -130,9 +123,6 @@
 
   /* =========================================================
      RAÇAS
-     
-     Povo das Nuvens / Aureano continua fora
-     conforme a decisão atual do projeto.
   ========================================================= */
 
   const RACES = [
@@ -161,7 +151,7 @@
         "https://i.ibb.co/F1DCc3j/file-00000000dcf8820e883635d6ca9de492.png",
 
       description:
-        "Elfos possuem uma aparência característica e uma forte ligação com Mana e fenômenos mágicos."
+        "Elfos possuem uma aparência característica e forte identidade ligada à fantasia de AERION."
     },
 
     {
@@ -175,7 +165,7 @@
         "https://i.ibb.co/hJh4XYXM/file-00000000a4fc820e9bd0551b2472e125.png",
 
       description:
-        "Anões possuem constituição robusta e grande tradição ligada a materiais, estruturas e forja."
+        "Anões possuem constituição robusta e tradição ligada a materiais, estruturas e forja."
     },
 
     {
@@ -189,7 +179,7 @@
         "https://i.ibb.co/ksjBsffv/file-00000000decc820e9cd0c4ace952b82c.png",
 
       description:
-        "Orcs apresentam presença física marcante e uma forte identidade guerreira."
+        "Orcs apresentam características físicas marcantes e presença facilmente reconhecível."
     },
 
     {
@@ -203,7 +193,7 @@
         "https://i.ibb.co/hFCDFvN2/file-00000000e5c8820ebb67aa67f2d7a1b8.png",
 
       description:
-        "Centauros possuem anatomia humanoide e equina, com grande mobilidade terrestre."
+        "Centauros combinam características humanoides e equinas em uma única anatomia."
     },
 
     {
@@ -217,7 +207,7 @@
         "https://i.ibb.co/Kpx8jh0j/file-000000008cfc820e827a7b8376d3fd55.png",
 
       description:
-        "Vampiros possuem características sobrenaturais e identidade visual própria."
+        "Vampiros possuem identidade sobrenatural e características visuais próprias."
     },
 
     {
@@ -231,7 +221,7 @@
         "https://i.ibb.co/G3dGmfBg/file-000000001ce8820ea3db1f6c8da1c8dd.png",
 
       description:
-        "Duendes são pequenos, inteligentes e muito ligados ao comércio, contratos e finanças."
+        "Duendes possuem aparência distinta e forte identidade ligada a comércio e contratos."
     },
 
     {
@@ -245,7 +235,7 @@
         "https://i.ibb.co/jPysnZz1/file-00000000f014820e954413d3d309ae96.png",
 
       description:
-        "Fadas possuem uma identidade fantástica e uma forte conexão com Mana."
+        "Fadas possuem uma identidade fantástica e visual delicado."
     },
 
     {
@@ -259,7 +249,7 @@
         "https://i.ibb.co/SDQqHjSj/file-00000000779c820ea18c5cf3ce6529b7.png",
 
       description:
-        "O Povo Aquático possui adaptações naturais para viver dentro e fora da água."
+        "O Povo Aquático possui características naturalmente adaptadas ao ambiente aquático."
     },
 
     {
@@ -273,7 +263,7 @@
         "https://i.ibb.co/zW6JnjPb/file-000000007a70820ea284e54236c00052.png",
 
       description:
-        "Animalhas felinas possuem características animais integradas naturalmente ao corpo."
+        "Animalhas felinas possuem características animais integradas ao corpo humanoide."
     },
 
     {
@@ -287,7 +277,7 @@
         "https://i.ibb.co/gFFk7Kyv/file-00000000a170820eaf15f8650242c3c9.png",
 
       description:
-        "O Povo da Natureza possui forte vínculo com ambientes naturais, plantas e animais."
+        "O Povo da Natureza possui identidade ligada aos ambientes naturais."
     },
 
     {
@@ -301,19 +291,13 @@
         "https://i.ibb.co/k2ND7Tbp/file-000000003cb0820e842b5d0997ee34f5.png",
 
       description:
-        "Neralianos possuem adaptações naturais relacionadas à água, profundidade e percepção de vibrações."
+        "Neralianos possuem adaptações relacionadas à água, profundidade e vibrações."
     }
   ];
 
 
   /* =========================================================
      CLASSES
-     
-     Bônus oficiais presentes no Livro I:
-     Feiticeiro +5
-     Guerreiro +1
-     Curandeiro +2
-     Monge +7
   ========================================================= */
 
   const CLASSES = [
@@ -323,7 +307,7 @@
       role: "Combatente",
       bonus: "+1",
       description:
-        "Armas e combate.",
+        "Especialista em armas e combate.",
       image:
         "https://i.ibb.co/Z12VGcdj/file-00000000f884820ea169d455610bbb08.png"
     },
@@ -334,7 +318,7 @@
       role: "Mágico",
       bonus: "+5",
       description:
-        "Especialista em técnicas e Mana.",
+        "Especialista em magia, técnicas e Mana.",
       image:
         "https://i.ibb.co/pBsLK1dG/file-000000004438820eb1451ab0c303400a.png"
     },
@@ -345,7 +329,7 @@
       role: "Suporte",
       bonus: "+2",
       description:
-        "Cura, proteção e utilidade.",
+        "Especialista em cura e suporte.",
       image:
         "https://i.ibb.co/MkV7gWRh/file-000000008180820e865940e8302d66ee.png"
     },
@@ -356,7 +340,7 @@
       role: "Marcial",
       bonus: "+7",
       description:
-        "Mana corporal para força, defesa, movimento e objetos simples.",
+        "Especialista em Mana corporal e combate marcial.",
       image:
         "https://i.ibb.co/JjgbsFKy/64403ce2-d0b6-4627-9419-b9f570e4a04c-20260829-224451-0000.png"
     }
@@ -380,19 +364,36 @@
 
 
   const ATTRIBUTE_DESCRIPTIONS = Object.freeze({
-    forca: "Potência física.",
-    vigor: "Resistência.",
-    controle: "Controle de Mana.",
-    precisao: "Mira e precisão.",
-    presenca: "Influência e interação.",
-    agilidade: "Reflexos e movimento.",
-    intelecto: "Conhecimento e raciocínio.",
-    percepcao: "Ambiente e detalhes."
+    forca: "Potência física",
+    vigor: "Resistência",
+    controle: "Controle de Mana",
+    precisao: "Mira e precisão",
+    presenca: "Influência e presença",
+    agilidade: "Reflexos e movimento",
+    intelecto: "Conhecimento e raciocínio",
+    percepcao: "Leitura do ambiente"
   });
 
 
   /* =========================================================
-     ESTADO PADRÃO
+     PODERES
+     
+     IMPORTANTE:
+     O D100 gera um resultado 1–100.
+     Não colocamos uma tabela inventada de poderes porque
+     ela ainda não foi definida oficialmente no material.
+  ========================================================= */
+
+  const POWER_CENTRAL_ELEMENTS = [
+    "Fogo",
+    "Ar",
+    "Terra",
+    "Água"
+  ];
+
+
+  /* =========================================================
+     ESTADO
   ========================================================= */
 
   function createDefaultState() {
@@ -419,27 +420,24 @@
 
       class: "",
 
+      classBonus: "",
+
       attributes: {
 
         forca: null,
-
         vigor: null,
-
         controle: null,
-
         precisao: null,
-
         presenca: null,
-
         agilidade: null,
-
         intelecto: null,
-
         percepcao: null
 
       },
 
       power: "",
+
+      powerRoll: null,
 
       origin: "",
 
@@ -483,45 +481,39 @@
   const $ = (
     selector,
     root = document
-  ) => {
-
-    return root.querySelector(
+  ) =>
+    root.querySelector(
       selector
     );
-
-  };
 
 
   const $$ = (
     selector,
     root = document
-  ) => {
-
-    return Array.from(
+  ) =>
+    Array.from(
       root.querySelectorAll(
         selector
       )
     );
-
-  };
 
 
   /* =========================================================
      UTILITÁRIOS
   ========================================================= */
 
-  function safeText(
-    value
-  ) {
+  function safeText(value) {
 
-    return value === null ||
+    if (
+      value === null ||
       value === undefined
+    ) {
 
-      ? ""
+      return "";
 
-      : String(
-          value
-        );
+    }
+
+    return String(value);
 
   }
 
@@ -551,30 +543,19 @@
     const toast =
       $("#toast");
 
-
-    if (
-      !toast
-    ) {
-
+    if (!toast) {
       return;
-
     }
 
-
     toast.textContent =
-      safeText(
-        message
-      );
-
+      safeText(message);
 
     toast.hidden =
       false;
 
-
     clearTimeout(
       toastTimer
     );
-
 
     toastTimer =
       window.setTimeout(
@@ -598,10 +579,8 @@
     const textElement =
       $("#saveStatusText");
 
-
     const dot =
       $(".save-dot");
-
 
     if (
       textElement
@@ -612,7 +591,6 @@
 
     }
 
-
     if (
       !dot
     ) {
@@ -620,7 +598,6 @@
       return;
 
     }
-
 
     if (
       type ===
@@ -637,7 +614,6 @@
 
     }
 
-
     if (
       type ===
       "saved"
@@ -653,7 +629,6 @@
 
     }
 
-
     dot.style.background =
       "var(--gold)";
 
@@ -664,7 +639,112 @@
 
 
   /* =========================================================
-     NORMALIZAÇÃO DO ESTADO
+     ATRIBUTOS — NORMALIZAÇÃO
+  ========================================================= */
+
+  function normalizeAttributes(
+    rawAttributes
+  ) {
+
+    const output = {
+
+      forca: null,
+      vigor: null,
+      controle: null,
+      precisao: null,
+      presenca: null,
+      agilidade: null,
+      intelecto: null,
+      percepcao: null
+
+    };
+
+
+    if (
+      !rawAttributes ||
+      typeof rawAttributes !==
+      "object"
+    ) {
+
+      return output;
+
+    }
+
+
+    const used = {
+
+      d4: 0,
+      d6: 0,
+      d8: 0,
+      d10: 0,
+      d12: 0,
+      d20: 0
+
+    };
+
+
+    Object.keys(
+      output
+    )
+      .forEach(
+        attribute => {
+
+          const die =
+            safeText(
+              rawAttributes[
+                attribute
+              ]
+            )
+            .toLowerCase();
+
+
+          if (
+            !Object.prototype.hasOwnProperty.call(
+              DICE_LIMITS,
+              die
+            )
+          ) {
+
+            return;
+
+          }
+
+
+          if (
+            used[
+              die
+            ] >=
+            DICE_LIMITS[
+              die
+            ]
+          ) {
+
+            return;
+
+          }
+
+
+          output[
+            attribute
+          ] =
+            die;
+
+
+          used[
+            die
+          ]++;
+
+        }
+      );
+
+
+    return output;
+
+  }
+
+
+  /* =========================================================
+     NORMALIZAÇÃO COMPLETA
   ========================================================= */
 
   function normalizeState(
@@ -692,48 +772,30 @@
 
       ...raw,
 
-      attributes: {
-
-        ...base.attributes,
-
-        ...(
-          raw.attributes &&
-          typeof raw.attributes ===
-            "object"
-
-            ? raw.attributes
-
-            : {}
-
-        )
-
-      },
+      attributes:
+        normalizeAttributes(
+          raw.attributes
+        ),
 
       skills:
         Array.isArray(
           raw.skills
         )
-
           ? raw.skills
-
           : [],
 
       techniques:
         Array.isArray(
           raw.techniques
         )
-
           ? raw.techniques
-
           : [],
 
       inventory:
         Array.isArray(
           raw.inventory
         )
-
           ? raw.inventory
-
           : []
 
     };
@@ -793,16 +855,28 @@
     }
 
 
-    if (
-      !CLASSES.some(
+    const classData =
+      CLASSES.find(
         item =>
           item.id ===
           merged.class
-      )
+      );
+
+
+    if (
+      !classData
     ) {
 
       merged.class =
         "";
+
+      merged.classBonus =
+        "";
+
+    } else {
+
+      merged.classBonus =
+        classData.bonus;
 
     }
 
@@ -823,22 +897,11 @@
 
 
     /*
-     * Regra atual:
-     * somente Mana Azul é permitida na ficha-base.
+     * Ficha-base:
+     * Mana Azul somente.
      */
     merged.mana =
       "azul";
-
-
-    /*
-     * Corrige dados inválidos antigos.
-     * Também garante que apenas os dados permitidos
-     * existam nos atributos.
-     */
-    merged.attributes =
-      normalizeAttributes(
-        merged.attributes
-      );
 
 
     return merged;
@@ -846,249 +909,8 @@
   }
 
 
-  function normalizeAttributes(
-    attributes
-  ) {
-
-    const output = {
-
-      forca:
-        null,
-
-      vigor:
-        null,
-
-      controle:
-        null,
-
-      precisao:
-        null,
-
-      presenca:
-        null,
-
-      agilidade:
-        null,
-
-      intelecto:
-        null,
-
-      percepcao:
-        null
-
-    };
-
-
-    if (
-      !attributes ||
-      typeof attributes !==
-      "object"
-    ) {
-
-      return output;
-
-    }
-
-
-    /*
-     * Reconstrói respeitando os limites.
-     *
-     * Isso também protege a aplicação caso um rascunho
-     * antigo tenha valores inválidos.
-     */
-    const used =
-      {
-        d4: 0,
-        d6: 0,
-        d8: 0,
-        d10: 0,
-        d12: 0,
-        d20: 0
-      };
-
-
-    Object.keys(
-      output
-    )
-      .forEach(
-        attribute => {
-
-          const raw =
-            safeText(
-              attributes[
-                attribute
-              ]
-            )
-            .toLowerCase();
-
-
-          if (
-            !Object.prototype.hasOwnProperty.call(
-              DICE_LIMITS,
-              raw
-            )
-          ) {
-
-            output[
-              attribute
-            ] =
-              null;
-
-            return;
-
-          }
-
-
-          if (
-            used[
-              raw
-            ] >=
-            DICE_LIMITS[
-              raw
-            ]
-          ) {
-
-            output[
-              attribute
-            ] =
-              null;
-
-            return;
-
-          }
-
-
-          output[
-            attribute
-          ] =
-            raw;
-
-
-          used[
-            raw
-          ]++;
-
-        }
-      );
-
-
-    return output;
-
-  }
-
-
   /* =========================================================
-     CONTAGEM DOS DADOS
-  ========================================================= */
-
-  function getDiceUsage() {
-
-    const usage = {
-
-      d4: 0,
-
-      d6: 0,
-
-      d8: 0,
-
-      d10: 0,
-
-      d12: 0,
-
-      d20: 0
-
-    };
-
-
-    Object.values(
-      state.attributes
-    )
-      .forEach(
-        die => {
-
-          if (
-            Object.prototype.hasOwnProperty.call(
-              usage,
-              die
-            )
-          ) {
-
-            usage[
-              die
-            ]++;
-
-          }
-
-        }
-      );
-
-
-    return usage;
-
-  }
-
-
-  function getRemainingDice(
-    die
-  ) {
-
-    const normalized =
-      safeText(
-        die
-      )
-      .toLowerCase();
-
-
-    const max =
-      DICE_LIMITS[
-        normalized
-      ] || 0;
-
-
-    const usage =
-      getDiceUsage();
-
-
-    return Math.max(
-      0,
-      max -
-      (
-        usage[
-          normalized
-        ] || 0
-      )
-    );
-
-  }
-
-
-  function getAttributeCount() {
-
-    return Object.values(
-      state.attributes
-    )
-      .filter(
-        Boolean
-      )
-      .length;
-
-  }
-
-
-  function areAllAttributesAssigned() {
-
-    return (
-      getAttributeCount() ===
-      Object.keys(
-        ATTRIBUTE_NAMES
-      ).length
-    );
-
-  }
-
-
-  /* =========================================================
-     RASCUNHO
+     SALVAMENTO LOCAL
   ========================================================= */
 
   function saveLocalDraft() {
@@ -1109,28 +931,26 @@
 
         techniques:
           state.techniques.map(
-            technique =>
-              ({
-                ...technique
-              })
+            item => ({
+              ...item
+            })
           ),
 
         inventory:
           state.inventory.map(
-            item =>
-              ({
-                ...item
-              })
+            item => ({
+              ...item
+            })
           ),
 
         /*
-         * Imagens muito grandes não devem
-         * explodir o localStorage.
+         * Data URL só permanece se for pequena.
+         * A persistência definitiva da imagem ficará no Storage.
          */
         avatarDataUrl:
           state.avatarDataUrl &&
           state.avatarDataUrl.length <=
-            2_000_000
+          2_000_000
 
             ? state.avatarDataUrl
 
@@ -1167,7 +987,7 @@
     ) {
 
       console.error(
-        "[AERION][FICHA] Erro ao salvar rascunho:",
+        "[AERION][FICHA] Erro ao salvar:",
         error
       );
 
@@ -1195,24 +1015,18 @@
         );
 
 
-      if (
-        !raw
-      ) {
+      if (!raw) {
 
         return false;
 
       }
 
 
-      const parsed =
-        JSON.parse(
-          raw
-        );
-
-
       state =
         normalizeState(
-          parsed
+          JSON.parse(
+            raw
+          )
         );
 
 
@@ -1255,41 +1069,18 @@
 
     saveTimer =
       window.setTimeout(
-        () => {
-
-          saveLocalDraft();
-
-        },
+        saveLocalDraft,
         CONFIG.autosaveDelay
       );
 
   }
 
 
-  function updateState(
-    partial
-  ) {
-
-    state = {
-
-      ...state,
-
-      ...partial
-
-    };
-
-
-    scheduleAutosave();
-
-    updateProgress();
-
-    updateReview();
-
-  }
-
-
   /* =========================================================
      SUPABASE
+     
+     A persistência definitiva não é ativada aqui ainda,
+     para não escrever em uma tabela incorreta.
   ========================================================= */
 
   function getSupabaseClient() {
@@ -1333,12 +1124,6 @@
   }
 
 
-  /*
-   * Ainda não executa INSERT/UPDATE definitivo.
-   *
-   * Isso é intencional: a arquitetura de ficha-base
-   * e instância de campanha precisa permanecer separada.
-   */
   async function saveToSupabase() {
 
     const client =
@@ -1352,17 +1137,18 @@
       return {
 
         ok: false,
-
-        skipped: true,
-
-        reason:
-          "Supabase não configurado."
+        skipped: true
 
       };
 
     }
 
 
+    /*
+     * Não executa operação destrutiva ou especulativa.
+     * A estrutura definitiva de ficha-base + campanha
+     * será conectada quando o schema estiver fechado.
+     */
     return {
 
       ok: false,
@@ -1370,7 +1156,7 @@
       skipped: true,
 
       reason:
-        "Persistência definitiva da ficha ainda não ligada."
+        "Persistência definitiva ainda não conectada."
 
     };
 
@@ -1381,84 +1167,190 @@
      PROGRESSO
   ========================================================= */
 
-  function getStepCompletion(
-    stepId
+  function isIdentityComplete() {
+
+    return Boolean(
+      state.name.trim()
+    );
+
+  }
+
+
+  function isRaceComplete() {
+
+    return Boolean(
+      state.race
+    );
+
+  }
+
+
+  function isClassComplete() {
+
+    return Boolean(
+      state.class
+    );
+
+  }
+
+
+  function areAllAttributesAssigned() {
+
+    return (
+      Object.values(
+        state.attributes
+      )
+      .filter(
+        Boolean
+      )
+      .length ===
+      Object.keys(
+        ATTRIBUTE_NAMES
+      ).length
+    );
+
+  }
+
+
+  function isPowerComplete() {
+
+    return Boolean(
+      state.power.trim()
+    );
+
+  }
+
+
+  function isManaComplete() {
+
+    return (
+      state.mana ===
+      "azul"
+    );
+
+  }
+
+
+  function canEnterStep(
+    index
+  ) {
+
+    if (
+      index <=
+      0
+    ) {
+
+      return true;
+
+    }
+
+
+    if (
+      index >=
+      1 &&
+      !isIdentityComplete()
+    ) {
+
+      return false;
+
+    }
+
+
+    if (
+      index >=
+      2 &&
+      !isRaceComplete()
+    ) {
+
+      return false;
+
+    }
+
+
+    if (
+      index >=
+      3 &&
+      !isClassComplete()
+    ) {
+
+      return false;
+
+    }
+
+
+    if (
+      index >=
+      4 &&
+      !areAllAttributesAssigned()
+    ) {
+
+      return false;
+
+    }
+
+
+    if (
+      index >=
+      5 &&
+      !isPowerComplete()
+    ) {
+
+      return false;
+
+    }
+
+
+    return true;
+
+  }
+
+
+  function isStepComplete(
+    index
   ) {
 
     switch (
-      stepId
+      STEPS[index]?.id
     ) {
 
       case "identity":
-
-        return Boolean(
-          state.name.trim()
-        );
-
+        return isIdentityComplete();
 
       case "race":
-
-        return Boolean(
-          state.race
-        );
-
+        return isRaceComplete();
 
       case "class":
-
-        return Boolean(
-          state.class
-        );
-
+        return isClassComplete();
 
       case "attributes":
-
         return areAllAttributesAssigned();
 
-
       case "power":
-
-        return Boolean(
-          state.power.trim()
-        );
-
+        return isPowerComplete();
 
       case "mana":
-
-        return state.mana ===
-          "azul";
-
+        return isManaComplete();
 
       case "skills":
-
-        return (
-          state.skills.length >
-          0
-        );
-
+        return state.skills.length > 0;
 
       case "techniques":
-
-        return (
-          state.techniques.length >
-          0
-        );
-
+        return state.techniques.length > 0;
 
       case "inventory":
-
-        return (
-          state.inventory.length >
-          0
-        );
-
+        return state.inventory.length > 0;
 
       case "review":
-
-        return isMinimumCharacterReady();
-
+        return (
+          isIdentityComplete() &&
+          isRaceComplete() &&
+          isClassComplete() &&
+          areAllAttributesAssigned() &&
+          isPowerComplete() &&
+          isManaComplete()
+        );
 
       default:
-
         return false;
 
     }
@@ -1472,21 +1364,23 @@
       0;
 
 
-    STEPS.forEach(
-      step => {
+    for (
+      let i = 0;
+      i < STEPS.length;
+      i++
+    ) {
 
-        if (
-          getStepCompletion(
-            step.id
-          )
-        ) {
+      if (
+        isStepComplete(
+          i
+        )
+      ) {
 
-          completed++;
-
-        }
+        completed++;
 
       }
-    );
+
+    }
 
 
     return Math.round(
@@ -1502,14 +1396,10 @@
 
   function updateProgress() {
 
-    const currentIndex =
+    const index =
       state.currentStep;
 
 
-    /*
-     * A barra mostra progresso de etapas concluídas,
-     * enquanto o contador continua indicando a etapa atual.
-     */
     const percent =
       getProgressPercent();
 
@@ -1518,7 +1408,7 @@
       $("#progressFill");
 
 
-    const percentElement =
+    const percentage =
       $("#progressPercent");
 
 
@@ -1541,10 +1431,10 @@
 
 
     if (
-      percentElement
+      percentage
     ) {
 
-      percentElement.textContent =
+      percentage.textContent =
         `${percent}%`;
 
     }
@@ -1556,7 +1446,7 @@
 
       title.textContent =
         STEPS[
-          currentIndex
+          index
         ]?.title ||
         "Identidade";
 
@@ -1568,7 +1458,7 @@
     ) {
 
       counter.textContent =
-        `${currentIndex + 1} de ${STEPS.length}`;
+        `${index + 1} de ${STEPS.length}`;
 
     }
 
@@ -1577,44 +1467,29 @@
       .forEach(
         (
           button,
-          index
+          buttonIndex
         ) => {
-
-          const isCurrent =
-            index ===
-            currentIndex;
-
-
-          const isComplete =
-            index <
-            currentIndex &&
-            getStepCompletion(
-              STEPS[index].id
-            );
-
 
           button.classList.toggle(
             "is-active",
-            isCurrent
+            buttonIndex ===
+            index
           );
 
 
           button.classList.toggle(
             "is-complete",
-            isComplete
+            isStepComplete(
+              buttonIndex
+            )
           );
 
 
-          /*
-           * O histórico anterior pode ser revisitado.
-           * A próxima etapa só abre quando seus pré-requisitos
-           * estiverem cumpridos.
-           */
           button.disabled =
-            index >
-              currentIndex &&
+            buttonIndex >
+            index &&
             !canEnterStep(
-              index
+              buttonIndex
             );
 
         }
@@ -1630,7 +1505,7 @@
     ) {
 
       previous.disabled =
-        currentIndex ===
+        index ===
         0;
 
     }
@@ -1644,139 +1519,40 @@
       next
     ) {
 
-      if (
-        currentIndex ===
+      next.textContent =
+        index ===
         STEPS.length - 1
-      ) {
 
-        next.textContent =
-          "Finalizar →";
+          ? "Finalizar →"
 
-      } else {
-
-        next.textContent =
-          "Próximo →";
-
-      }
+          : "Próximo →";
 
     }
-
-  }
-
-
-  function canEnterStep(
-    index
-  ) {
-
-    if (
-      index <=
-      0
-    ) {
-
-      return true;
-
-    }
-
-
-    /*
-     * Raça só depois da identidade.
-     */
-    if (
-      index >=
-        1 &&
-      !state.name.trim()
-    ) {
-
-      return false;
-
-    }
-
-
-    /*
-     * Classe só depois da raça.
-     */
-    if (
-      index >=
-        2 &&
-      !state.race
-    ) {
-
-      return false;
-
-    }
-
-
-    /*
-     * Atributos só depois da classe.
-     */
-    if (
-      index >=
-        3 &&
-      !state.class
-    ) {
-
-      return false;
-
-    }
-
-
-    /*
-     * Poder só depois de 8/8 atributos.
-     */
-    if (
-      index >=
-        4 &&
-      !areAllAttributesAssigned()
-    ) {
-
-      return false;
-
-    }
-
-
-    /*
-     * Mana só depois de poder.
-     *
-     * O poder pode ficar temporariamente vazio durante a
-     * montagem do sistema, mas para liberar a etapa seguinte
-     * exigimos o preenchimento.
-     */
-    if (
-      index >=
-        5 &&
-      !state.power.trim()
-    ) {
-
-      return false;
-
-    }
-
-
-    return true;
 
   }
 
 
   function goToStep(
-    index
+    targetIndex
   ) {
 
-    const safeIndex =
+    const index =
       clamp(
-        Number(index) || 0,
+        Number(
+          targetIndex
+        ) || 0,
+
         0,
+
         STEPS.length - 1
       );
 
 
-    /*
-     * Permite voltar normalmente.
-     */
     if (
-      safeIndex >
+      index >
       state.currentStep &&
       !canEnterStep(
-        safeIndex
+        index
       )
     ) {
 
@@ -1788,7 +1564,7 @@
 
 
     state.currentStep =
-      safeIndex;
+      index;
 
 
     $$(".creation-panel")
@@ -1798,7 +1574,7 @@
           const active =
             panel.dataset.panel ===
             STEPS[
-              safeIndex
+              index
             ].id;
 
 
@@ -1818,13 +1594,13 @@
     updateProgress();
 
 
-    const activeButton =
+    const stepButton =
       $(
-        `.creation-step[data-step="${STEPS[safeIndex].id}"]`
+        `.creation-step[data-step="${STEPS[index].id}"]`
       );
 
 
-    activeButton?.scrollIntoView(
+    stepButton?.scrollIntoView(
       {
         behavior:
           "smooth",
@@ -1840,78 +1616,53 @@
 
     window.scrollTo(
       {
-        top: 0,
-        behavior: "smooth"
+        top:
+          0,
+
+        behavior:
+          "smooth"
       }
     );
 
 
-    if (
-      safeIndex ===
-      1
+    /*
+     * Atualiza a etapa individual.
+     */
+    switch (
+      STEPS[index].id
     ) {
 
-      renderRace();
+      case "race":
+        renderRace();
+        break;
 
-    }
+      case "class":
+        renderClasses();
+        break;
 
+      case "attributes":
+        renderAttributes();
+        break;
 
-    if (
-      safeIndex ===
-      2
-    ) {
+      case "power":
+        renderPower();
+        break;
 
-      renderClass();
+      case "mana":
+        renderMana();
+        break;
 
-    }
+      case "techniques":
+        renderTechniques();
+        break;
 
+      case "inventory":
+        renderInventory();
+        break;
 
-    if (
-      safeIndex ===
-      3
-    ) {
-
-      renderAttributes();
-
-    }
-
-
-    if (
-      safeIndex ===
-      5
-    ) {
-
-      renderMana();
-
-    }
-
-
-    if (
-      safeIndex ===
-      7
-    ) {
-
-      renderTechniques();
-
-    }
-
-
-    if (
-      safeIndex ===
-      8
-    ) {
-
-      renderInventory();
-
-    }
-
-
-    if (
-      safeIndex ===
-      9
-    ) {
-
-      updateReview();
+      case "review":
+        updateReview();
+        break;
 
     }
 
@@ -1927,7 +1678,7 @@
   function validateBeforeNext() {
 
     if (
-      !state.name.trim()
+      !isIdentityComplete()
     ) {
 
       showToast(
@@ -1950,11 +1701,11 @@
 
 
     if (
-      !state.race
+      !isRaceComplete()
     ) {
 
       showToast(
-        "Escolha uma raça antes de continuar."
+        "Escolha uma raça."
       );
 
 
@@ -1969,11 +1720,11 @@
 
 
     if (
-      !state.class
+      !isClassComplete()
     ) {
 
       showToast(
-        "Escolha uma classe antes de continuar."
+        "Escolha uma classe."
       );
 
 
@@ -1992,7 +1743,7 @@
     ) {
 
       showToast(
-        `Preencha os 8 atributos. Atualmente: ${getAttributeCount()}/8.`
+        `Complete os atributos: ${getAttributeCount()}/8.`
       );
 
 
@@ -2007,11 +1758,11 @@
 
 
     if (
-      !state.power.trim()
+      !isPowerComplete()
     ) {
 
       showToast(
-        "Defina o poder antes de continuar."
+        "Defina o poder do aventureiro."
       );
 
 
@@ -2029,6 +1780,7 @@
 
   }
 
+
   /* =========================================================
      IDENTIDADE
   ========================================================= */
@@ -2038,18 +1790,14 @@
     const name =
       $("#characterName");
 
-
     const age =
       $("#characterAge");
-
 
     const description =
       $("#characterDescription");
 
-
     const power =
       $("#characterPower");
-
 
     const origin =
       $("#characterOrigin");
@@ -2137,26 +1885,17 @@
             );
 
 
-          const error =
-            $("#nameError");
-
-
-          if (
-            error
-          ) {
-
-            error.hidden =
-              true;
-
-          }
-
-
-          updateState(
-            {
-              name:
-                state.name
-            }
+          $("#nameError")?.setAttribute(
+            "hidden",
+            ""
           );
+
+
+          updateProgress();
+
+          scheduleAutosave();
+
+          updateReview();
 
         }
       );
@@ -2173,12 +1912,9 @@
             );
 
 
-          updateState(
-            {
-              age:
-                state.age
-            }
-          );
+          scheduleAutosave();
+
+          updateReview();
 
         }
       );
@@ -2195,12 +1931,7 @@
             );
 
 
-          updateState(
-            {
-              description:
-                state.description
-            }
-          );
+          scheduleAutosave();
 
         }
       );
@@ -2217,12 +1948,11 @@
             );
 
 
-          updateState(
-            {
-              power:
-                state.power
-            }
-          );
+          scheduleAutosave();
+
+          updateProgress();
+
+          updateReview();
 
         }
       );
@@ -2239,12 +1969,7 @@
             );
 
 
-          updateState(
-            {
-              origin:
-                state.origin
-            }
-          );
+          scheduleAutosave();
 
         }
       );
@@ -2264,15 +1989,11 @@
                 radio.value;
 
 
-              updateState(
-                {
-                  gender:
-                    state.gender
-                }
-              );
-
-
               renderRace();
+
+              updateReview();
+
+              scheduleAutosave();
 
             }
           );
@@ -2316,18 +2037,7 @@
 
           renderAvatar();
 
-
-          updateState(
-            {
-
-              avatarDataUrl:
-                "",
-
-              avatarFileName:
-                ""
-
-            }
-          );
+          scheduleAutosave();
 
         }
       );
@@ -2352,16 +2062,21 @@
     }
 
 
-    const allowedTypes = [
+    const validTypes = [
+
       "image/png",
+
       "image/jpeg",
+
       "image/webp",
+
       "image/avif"
+
     ];
 
 
     if (
-      !allowedTypes.includes(
+      !validTypes.includes(
         file.type
       )
     ) {
@@ -2420,7 +2135,6 @@
 
         renderAvatar();
 
-
         scheduleAutosave();
 
       };
@@ -2430,7 +2144,7 @@
       () => {
 
         showToast(
-          "Não foi possível ler a imagem."
+          "Não foi possível carregar a imagem."
         );
 
       };
@@ -2494,13 +2208,13 @@
 
     } else {
 
+      image.hidden =
+        true;
+
+
       image.removeAttribute(
         "src"
       );
-
-
-      image.hidden =
-        true;
 
 
       placeholder.hidden =
@@ -2522,6 +2236,7 @@
     updateReview();
 
   }
+
 
   /* =========================================================
      RAÇAS
@@ -2554,7 +2269,7 @@
 
     if (
       state.gender ===
-        "feminino"
+      "feminino"
     ) {
 
       return (
@@ -2568,7 +2283,7 @@
 
     if (
       state.gender ===
-        "masculino"
+      "masculino"
     ) {
 
       return (
@@ -2639,15 +2354,6 @@
         );
 
 
-        button.setAttribute(
-          "aria-current",
-          index ===
-            state.raceIndex
-            ? "true"
-            : "false"
-        );
-
-
         button.addEventListener(
           "click",
           event => {
@@ -2660,6 +2366,8 @@
 
 
             renderRace();
+
+            scheduleAutosave();
 
           }
         );
@@ -2698,11 +2406,11 @@
       $("#raceName");
 
 
-    const short =
+    const description =
       $("#raceShortDescription");
 
 
-    const selectedText =
+    const selected =
       $("#raceSelectedText");
 
 
@@ -2723,20 +2431,6 @@
       image.alt =
         `${race.name} — personagem`;
 
-
-      image.onerror =
-        () => {
-
-          image.removeAttribute(
-            "src"
-          );
-
-
-          image.alt =
-            `${race.name} — imagem indisponível`;
-
-        };
-
     }
 
 
@@ -2751,10 +2445,10 @@
 
 
     if (
-      short
+      description
     ) {
 
-      short.textContent =
+      description.textContent =
         race.description;
 
     }
@@ -2775,16 +2469,44 @@
 
 
     if (
-      selectedText
+      selected
     ) {
 
-      selectedText.textContent =
+      selected.textContent =
         state.race ===
         race.id
 
           ? "✓ Selecionada"
 
           : "Selecionar raça";
+
+    }
+
+
+    const detailsTitle =
+      $("#raceDescriptionTitle");
+
+
+    const detailsText =
+      $("#raceDescriptionText");
+
+
+    if (
+      detailsTitle
+    ) {
+
+      detailsTitle.textContent =
+        race.name;
+
+    }
+
+
+    if (
+      detailsText
+    ) {
+
+      detailsText.textContent =
+        race.description;
 
     }
 
@@ -2804,7 +2526,7 @@
       !race
     ) {
 
-      return;
+      return false;
 
     }
 
@@ -2813,25 +2535,15 @@
       race.id;
 
 
-    updateState(
-      {
-
-        race:
-          race.id,
-
-        raceIndex:
-          state.raceIndex
-
-      }
-    );
-
-
-    renderRace();
+    updateStateAndRender();
 
 
     showToast(
       `${race.name} selecionada.`
     );
+
+
+    return true;
 
   }
 
@@ -2856,29 +2568,29 @@
     }
 
 
-    const modalName =
+    const title =
       $("#modalRaceName");
 
 
-    const modalDescription =
+    const description =
       $("#modalRaceDescription");
 
 
     if (
-      modalName
+      title
     ) {
 
-      modalName.textContent =
+      title.textContent =
         race.name;
 
     }
 
 
     if (
-      modalDescription
+      description
     ) {
 
-      modalDescription.textContent =
+      description.textContent =
         race.description;
 
     }
@@ -2999,10 +2711,6 @@
       );
 
 
-    /*
-     * No card da raça, clicar no indicador seleciona.
-     * Clicar na área principal abre a descrição.
-     */
     $("#raceCard")
       ?.addEventListener(
         "click",
@@ -3022,28 +2730,6 @@
 
 
           openRaceModal();
-
-        }
-      );
-
-
-    $("#raceCard")
-      ?.addEventListener(
-        "keydown",
-        event => {
-
-          if (
-            event.key ===
-              "Enter" ||
-            event.key ===
-              " "
-          ) {
-
-            event.preventDefault();
-
-            openRaceModal();
-
-          }
 
         }
       );
@@ -3088,25 +2774,27 @@
 
   }
 
+
   /* =========================================================
      CLASSES
   ========================================================= */
 
-  function renderClass() {
+  function renderClasses() {
 
     $$(".class-card")
       .forEach(
         card => {
 
-          const classId =
+          const id =
             safeText(
               card.dataset.class
             )
+            .trim()
             .toLowerCase();
 
 
           const selected =
-            classId ===
+            id ===
             state.class;
 
 
@@ -3146,74 +2834,6 @@
         }
       );
 
-
-    /*
-     * Se a estrutura antiga do HTML ainda estiver usando
-     * imagens/classes dentro do card, não tentamos reconstruí-la.
-     * O data-class continua sendo a fonte principal.
-     */
-    $$(".class-card img")
-      .forEach(
-        image => {
-
-          const card =
-            image.closest(
-              ".class-card"
-            );
-
-
-          if (
-            !card
-          ) {
-
-            return;
-
-          }
-
-
-          const classId =
-            card.dataset.class;
-
-
-          const classData =
-            CLASSES.find(
-              item =>
-                item.id ===
-                classId
-            );
-
-
-          if (
-            !classData
-          ) {
-
-            return;
-
-          }
-
-
-          /*
-           * Só substitui a imagem se o HTML não tiver
-           * uma URL explícita diferente.
-           */
-          if (
-            !image.getAttribute(
-              "src"
-            ) ||
-            image.getAttribute(
-              "src"
-            ) ===
-              ""
-          ) {
-
-            image.src =
-              classData.image;
-
-          }
-
-        }
-      );
-
   }
 
 
@@ -3241,12 +2861,6 @@
       !classData
     ) {
 
-      console.warn(
-        "[AERION][FICHA] Classe desconhecida:",
-        classId
-      );
-
-
       return false;
 
     }
@@ -3256,19 +2870,15 @@
       classData.id;
 
 
-    updateState(
-      {
-        class:
-          classData.id
-      }
-    );
+    state.classBonus =
+      classData.bonus;
 
 
-    renderClass();
+    updateStateAndRender();
 
 
     showToast(
-      `${classData.name} selecionado.`
+      `${classData.name} selecionada.`
     );
 
 
@@ -3280,9 +2890,10 @@
   function bindClasses() {
 
     /*
-     * O listener fica no document para funcionar tanto
-     * com o HTML novo quanto com cards antigos que possuam
-     * data-class.
+     * Funciona com o HTML atual:
+     * <article class="class-card" data-class="guerreiro">
+     *
+     * Também funciona com botão, caso o HTML seja alterado.
      */
     document.addEventListener(
       "click",
@@ -3296,21 +2907,6 @@
 
         if (
           !card
-        ) {
-
-          return;
-
-        }
-
-
-        /*
-         * Botões internos continuam podendo funcionar
-         * normalmente, mas o card inteiro seleciona.
-         */
-        if (
-          event.target.closest(
-            "a"
-          )
         ) {
 
           return;
@@ -3371,13 +2967,161 @@
       }
     );
 
+
+    /*
+     * Se os cards forem criados sem imagem,
+     * preenchemos usando os dados oficiais do catálogo.
+     */
+    $$(".class-card[data-class]")
+      .forEach(
+        card => {
+
+          const id =
+            card.dataset.class;
+
+
+          const classData =
+            CLASSES.find(
+              item =>
+                item.id ===
+                id
+            );
+
+
+          if (
+            !classData
+          ) {
+
+            return;
+
+          }
+
+
+          const image =
+            card.querySelector(
+              "img"
+            );
+
+
+          if (
+            image &&
+            !image.src
+          ) {
+
+            image.src =
+              classData.image;
+
+          }
+
+        }
+      );
+
   }
+
 
   /* =========================================================
      ATRIBUTOS
   ========================================================= */
 
-  function updateDiceUI() {
+  function getAttributeCount() {
+
+    return Object.values(
+      state.attributes
+    )
+      .filter(
+        Boolean
+      )
+      .length;
+
+  }
+
+
+  function getDiceUsage() {
+
+    const usage = {
+
+      d4: 0,
+      d6: 0,
+      d8: 0,
+      d10: 0,
+      d12: 0,
+      d20: 0
+
+    };
+
+
+    Object.values(
+      state.attributes
+    )
+      .forEach(
+        die => {
+
+          if (
+            die &&
+            Object.prototype.hasOwnProperty.call(
+              usage,
+              die
+            )
+          ) {
+
+            usage[
+              die
+            ]++;
+
+          }
+
+        }
+      );
+
+
+    return usage;
+
+  }
+
+
+  function getRemainingDice(
+    die
+  ) {
+
+    const normalized =
+      safeText(
+        die
+      )
+      .toLowerCase();
+
+
+    if (
+      !Object.prototype.hasOwnProperty.call(
+        DICE_LIMITS,
+        normalized
+      )
+    ) {
+
+      return 0;
+
+    }
+
+
+    const usage =
+      getDiceUsage();
+
+
+    return Math.max(
+      0,
+      DICE_LIMITS[
+        normalized
+      ] -
+      (
+        usage[
+          normalized
+        ] || 0
+      )
+    );
+
+  }
+
+
+  function updateDiceCards() {
 
     const usage =
       getDiceUsage();
@@ -3424,26 +3168,19 @@
             remainingElement
           ) {
 
-            if (
+            remainingElement.textContent =
               remaining ===
               1
-            ) {
 
-              remainingElement.textContent =
-                "1 disponível";
+                ? "1 disponível"
 
-            } else {
-
-              remainingElement.textContent =
-                `${remaining} disponíveis`;
-
-            }
+                : `${remaining} disponíveis`;
 
           }
 
 
           const exhausted =
-            remaining <=
+            remaining ===
             0;
 
 
@@ -3453,34 +3190,29 @@
           );
 
 
-          card.setAttribute(
-            "aria-disabled",
-            String(
-              exhausted
-            )
-          );
-
-
           card.disabled =
             exhausted;
 
 
-          card.title =
-            exhausted
+          card.setAttribute(
+            "aria-disabled",
+            String(
+              exhausted
+            );
 
-              ? `${die.toUpperCase()} esgotado`
+          });
 
-              : `${remaining} ${die.toUpperCase()} disponível(is)`;
+
+          card.classList.toggle(
+            "is-selected",
+            selectedDice ===
+            die
+          );
 
         }
       );
 
 
-    /*
-     * Se algum dado estiver atualmente selecionado,
-     * mantém selecionável apenas quando ainda houver
-     * disponibilidade.
-     */
     if (
       selectedDice &&
       getRemainingDice(
@@ -3494,29 +3226,344 @@
 
     }
 
+  }
 
-    $$(".dice-card")
-      .forEach(
-        card => {
 
-          card.classList.toggle(
-            "is-selected",
-            safeText(
-              card.dataset.die
-            )
-            .toLowerCase() ===
-            selectedDice
-          );
+  function selectDice(
+    die
+  ) {
 
-        }
+    const normalized =
+      safeText(
+        die
+      )
+      .toLowerCase();
+
+
+    if (
+      !Object.prototype.hasOwnProperty.call(
+        DICE_LIMITS,
+        normalized
+      )
+    ) {
+
+      return false;
+
+    }
+
+
+    const remaining =
+      getRemainingDice(
+        normalized
       );
+
+
+    if (
+      remaining <=
+      0
+    ) {
+
+      showToast(
+        `${normalized.toUpperCase()} já está esgotado.`
+      );
+
+
+      selectedDice =
+        null;
+
+
+      updateDiceCards();
+
+
+      return false;
+
+    }
+
+
+    selectedDice =
+      normalized;
+
+
+    updateDiceCards();
+
+
+    showToast(
+      `${normalized.toUpperCase()} selecionado.`
+    );
+
+
+    return true;
+
+  }
+
+
+  function clearAttribute(
+    attributeId
+  ) {
+
+    if (
+      !Object.prototype.hasOwnProperty.call(
+        state.attributes,
+        attributeId
+      )
+    ) {
+
+      return false;
+
+    }
+
+
+    const oldDie =
+      state.attributes[
+        attributeId
+      ];
+
+
+    if (
+      !oldDie
+    ) {
+
+      return false;
+
+    }
+
+
+    state.attributes[
+      attributeId
+    ] =
+      null;
+
+
+    selectedDice =
+      null;
+
+
+    updateStateAndRender();
+
+
+    showToast(
+      `${oldDie.toUpperCase()} devolvido aos dados disponíveis.`
+    );
+
+
+    return true;
+
+  }
+
+
+  function assignSelectedDice(
+    attributeId
+  ) {
+
+    if (
+      !Object.prototype.hasOwnProperty.call(
+        state.attributes,
+        attributeId
+      )
+    ) {
+
+      return false;
+
+    }
+
+
+    /*
+     * Sem dado selecionado:
+     *
+     * atributo preenchido -> devolve o dado
+     */
+    if (
+      !selectedDice
+    ) {
+
+      return clearAttribute(
+        attributeId
+      );
+
+    }
+
+
+    const newDie =
+      selectedDice;
+
+
+    const oldDie =
+      state.attributes[
+        attributeId
+      ];
+
+
+    /*
+     * Clicou no mesmo dado:
+     *
+     * D20 em Força
+     * seleciona D20
+     * toca em Força
+     * -> D20 volta para o estoque.
+     */
+    if (
+      oldDie ===
+      newDie
+    ) {
+
+      return clearAttribute(
+        attributeId
+      );
+
+    }
+
+
+    /*
+     * Como o dado antigo fica liberado antes
+     * da nova atribuição, uma troca como:
+     *
+     * Força D6
+     * D20 selecionado
+     *
+     * resulta em:
+     *
+     * Força D20
+     * D6 devolvido ao estoque
+     */
+    state.attributes[
+      attributeId
+    ] =
+      null;
+
+
+    /*
+     * Confirma que ainda existe quantidade
+     * do novo dado.
+     */
+    if (
+      getRemainingDice(
+        newDie
+      ) <=
+      0
+    ) {
+
+      state.attributes[
+        attributeId
+      ] =
+        oldDie;
+
+
+      showToast(
+        `${newDie.toUpperCase()} não possui mais unidades disponíveis.`
+      );
+
+
+      selectedDice =
+        null;
+
+
+      updateDiceCards();
+
+
+      return false;
+
+    }
+
+
+    state.attributes[
+      attributeId
+    ] =
+      newDie;
+
+
+    selectedDice =
+      null;
+
+
+    updateStateAndRender();
+
+
+    showToast(
+      `${newDie.toUpperCase()} colocado em ${ATTRIBUTE_NAMES[attributeId]}.`
+    );
+
+
+    return true;
+
+  }
+
+
+  /*
+   * Função extra para troca direta entre DOIS atributos.
+   *
+   * Não é obrigatória para o uso normal da interface,
+   * mas deixa a API preparada para drag-and-drop depois.
+   */
+  function swapAttributes(
+    firstId,
+    secondId
+  ) {
+
+    if (
+      !Object.prototype.hasOwnProperty.call(
+        state.attributes,
+        firstId
+      ) ||
+      !Object.prototype.hasOwnProperty.call(
+        state.attributes,
+        secondId
+      )
+    ) {
+
+      return false;
+
+    }
+
+
+    if (
+      firstId ===
+      secondId
+    ) {
+
+      return false;
+
+    }
+
+
+    const firstDie =
+      state.attributes[
+        firstId
+      ];
+
+
+    const secondDie =
+      state.attributes[
+        secondId
+      ];
+
+
+    state.attributes[
+      firstId
+    ] =
+      secondDie || null;
+
+
+    state.attributes[
+      secondId
+    ] =
+      firstDie || null;
+
+
+    selectedDice =
+      null;
+
+
+    updateStateAndRender();
+
+
+    return true;
 
   }
 
 
   function renderAttributes() {
 
-    updateDiceUI();
+    updateDiceCards();
 
 
     $$(".attribute-row")
@@ -3561,10 +3608,8 @@
             );
 
 
-            slot.setAttribute(
-              "aria-label",
-              `${ATTRIBUTE_NAMES[attribute]} usando ${die.toUpperCase()}`
-            );
+            slot.title =
+              "Clique sem selecionar outro dado para devolver este dado. Selecione outro dado para trocar.";
 
           } else {
 
@@ -3578,7 +3623,7 @@
 
 
             slot.removeAttribute(
-              "aria-label"
+              "title"
             );
 
           }
@@ -3589,8 +3634,9 @@
 
     updateAttributeCountUI();
 
-
     renderAttributeChart();
+
+    updateProgress();
 
   }
 
@@ -3630,16 +3676,16 @@
         "attribute-count-indicator";
 
 
-      indicator.style.margin =
-        "0 0 12px";
-
-
       indicator.style.color =
         "var(--muted)";
 
 
       indicator.style.fontSize =
         "12px";
+
+
+      indicator.style.marginBottom =
+        "10px";
 
 
       list.prepend(
@@ -3663,418 +3709,6 @@
   }
 
 
-  function selectDice(
-    die
-  ) {
-
-    const normalized =
-      safeText(
-        die
-      )
-      .toLowerCase();
-
-
-    if (
-      !Object.prototype.hasOwnProperty.call(
-        DICE_LIMITS,
-        normalized
-      )
-    ) {
-
-      return false;
-
-    }
-
-
-    const remaining =
-      getRemainingDice(
-        normalized
-      );
-
-
-    if (
-      remaining <=
-      0
-    ) {
-
-      showToast(
-        `${normalized.toUpperCase()} já atingiu o limite permitido.`
-      );
-
-
-      selectedDice =
-        null;
-
-
-      updateDiceUI();
-
-
-      return false;
-
-    }
-
-
-    selectedDice =
-      normalized;
-
-
-    updateDiceUI();
-
-
-    showToast(
-      `${normalized.toUpperCase()} selecionado. Agora escolha o atributo.`
-    );
-
-
-    return true;
-
-  }
-
-
-  function assignSelectedDiceToAttribute(
-    attribute
-  ) {
-
-    if (
-      !Object.prototype.hasOwnProperty.call(
-        state.attributes,
-        attribute
-      )
-    ) {
-
-      return false;
-
-    }
-
-
-    if (
-      !selectedDice
-    ) {
-
-      showToast(
-        "Escolha um dado primeiro."
-      );
-
-
-      return false;
-
-    }
-
-
-    const currentDie =
-      state.attributes[
-        attribute
-      ];
-
-
-    /*
-     * Se o atributo já possui exatamente esse dado,
-     * não há consumo adicional.
-     */
-    if (
-      currentDie ===
-      selectedDice
-    ) {
-
-      selectedDice =
-        null;
-
-
-      updateDiceUI();
-
-
-      return true;
-
-    }
-
-
-    /*
-     * Se o atributo já possuía outro dado,
-     * esse dado volta ao estoque antes da nova atribuição.
-     */
-    if (
-      currentDie
-    ) {
-
-      /*
-       * Como getRemainingDice conta o estado atual,
-       * precisamos temporariamente remover o dado antigo.
-       */
-      state.attributes[
-        attribute
-      ] =
-        null;
-
-    }
-
-
-    /*
-     * Agora checamos o novo dado com o atributo antigo
-     * já liberado.
-     */
-    const remaining =
-      getRemainingDice(
-        selectedDice
-      );
-
-
-    if (
-      remaining <=
-      0
-    ) {
-
-      /*
-       * Restaura o valor antigo se não houver espaço.
-       */
-      state.attributes[
-        attribute
-      ] =
-        currentDie;
-
-
-      showToast(
-        `${selectedDice.toUpperCase()} já está esgotado.`
-      );
-
-
-      updateDiceUI();
-
-
-      return false;
-
-    }
-
-
-    state.attributes[
-      attribute
-    ] =
-      selectedDice;
-
-
-    const assigned =
-      selectedDice;
-
-
-    selectedDice =
-      null;
-
-
-    updateState(
-      {
-        attributes:
-          {
-            ...state.attributes
-          }
-      }
-    );
-
-
-    renderAttributes();
-
-
-    showToast(
-      `${assigned.toUpperCase()} colocado em ${ATTRIBUTE_NAMES[attribute]}.`
-    );
-
-
-    return true;
-
-  }
-
-
-  function clearAttribute(
-    attribute
-  ) {
-
-    if (
-      !Object.prototype.hasOwnProperty.call(
-        state.attributes,
-        attribute
-      )
-    ) {
-
-      return;
-
-    }
-
-
-    const current =
-      state.attributes[
-        attribute
-      ];
-
-
-    if (
-      !current
-    ) {
-
-      return;
-
-    }
-
-
-    state.attributes[
-      attribute
-    ] =
-      null;
-
-
-    updateState(
-      {
-        attributes:
-          {
-            ...state.attributes
-          }
-      }
-    );
-
-
-    renderAttributes();
-
-
-    showToast(
-      `${current.toUpperCase()} devolvido aos dados disponíveis.`
-    );
-
-  }
-
-
-  function bindAttributes() {
-
-    /*
-     * NÃO usa apenas querySelectorAll fixo para os dados.
-     * O listener delegado funciona mesmo depois de a UI
-     * ser redesenhada.
-     */
-    document.addEventListener(
-      "click",
-      event => {
-
-        const diceCard =
-          event.target.closest(
-            ".dice-card[data-die]"
-          );
-
-
-        if (
-          diceCard
-        ) {
-
-          const die =
-            safeText(
-              diceCard.dataset.die
-            )
-            .toLowerCase();
-
-
-          /*
-           * Atualiza a disponibilidade em tempo real.
-           */
-          if (
-            getRemainingDice(
-              die
-            ) <=
-            0
-          ) {
-
-            event.preventDefault();
-            event.stopPropagation();
-
-
-            showToast(
-              `${die.toUpperCase()} já foi usado o número máximo de vezes.`
-            );
-
-
-            updateDiceUI();
-
-
-            return;
-
-          }
-
-
-          selectDice(
-            die
-          );
-
-
-          return;
-
-        }
-
-
-        const attributeSlot =
-          event.target.closest(
-            ".attribute-slot[data-attribute-slot]"
-          );
-
-
-        if (
-          attributeSlot
-        ) {
-
-          assignSelectedDiceToAttribute(
-            attributeSlot.dataset.attributeSlot
-          );
-
-          return;
-
-        }
-
-      },
-      true
-    );
-
-
-    /*
-     * Clique secundário em um atributo preenchido:
-     * remove o dado e devolve ao estoque.
-     *
-     * Útil no celular: toque normal continua atribuindo.
-     * Para remover, o JS também expõe clearAttribute().
-     */
-    document.addEventListener(
-      "dblclick",
-      event => {
-
-        const slot =
-          event.target.closest(
-            ".attribute-slot[data-attribute-slot]"
-          );
-
-
-        if (
-          !slot
-        ) {
-
-          return;
-
-        }
-
-
-        const attribute =
-          slot.dataset.attributeSlot;
-
-
-        if (
-          state.attributes[
-            attribute
-          ]
-        ) {
-
-          clearAttribute(
-            attribute
-          );
-
-        }
-
-      }
-    );
-
-  }
-
-
   function renderAttributeChart() {
 
     const container =
@@ -4094,55 +3728,50 @@
       Object.entries(
         state.attributes
       )
-        .map(
-          ([
-            id,
+      .map(
+        ([
+          id,
+          die
+        ]) => {
+
+          const numeric =
             die
-          ]) => {
 
-            const sides =
-              die
-
-                ? Number(
-                    safeText(
-                      die
-                    )
+              ? Number(
+                  die
                     .replace(
                       "d",
                       ""
                     )
-                  )
+                )
 
-                : 0;
-
-
-            return {
-
-              id,
-
-              label:
-                ATTRIBUTE_NAMES[
-                  id
-                ],
-
-              sides
-
-            };
-
-          }
-        );
+              : 0;
 
 
-    const hasValues =
-      values.some(
-        item =>
-          item.sides >
-          0
+          return {
+
+            id,
+
+            label:
+              ATTRIBUTE_NAMES[
+                id
+              ],
+
+            sides:
+              numeric
+
+          };
+
+        }
       );
 
 
     if (
-      !hasValues
+      !values.some(
+        item =>
+          item.sides >
+          0
+      )
     ) {
 
       container.innerHTML =
@@ -4158,13 +3787,6 @@
     }
 
 
-    /*
-     * Este é o gráfico provisório da primeira implementação.
-     *
-     * Ele representa visualmente a força relativa de cada
-     * atributo e pode ser trocado pelo radar de 8 pontas
-     * quando refinarmos a interface.
-     */
     container.innerHTML =
       "";
 
@@ -4201,7 +3823,7 @@
 
 
         row.style.gridTemplateColumns =
-          "95px 1fr 48px";
+          "95px minmax(0,1fr) 48px";
 
 
         row.style.alignItems =
@@ -4222,12 +3844,12 @@
           item.label;
 
 
-        label.style.fontSize =
-          "12px";
-
-
         label.style.color =
           "#bdb7ac";
+
+
+        label.style.fontSize =
+          "12px";
 
 
         const track =
@@ -4240,60 +3862,49 @@
           "8px";
 
 
-        track.style.borderRadius =
-          "999px";
-
-
         track.style.overflow =
           "hidden";
+
+
+        track.style.borderRadius =
+          "999px";
 
 
         track.style.background =
           "rgba(255,255,255,.07)";
 
 
-        const bar =
+        const fill =
           document.createElement(
             "div"
           );
 
 
-        const percentage =
-          item.sides
-            ? (
-                item.sides /
-                20
-              ) *
-              100
-            : 0;
-
-
-        bar.style.width =
-          `${Math.min(
-            100,
-            percentage
-          )}%`;
-
-
-        bar.style.height =
+        fill.style.height =
           "100%";
 
 
-        bar.style.background =
-          "linear-gradient(90deg,#a47d29,#edd58d)";
+        fill.style.width =
+          `${Math.min(
+            100,
+            (
+              item.sides /
+              20
+            ) *
+            100
+          )}%`;
 
 
-        bar.style.borderRadius =
+        fill.style.borderRadius =
           "inherit";
 
 
-        bar.style.transition =
+        fill.style.background =
+          "linear-gradient(90deg,#a47d29,#edd58d)";
+
+
+        fill.style.transition =
           "width .3s ease";
-
-
-        track.appendChild(
-          bar
-        );
 
 
         const value =
@@ -4304,12 +3915,10 @@
 
         value.textContent =
           item.sides
+
             ? `D${item.sides}`
+
             : "—";
-
-
-        value.style.textAlign =
-          "right";
 
 
         value.style.color =
@@ -4320,8 +3929,17 @@
             : "#67635c";
 
 
+        value.style.textAlign =
+          "right";
+
+
         value.style.fontFamily =
-          "Georgia, serif";
+          "Georgia,serif";
+
+
+        track.appendChild(
+          fill
+        );
 
 
         row.append(
@@ -4345,6 +3963,612 @@
 
   }
 
+
+  function bindAttributes() {
+
+    /*
+     * Dados
+     */
+    document.addEventListener(
+      "click",
+      event => {
+
+        const diceCard =
+          event.target.closest(
+            ".dice-card[data-die]"
+          );
+
+
+        if (
+          !diceCard
+        ) {
+
+          return;
+
+        }
+
+
+        const die =
+          diceCard.dataset.die;
+
+
+        selectDice(
+          die
+        );
+
+      },
+      true
+    );
+
+
+    /*
+     * Slots dos atributos
+     */
+    document.addEventListener(
+      "click",
+      event => {
+
+        const slot =
+          event.target.closest(
+            ".attribute-slot[data-attribute-slot]"
+          );
+
+
+        if (
+          !slot
+        ) {
+
+          return;
+
+        }
+
+
+        assignSelectedDice(
+          slot.dataset.attributeSlot
+        );
+
+      }
+    );
+
+  }
+
+
+  /* =========================================================
+     PODER — D100
+  ========================================================= */
+
+  function ensurePowerInterface() {
+
+    const panel =
+      $(
+        '.creation-panel[data-panel="power"]'
+      );
+
+
+    if (
+      !panel
+    ) {
+
+      return;
+
+    }
+
+
+    /*
+     * Se o HTML futuro já possuir o sistema completo,
+     * não duplicamos.
+     */
+    if (
+      panel.querySelector(
+        ".power-system"
+      )
+    ) {
+
+      return;
+
+    }
+
+
+    /*
+     * Apenas adiciona o núcleo interativo do D100
+     * ao painel existente.
+     */
+    const existingHeading =
+      panel.querySelector(
+        ".section-heading"
+      );
+
+
+    const container =
+      document.createElement(
+        "div"
+      );
+
+
+    container.className =
+      "power-system";
+
+
+    container.style.display =
+      "grid";
+
+
+    container.style.gap =
+      "18px";
+
+
+    container.innerHTML =
+      `
+      <div
+        class="power-choice-mode"
+        style="
+          display:grid;
+          grid-template-columns:repeat(2,minmax(0,1fr));
+          gap:12px;
+        "
+      >
+
+        <button
+          type="button"
+          class="button button-secondary"
+          data-power-mode="manual"
+        >
+          Escolher poder
+        </button>
+
+        <button
+          type="button"
+          class="button button-secondary"
+          data-power-mode="roll"
+        >
+          🎲 Sortear D100
+        </button>
+
+      </div>
+
+
+      <div
+        class="power-manual"
+        data-power-section="manual"
+        hidden
+      >
+
+        <span class="field-label">
+          Elementos centrais
+        </span>
+
+        <div
+          style="
+            display:grid;
+            grid-template-columns:repeat(2,minmax(0,1fr));
+            gap:10px;
+            margin-top:10px;
+          "
+        >
+
+          ${POWER_CENTRAL_ELEMENTS
+            .map(
+              power =>
+                `
+                <button
+                  type="button"
+                  class="button button-secondary"
+                  data-power-value="${power}"
+                >
+                  ${power}
+                </button>
+                `
+            )
+            .join("")}
+
+        </div>
+
+      </div>
+
+
+      <div
+        class="power-roll"
+        data-power-section="roll"
+        hidden
+      >
+
+        <div
+          style="
+            padding:25px;
+            border:1px solid var(--line);
+            border-radius:18px;
+            text-align:center;
+            background:rgba(255,255,255,.015);
+          "
+        >
+
+          <span class="eyebrow">
+            RESULTADO DO D100
+          </span>
+
+          <strong
+            data-power-result
+            style="
+              display:block;
+              margin-top:8px;
+              font-family:Georgia,serif;
+              font-size:54px;
+              color:var(--gold-soft);
+            "
+          >
+            —
+          </strong>
+
+          <p
+            data-power-result-note
+            style="
+              margin:10px 0 0;
+              color:var(--muted);
+            "
+          >
+            Role o D100 para obter um resultado.
+          </p>
+
+        </div>
+
+        <button
+          type="button"
+          class="button button-primary"
+          data-roll-power
+        >
+          🎲 Rolar D100
+        </button>
+
+      </div>
+
+
+      <div
+        class="power-current"
+        style="
+          padding:18px;
+          border:1px solid var(--line);
+          border-radius:16px;
+          background:rgba(255,255,255,.012);
+        "
+      >
+
+        <span class="eyebrow">
+          PODER ESCOLHIDO
+        </span>
+
+        <strong
+          data-power-current
+          style="
+            display:block;
+            margin-top:6px;
+            font-family:Georgia,serif;
+            font-size:27px;
+          "
+        >
+          Nenhum poder escolhido
+        </strong>
+
+      </div>
+      `;
+
+
+    /*
+     * Encontra a posição correta:
+     * depois do heading.
+     */
+    if (
+      existingHeading
+    ) {
+
+      existingHeading.after(
+        container
+      );
+
+    } else {
+
+      panel.prepend(
+        container
+      );
+
+    }
+
+
+    /*
+     * Esconde os inputs antigos de poder/origem visualmente
+     * sem apagar dados que possam existir.
+     */
+    $("#characterPower")?.closest(
+      ".field"
+    )?.setAttribute(
+      "hidden",
+      ""
+    );
+
+  }
+
+
+  function renderPower() {
+
+    ensurePowerInterface();
+
+
+    const current =
+      $(
+        "[data-power-current]"
+      );
+
+
+    const result =
+      $(
+        "[data-power-result]"
+      );
+
+
+    const note =
+      $(
+        "[data-power-result-note]"
+      );
+
+
+    if (
+      current
+    ) {
+
+      current.textContent =
+        state.power.trim() ||
+        "Nenhum poder escolhido";
+
+    }
+
+
+    if (
+      result
+    ) {
+
+      result.textContent =
+        state.powerRoll
+          ? String(
+              state.powerRoll
+            )
+          : "—";
+
+    }
+
+
+    if (
+      note
+    ) {
+
+      if (
+        state.powerRoll
+      ) {
+
+        note.textContent =
+          "Resultado gerado pelo D100. A associação entre faixas e poderes será aplicada quando a tabela oficial estiver definida.";
+
+      } else {
+
+        note.textContent =
+          "Role o D100 para obter um resultado.";
+
+      }
+
+    }
+
+
+    updateProgress();
+
+  }
+
+
+  function selectManualPower(
+    power
+  ) {
+
+    if (
+      !POWER_CENTRAL_ELEMENTS.includes(
+        power
+      )
+    ) {
+
+      return false;
+
+    }
+
+
+    state.power =
+      power;
+
+
+    updateStateAndRender();
+
+
+    renderPower();
+
+
+    showToast(
+      `${power} selecionado como poder.`
+    );
+
+
+    return true;
+
+  }
+
+
+  function rollPowerD100() {
+
+    const result =
+      Math.floor(
+        Math.random() *
+        100
+      ) +
+      1;
+
+
+    state.powerRoll =
+      result;
+
+
+    /*
+     * NÃO atribuímos automaticamente um elemento,
+     * porque a tabela 1–100 de poderes ainda não foi fechada.
+     */
+
+
+    const resultElement =
+      $(
+        "[data-power-result]"
+      );
+
+
+    const note =
+      $(
+        "[data-power-result-note]"
+      );
+
+
+    if (
+      resultElement
+    ) {
+
+      resultElement.textContent =
+        String(
+          result
+        );
+
+    }
+
+
+    if (
+      note
+    ) {
+
+      note.textContent =
+        `Resultado: ${result}. A tabela oficial do D100 definirá qual poder corresponde a este número.`;
+
+    }
+
+
+    scheduleAutosave();
+
+
+    showToast(
+      `D100: ${result}`
+    );
+
+
+    return result;
+
+  }
+
+
+  function bindPower() {
+
+    /*
+     * O HTML pode não ter os controles ainda;
+     * eles são criados automaticamente.
+     */
+    ensurePowerInterface();
+
+
+    document.addEventListener(
+      "click",
+      event => {
+
+        const mode =
+          event.target.closest(
+            "[data-power-mode]"
+          );
+
+
+        if (
+          mode
+        ) {
+
+          const selectedMode =
+            mode.dataset.powerMode;
+
+
+          const manual =
+            $(
+              '[data-power-section="manual"]'
+            );
+
+
+          const roll =
+            $(
+              '[data-power-section="roll"]'
+            );
+
+
+          if (
+            manual
+          ) {
+
+            manual.hidden =
+              selectedMode !==
+              "manual";
+
+          }
+
+
+          if (
+            roll
+          ) {
+
+            roll.hidden =
+              selectedMode !==
+              "roll";
+
+          }
+
+
+          return;
+
+        }
+
+
+        const powerButton =
+          event.target.closest(
+            "[data-power-value]"
+          );
+
+
+        if (
+          powerButton
+        ) {
+
+          selectManualPower(
+            powerButton.dataset.powerValue
+          );
+
+
+          return;
+
+        }
+
+
+        const rollButton =
+          event.target.closest(
+            "[data-roll-power]"
+          );
+
+
+        if (
+          rollButton
+        ) {
+
+          rollPowerD100();
+
+        }
+
+      }
+    );
+
+  }
+
+
   /* =========================================================
      MANA
   ========================================================= */
@@ -4355,20 +4579,19 @@
       .forEach(
         card => {
 
-          const selected =
+          const azul =
             card.dataset.mana ===
             "azul";
 
 
           card.classList.toggle(
             "is-selected",
-            selected
+            azul
           );
 
 
           if (
-            card.dataset.mana !==
-            "azul"
+            !azul
           ) {
 
             card.disabled =
@@ -4378,6 +4601,13 @@
 
         }
       );
+
+
+    state.mana =
+      "azul";
+
+
+    updateProgress();
 
   }
 
@@ -4412,38 +4642,19 @@
         }
 
 
-        if (
-          card.dataset.mana !==
-          "azul"
-        ) {
-
-          return;
-
-        }
-
-
         state.mana =
           "azul";
 
 
-        updateState(
-          {
-            mana:
-              "azul"
-          }
-        );
-
-
         renderMana();
 
-        showToast(
-          "Mana Azul selecionada."
-        );
+        scheduleAutosave();
 
       }
     );
 
   }
+
 
   /* =========================================================
      TÉCNICAS
@@ -4472,11 +4683,13 @@
 
     wrapper.innerHTML =
       `
-      <div style="
-        display:grid;
-        gap:12px;
-        text-align:left;
-      ">
+      <div
+        style="
+          display:grid;
+          gap:12px;
+          text-align:left;
+        "
+      >
 
         <label class="field">
 
@@ -4510,11 +4723,13 @@
         </label>
 
 
-        <div style="
-          display:grid;
-          grid-template-columns:1fr 1fr;
-          gap:10px;
-        ">
+        <div
+          style="
+            display:grid;
+            grid-template-columns:1fr 1fr;
+            gap:10px;
+          "
+        >
 
           <label class="field">
 
@@ -4526,7 +4741,7 @@
               type="text"
               data-technique-field="range"
               maxlength="80"
-              placeholder="Ex.: 10 m"
+              placeholder="Alcance"
             >
 
           </label>
@@ -4542,7 +4757,7 @@
               type="text"
               data-technique-field="damage"
               maxlength="100"
-              placeholder="Ex.: 1D8"
+              placeholder="Dano ou efeito"
             >
 
           </label>
@@ -4560,7 +4775,7 @@
             type="text"
             data-technique-field="cost"
             maxlength="80"
-            placeholder="Custo da técnica"
+            placeholder="Custo"
           >
 
         </label>
@@ -4592,7 +4807,7 @@
             data-technique-field="limitation"
             rows="3"
             maxlength="500"
-            placeholder="Limitações da técnica"
+            placeholder="Limitações"
           ></textarea>
 
         </label>
@@ -4633,17 +4848,6 @@
             "input",
             () => {
 
-              if (
-                !state.techniques[
-                  index
-                ]
-              ) {
-
-                return;
-
-              }
-
-
               state.techniques[
                 index
               ][key] =
@@ -4675,9 +4879,7 @@
 
           renderTechniques();
 
-
           scheduleAutosave();
-
 
           updateProgress();
 
@@ -4725,6 +4927,9 @@
       }
     );
 
+
+    updateProgress();
+
   }
 
 
@@ -4733,26 +4938,19 @@
     state.techniques.push(
       {
 
-        name:
-          "",
+        name: "",
 
-        description:
-          "",
+        description: "",
 
-        range:
-          "",
+        range: "",
 
-        damage:
-          "",
+        damage: "",
 
-        cost:
-          "",
+        cost: "",
 
-        test:
-          "",
+        test: "",
 
-        limitation:
-          ""
+        limitation: ""
 
       }
     );
@@ -4760,11 +4958,7 @@
 
     renderTechniques();
 
-
     scheduleAutosave();
-
-
-    updateProgress();
 
 
     const firstEmpty =
@@ -4772,10 +4966,10 @@
         "[data-technique-field]",
         $("#techniquesList")
       )
-        .find(
-          input =>
-            !input.value
-        );
+      .find(
+        input =>
+          !input.value
+      );
 
 
     firstEmpty?.focus();
@@ -4792,6 +4986,7 @@
       );
 
   }
+
 
   /* =========================================================
      INVENTÁRIO
@@ -4820,11 +5015,13 @@
 
     wrapper.innerHTML =
       `
-      <div style="
-        display:grid;
-        gap:12px;
-        text-align:left;
-      ">
+      <div
+        style="
+          display:grid;
+          gap:12px;
+          text-align:left;
+        "
+      >
 
         <label class="field">
 
@@ -4852,7 +5049,7 @@
             data-inventory-field="description"
             rows="3"
             maxlength="500"
-            placeholder="Descrição do item"
+            placeholder="Descrição"
           ></textarea>
 
         </label>
@@ -4893,17 +5090,6 @@
             "input",
             () => {
 
-              if (
-                !state.inventory[
-                  index
-                ]
-              ) {
-
-                return;
-
-              }
-
-
               state.inventory[
                 index
               ][key] =
@@ -4937,9 +5123,7 @@
 
           renderInventory();
 
-
           scheduleAutosave();
-
 
           updateProgress();
 
@@ -4987,6 +5171,9 @@
       }
     );
 
+
+    updateProgress();
+
   }
 
 
@@ -4995,11 +5182,9 @@
     state.inventory.push(
       {
 
-        name:
-          "",
+        name: "",
 
-        description:
-          ""
+        description: ""
 
       }
     );
@@ -5007,11 +5192,7 @@
 
     renderInventory();
 
-
     scheduleAutosave();
-
-
-    updateProgress();
 
 
     const firstEmpty =
@@ -5019,10 +5200,10 @@
         "[data-inventory-field]",
         $("#inventoryList")
       )
-        .find(
-          input =>
-            !input.value
-        );
+      .find(
+        input =>
+          !input.value
+      );
 
 
     firstEmpty?.focus();
@@ -5039,6 +5220,7 @@
       );
 
   }
+
 
   /* =========================================================
      REVISÃO
@@ -5072,52 +5254,37 @@
   }
 
 
-  function isMinimumCharacterReady() {
-
-    return Boolean(
-      state.name.trim() &&
-      state.race &&
-      state.class &&
-      areAllAttributesAssigned() &&
-      state.power.trim() &&
-      state.mana ===
-        "azul"
-    );
-
-  }
-
-
   function updateReview() {
 
-    const reviewName =
+    const name =
       $("#reviewName");
 
 
-    const reviewIdentity =
+    const identity =
       $("#reviewIdentity");
 
 
-    const reviewRace =
+    const race =
       $("#reviewRace");
 
 
-    const reviewClass =
+    const classElement =
       $("#reviewClass");
 
 
-    const reviewMana =
-      $("#reviewMana");
-
-
-    const reviewGender =
+    const gender =
       $("#reviewGender");
 
 
+    const mana =
+      $("#reviewMana");
+
+
     if (
-      reviewName
+      name
     ) {
 
-      reviewName.textContent =
+      name.textContent =
         state.name.trim() ||
         "Sem nome";
 
@@ -5125,10 +5292,10 @@
 
 
     if (
-      reviewIdentity
+      identity
     ) {
 
-      const pieces =
+      const parts =
         [];
 
 
@@ -5136,7 +5303,7 @@
         state.age
       ) {
 
-        pieces.push(
+        parts.push(
           `${state.age} anos`
         );
 
@@ -5147,22 +5314,23 @@
         state.gender
       ) {
 
-        pieces.push(
+        parts.push(
           state.gender ===
             "masculino"
 
             ? "Masculino"
 
             : "Feminino"
+
         );
 
       }
 
 
-      reviewIdentity.textContent =
-        pieces.length
+      identity.textContent =
+        parts.length
 
-          ? pieces.join(
+          ? parts.join(
               " · "
             )
 
@@ -5172,40 +5340,30 @@
 
 
     if (
-      reviewRace
+      race
     ) {
 
-      reviewRace.textContent =
+      race.textContent =
         getRaceName();
 
     }
 
 
     if (
-      reviewClass
+      classElement
     ) {
 
-      reviewClass.textContent =
+      classElement.textContent =
         getClassName();
 
     }
 
 
     if (
-      reviewMana
+      gender
     ) {
 
-      reviewMana.textContent =
-        "Mana Azul";
-
-    }
-
-
-    if (
-      reviewGender
-    ) {
-
-      reviewGender.textContent =
+      gender.textContent =
         state.gender ===
           "masculino"
 
@@ -5217,6 +5375,16 @@
             ? "Feminino"
 
             : "—";
+
+    }
+
+
+    if (
+      mana
+    ) {
+
+      mana.textContent =
+        "Mana Azul";
 
     }
 
@@ -5264,6 +5432,7 @@
 
   }
 
+
   /* =========================================================
      FINALIZAÇÃO
   ========================================================= */
@@ -5271,11 +5440,11 @@
   function validateFinal() {
 
     if (
-      !state.name.trim()
+      !isIdentityComplete()
     ) {
 
       showToast(
-        "Falta o nome do aventureiro."
+        "Falta o nome."
       );
 
 
@@ -5290,11 +5459,11 @@
 
 
     if (
-      !state.race
+      !isRaceComplete()
     ) {
 
       showToast(
-        "Falta escolher uma raça."
+        "Falta escolher a raça."
       );
 
 
@@ -5309,11 +5478,11 @@
 
 
     if (
-      !state.class
+      !isClassComplete()
     ) {
 
       showToast(
-        "Falta escolher uma classe."
+        "Falta escolher a classe."
       );
 
 
@@ -5332,7 +5501,7 @@
     ) {
 
       showToast(
-        `Complete os atributos: ${getAttributeCount()}/8.`
+        `Faltam atributos: ${getAttributeCount()}/8.`
       );
 
 
@@ -5347,11 +5516,11 @@
 
 
     if (
-      !state.power.trim()
+      !isPowerComplete()
     ) {
 
       showToast(
-        "Defina o poder do personagem."
+        "Falta definir o poder."
       );
 
 
@@ -5426,7 +5595,7 @@
     ) {
 
       showToast(
-        "Ficha salva localmente; banco ainda não atualizado."
+        "Ficha salva localmente."
       );
 
 
@@ -5440,6 +5609,7 @@
     );
 
   }
+
 
   /* =========================================================
      NAVEGAÇÃO
@@ -5473,7 +5643,6 @@
           ) {
 
             finishCharacter();
-
 
             return;
 
@@ -5556,6 +5725,7 @@
 
   }
 
+
   /* =========================================================
      EVENTOS GERAIS
   ========================================================= */
@@ -5590,6 +5760,32 @@
 
   }
 
+
+  /* =========================================================
+     ATUALIZA ESTADO + INTERFACE
+  ========================================================= */
+
+  function updateStateAndRender() {
+
+    scheduleAutosave();
+
+    renderRace();
+
+    renderClasses();
+
+    renderAttributes();
+
+    renderPower();
+
+    renderMana();
+
+    updateReview();
+
+    updateProgress();
+
+  }
+
+
   /* =========================================================
      INICIALIZAÇÃO
   ========================================================= */
@@ -5613,24 +5809,6 @@
       loadLocalDraft();
 
 
-    /*
-     * IMPORTANTE:
-     * Um rascunho antigo pode ter uma etapa de atributos
-     * incompleta. Nesse caso, não permitimos que ele pule
-     * para uma etapa inválida.
-     */
-    if (
-      !canEnterStep(
-        state.currentStep
-      )
-    ) {
-
-      state.currentStep =
-        0;
-
-    }
-
-
     bindIdentity();
 
     bindRace();
@@ -5638,6 +5816,8 @@
     bindClasses();
 
     bindAttributes();
+
+    bindPower();
 
     bindMana();
 
@@ -5655,9 +5835,11 @@
 
     renderRace();
 
-    renderClass();
+    renderClasses();
 
     renderAttributes();
+
+    renderPower();
 
     renderMana();
 
@@ -5668,6 +5850,22 @@
     updateReview();
 
     updateProgress();
+
+
+    /*
+     * Não deixa abrir uma etapa que perdeu
+     * seus pré-requisitos.
+     */
+    if (
+      !canEnterStep(
+        state.currentStep
+      )
+    ) {
+
+      state.currentStep =
+        0;
+
+    }
 
 
     goToStep(
@@ -5688,7 +5886,7 @@
 
 
     console.info(
-      "[AERION][FICHA] módulo iniciado.",
+      "[AERION][FICHA] Inicializado.",
       {
 
         restored,
@@ -5699,19 +5897,11 @@
         classes:
           CLASSES.length,
 
-        diceLimits:
-          {
-            ...DICE_LIMITS
-          },
+        attributeDice:
+          DICE_LIMITS,
 
         attributes:
-          getAttributeCount(),
-
-        supabaseConfigured:
-          Boolean(
-            CONFIG.supabaseUrl &&
-            CONFIG.supabaseAnonKey
-          )
+          getAttributeCount()
 
       }
     );
@@ -5764,44 +5954,30 @@
       getRemainingDice,
 
 
-      assignDice(
-        attribute,
-        die
-      ) {
-
-        if (
-          die !==
-          undefined &&
-          die !==
-          null
-        ) {
-
-          if (
-            !selectDice(
-              die
-            )
-          ) {
-
-            return false;
-
-          }
-
-        }
+      selectDice,
 
 
-        return assignSelectedDiceToAttribute(
-          attribute
-        );
-
-      },
+      assignDice:
+        assignSelectedDice,
 
 
       clearAttribute,
 
 
+      swapAttributes,
+
+
       areAllAttributesAssigned,
 
-      getAttributeCount
+
+      getAttributeCount,
+
+
+      rollPowerD100,
+
+
+      selectPower:
+        selectManualPower
 
     });
 
