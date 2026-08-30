@@ -26,13 +26,23 @@
 
   <title>AERION — Criar Ficha</title>
 
+
   <!-- ======================================================
-       CSS
+       CSS PRINCIPAL
        ====================================================== -->
 
   <link
     rel="stylesheet"
     href="./css/ficha.css"
+  >
+
+  <!-- ======================================================
+       CSS DO PERSONAGEM 2D
+       ====================================================== -->
+
+  <link
+    rel="stylesheet"
+    href="./css/personagem-render.css"
   >
 
 
@@ -47,22 +57,24 @@
 
 
   <!-- ======================================================
-       JAVASCRIPT
+       RENDERIZADORES
        ======================================================
 
-       ficha-render.js:
-       somente apresentação.
+       ficha-render.js
+       → interface da ficha
 
-       ficha.js:
-       regras, estado e interações.
+       personagem-render.js
+       → personagem 2D
 
-       Ordem intencional:
-       renderizador primeiro,
-       núcleo depois.
        ====================================================== -->
 
   <script
     src="./js/core/ficha-render.js"
+    defer
+  ></script>
+
+  <script
+    src="./js/core/personagem-render.js"
     defer
   ></script>
 
@@ -83,7 +95,7 @@
 
 
     <!-- ====================================================
-         CABEÇALHO
+         HEADER
          ==================================================== -->
 
     <header class="ficha-header">
@@ -158,9 +170,7 @@
         </div>
 
 
-        <strong
-          id="progressPercent"
-        >
+        <strong id="progressPercent">
           0%
         </strong>
 
@@ -510,6 +520,23 @@
             </label>
 
 
+            <label class="field">
+
+              <span class="field-label">
+                Local de origem
+              </span>
+
+              <input
+                id="characterOrigin"
+                name="origin"
+                type="text"
+                maxlength="120"
+                placeholder="Cidade, vila, reino..."
+              >
+
+            </label>
+
+
             <div class="gender-field">
 
               <span class="field-label">
@@ -606,8 +633,8 @@
           </h2>
 
           <p>
-            Explore as raças disponíveis e selecione o perfil
-            natural que mais combina com seu personagem.
+            Sua raça altera diretamente o perfil natural,
+            atributos, porte e características do personagem.
           </p>
 
         </div>
@@ -630,7 +657,6 @@
           <article
             id="raceCard"
             class="race-card"
-            tabindex="0"
           >
 
             <div class="race-image-wrap">
@@ -641,6 +667,7 @@
               >
                 <span></span>
               </div>
+
 
               <img
                 id="raceImage"
@@ -680,17 +707,28 @@
               >
 
                 <span>
-                  <b>Perfil</b>
+
+                  <b>
+                    Perfil natural
+                  </b>
+
                   <strong data-race-profile>
                     —
                   </strong>
+
                 </span>
 
+
                 <span>
-                  <b>Característica</b>
+
+                  <b>
+                    Característica
+                  </b>
+
                   <strong data-race-feature>
                     —
                   </strong>
+
                 </span>
 
               </div>
@@ -772,12 +810,12 @@
             </span>
 
             <h3>
-              Primeiro escolha o tipo
+              Escolha primeiro o tipo
             </h3>
 
             <p>
-              O tipo define o perfil natural. Depois você poderá
-              escolher o animal específico dentro da categoria.
+              Depois de escolher a categoria, você seleciona
+              o animal específico.
             </p>
 
           </div>
@@ -789,7 +827,6 @@
             class="animalha-category-grid"
             data-animalha-categories
           >
-
 
             <button
               type="button"
@@ -819,9 +856,11 @@
 
               </span>
 
+
               <strong>
                 Voadores
               </strong>
+
 
               <small>
                 Mobilidade aérea
@@ -865,9 +904,11 @@
 
               </span>
 
+
               <strong>
                 Terrestres
               </strong>
+
 
               <small>
                 Força e mobilidade terrestre
@@ -911,9 +952,11 @@
 
               </span>
 
+
               <strong>
                 Marinhos
               </strong>
+
 
               <small>
                 Adaptação aquática
@@ -958,9 +1001,11 @@
 
               </span>
 
+
               <strong>
                 Pequeno porte
               </strong>
+
 
               <small>
                 Agilidade e adaptação
@@ -1007,9 +1052,11 @@
 
               </span>
 
+
               <strong>
                 Grande porte
               </strong>
+
 
               <small>
                 Vigor e potência física
@@ -1020,7 +1067,9 @@
           </div>
 
 
-          <!-- ANIMAIS -->
+          <!-- ==================================================
+               ANIMAIS DA CATEGORIA
+               ================================================== -->
 
           <div
             class="animalha-animals"
@@ -1038,10 +1087,11 @@
                 ← Categorias
               </button>
 
+
               <div>
 
                 <span class="eyebrow">
-                  LINHAGEM
+                  CATEGORIA
                 </span>
 
                 <h4
@@ -1062,8 +1112,6 @@
 
           </div>
 
-
-          <!-- SELECT OCULTO DE COMPATIBILIDADE -->
 
           <div
             data-animalha-editor
@@ -1117,8 +1165,8 @@
           </h2>
 
           <p>
-            Personalize altura, aparência, vestimenta e outros
-            detalhes do aventureiro.
+            Agora você começa a construir visualmente
+            o personagem.
           </p>
 
         </div>
@@ -1130,7 +1178,9 @@
         >
 
 
-          <!-- VISUAL DO PERSONAGEM -->
+          <!-- ==============================================
+               PERSONAGEM 2D
+               ============================================== -->
 
           <div class="appearance-stage">
 
@@ -1152,52 +1202,29 @@
 
             <div class="appearance-figure-area">
 
+              <!--
+                ESTE ELEMENTO É O ALVO DO
+                personagem-render.js
+              -->
+
               <div
                 id="appearanceFigure"
                 class="appearance-figure appearance-figure--neutral"
-                aria-hidden="true"
+                aria-label="Pré-visualização 2D do personagem"
               >
 
-                <div
-                  class="appearance-figure__wings"
-                  data-character-feature="wings"
-                  hidden
-                ></div>
-
-                <div
-                  class="appearance-figure__tail"
-                  data-character-feature="tail"
-                  hidden
-                ></div>
-
-                <div
-                  class="appearance-figure__head"
-                ></div>
-
-                <div
-                  class="appearance-figure__body"
-                ></div>
-
-                <div
-                  class="appearance-figure__left-arm"
-                ></div>
-
-                <div
-                  class="appearance-figure__right-arm"
-                ></div>
-
-                <div
-                  class="appearance-figure__left-leg"
-                ></div>
-
-                <div
-                  class="appearance-figure__right-leg"
-                ></div>
+                <!--
+                  O personagem será criado
+                  dinamicamente pelo
+                  personagem-render.js.
+                -->
 
               </div>
 
             </div>
 
+
+            <!-- CONTROLE DE ALTURA -->
 
             <div class="appearance-height-readout">
 
@@ -1205,12 +1232,14 @@
                 ALTURA
               </span>
 
+
               <strong
                 id="appearanceHeightValue"
                 data-height-value
               >
                 —
               </strong>
+
 
               <small
                 id="appearanceHeightLimits"
@@ -1230,9 +1259,7 @@
               >
 
 
-              <div
-                class="height-limits"
-              >
+              <div class="height-limits">
 
                 <span
                   id="appearanceMinLabel"
@@ -1253,9 +1280,13 @@
           </div>
 
 
-          <!-- CONTROLES -->
+          <!-- ==============================================
+               OPÇÕES DE APARÊNCIA
+               ============================================== -->
 
-          <div class="appearance-controls">
+          <div
+            class="appearance-controls"
+          >
 
 
             <div class="field">
@@ -1406,7 +1437,7 @@
           </h2>
 
           <p>
-            Sua classe influencia principalmente suas perícias
+            A classe influencia principalmente suas perícias
             e seu estilo de atuação.
           </p>
 
@@ -1490,8 +1521,7 @@
               <div
                 class="class-bonus-list"
                 data-class-bonus
-              >
-              </div>
+              ></div>
 
             </div>
 
@@ -1577,8 +1607,7 @@
               <div
                 class="class-bonus-list"
                 data-class-bonus
-              >
-              </div>
+              ></div>
 
             </div>
 
@@ -1650,8 +1679,7 @@
               <div
                 class="class-bonus-list"
                 data-class-bonus
-              >
-              </div>
+              ></div>
 
             </div>
 
@@ -1745,8 +1773,7 @@
               <div
                 class="class-bonus-list"
                 data-class-bonus
-              >
-              </div>
+              ></div>
 
             </div>
 
@@ -1779,15 +1806,14 @@
           </h2>
 
           <p>
-            Escolha um dos dados disponíveis e coloque-o em
-            cada atributo. Dados do mesmo tipo continuam
-            sendo peças individuais.
+            Selecione um dado e clique no atributo onde
+            deseja colocá-lo.
           </p>
 
         </div>
 
 
-        <!-- POOL -->
+        <!-- PISCINA -->
 
         <div
           class="attribute-pool-panel"
@@ -1804,7 +1830,7 @@
               </span>
 
               <h3>
-                Seus dados disponíveis
+                Dados disponíveis
               </h3>
 
             </div>
@@ -1831,14 +1857,13 @@
         </div>
 
 
-        <!-- ATRIBUTOS + RADAR -->
+
+        <!-- ATRIBUTOS -->
 
         <div
           class="attribute-layout"
         >
 
-
-          <!-- ATRIBUTOS -->
 
           <div
             class="attribute-grid"
@@ -1849,7 +1874,7 @@
             <article
               class="attribute-card"
               data-attribute="forca"
-              data-attribute-drop
+              data-attribute-drop="forca"
             >
 
               <div class="attribute-card-info">
@@ -1882,8 +1907,8 @@
 
 
               <div
-                data-attribute-die
                 class="attribute-die-slot"
+                data-attribute-die
                 data-attribute="forca"
               >
 
@@ -1900,8 +1925,6 @@
                 data-action="roll-attribute"
                 data-attribute="forca"
                 disabled
-                aria-label="Rolar Força"
-                title="Rolar Força"
               >
                 Rolar
               </button>
@@ -1913,7 +1936,7 @@
             <article
               class="attribute-card"
               data-attribute="vigor"
-              data-attribute-drop
+              data-attribute-drop="vigor"
             >
 
               <div class="attribute-card-info">
@@ -1946,8 +1969,8 @@
 
 
               <div
-                data-attribute-die
                 class="attribute-die-slot"
+                data-attribute-die
                 data-attribute="vigor"
               >
 
@@ -1964,8 +1987,6 @@
                 data-action="roll-attribute"
                 data-attribute="vigor"
                 disabled
-                aria-label="Rolar Vigor"
-                title="Rolar Vigor"
               >
                 Rolar
               </button>
@@ -1977,7 +1998,7 @@
             <article
               class="attribute-card"
               data-attribute="agilidade"
-              data-attribute-drop
+              data-attribute-drop="agilidade"
             >
 
               <div class="attribute-card-info">
@@ -2010,8 +2031,8 @@
 
 
               <div
-                data-attribute-die
                 class="attribute-die-slot"
+                data-attribute-die
                 data-attribute="agilidade"
               >
 
@@ -2028,8 +2049,6 @@
                 data-action="roll-attribute"
                 data-attribute="agilidade"
                 disabled
-                aria-label="Rolar Agilidade"
-                title="Rolar Agilidade"
               >
                 Rolar
               </button>
@@ -2041,7 +2060,7 @@
             <article
               class="attribute-card"
               data-attribute="precisao"
-              data-attribute-drop
+              data-attribute-drop="precisao"
             >
 
               <div class="attribute-card-info">
@@ -2074,8 +2093,8 @@
 
 
               <div
-                data-attribute-die
                 class="attribute-die-slot"
+                data-attribute-die
                 data-attribute="precisao"
               >
 
@@ -2092,8 +2111,6 @@
                 data-action="roll-attribute"
                 data-attribute="precisao"
                 disabled
-                aria-label="Rolar Precisão"
-                title="Rolar Precisão"
               >
                 Rolar
               </button>
@@ -2105,7 +2122,7 @@
             <article
               class="attribute-card"
               data-attribute="intelecto"
-              data-attribute-drop
+              data-attribute-drop="intelecto"
             >
 
               <div class="attribute-card-info">
@@ -2138,8 +2155,8 @@
 
 
               <div
-                data-attribute-die
                 class="attribute-die-slot"
+                data-attribute-die
                 data-attribute="intelecto"
               >
 
@@ -2156,8 +2173,6 @@
                 data-action="roll-attribute"
                 data-attribute="intelecto"
                 disabled
-                aria-label="Rolar Intelecto"
-                title="Rolar Intelecto"
               >
                 Rolar
               </button>
@@ -2169,7 +2184,7 @@
             <article
               class="attribute-card"
               data-attribute="controle"
-              data-attribute-drop
+              data-attribute-drop="controle"
             >
 
               <div class="attribute-card-info">
@@ -2202,8 +2217,8 @@
 
 
               <div
-                data-attribute-die
                 class="attribute-die-slot"
+                data-attribute-die
                 data-attribute="controle"
               >
 
@@ -2220,8 +2235,6 @@
                 data-action="roll-attribute"
                 data-attribute="controle"
                 disabled
-                aria-label="Rolar Controle"
-                title="Rolar Controle"
               >
                 Rolar
               </button>
@@ -2233,7 +2246,7 @@
             <article
               class="attribute-card"
               data-attribute="presenca"
-              data-attribute-drop
+              data-attribute-drop="presenca"
             >
 
               <div class="attribute-card-info">
@@ -2266,8 +2279,8 @@
 
 
               <div
-                data-attribute-die
                 class="attribute-die-slot"
+                data-attribute-die
                 data-attribute="presenca"
               >
 
@@ -2284,8 +2297,6 @@
                 data-action="roll-attribute"
                 data-attribute="presenca"
                 disabled
-                aria-label="Rolar Presença"
-                title="Rolar Presença"
               >
                 Rolar
               </button>
@@ -2297,7 +2308,7 @@
             <article
               class="attribute-card"
               data-attribute="percepcao"
-              data-attribute-drop
+              data-attribute-drop="percepcao"
             >
 
               <div class="attribute-card-info">
@@ -2330,8 +2341,8 @@
 
 
               <div
-                data-attribute-die
                 class="attribute-die-slot"
+                data-attribute-die
                 data-attribute="percepcao"
               >
 
@@ -2348,8 +2359,6 @@
                 data-action="roll-attribute"
                 data-attribute="percepcao"
                 disabled
-                aria-label="Rolar Percepção"
-                title="Rolar Percepção"
               >
                 Rolar
               </button>
@@ -2375,6 +2384,7 @@
               </h3>
 
             </div>
+
 
             <div
               id="attributeRadar"
@@ -2411,8 +2421,8 @@
           </h2>
 
           <p>
-            O D100 determina um dos quatro poderes principais.
-            Poderes paralelos podem ser escolhidos separadamente.
+            O D100 define um dos quatro poderes principais.
+            Poderes paralelos podem ser selecionados separadamente.
           </p>
 
         </div>
@@ -2427,12 +2437,14 @@
               PODER ATUAL
             </span>
 
+
             <div
               data-power-current
               class="power-current"
             >
               Nenhum poder escolhido
             </div>
+
 
             <div
               data-power-result
@@ -2441,9 +2453,8 @@
               —
             </div>
 
-            <p
-              data-power-result-note
-            >
+
+            <p data-power-result-note>
               O D100 define um dos quatro poderes principais.
             </p>
 
@@ -2478,7 +2489,7 @@
               </span>
 
               <h3>
-                Escolha um poder específico
+                Poder específico
               </h3>
 
             </div>
@@ -2496,6 +2507,7 @@
                 <strong>
                   Gelo
                 </strong>
+
                 <span>
                   Manipulação térmica e congelamento.
                 </span>
@@ -2511,6 +2523,7 @@
                 <strong>
                   Magnetismo
                 </strong>
+
                 <span>
                   Influência sobre campos magnéticos.
                 </span>
@@ -2526,8 +2539,9 @@
                 <strong>
                   Vegetação
                 </strong>
+
                 <span>
-                  Influência sobre plantas e crescimento.
+                  Influência sobre plantas.
                 </span>
               </button>
 
@@ -2541,6 +2555,7 @@
                 <strong>
                   Tecnologia
                 </strong>
+
                 <span>
                   Interação extraordinária com tecnologia.
                 </span>
@@ -2556,6 +2571,7 @@
                 <strong>
                   Gravidade
                 </strong>
+
                 <span>
                   Manipulação gravitacional.
                 </span>
@@ -2571,6 +2587,7 @@
                 <strong>
                   Som
                 </strong>
+
                 <span>
                   Manipulação de ondas sonoras.
                 </span>
@@ -2607,17 +2624,14 @@
           </h2>
 
           <p>
-            A Mana Azul começa disponível. Outras cores
-            podem ser liberadas pelo Mestre durante a campanha.
+            A Mana Azul começa liberada. As demais podem
+            ser desbloqueadas pelo Mestre durante a campanha.
           </p>
 
         </div>
 
 
-        <div
-          class="mana-grid"
-          id="manaGrid"
-        >
+        <div class="mana-grid">
 
 
           <button
@@ -2627,7 +2641,10 @@
             data-action="select-mana"
           >
 
-            <div class="mana-card-symbol">
+            <div
+              class="mana-card-symbol"
+              aria-hidden="true"
+            >
               ◇
             </div>
 
@@ -2650,7 +2667,10 @@
             aria-disabled="true"
           >
 
-            <div class="mana-card-symbol">
+            <div
+              class="mana-card-symbol"
+              aria-hidden="true"
+            >
               ◇
             </div>
 
@@ -2673,7 +2693,10 @@
             aria-disabled="true"
           >
 
-            <div class="mana-card-symbol">
+            <div
+              class="mana-card-symbol"
+              aria-hidden="true"
+            >
               ◇
             </div>
 
@@ -2696,7 +2719,10 @@
             aria-disabled="true"
           >
 
-            <div class="mana-card-symbol">
+            <div
+              class="mana-card-symbol"
+              aria-hidden="true"
+            >
               ◇
             </div>
 
@@ -2737,8 +2763,7 @@
           </h2>
 
           <p>
-            Sua classe influencia os bônus. Treinamentos
-            adicionais podem ser definidos aqui.
+            Sua classe influencia seus bônus de perícia.
           </p>
 
         </div>
@@ -2774,16 +2799,13 @@
           </h2>
 
           <p>
-            Registre técnicas especiais, custos, alcances
-            e limitações do personagem.
+            Registre suas técnicas, custos, alcances e limitações.
           </p>
 
         </div>
 
 
-        <div
-          class="techniques-toolbar"
-        >
+        <div class="techniques-toolbar">
 
           <button
             type="button"
@@ -2832,9 +2854,7 @@
         </div>
 
 
-        <div
-          class="inventory-toolbar"
-        >
+        <div class="inventory-toolbar">
 
           <button
             type="button"
@@ -2877,18 +2897,14 @@
           </h2>
 
           <p>
-            Confira sua ficha antes de finalizar.
+            Confira tudo antes de concluir a ficha.
           </p>
 
         </div>
 
 
-        <div
-          class="review-grid"
-        >
+        <div class="review-grid">
 
-
-          <!-- IDENTIDADE -->
 
           <article class="review-card">
 
@@ -2896,53 +2912,40 @@
               IDENTIDADE
             </span>
 
-            <h3
-              data-review="name"
-            >
+            <h3 data-review="name">
               Sem nome
             </h3>
 
             <p>
               Gênero:
-              <strong
-                data-review="gender"
-              >
+              <strong data-review="gender">
                 —
               </strong>
             </p>
 
             <p>
               Raça:
-              <strong
-                data-review="race"
-              >
+              <strong data-review="race">
                 —
               </strong>
             </p>
 
             <p>
               Classe:
-              <strong
-                data-review="class"
-              >
+              <strong data-review="class">
                 —
               </strong>
             </p>
 
             <p>
               Altura:
-              <strong
-                data-review="height"
-              >
+              <strong data-review="height">
                 —
               </strong>
             </p>
 
           </article>
 
-
-
-          <!-- DESCRIÇÃO -->
 
           <article class="review-card">
 
@@ -2950,17 +2953,12 @@
               DESCRIÇÃO
             </span>
 
-            <p
-              data-review="description"
-            >
+            <p data-review="description">
               Nenhuma descrição.
             </p>
 
           </article>
 
-
-
-          <!-- APARÊNCIA -->
 
           <article class="review-card">
 
@@ -2968,17 +2966,12 @@
               APARÊNCIA
             </span>
 
-            <p
-              data-review="appearance"
-            >
+            <p data-review="appearance">
               Nenhuma informação.
             </p>
 
           </article>
 
-
-
-          <!-- PODER -->
 
           <article class="review-card">
 
@@ -2986,26 +2979,19 @@
               PODER
             </span>
 
-            <h3
-              data-review="power"
-            >
+            <h3 data-review="power">
               —
             </h3>
 
             <p>
               Mana:
-              <strong
-                data-review="mana"
-              >
+              <strong data-review="mana">
                 Mana Azul
               </strong>
             </p>
 
           </article>
 
-
-
-          <!-- ATRIBUTOS -->
 
           <article
             class="review-card review-card-wide"
@@ -3022,12 +3008,11 @@
 
           </article>
 
+
         </div>
 
 
-        <div
-          class="review-final-actions"
-        >
+        <div class="review-final-actions">
 
           <button
             type="button"
@@ -3090,13 +3075,11 @@
 
     </footer>
 
-
-
   </div>
 
 
   <!-- ======================================================
-       LIVE REGION
+       ACESSIBILIDADE
        ====================================================== -->
 
   <div
