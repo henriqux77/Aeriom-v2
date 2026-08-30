@@ -9,39 +9,56 @@
    - Regras
    - Navegação
    - Validação
-   - Seleções
-   - Dados
-   - Rolagens
-   - Autosave
+   - Raça
+   - Animalha
+   - Aparência
+   - Classe
+   - Atributos
+   - SISTEMA INDIVIDUAL DOS DADOS
+   - Poder
+   - Mana
    - Perícias
    - Técnicas
    - Inventário
+   - Combate
+   - Autosave
    - Finalização
 
    Renderização:
    js/core/ficha-render.js
+
+   IMPORTANTE:
+   Os dados da criação de ficha ficam inteiramente
+   controlados aqui. Cada dado possui identidade própria.
+
    ========================================================= */
 
 (() => {
   "use strict";
 
-  /* =======================================================
+
+  /* =========================================================
      CONFIGURAÇÃO
-     ======================================================= */
+     ========================================================= */
 
   const CONFIG = Object.freeze({
-    storageKey: "aerion:ficha:draft:v10",
-    lastCharacterKey: "aerion:ficha:last:v10",
+    storageKey:
+      "aerion:ficha:draft:v11",
 
-    autosaveDelay: 450,
+    lastCharacterKey:
+      "aerion:ficha:last:v11",
+
+    autosaveDelay:
+      450,
 
     maxImageSize:
       6 * 1024 * 1024
   });
 
-  /* =======================================================
+
+  /* =========================================================
      ETAPAS
-     ======================================================= */
+     ========================================================= */
 
   const STEPS = Object.freeze([
     {
@@ -100,9 +117,10 @@
     }
   ]);
 
-  /* =======================================================
+
+  /* =========================================================
      ATRIBUTOS
-     ======================================================= */
+     ========================================================= */
 
   const ATTRIBUTES = Object.freeze([
     {
@@ -146,45 +164,97 @@
     }
   ]);
 
-  /* =======================================================
-     PISCINA DE DADOS
-     ======================================================= */
 
-  const DICE = Object.freeze({
-    d4: {
-      sides: 4,
-      amount: 1
+  /* =========================================================
+     DADOS DA CRIAÇÃO DE FICHA
+     
+     CADA DADO É INDIVIDUAL.
+
+     NÃO EXISTE:
+       d20 = "dois dados iguais"
+
+     EXISTE:
+       d20-1
+       d20-2
+
+     Isso permite:
+       - selecionar só um D20
+       - usar o outro separadamente
+       - devolver apenas um
+       - arrastar um sem afetar o outro
+       - trocar posições sem conflito
+     ========================================================= */
+
+  const DICE = Object.freeze([
+    {
+      id: "d4-1",
+      type: "d4",
+      sides: 4
     },
 
-    d6: {
-      sides: 6,
-      amount: 2
+    {
+      id: "d6-1",
+      type: "d6",
+      sides: 6
     },
 
-    d8: {
-      sides: 8,
-      amount: 1
+    {
+      id: "d6-2",
+      type: "d6",
+      sides: 6
     },
 
-    d10: {
-      sides: 10,
-      amount: 1
+    {
+      id: "d8-1",
+      type: "d8",
+      sides: 8
     },
 
-    d12: {
-      sides: 12,
-      amount: 1
+    {
+      id: "d10-1",
+      type: "d10",
+      sides: 10
     },
 
-    d20: {
-      sides: 20,
-      amount: 2
+    {
+      id: "d12-1",
+      type: "d12",
+      sides: 12
+    },
+
+    {
+      id: "d20-1",
+      type: "d20",
+      sides: 20
+    },
+
+    {
+      id: "d20-2",
+      type: "d20",
+      sides: 20
     }
-  });
+  ]);
 
-  /* =======================================================
+
+  /* =========================================================
+     MAPAS AUXILIARES DOS DADOS
+     ========================================================= */
+
+  const DICE_BY_ID = Object.freeze(
+    Object.fromEntries(
+      DICE.map(
+        die => [
+          die.id,
+          die
+        ]
+      )
+    )
+  );
+
+
+  /* =========================================================
      PODERES
-     ======================================================= */
+     ========================================================= */
 
   const PRIMARY_POWERS = Object.freeze([
     "Fogo",
@@ -202,9 +272,10 @@
     "Som"
   ]);
 
-  /* =======================================================
+
+  /* =========================================================
      CLASSES
-     ======================================================= */
+     ========================================================= */
 
   const CLASSES = Object.freeze({
     guerreiro: {
@@ -252,15 +323,15 @@
     }
   });
 
-  /* =======================================================
+
+  /* =========================================================
      PERÍCIAS
-     ======================================================= */
+     ========================================================= */
 
   const SKILLS = Object.freeze({
     acrobacia: {
       id: "acrobacia",
       name: "Acrobacia",
-
       description:
         "Equilíbrio, movimentos rápidos e manobras."
     },
@@ -268,7 +339,6 @@
     atletismo: {
       id: "atletismo",
       name: "Atletismo",
-
       description:
         "Força corporal, corrida, escalada e esforço físico."
     },
@@ -276,7 +346,6 @@
     furtividade: {
       id: "furtividade",
       name: "Furtividade",
-
       description:
         "Mover-se sem ser percebido."
     },
@@ -284,7 +353,6 @@
     percepcao: {
       id: "percepcao",
       name: "Percepção",
-
       description:
         "Perceber detalhes, ameaças e mudanças no ambiente."
     },
@@ -292,7 +360,6 @@
     investigacao: {
       id: "investigacao",
       name: "Investigação",
-
       description:
         "Analisar pistas e descobrir informações."
     },
@@ -300,7 +367,6 @@
     conhecimento: {
       id: "conhecimento",
       name: "Conhecimento",
-
       description:
         "Conhecimentos gerais e especializados."
     },
@@ -308,7 +374,6 @@
     medicina: {
       id: "medicina",
       name: "Medicina",
-
       description:
         "Tratamento, primeiros socorros e diagnóstico."
     },
@@ -316,7 +381,6 @@
     sobrevivencia: {
       id: "sobrevivencia",
       name: "Sobrevivência",
-
       description:
         "Rastreamento, exploração e adaptação ambiental."
     },
@@ -324,7 +388,6 @@
     persuasao: {
       id: "persuasao",
       name: "Persuasão",
-
       description:
         "Convencer e negociar de maneira legítima."
     },
@@ -332,7 +395,6 @@
     intuicao: {
       id: "intuicao",
       name: "Intuição",
-
       description:
         "Perceber intenções e situações suspeitas."
     },
@@ -340,7 +402,6 @@
     enganacao: {
       id: "enganacao",
       name: "Enganação",
-
       description:
         "Blefes, disfarces e manipulação verbal."
     },
@@ -348,7 +409,6 @@
     tatica: {
       id: "tatica",
       name: "Tática",
-
       description:
         "Planejamento e leitura de situações de combate."
     },
@@ -356,7 +416,6 @@
     oficio: {
       id: "oficio",
       name: "Ofício / Crafting",
-
       description:
         "Construção, reparo e criação de itens."
     },
@@ -364,20 +423,19 @@
     controle_mana: {
       id: "controle_mana",
       name: "Controle de Mana",
-
       description:
         "Domínio e precisão na manipulação de Mana."
     }
   });
 
-  /* =======================================================
+
+  /* =========================================================
      RAÇAS
-     ======================================================= */
+     ========================================================= */
 
   const RACES = Object.freeze([
     {
       id: "humano",
-
       name: "Humano",
 
       male:
@@ -414,7 +472,6 @@
 
     {
       id: "elfo",
-
       name: "Elfo",
 
       male:
@@ -452,7 +509,6 @@
 
     {
       id: "anao",
-
       name: "Anão",
 
       male:
@@ -490,7 +546,6 @@
 
     {
       id: "orc",
-
       name: "Orc",
 
       male:
@@ -528,7 +583,6 @@
 
     {
       id: "centauro",
-
       name: "Centauro",
 
       male:
@@ -568,7 +622,6 @@
 
     {
       id: "vampiro",
-
       name: "Vampiro",
 
       male:
@@ -606,7 +659,6 @@
 
     {
       id: "duende",
-
       name: "Duende",
 
       male:
@@ -644,7 +696,6 @@
 
     {
       id: "fada",
-
       name: "Fada",
 
       male:
@@ -684,7 +735,6 @@
 
     {
       id: "povo_aquatico",
-
       name: "Povo Aquático",
 
       male:
@@ -724,7 +774,6 @@
 
     {
       id: "animalha",
-
       name: "Animalha",
 
       male:
@@ -758,7 +807,6 @@
 
     {
       id: "povo_natureza",
-
       name: "Povo da Natureza",
 
       male:
@@ -796,7 +844,6 @@
 
     {
       id: "neraliano",
-
       name: "Neraliano",
 
       male:
@@ -836,11 +883,9 @@
 
     {
       id: "aureano",
-
       name: "Aureano",
 
       male: "",
-
       female: "",
 
       description:
@@ -872,11 +917,9 @@
 
     {
       id: "povo_nuvens",
-
       name: "Povo das Nuvens",
 
       male: "",
-
       female: "",
 
       description:
@@ -908,11 +951,9 @@
 
     {
       id: "colosso",
-
       name: "Colosso",
 
       male: "",
-
       female: "",
 
       description:
@@ -946,11 +987,9 @@
 
     {
       id: "troll",
-
       name: "Troll",
 
       male: "",
-
       female: "",
 
       description:
@@ -981,9 +1020,10 @@
     }
   ]);
 
-  /* =======================================================
-     ANIMALHA — SUBLINHAGENS
-     ======================================================= */
+
+  /* =========================================================
+     ANIMALHA
+     ========================================================= */
 
   const ANIMALHA_VARIANTS = Object.freeze([
     {
@@ -1523,9 +1563,10 @@
     }
   ]);
 
-  /* =======================================================
-     REGRAS DE PORTE
-     ======================================================= */
+
+  /* =========================================================
+     PORTE
+     ========================================================= */
 
   const SIZE_RULES = Object.freeze({
     pequeno: {
@@ -1549,9 +1590,10 @@
     }
   });
 
-  /* =======================================================
+
+  /* =========================================================
      ESTADO PADRÃO
-     ======================================================= */
+     ========================================================= */
 
   function createDefaultState() {
     return {
@@ -1584,6 +1626,20 @@
 
       class: "",
 
+      /*
+       * Aqui ficam os IDs INDIVIDUAIS dos dados.
+       *
+       * Exemplo:
+       *
+       * forca: "d20-1"
+       * vigor: "d20-2"
+       *
+       * Nunca:
+       *
+       * forca: "d20"
+       * vigor: "d20"
+       */
+
       attributes: {
         forca: null,
         vigor: null,
@@ -1615,6 +1671,7 @@
     };
   }
 
+
   let state =
     createDefaultState();
 
@@ -1624,15 +1681,14 @@
   let autosaveTimer =
     null;
 
-  /* =======================================================
+
+  /* =========================================================
      UTILITÁRIOS
-     ======================================================= */
+     ========================================================= */
 
   function clone(value) {
     return JSON.parse(
-      JSON.stringify(
-        value
-      )
+      JSON.stringify(value)
     );
   }
 
@@ -1671,9 +1727,10 @@
     );
   }
 
-  /* =======================================================
+
+  /* =========================================================
      AUTOSAVE
-     ======================================================= */
+     ========================================================= */
 
   function save() {
     clearTimeout(
@@ -1689,6 +1746,7 @@
           try {
             localStorage.setItem(
               CONFIG.storageKey,
+
               JSON.stringify(
                 state
               )
@@ -1703,11 +1761,12 @@
             error
           ) {
             console.error(
-              "[AERION] Falha no autosave:",
+              "[AERION] Falha ao salvar:",
               error
             );
           }
         },
+
         CONFIG.autosaveDelay
       );
   }
@@ -1723,6 +1782,7 @@
     try {
       localStorage.setItem(
         CONFIG.storageKey,
+
         JSON.stringify(
           state
         )
@@ -1741,6 +1801,11 @@
     }
   }
 
+
+  /* =========================================================
+     CARREGAMENTO
+     ========================================================= */
+
   function load() {
     try {
       const raw =
@@ -1748,7 +1813,9 @@
           CONFIG.storageKey
         );
 
-      if (!raw) {
+      if (
+        !raw
+      ) {
         return false;
       }
 
@@ -1775,14 +1842,12 @@
 
         appearance: {
           ...defaults.appearance,
-
           ...(saved.appearance ||
             {})
         },
 
         attributes: {
           ...defaults.attributes,
-
           ...(saved.attributes ||
             {})
         },
@@ -1816,8 +1881,7 @@
         Math.max(
           0,
           Math.min(
-            STEPS.length -
-              1,
+            STEPS.length - 1,
 
             Number(
               state.step
@@ -1843,6 +1907,11 @@
     }
   }
 
+
+  /* =========================================================
+     SANITIZAÇÃO
+     ========================================================= */
+
   function sanitizeState() {
     ensureRaceIndex();
 
@@ -1861,15 +1930,19 @@
     resetAppearanceHeight();
   }
 
-  /* =======================================================
+
+  /* =========================================================
      ESTADO PÚBLICO
-     ======================================================= */
+     ========================================================= */
 
   function getPublicState() {
     return clone({
       ...state,
 
       selectedDie,
+
+      dice:
+        getDiceState(),
 
       previewRace:
         getPreviewRace(),
@@ -1894,9 +1967,10 @@
     });
   }
 
-  /* =======================================================
+
+  /* =========================================================
      RAÇA
-     ======================================================= */
+     ========================================================= */
 
   function ensureRaceIndex() {
     if (
@@ -1906,8 +1980,7 @@
         Math.max(
           0,
           Math.min(
-            RACES.length -
-              1,
+            RACES.length - 1,
 
             Number(
               state.raceIndex
@@ -1931,16 +2004,18 @@
     ) {
       state.raceIndex =
         index;
-    } else {
-      state.race =
-        "";
 
-      state.raceIndex =
-        0;
-
-      state.animalha =
-        "";
+      return;
     }
+
+    state.race =
+      "";
+
+    state.raceIndex =
+      0;
+
+    state.animalha =
+      "";
   }
 
   function getRace() {
@@ -2063,7 +2138,8 @@
       );
 
     if (
-      index < 0
+      index <
+      0
     ) {
       return false;
     }
@@ -2108,9 +2184,7 @@
     index
   ) {
     index =
-      Number(
-        index
-      );
+      Number(index);
 
     if (
       !Number.isInteger(
@@ -2175,9 +2249,10 @@
     return true;
   }
 
-  /* =======================================================
+
+  /* =========================================================
      ANIMALHA
-     ======================================================= */
+     ========================================================= */
 
   function selectAnimalha(
     id
@@ -2213,9 +2288,10 @@
     return true;
   }
 
-  /* =======================================================
+
+  /* =========================================================
      APARÊNCIA
-     ======================================================= */
+     ========================================================= */
 
   function resetAppearanceHeight() {
     const race =
@@ -2310,8 +2386,10 @@
     state.appearance.height =
       Math.max(
         min,
+
         Math.min(
           max,
+
           Math.round(
             safeValue
           )
@@ -2358,9 +2436,10 @@
     return true;
   }
 
-  /* =======================================================
+
+  /* =========================================================
      CLASSE
-     ======================================================= */
+     ========================================================= */
 
   function selectClass(
     classId
@@ -2388,9 +2467,10 @@
     return true;
   }
 
-  /* =======================================================
-     ATRIBUTOS — VALIDAÇÃO
-     ======================================================= */
+
+  /* =========================================================
+     DADOS — ESTADO
+     ========================================================= */
 
   function ensureAttributes() {
     if (
@@ -2407,14 +2487,18 @@
 
     ATTRIBUTES.forEach(
       attribute => {
-        const value =
+        const dieId =
           state.attributes[
             attribute.id
           ];
 
+        /*
+         * Somente IDs reais de dados são aceitos.
+         */
         if (
-          !DICE[
-            value
+          dieId !== null &&
+          !DICE_BY_ID[
+            dieId
           ]
         ) {
           state.attributes[
@@ -2422,6 +2506,45 @@
           ] =
             null;
         }
+      }
+    );
+
+    /*
+     * Corrige duplicação de um mesmo
+     * dado individual no estado.
+     */
+    const used =
+      new Set();
+
+    ATTRIBUTES.forEach(
+      attribute => {
+        const id =
+          state.attributes[
+            attribute.id
+          ];
+
+        if (
+          !id
+        ) {
+          return;
+        }
+
+        if (
+          used.has(
+            id
+          )
+        ) {
+          state.attributes[
+            attribute.id
+          ] =
+            null;
+
+          return;
+        }
+
+        used.add(
+          id
+        );
       }
     );
 
@@ -2438,95 +2561,113 @@
     }
   }
 
-  /* =======================================================
-     ATRIBUTOS — DADOS
-     ======================================================= */
 
-  function countAssignedDie(
-    die
+  /* =========================================================
+     DADOS — CONSULTAS
+     ========================================================= */
+
+  function getAssignedAttributeForDie(
+    dieId
   ) {
-    return Object.values(
-      state.attributes
-    ).filter(
-      value =>
-        value ===
-        die
-    ).length;
+    const entry =
+      ATTRIBUTES.find(
+        attribute =>
+          state.attributes[
+            attribute.id
+          ] ===
+          dieId
+      );
+
+    return (
+      entry?.id ||
+      null
+    );
   }
 
-  function getAvailableDieCount(
-    die
+  function isDieAssigned(
+    dieId
   ) {
-    if (
-      !DICE[
-        die
-      ]
-    ) {
-      return 0;
-    }
-
-    return Math.max(
-      0,
-      DICE[die].amount -
-        countAssignedDie(
-          die
-        )
+    return Boolean(
+      getAssignedAttributeForDie(
+        dieId
+      )
     );
   }
 
   function isDieAvailable(
-    die
+    dieId
   ) {
     return (
       Boolean(
-        DICE[
-          die
+        DICE_BY_ID[
+          dieId
         ]
       ) &&
-      getAvailableDieCount(
-        die
-      ) >
-        0
+      !isDieAssigned(
+        dieId
+      )
     );
   }
 
-  function selectDie(
-    die
-  ) {
-    die =
-      String(
-        die ?? ""
-      ).toLowerCase();
+  function getDiceState() {
+    return DICE.map(
+      die => {
+        const assignedTo =
+          getAssignedAttributeForDie(
+            die.id
+          );
 
+        return {
+          ...die,
+
+          available:
+            !assignedTo,
+
+          assigned:
+            Boolean(
+              assignedTo
+            ),
+
+          assignedTo:
+            assignedTo
+        };
+      }
+    );
+  }
+
+
+  /* =========================================================
+     DADOS — SELEÇÃO
+     ========================================================= */
+
+  function selectDie(
+    dieId
+  ) {
     if (
-      !DICE[
-        die
+      !DICE_BY_ID[
+        dieId
       ]
     ) {
       return false;
     }
 
     /*
-     * IMPORTANTE:
-     *
-     * Se o dado já estiver atribuído
-     * em outro atributo, ele não pode ser
-     * "roubado".
+     * Um dado já usado não pode ser selecionado.
      */
     if (
       !isDieAvailable(
-        die
+        dieId
       )
     ) {
       toast(
-        `${die.toUpperCase()} não está disponível.`
+        "Esse dado já está atribuído a um atributo."
       );
 
       return false;
     }
 
     selectedDie =
-      die;
+      dieId;
 
     render();
 
@@ -2540,15 +2681,15 @@
     render();
   }
 
+
+  /* =========================================================
+     DADOS — ATRIBUIÇÃO
+     ========================================================= */
+
   function assignDie(
     attribute,
-    die
+    dieId
   ) {
-    die =
-      String(
-        die ?? ""
-      ).toLowerCase();
-
     if (
       !ATTRIBUTES.some(
         item =>
@@ -2560,8 +2701,8 @@
     }
 
     if (
-      !DICE[
-        die
+      !DICE_BY_ID[
+        dieId
       ]
     ) {
       return false;
@@ -2569,13 +2710,13 @@
 
     /*
      * Clicar no mesmo dado que já está
-     * no atributo = devolve o dado para a piscina.
+     * naquele atributo = devolver.
      */
     if (
       state.attributes[
         attribute
       ] ===
-      die
+      dieId
     ) {
       return returnDie(
         attribute
@@ -2583,38 +2724,70 @@
     }
 
     /*
-     * NUNCA mover automaticamente um dado
-     * que já esteja em outro atributo.
+     * Se o dado já estiver em qualquer
+     * outro atributo, NÃO REMOVE.
      *
-     * Esse é o ponto que elimina o ciclo
-     * de "coloca em um / remove do outro".
+     * Esse é o comportamento fundamental
+     * da nova arquitetura.
      */
+    const currentOwner =
+      getAssignedAttributeForDie(
+        dieId
+      );
+
     if (
-      !isDieAvailable(
-        die
-      )
+      currentOwner
     ) {
       toast(
-        `${die.toUpperCase()} já está atribuído a outro atributo.`
+        `${formatDieName(
+          dieId
+        )} já está em ${getAttributeName(
+          currentOwner
+        )}.`
       );
 
       return false;
     }
 
     /*
-     * Atribui somente ao atributo solicitado.
+     * O atributo pode estar ocupado por
+     * OUTRO dado. Nesse caso NÃO sobrescreve.
      *
-     * Nenhum outro atributo é alterado.
+     * Isso evita troca acidental.
+     */
+    const currentDie =
+      state.attributes[
+        attribute
+      ];
+
+    if (
+      currentDie
+    ) {
+      toast(
+        `${getAttributeName(
+          attribute
+        )} já possui ${formatDieName(
+          currentDie
+        )}.`
+      );
+
+      return false;
+    }
+
+    /*
+     * Agora sim:
+     *
+     * dado livre
+     * +
+     * atributo livre
+     *
+     * = atribuição.
      */
     state.attributes[
       attribute
     ] =
-      die;
+      dieId;
 
-    /*
-     * Uma nova atribuição apaga somente
-     * a rolagem antiga daquele atributo.
-     */
     delete state.rolls[
       attribute
     ];
@@ -2627,6 +2800,11 @@
 
     return true;
   }
+
+
+  /* =========================================================
+     DADOS — ATRIBUIÇÃO POR SELEÇÃO
+     ========================================================= */
 
   function assignSelectedDie(
     attribute
@@ -2647,6 +2825,11 @@
     );
   }
 
+
+  /* =========================================================
+     DADOS — DEVOLVER
+     ========================================================= */
+
   function returnDie(
     attribute
   ) {
@@ -2660,18 +2843,16 @@
       return false;
     }
 
-    if (
-      !state.attributes[
-        attribute
-      ]
-    ) {
-      return false;
-    }
-
-    const previousDie =
+    const dieId =
       state.attributes[
         attribute
       ];
+
+    if (
+      !dieId
+    ) {
+      return false;
+    }
 
     state.attributes[
       attribute
@@ -2682,18 +2863,34 @@
       attribute
     ];
 
-    selectedDie =
-      null;
+    /*
+     * Se o usuário estava com esse
+     * mesmo dado selecionado, limpa.
+     */
+    if (
+      selectedDie ===
+      dieId
+    ) {
+      selectedDie =
+        null;
+    }
 
     save();
     render();
 
     toast(
-      `${previousDie.toUpperCase()} devolvido à piscina.`
+      `${formatDieName(
+        dieId
+      )} devolvido à piscina.`
     );
 
     return true;
   }
+
+
+  /* =========================================================
+     DADOS — TROCA DE ATRIBUTOS
+     ========================================================= */
 
   function swapAttributes(
     first,
@@ -2732,8 +2929,8 @@
       ];
 
     /*
-     * A troca é segura porque ambos os dados
-     * já estão dentro do limite permitido.
+     * Como os IDs são individuais,
+     * a troca é segura.
      */
     state.attributes[
       first
@@ -2792,9 +2989,32 @@
     return true;
   }
 
-  /* =======================================================
-     ATRIBUTOS — ROLAGEM
-     ======================================================= */
+
+  /* =========================================================
+     DADOS — FORMATAÇÃO
+     ========================================================= */
+
+  function formatDieName(
+    dieId
+  ) {
+    const die =
+      DICE_BY_ID[
+        dieId
+      ];
+
+    if (
+      !die
+    ) {
+      return "Dado";
+    }
+
+    return `D${die.sides}`;
+  }
+
+
+  /* =========================================================
+     ATRIBUTOS
+     ========================================================= */
 
   function getRaceModifier(
     attribute
@@ -2825,10 +3045,17 @@
   function getAttribute(
     attribute
   ) {
-    const die =
+    const dieId =
       state.attributes[
         attribute
       ];
+
+    const die =
+      dieId
+        ? DICE_BY_ID[
+            dieId
+          ]
+        : null;
 
     const roll =
       state.rolls[
@@ -2841,9 +3068,7 @@
       );
 
     const sides =
-      DICE[
-        die
-      ]?.sides ||
+      die?.sides ||
       0;
 
     return {
@@ -2855,7 +3080,15 @@
           attribute
         ),
 
-      die,
+      die:
+        dieId,
+
+      dieId:
+        dieId,
+
+      type:
+        die?.type ||
+        null,
 
       sides,
 
@@ -2874,7 +3107,7 @@
       total:
         roll?.total ??
         (
-          die
+          dieId
             ? sides +
               modifier
             : null
@@ -2900,19 +3133,28 @@
     return result;
   }
 
+
+  /* =========================================================
+     ROLAGEM DE ATRIBUTO
+     ========================================================= */
+
   function rollAttribute(
     attribute
   ) {
-    const die =
+    const dieId =
       state.attributes[
         attribute
       ];
 
+    const die =
+      dieId
+        ? DICE_BY_ID[
+            dieId
+          ]
+        : null;
+
     if (
-      !die ||
-      !DICE[
-        die
-      ]
+      !die
     ) {
       toast(
         "Coloque um dado nesse atributo primeiro."
@@ -2924,9 +3166,7 @@
     const roll =
       Math.floor(
         Math.random() *
-          DICE[
-            die
-          ].sides
+          die.sides
       ) +
       1;
 
@@ -2942,7 +3182,13 @@
     state.rolls[
       attribute
     ] = {
-      die,
+      dieId,
+
+      dieType:
+        die.type,
+
+      sides:
+        die.sides,
 
       value:
         roll,
@@ -2967,9 +3213,10 @@
     return total;
   }
 
-  /* =======================================================
+
+  /* =========================================================
      PODER
-     ======================================================= */
+     ========================================================= */
 
   function validatePower() {
     if (
@@ -3017,7 +3264,6 @@
     }
 
     if (
-      state.power &&
       PRIMARY_POWERS.includes(
         state.power
       )
@@ -3029,7 +3275,6 @@
     }
 
     if (
-      state.power &&
       PARALLEL_POWERS.includes(
         state.power
       )
@@ -3132,16 +3377,12 @@
     return true;
   }
 
-  /* =======================================================
+
+  /* =========================================================
      MANA
-     ======================================================= */
+     ========================================================= */
 
   function validateMana() {
-    /*
-     * Na criação da ficha:
-     * somente Mana Azul está disponível.
-     */
-
     if (
       String(
         state.mana ||
@@ -3159,7 +3400,8 @@
   ) {
     mana =
       String(
-        mana ?? ""
+        mana ??
+          ""
       ).toLowerCase();
 
     if (
@@ -3182,9 +3424,10 @@
     return true;
   }
 
-  /* =======================================================
+
+  /* =========================================================
      PERÍCIAS
-     ======================================================= */
+     ========================================================= */
 
   function ensureSkills() {
     if (
@@ -3387,9 +3630,10 @@
     return result;
   }
 
-  /* =======================================================
+
+  /* =========================================================
      TÉCNICAS
-     ======================================================= */
+     ========================================================= */
 
   function ensureTechniques() {
     if (
@@ -3491,7 +3735,8 @@
       field
     ] =
       String(
-        value ?? ""
+        value ??
+          ""
       );
 
     save();
@@ -3517,9 +3762,10 @@
     return true;
   }
 
-  /* =======================================================
+
+  /* =========================================================
      INVENTÁRIO
-     ======================================================= */
+     ========================================================= */
 
   function ensureInventory() {
     if (
@@ -3563,12 +3809,14 @@
 
     item.name =
       String(
-        item.name ?? ""
+        item.name ??
+          ""
       );
 
     item.quantity =
       Math.max(
         0,
+
         Number(
           item.quantity
         ) || 1
@@ -3617,6 +3865,7 @@
       item.quantity =
         Math.max(
           0,
+
           Number(
             value
           ) || 0
@@ -3631,7 +3880,8 @@
         field
       ] =
         String(
-          value ?? ""
+          value ??
+            ""
         );
     } else {
       return false;
@@ -3660,9 +3910,10 @@
     return true;
   }
 
-  /* =======================================================
+
+  /* =========================================================
      COMBATE
-     ======================================================= */
+     ========================================================= */
 
   function calculateHP() {
     const race =
@@ -3798,9 +4049,10 @@
     };
   }
 
-  /* =======================================================
+
+  /* =========================================================
      PROGRESSO
-     ======================================================= */
+     ========================================================= */
 
   function isStepComplete(
     index
@@ -3858,6 +4110,10 @@
           "azul"
         );
 
+      /*
+       * Essas etapas podem ficar opcionais
+       * durante a criação.
+       */
       case 7:
       case 8:
       case 9:
@@ -3945,9 +4201,10 @@
     };
   }
 
-  /* =======================================================
+
+  /* =========================================================
      NAVEGAÇÃO
-     ======================================================= */
+     ========================================================= */
 
   function goToStep(
     index
@@ -3988,6 +4245,7 @@
 
     window.scrollTo({
       top: 0,
+
       behavior:
         "smooth"
     });
@@ -4030,6 +4288,7 @@
 
     window.scrollTo({
       top: 0,
+
       behavior:
         "smooth"
     });
@@ -4053,6 +4312,7 @@
 
     window.scrollTo({
       top: 0,
+
       behavior:
         "smooth"
     });
@@ -4060,16 +4320,18 @@
     return true;
   }
 
-  /* =======================================================
+
+  /* =========================================================
      IDENTIDADE
-     ======================================================= */
+     ========================================================= */
 
   function setName(
     value
   ) {
     state.name =
       String(
-        value ?? ""
+        value ??
+          ""
       );
 
     save();
@@ -4081,7 +4343,8 @@
   ) {
     state.age =
       String(
-        value ?? ""
+        value ??
+          ""
       );
 
     save();
@@ -4113,7 +4376,8 @@
   ) {
     state.description =
       String(
-        value ?? ""
+        value ??
+          ""
       );
 
     save();
@@ -4124,15 +4388,17 @@
   ) {
     state.origin =
       String(
-        value ?? ""
+        value ??
+          ""
       );
 
     save();
   }
 
-  /* =======================================================
+
+  /* =========================================================
      AVATAR
-     ======================================================= */
+     ========================================================= */
 
   function setAvatar(
     file
@@ -4217,9 +4483,10 @@
     return true;
   }
 
-  /* =======================================================
+
+  /* =========================================================
      RESET
-     ======================================================= */
+     ========================================================= */
 
   function reset() {
     const confirmed =
@@ -4255,9 +4522,10 @@
     return true;
   }
 
-  /* =======================================================
+
+  /* =========================================================
      FINALIZAÇÃO
-     ======================================================= */
+     ========================================================= */
 
   function validateBeforeFinish() {
     for (
@@ -4294,6 +4562,9 @@
         state
       ),
 
+      dice:
+        getDiceState(),
+
       raceData:
         clone(
           getEffectiveRace()
@@ -4309,7 +4580,7 @@
         getCombatData(),
 
       version:
-        10,
+        11,
 
       exportedAt:
         new Date().toISOString()
@@ -4366,9 +4637,10 @@
     return true;
   }
 
-  /* =======================================================
+
+  /* =========================================================
      CLICK
-     ======================================================= */
+     ========================================================= */
 
   function onClick(
     event
@@ -4382,21 +4654,10 @@
       return;
     }
 
-    /*
-     * -------------------------------------------------------
-     * DEVOLVER DADO PELO PRÓPRIO ATRIBUTO
-     *
-     * O renderizador pode colocar:
-     *
-     * data-attribute-die
-     *
-     * dentro de:
-     *
-     * .attribute-card
-     *
-     * Ao tocar nele, o dado volta para a piscina.
-     * -------------------------------------------------------
-     */
+
+    /* -------------------------------------------------------
+       DEVOLVER DADO CLICANDO NO DADO DO ATRIBUTO
+       ------------------------------------------------------- */
 
     const attributeDie =
       target.closest(
@@ -4417,6 +4678,7 @@
       const attribute =
         attributeDie.dataset
           .attribute ||
+
         card?.dataset
           ?.attribute;
 
@@ -4431,11 +4693,10 @@
       }
     }
 
-    /*
-     * -------------------------------------------------------
-     * CLIQUE NO DADO DA PISCINA
-     * -------------------------------------------------------
-     */
+
+    /* -------------------------------------------------------
+       DADO DA PISCINA
+       ------------------------------------------------------- */
 
     const die =
       target.closest(
@@ -4444,35 +4705,25 @@
 
     if (
       die &&
-      !target.closest(
-        "[data-attribute-die]"
-      )
+      !attributeDie
     ) {
-      /*
-       * Se o elemento é um dado visual
-       * de atributo, não selecionamos como
-       * dado de piscina.
-       */
-      if (
-        die.closest(
-          ".attribute-card"
-        )
-      ) {
-        return;
-      }
+      const dieId =
+        die.dataset.die;
 
+      /*
+       * Só seleciona dados livres.
+       */
       selectDie(
-        die.dataset.die
+        dieId
       );
 
       return;
     }
 
-    /*
-     * -------------------------------------------------------
-     * AÇÃO GERAL
-     * -------------------------------------------------------
-     */
+
+    /* -------------------------------------------------------
+       AÇÃO GERAL
+       ------------------------------------------------------- */
 
     const action =
       target.closest(
@@ -4541,6 +4792,10 @@
           action.dataset
             .class
         );
+        break;
+
+      case "clear-die-selection":
+        clearDieSelection();
         break;
 
       case "power-mode":
@@ -4626,9 +4881,10 @@
     }
   }
 
-  /* =======================================================
+
+  /* =========================================================
      INPUT
-     ======================================================= */
+     ========================================================= */
 
   function onInput(
     event
@@ -4752,12 +5008,15 @@
 
         element.value
       );
+
+      return;
     }
   }
 
-  /* =======================================================
+
+  /* =========================================================
      CHANGE
-     ======================================================= */
+     ========================================================= */
 
   function onChange(
     event
@@ -4805,9 +5064,10 @@
     }
   }
 
-  /* =======================================================
+
+  /* =========================================================
      DRAG START
-     ======================================================= */
+     ========================================================= */
 
   function onDragStart(
     event
@@ -4818,7 +5078,16 @@
       );
 
     if (
-      !element ||
+      !element
+    ) {
+      return;
+    }
+
+    /*
+     * Dado de atributo não participa
+     * da seleção da piscina.
+     */
+    if (
       element.closest(
         "[data-attribute-die]"
       )
@@ -4826,20 +5095,12 @@
       return;
     }
 
-    const die =
-      String(
-        element.dataset
-          .die ||
-          ""
-      ).toLowerCase();
+    const dieId =
+      element.dataset.die;
 
-    /*
-     * Só permite arrastar um dado que realmente
-     * tenha cópia disponível na piscina.
-     */
     if (
       !isDieAvailable(
-        die
+        dieId
       )
     ) {
       event.preventDefault();
@@ -4848,7 +5109,11 @@
     }
 
     selectedDie =
-      die;
+      dieId;
+
+    element.classList.add(
+      "is-dragging"
+    );
 
     if (
       event.dataTransfer
@@ -4858,18 +5123,15 @@
 
       event.dataTransfer.setData(
         "text/plain",
-        die
+        dieId
       );
     }
-
-    element.classList.add(
-      "is-dragging"
-    );
   }
 
-  /* =======================================================
+
+  /* =========================================================
      DRAG END
-     ======================================================= */
+     ========================================================= */
 
   function onDragEnd(
     event
@@ -4886,16 +5148,12 @@
         "is-dragging"
       );
     }
-
-    /*
-     * O selectedDie não é apagado aqui,
-     * pois um drop válido pode ainda utilizá-lo.
-     */
   }
 
-  /* =======================================================
+
+  /* =========================================================
      DRAG OVER
-     ======================================================= */
+     ========================================================= */
 
   function onDragOver(
     event
@@ -4925,9 +5183,10 @@
     }
   }
 
-  /* =======================================================
+
+  /* =========================================================
      DRAG LEAVE
-     ======================================================= */
+     ========================================================= */
 
   function onDragLeave(
     event
@@ -4943,10 +5202,6 @@
       return;
     }
 
-    /*
-     * Evita remover a classe quando o cursor
-     * apenas passou por um filho do elemento.
-     */
     if (
       target.contains(
         event.relatedTarget
@@ -4960,9 +5215,10 @@
     );
   }
 
-  /* =======================================================
+
+  /* =========================================================
      DROP
-     ======================================================= */
+     ========================================================= */
 
   function onDrop(
     event
@@ -4984,36 +5240,33 @@
       "drag-over"
     );
 
-    const die =
+    const dieId =
       String(
         event.dataTransfer?.getData(
           "text/plain"
         ) ||
           selectedDie ||
           ""
-      ).toLowerCase();
+      );
 
     if (
-      !die
+      !dieId
     ) {
       return;
     }
 
-    /*
-     * A mesma validação de assignDie()
-     * impede substituição automática.
-     */
     assignDie(
       target.dataset
         .attributeDrop,
 
-      die
+      dieId
     );
   }
 
-  /* =======================================================
-     SALVAMENTO AO SAIR
-     ======================================================= */
+
+  /* =========================================================
+     SALVAMENTO DO CICLO DE VIDA
+     ========================================================= */
 
   function installLifecycleSaving() {
     document.addEventListener(
@@ -5034,9 +5287,10 @@
     );
   }
 
-  /* =======================================================
+
+  /* =========================================================
      INICIALIZAÇÃO
-     ======================================================= */
+     ========================================================= */
 
   function init() {
     const recovered =
@@ -5046,8 +5300,11 @@
     ensureSkills();
     ensureTechniques();
     ensureInventory();
+
     ensureRaceIndex();
+
     resetAppearanceHeight();
+
     validatePower();
     validateMana();
 
@@ -5095,29 +5352,47 @@
 
     render();
 
+
+    /* =======================================================
+       API GLOBAL
+       ======================================================= */
+
     window.AERIONFicha =
       Object.freeze({
-        /* ===============================
+        /* ---------------------------------------------------
            CONSTANTES
-           =============================== */
+           --------------------------------------------------- */
 
         constants: {
           CONFIG,
+
           STEPS,
+
           ATTRIBUTES,
+
           DICE,
+
+          DICE_BY_ID,
+
           PRIMARY_POWERS,
+
           PARALLEL_POWERS,
+
           CLASSES,
+
           SKILLS,
+
           RACES,
+
           ANIMALHA_VARIANTS,
+
           SIZE_RULES
         },
 
-        /* ===============================
+
+        /* ---------------------------------------------------
            ESTADO
-           =============================== */
+           --------------------------------------------------- */
 
         getState:
           getPublicState,
@@ -5125,20 +5400,27 @@
         getCharacter:
           buildCharacter,
 
+
+        /* ---------------------------------------------------
+           SALVAMENTO
+           --------------------------------------------------- */
+
         save:
           forceSave,
 
-        /* ===============================
-           FICHA
-           =============================== */
+
+        /* ---------------------------------------------------
+           RESET / FINALIZAÇÃO
+           --------------------------------------------------- */
 
         reset,
 
         finish,
 
-        /* ===============================
+
+        /* ---------------------------------------------------
            NAVEGAÇÃO
-           =============================== */
+           --------------------------------------------------- */
 
         next:
           nextStep,
@@ -5148,9 +5430,10 @@
 
         goToStep,
 
-        /* ===============================
+
+        /* ---------------------------------------------------
            RAÇA
-           =============================== */
+           --------------------------------------------------- */
 
         selectRace,
 
@@ -5164,23 +5447,26 @@
 
         selectAnimalha,
 
-        /* ===============================
+
+        /* ---------------------------------------------------
            APARÊNCIA
-           =============================== */
+           --------------------------------------------------- */
 
         setHeight,
 
         setAppearanceField,
 
-        /* ===============================
+
+        /* ---------------------------------------------------
            CLASSE
-           =============================== */
+           --------------------------------------------------- */
 
         selectClass,
 
-        /* ===============================
-           DADOS / ATRIBUTOS
-           =============================== */
+
+        /* ---------------------------------------------------
+           DADOS
+           --------------------------------------------------- */
 
         selectDie,
 
@@ -5194,33 +5480,40 @@
 
         swapAttributes,
 
-        rollAttribute,
+        isDieAvailable,
+
+        isDieAssigned,
+
+        getDiceState,
+
+        getAssignedAttributeForDie,
 
         getAttribute,
 
         getEffectiveAttributes,
 
-        isDieAvailable,
+        rollAttribute,
 
-        getAvailableDieCount,
 
-        /* ===============================
+        /* ---------------------------------------------------
            PODER
-           =============================== */
+           --------------------------------------------------- */
 
         rollPower,
 
         selectParallelPower,
 
-        /* ===============================
+
+        /* ---------------------------------------------------
            MANA
-           =============================== */
+           --------------------------------------------------- */
 
         selectMana,
 
-        /* ===============================
+
+        /* ---------------------------------------------------
            PERÍCIAS
-           =============================== */
+           --------------------------------------------------- */
 
         trainSkill,
 
@@ -5230,9 +5523,10 @@
 
         getEffectiveSkills,
 
-        /* ===============================
+
+        /* ---------------------------------------------------
            TÉCNICAS
-           =============================== */
+           --------------------------------------------------- */
 
         addTechnique,
 
@@ -5240,9 +5534,10 @@
 
         removeTechnique,
 
-        /* ===============================
+
+        /* ---------------------------------------------------
            INVENTÁRIO
-           =============================== */
+           --------------------------------------------------- */
 
         addInventoryItem,
 
@@ -5250,9 +5545,10 @@
 
         removeInventoryItem,
 
-        /* ===============================
+
+        /* ---------------------------------------------------
            IDENTIDADE
-           =============================== */
+           --------------------------------------------------- */
 
         setName,
 
@@ -5264,20 +5560,23 @@
 
         setOrigin,
 
-        /* ===============================
+
+        /* ---------------------------------------------------
            AVATAR
-           =============================== */
+           --------------------------------------------------- */
 
         setAvatar,
 
         removeAvatar
       });
 
+
     window.dispatchEvent(
       new CustomEvent(
         "aerion:ficha:ready"
       )
     );
+
 
     console.info(
       "[AERION] ficha.js inicializado.",
@@ -5287,9 +5586,10 @@
     );
   }
 
-  /* =======================================================
+
+  /* =========================================================
      START
-     ======================================================= */
+     ========================================================= */
 
   if (
     document.readyState ===
