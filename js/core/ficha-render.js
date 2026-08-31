@@ -1,61 +1,31 @@
-/* =========================================================
-   AERION — FICHA RENDER
-   js/core/ficha-render.js
-
-   CAMADA VISUAL DA FICHA
-
-   ficha.js
-     -> estado e regras
-
-   personagem-assets.js
-     -> catálogo de imagens e raças
-
-   personagem-render.js
-     -> visualizador da imagem da raça
-
-   ficha-render.js
-     -> interface / apresentação
-   ========================================================= */
-
 (() => {
   "use strict";
+
+  /* =========================================================
+     AERION — FICHA RENDER
+     js/core/ficha-render.js
+
+     CAMADA VISUAL
+
+     ficha.js
+       -> estado / regras / dados
+
+     personagem-assets.js
+       -> catálogo das raças e imagens
+
+     personagem-render.js
+       -> imagem da raça no visualizador
+
+     Este arquivo
+       -> interface da ficha
+     ========================================================= */
 
 
   /* =========================================================
      CONFIGURAÇÃO
      ========================================================= */
 
-  const CONFIG = Object.freeze({
-
-    totalSteps:
-      11,
-
-    defaultRaceHeight:
-      {
-        min:
-          150,
-
-        max:
-          200
-      },
-
-    progressTitles:
-      [
-        "Identidade",
-        "Raça",
-        "Aparência",
-        "Classe",
-        "Atributos",
-        "Poder",
-        "Mana",
-        "Perícias",
-        "Técnicas",
-        "Inventário",
-        "Revisão"
-      ]
-
-  });
-
+  const TOTAL_STEPS = 11;
 
   const STEP_IDS = Object.freeze([
     "identity",
@@ -71,98 +41,43 @@
     "review"
   ]);
 
+  const STEP_NAMES = Object.freeze([
+    "Identidade",
+    "Raça",
+    "Aparência",
+    "Classe",
+    "Atributos",
+    "Poder",
+    "Mana",
+    "Perícias",
+    "Técnicas",
+    "Inventário",
+    "Revisão"
+  ]);
 
-  const MANA_TYPES = Object.freeze({
 
-    azul: {
-      id:
-        "azul",
+  /* =========================================================
+     ESTADO
+     ========================================================= */
 
-      name:
-        "Mana Azul",
+  let state = null;
 
-      className:
-        "mana-azul",
+  let initialized = false;
 
-      symbol:
-        "◆"
-    },
-
-    dourada: {
-      id:
-        "dourada",
-
-      name:
-        "Mana Dourada",
-
-      className:
-        "mana-dourada",
-
-      symbol:
-        "◆"
-    },
-
-    branca: {
-      id:
-        "branca",
-
-      name:
-        "Mana Branca",
-
-      className:
-        "mana-branca",
-
-      symbol:
-        "◆"
-    },
-
-    vermelha: {
-      id:
-        "vermelha",
-
-      name:
-        "Mana Vermelha",
-
-      className:
-        "mana-vermelha",
-
-      symbol:
-        "◆"
-    },
-
-    negra: {
-      id:
-        "negra",
-
-      name:
-        "Mana Negra",
-
-      className:
-        "mana-negra",
-
-      symbol:
-        "◆"
-    }
-
-  });
+  let raceIndex = 0;
 
 
   /* =========================================================
      DOM
      ========================================================= */
 
-  function $(selector, root = document) {
-    return root.querySelector(
-      selector
-    );
+  function $(selector, parent = document) {
+    return parent.querySelector(selector);
   }
 
-
-  function $$(selector, root = document) {
+  function $$(selector, parent = document) {
     return Array.from(
-      root.querySelectorAll(
-        selector
-      )
+      parent.querySelectorAll(selector)
     );
   }
 
@@ -171,32 +86,13 @@
      UTILITÁRIOS
      ========================================================= */
 
-  function number(
-    value,
-    fallback = 0
-  ) {
-
-    const parsed =
-      Number(
-        value
-      );
-
-    return Number.isFinite(
-      parsed
-    )
-      ? parsed
-      : fallback;
+  function text(value) {
+    return String(value ?? "").trim();
   }
 
 
-  function normalize(
-    value
-  ) {
-
-    return String(
-      value ?? ""
-    )
-      .trim()
+  function normalize(value) {
+    return text(value)
       .toLowerCase()
       .normalize("NFD")
       .replace(
@@ -207,182 +103,426 @@
         /\s+/g,
         "_"
       );
-
   }
 
 
-  function clamp(
-    value,
-    min,
-    max
-  ) {
+  function number(value, fallback = 0) {
+    const parsed = Number(value);
 
+    return Number.isFinite(parsed)
+      ? parsed
+      : fallback;
+  }
+
+
+  function clamp(value, min, max) {
     return Math.max(
       min,
-      Math.min(
-        max,
-        value
-      )
+      Math.min(max, value)
     );
-
   }
 
 
   function getCore() {
-
     return (
       window.AERIONFicha ||
       window.AERION_FICHA ||
       null
     );
-
   }
 
 
   function getAssets() {
-
     return (
       window.AERIONPersonagemAssets ||
       window.AERION_CHARACTER_ASSETS ||
       null
     );
-
   }
 
 
-  function getState() {
-
-    const core =
-      getCore();
+  function getCurrentState() {
+    const core = getCore();
 
     if (
       core &&
-      typeof core.getState ===
-        "function"
+      typeof core.getState === "function"
     ) {
-
       try {
-
         return core.getState();
-
-      } catch {
-
-        return {};
+      } catch (error) {
+        console.warn(
+          "[AERION] Não foi possível ler o estado:",
+          error
+        );
       }
     }
 
-    return {};
+    return state || {};
   }
 
 
-  function announce(
-    message
-  ) {
+  /* =========================================================
+     NOTIFICAÇÃO
+     ========================================================= */
 
-    let region =
-      $("#aerionLiveRegion");
+  function announce(message) {
+    let live = $("#aerionLiveRegion");
 
-    if (
-      !region
-    ) {
+    if (!live) {
+      live = document.createElement("div");
 
-      region =
-        document.createElement(
-          "div"
-        );
+      live.id = "aerionLiveRegion";
 
-      region.id =
-        "aerionLiveRegion";
+      live.className = "visually-hidden";
 
-      region.className =
-        "visually-hidden";
-
-      region.setAttribute(
+      live.setAttribute(
         "aria-live",
         "polite"
       );
 
-      region.setAttribute(
+      live.setAttribute(
         "aria-atomic",
         "true"
       );
 
-      document.body.appendChild(
-        region
-      );
+      document.body.appendChild(live);
     }
 
-
-    region.textContent =
-      String(
-        message
-      );
-
+    live.textContent = text(message);
   }
 
 
-  function toast(
-    message
-  ) {
+  function toast(message) {
+    let element = $("#aerionToast");
 
-    let element =
-      $("#aerionToast");
+    if (!element) {
+      element = document.createElement("div");
 
+      element.id = "aerionToast";
 
-    if (
-      !element
-    ) {
+      element.className = "toast";
 
-      element =
-        document.createElement(
-          "div"
-        );
-
-      element.id =
-        "aerionToast";
-
-      element.className =
-        "toast";
-
-      document.body.appendChild(
-        element
-      );
-
+      document.body.appendChild(element);
     }
 
+    element.textContent = text(message);
 
-    element.textContent =
-      message;
-
-    element.hidden =
-      false;
-
+    element.hidden = false;
 
     clearTimeout(
       element.__aerionToastTimer
     );
 
-
-    element.__aerionToastTimer =
-      setTimeout(
-        () => {
-
-          element.hidden =
-            true;
-
-        },
-        1800
-      );
-
+    element.__aerionToastTimer = setTimeout(
+      () => {
+        element.hidden = true;
+      },
+      1800
+    );
   }
 
 
   /* =========================================================
-     ESTADO
+     NAVEGAÇÃO
      ========================================================= */
 
-  let currentState =
-    getState();
+  function getCurrentStep(current = getCurrentState()) {
+    return clamp(
+      number(
+        current?.currentStep,
+        0
+      ),
+      0,
+      TOTAL_STEPS - 1
+    );
+  }
+
+
+  function getCurrentStepId(current = getCurrentState()) {
+    return (
+      STEP_IDS[
+        getCurrentStep(current)
+      ] ||
+      STEP_IDS[0]
+    );
+  }
+
+
+  function isStepUnlocked(
+    index,
+    currentState = getCurrentState()
+  ) {
+    const current =
+      getCurrentStep(
+        currentState
+      );
+
+    if (index <= current) {
+      return true;
+    }
+
+    return (
+      currentState?.completedSteps?.[
+        index - 1
+      ] === true
+    );
+  }
+
+
+  function renderPanels(currentState) {
+    const current =
+      getCurrentStep(
+        currentState
+      );
+
+    const currentId =
+      STEP_IDS[current];
+
+
+    /*
+     * Painéis principais.
+     */
+
+    $$("[data-panel]")
+      .forEach(panel => {
+        const active =
+          panel.dataset.panel ===
+          currentId;
+
+        panel.hidden =
+          !active;
+
+        panel.classList.toggle(
+          "is-active",
+          active
+        );
+
+        panel.setAttribute(
+          "aria-hidden",
+          active
+            ? "false"
+            : "true"
+        );
+      });
+
+
+    /*
+     * Compatibilidade com data-step-panel.
+     */
+
+    $$("[data-step-panel]")
+      .forEach(panel => {
+        const active =
+          normalize(
+            panel.dataset.stepPanel
+          ) ===
+          normalize(
+            currentId
+          );
+
+        panel.hidden =
+          !active;
+
+        panel.classList.toggle(
+          "is-active",
+          active
+        );
+      });
+  }
+
+
+  function renderStepTabs(currentState) {
+    const current =
+      getCurrentStep(
+        currentState
+      );
+
+
+    $$(".creation-step")
+      .forEach(
+        (button, index) => {
+
+          const unlocked =
+            isStepUnlocked(
+              index,
+              currentState
+            );
+
+          const active =
+            index === current;
+
+
+          button.classList.toggle(
+            "active",
+            active
+          );
+
+
+          button.classList.toggle(
+            "locked",
+            !unlocked
+          );
+
+
+          /*
+           * Etapas futuras continuam bloqueadas.
+           * Etapas atuais e anteriores podem ser acessadas.
+           */
+
+          button.disabled =
+            !unlocked;
+
+
+          if (active) {
+            button.setAttribute(
+              "aria-current",
+              "step"
+            );
+          } else {
+            button.removeAttribute(
+              "aria-current"
+            );
+          }
+
+
+          if (unlocked) {
+            button.removeAttribute(
+              "aria-disabled"
+            );
+          } else {
+            button.setAttribute(
+              "aria-disabled",
+              "true"
+            );
+          }
+        }
+      );
+  }
+
+
+  function renderProgress(currentState) {
+    const current =
+      getCurrentStep(
+        currentState
+      );
+
+
+    const percent =
+      Math.round(
+        (
+          current /
+          Math.max(
+            1,
+            TOTAL_STEPS - 1
+          )
+        ) *
+        100
+      );
+
+
+    const progressBar =
+      $("#progressBar");
+
+    if (progressBar) {
+      progressBar.style.width =
+        `${percent}%`;
+    }
+
+
+    const progressPercent =
+      $("#progressPercent");
+
+    if (progressPercent) {
+      progressPercent.textContent =
+        `${percent}%`;
+    }
+
+
+    const progressTitle =
+      $("#progressTitle");
+
+    if (progressTitle) {
+      progressTitle.textContent =
+        STEP_NAMES[current] ||
+        "Identidade";
+    }
+
+
+    const progressTrack =
+      $(".progress-track");
+
+    if (progressTrack) {
+      progressTrack.setAttribute(
+        "aria-valuenow",
+        String(percent)
+      );
+    }
+
+
+    /*
+     * Contador da etapa.
+     */
+
+    $$("[data-current-step]")
+      .forEach(
+        element => {
+          element.textContent =
+            String(
+              current + 1
+            );
+        }
+      );
+
+
+    $$("[data-total-steps]")
+      .forEach(
+        element => {
+          element.textContent =
+            String(
+              TOTAL_STEPS
+            );
+        }
+      );
+
+
+    const stepNumber =
+      $("#stepNumber");
+
+    if (stepNumber) {
+      stepNumber.textContent =
+        String(
+          current + 1
+        );
+    }
+
+
+    const stepTitle =
+      $("[data-current-step-title]");
+
+    if (stepTitle) {
+      stepTitle.textContent =
+        STEP_NAMES[current] ||
+        "Identidade";
+    }
+  }
+
+
+  function renderNavigation(
+    currentState
+  ) {
+    renderPanels(
+      currentState
+    );
+
+    renderStepTabs(
+      currentState
+    );
+
+    renderProgress(
+      currentState
+    );
+  }
 
 
   /* =========================================================
@@ -390,7 +530,6 @@
      ========================================================= */
 
   function getRaces() {
-
     const assets =
       getAssets();
 
@@ -398,36 +537,28 @@
     if (
       Array.isArray(
         assets?.races
-      ) &&
-      assets.races.length
+      )
     ) {
-
       return assets.races;
-
     }
 
 
     if (
       Array.isArray(
         window.AERION_RACES
-      ) &&
-      window.AERION_RACES.length
+      )
     ) {
-
       return window.AERION_RACES;
-
     }
 
 
     return [];
-
   }
 
 
   function getRace(
     raceId
   ) {
-
     const assets =
       getAssets();
 
@@ -437,15 +568,13 @@
       typeof assets.getRace ===
         "function"
     ) {
-
       return assets.getRace(
         raceId
       );
-
     }
 
 
-    const wanted =
+    const id =
       normalize(
         raceId
       );
@@ -457,56 +586,46 @@
           normalize(
             race.id
           ) ===
-          wanted
+          id
       ) ||
       null
     );
-
   }
 
 
   function getRaceIndex(
-    state
+    currentState
   ) {
-
     const races =
       getRaces();
 
 
-    if (
-      !races.length
-    ) {
-
+    if (!races.length) {
       return 0;
     }
 
 
-    const wanted =
+    const raceId =
       normalize(
-        state?.race
+        currentState?.race
       );
 
 
-    const explicitIndex =
+    const explicit =
       number(
-        state?.raceIndex,
+        currentState?.raceIndex,
         -1
       );
 
 
     if (
-      explicitIndex >= 0 &&
-      explicitIndex < races.length &&
+      explicit >= 0 &&
+      explicit < races.length &&
       normalize(
-        races[
-          explicitIndex
-        ]?.id
-      ) ===
-        wanted
+        races[explicit]?.id
+      ) === raceId
     ) {
-
-      return explicitIndex;
-
+      return explicit;
     }
 
 
@@ -515,30 +634,24 @@
         race =>
           normalize(
             race.id
-          ) ===
-          wanted
+          ) === raceId
       );
 
 
     return found >= 0
       ? found
       : 0;
-
   }
 
 
   function getCurrentRace(
-    state
+    currentState
   ) {
-
     const races =
       getRaces();
 
 
-    if (
-      !races.length
-    ) {
-
+    if (!races.length) {
       return null;
     }
 
@@ -546,76 +659,47 @@
     return (
       races[
         getRaceIndex(
-          state
+          currentState
         )
       ] ||
       races[0]
     );
-
   }
 
 
-  /* =========================================================
-     GÊNERO
-     ========================================================= */
-
-  function getGenderKey(
-    state
-  ) {
-
-    const value =
-      normalize(
-        state?.gender
-      );
-
-
-    if (
-      value ===
-        "feminino" ||
-      value ===
-        "feminina" ||
-      value ===
-        "female" ||
-      value ===
-        "f"
-    ) {
-
-      return "feminino";
-
-    }
-
-
-    return "masculino";
-
-  }
-
-
-  /* =========================================================
-     IMAGEM DA RAÇA
-     ========================================================= */
-
-  function getRaceImageUrl(
+  function getRaceImage(
     race,
-    state
+    currentState
   ) {
-
-    if (
-      !race
-    ) {
-
+    if (!race) {
       return "";
     }
 
 
     const gender =
-      getGenderKey(
-        state
+      normalize(
+        currentState?.gender
       );
+
+
+    const genderKey =
+      (
+        gender === "feminino" ||
+        gender === "feminina" ||
+        gender === "female" ||
+        gender === "f"
+      )
+        ? "feminino"
+        : "masculino";
 
 
     const assets =
       getAssets();
 
+
+    /*
+     * Catálogo oficial.
+     */
 
     if (
       assets &&
@@ -626,165 +710,71 @@
       const source =
         assets.getRaceImage(
           race.id,
-          gender
+          genderKey
         );
 
 
-      if (
-        source
-      ) {
-
+      if (source) {
         return source;
       }
-
     }
 
 
     /*
-     * Catálogo novo:
-     *
-     * race.images.masculino
-     * race.images.feminino
+     * Catálogo novo.
      */
 
-    const requested =
+    if (
       race.images?.[
-        gender
+        genderKey
+      ]
+    ) {
+      return race.images[
+        genderKey
       ];
-
-
-    if (
-      requested
-    ) {
-
-      return requested;
-    }
-
-
-    const fallback =
-      gender ===
-        "feminino"
-        ? race.images?.masculino
-        : race.images?.feminino;
-
-
-    if (
-      fallback
-    ) {
-
-      return fallback;
     }
 
 
     /*
-     * Compatibilidade com catálogos antigos.
+     * Fallback para o outro gênero.
      */
+
+    const other =
+      genderKey ===
+        "feminino"
+        ? "masculino"
+        : "feminino";
+
 
     return (
+      race.images?.[
+        other
+      ] ||
       race.image ||
       race.imageUrl ||
       race.src ||
       ""
     );
-
   }
 
-
-  /* =========================================================
-     ALTURA DA RAÇA
-     ========================================================= */
-
-  function getRaceHeight(
-    race,
-    state
-  ) {
-
-    const assets =
-      getAssets();
-
-
-    if (
-      assets &&
-      typeof assets.getRaceHeight ===
-        "function"
-    ) {
-
-      const result =
-        assets.getRaceHeight(
-          race?.id ||
-          state?.race
-        );
-
-
-      if (
-        result
-      ) {
-
-        return {
-
-          min:
-            number(
-              result.min,
-              CONFIG.defaultRaceHeight.min
-            ),
-
-          max:
-            number(
-              result.max,
-              CONFIG.defaultRaceHeight.max
-            )
-
-        };
-
-      }
-
-    }
-
-
-    return {
-
-      min:
-        number(
-          race?.height?.min,
-          CONFIG.defaultRaceHeight.min
-        ),
-
-      max:
-        number(
-          race?.height?.max,
-          CONFIG.defaultRaceHeight.max
-        )
-
-    };
-
-  }
-
-
-  /* =========================================================
-     RENDER DA RAÇA
-     ========================================================= */
 
   function renderRace(
-    state
+    currentState
   ) {
-
     const race =
       getCurrentRace(
-        state
+        currentState
       );
 
 
-    if (
-      !race
-    ) {
-
+    if (!race) {
       return;
     }
 
 
     raceIndex =
       getRaceIndex(
-        state
+        currentState
       );
 
 
@@ -792,203 +782,260 @@
       $("#raceImage");
 
 
-    if (
-      image
-    ) {
+    const source =
+      getRaceImage(
+        race,
+        currentState
+      );
 
-      const src =
-        getRaceImageUrl(
-          race,
-          state
-        );
 
+    /*
+     * Imagem principal.
+     */
+
+    if (image) {
 
       image.alt =
-        `${race.name || "Raça"} — ${getGenderKey(state)}`;
+        `${race.name || "Raça"} — ${currentState?.gender || ""}`
+          .trim();
 
 
       if (
-        src &&
+        source &&
         image.getAttribute(
           "src"
-        ) !==
-          src
+        ) !== source
       ) {
 
         image.src =
-          src;
+          source;
 
       }
 
 
       image.hidden =
-        !src;
-
+        !source;
     }
 
+
+    /*
+     * Nome.
+     */
 
     const name =
       $("#raceName");
 
-
-    if (
-      name
-    ) {
-
+    if (name) {
       name.textContent =
         race.name ||
         "Raça";
-
     }
 
 
+    /*
+     * Descrição.
+     */
+
     const description =
-      $("#raceDescription");
+      $(
+        "#raceShortDescription"
+      ) ||
+      $(
+        "#raceDescriptionText"
+      );
 
 
-    if (
-      description
-    ) {
-
+    if (description) {
       description.textContent =
         race.description ||
         "";
-
     }
 
 
+    /*
+     * Perfil.
+     */
+
     const profile =
-      $("#raceProfile");
+      $(
+        "#raceProfile"
+      ) ||
+      $(
+        "[data-race-profile]"
+      );
 
 
-    if (
-      profile
-    ) {
-
+    if (profile) {
       profile.textContent =
         race.profile ||
         "—";
-
     }
 
 
+    /*
+     * Característica.
+     */
+
     const feature =
-      $("#raceFeature");
+      $(
+        "#raceFeature"
+      ) ||
+      $(
+        "[data-race-feature]"
+      );
 
 
-    if (
-      feature
-    ) {
-
+    if (feature) {
       feature.textContent =
         race.feature ||
         "—";
-
     }
 
+
+    /*
+     * Altura.
+     */
 
     const height =
       getRaceHeight(
         race,
-        state
+        currentState
       );
 
 
     const min =
-      $("#raceHeightMin");
-
-
-    if (
-      min
-    ) {
-
-      min.textContent =
-        `${height.min} cm`;
-
-    }
+      $(
+        "#raceHeightMin"
+      ) ||
+      $(
+        "[data-race-height-min]"
+      );
 
 
     const max =
-      $("#raceHeightMax");
+      $(
+        "#raceHeightMax"
+      ) ||
+      $(
+        "[data-race-height-max]"
+      );
 
 
-    if (
-      max
-    ) {
-
-      max.textContent =
-        `${height.max} cm`;
-
+    if (min) {
+      min.textContent =
+        `${height.min} cm`;
     }
 
 
-    const select =
-      $("#selectRaceButton");
+    if (max) {
+      max.textContent =
+        `${height.max} cm`;
+    }
 
 
-    if (
-      select
-    ) {
+    /*
+     * Botão selecionar.
+     */
+
+    const selectButton =
+      $(
+        "#selectRaceButton"
+      ) ||
+      $(
+        ".race-select-indicator"
+      );
+
+
+    if (selectButton) {
 
       const selected =
         normalize(
-          state?.race
+          currentState?.race
         ) ===
         normalize(
           race.id
         );
 
 
-      select.dataset.race =
+      selectButton.dataset.race =
         race.id;
 
 
-      select.dataset.raceId =
+      selectButton.dataset.raceId =
         race.id;
 
 
-      select.classList.toggle(
+      selectButton.classList.toggle(
         "is-selected",
         selected
       );
 
 
-      select.textContent =
+      selectButton.classList.toggle(
+        "selected",
         selected
-          ? "✓ Selecionada"
-          : "Selecionar";
+      );
+
+
+      const label =
+        $(
+          "#raceSelectedText",
+          selectButton
+        );
+
+
+      if (label) {
+
+        label.textContent =
+          selected
+            ? "✓ Selecionada"
+            : "Selecionar";
+
+      } else {
+
+        selectButton.textContent =
+          selected
+            ? "✓ Selecionada"
+            : "Selecionar";
+
+      }
 
     }
 
 
     renderRaceDots(
-      state
+      currentState
     );
 
 
-    renderRaceImageSourceForAppearance(
-      state
-    );
+    /*
+     * Informa ao renderizador da aparência
+     * qual raça/gênero está ativo.
+     */
+
+    if (image) {
+
+      image.dataset.race =
+        race.id;
+
+      image.dataset.gender =
+        normalize(
+          currentState?.gender
+        );
+    }
 
   }
 
 
-  /* =========================================================
-     DOTS
-     ========================================================= */
-
   function renderRaceDots(
-    state
+    currentState
   ) {
 
     const container =
       $("#raceDots");
 
 
-    if (
-      !container
-    ) {
-
+    if (!container) {
       return;
     }
 
@@ -999,7 +1046,7 @@
 
     const active =
       getRaceIndex(
-        state
+        currentState
       );
 
 
@@ -1027,23 +1074,6 @@
           "race-dot";
 
 
-        if (
-          index ===
-          active
-        ) {
-
-          button.classList.add(
-            "active"
-          );
-
-          button.setAttribute(
-            "aria-current",
-            "true"
-          );
-
-        }
-
-
         button.dataset.action =
           "race-goto";
 
@@ -1060,97 +1090,122 @@
         );
 
 
+        if (
+          index === active
+        ) {
+
+          button.classList.add(
+            "active"
+          );
+
+          button.setAttribute(
+            "aria-current",
+            "true"
+          );
+
+        }
+
+
         container.appendChild(
           button
         );
 
       }
     );
-
   }
 
 
-  /* =========================================================
-     IMAGEM PARA A APARÊNCIA
-     ========================================================= */
-
-  function renderRaceImageSourceForAppearance(
-    state
+  function getRaceHeight(
+    race,
+    currentState
   ) {
 
-    /*
-     * O personagem-render.js lê o #raceImage.
-     * Portanto não criamos outra URL ou outra imagem aqui.
-     */
-
-    const image =
-      $("#raceImage");
+    const assets =
+      getAssets();
 
 
     if (
-      !image
+      assets &&
+      typeof assets.getRaceHeight ===
+        "function"
     ) {
 
-      return;
+      const value =
+        assets.getRaceHeight(
+          race?.id ||
+          currentState?.race
+        );
+
+
+      if (value) {
+
+        return {
+          min:
+            number(
+              value.min,
+              150
+            ),
+
+          max:
+            number(
+              value.max,
+              200
+            )
+        };
+
+      }
     }
 
 
-    image.dataset.race =
-      getCurrentRace(
-        state
-      )?.id ||
-      "";
+    return {
 
+      min:
+        number(
+          race?.height?.min,
+          150
+        ),
 
-    image.dataset.gender =
-      getGenderKey(
-        state
-      );
+      max:
+        number(
+          race?.height?.max,
+          200
+        )
 
+    };
   }
 
 
   /* =========================================================
-     RAÇA — NAVEGAÇÃO
+     RAÇA — AÇÕES
      ========================================================= */
 
-  let raceIndex =
-    getRaceIndex(
-      currentState
-    );
-
-
-  function changeRace(
-    direction
-  ) {
+  function nextRace() {
 
     const races =
       getRaces();
 
 
-    if (
-      !races.length
-    ) {
-
-      return;
+    if (!races.length) {
+      return false;
     }
 
 
-    raceIndex =
+    const current =
+      getRaceIndex(
+        getCurrentState()
+      );
+
+
+    const next =
       (
-        getRaceIndex(
-          getState()
-        ) +
-        direction +
-        races.length
+        current +
+        1
       ) %
       races.length;
 
 
     const race =
-      races[
-        raceIndex
-      ];
+      races[next];
 
 
     const core =
@@ -1165,20 +1220,73 @@
 
       core.selectRace(
         race.id,
-        raceIndex
+        next
       );
 
+
+      return true;
     }
 
 
-    announce(
-      `Raça: ${race.name}`
-    );
-
+    return false;
   }
 
 
-  function goToRaceIndex(
+  function previousRace() {
+
+    const races =
+      getRaces();
+
+
+    if (!races.length) {
+      return false;
+    }
+
+
+    const current =
+      getRaceIndex(
+        getCurrentState()
+      );
+
+
+    const previous =
+      (
+        current -
+        1 +
+        races.length
+      ) %
+      races.length;
+
+
+    const race =
+      races[previous];
+
+
+    const core =
+      getCore();
+
+
+    if (
+      core &&
+      typeof core.selectRace ===
+        "function"
+    ) {
+
+      core.selectRace(
+        race.id,
+        previous
+      );
+
+
+      return true;
+    }
+
+
+    return false;
+  }
+
+
+  function gotoRace(
     index
   ) {
 
@@ -1186,15 +1294,12 @@
       getRaces();
 
 
-    if (
-      !races.length
-    ) {
-
-      return;
+    if (!races.length) {
+      return false;
     }
 
 
-    raceIndex =
+    const target =
       clamp(
         number(
           index,
@@ -1206,228 +1311,51 @@
 
 
     const race =
-      races[
-        raceIndex
-      ];
+      races[target];
 
 
-    getCore()
-      ?.selectRace?.(
-        race.id,
-        raceIndex
-      );
-
-  }
-
-
-  /* =========================================================
-     ANIMALHA
-     ========================================================= */
-
-  function renderAnimalha(
-    state
-  ) {
-
-    const category =
-      normalize(
-        state?.animalhaCategory
-      );
-
-
-    const assets =
-      getAssets();
-
-
-    const categoryContainer =
-      $("#animalhaCategories");
-
-
-    const animalContainer =
-      $("#animalhaOptions");
-
-
-    if (
-      categoryContainer
-    ) {
-
-      if (
-        Array.isArray(
-          assets?.animalhaCategories
+    return Boolean(
+      getCore()
+        ?.selectRace?.(
+          race.id,
+          target
         )
-      ) {
-
-        categoryContainer
-          .querySelectorAll(
-            "[data-animalha-category]"
-          )
-          .forEach(
-            element => {
-
-              const selected =
-                normalize(
-                  element.dataset.animalhaCategory
-                ) ===
-                category;
-
-
-              element.classList.toggle(
-                "selected",
-                selected
-              );
-
-
-              element.classList.toggle(
-                "is-selected",
-                selected
-              );
-
-            }
-          );
-
-      }
-
-    }
-
-
-    if (
-      !animalContainer
-    ) {
-
-      return;
-    }
-
-
-    if (
-      !category
-    ) {
-
-      animalContainer
-        .querySelectorAll(
-          "[data-animalha]"
-        )
-        .forEach(
-          element => {
-
-            element.hidden =
-              false;
-
-          }
-        );
-
-
-      return;
-    }
-
-
-    let animals = [];
-
-
-    if (
-      assets &&
-      typeof assets.getAnimalhaAnimals ===
-        "function"
-    ) {
-
-      animals =
-        assets.getAnimalhaAnimals(
-          category
-        );
-
-    } else if (
-      assets?.animalhaAnimals
-    ) {
-
-      animals =
-        Object.values(
-          assets.animalhaAnimals
-        )
-          .filter(
-            animal =>
-              normalize(
-                animal.category
-              ) ===
-              category
-          );
-
-    }
-
-
-    const existing =
-      $$(
-        "[data-animalha]",
-        animalContainer
-      );
-
-
-    existing.forEach(
-      element => {
-
-        const animalId =
-          normalize(
-            element.dataset.animalha
-          );
-
-
-        const available =
-          animals.some(
-            animal =>
-              normalize(
-                animal.id
-              ) ===
-              animalId
-          );
-
-
-        element.hidden =
-          !available;
-
-
-        element.classList.toggle(
-          "selected",
-          animalId ===
-            normalize(
-              state?.animalha
-            )
-        );
-
-      }
     );
-
   }
 
 
   /* =========================================================
-     ALTURA
+     APARÊNCIA
      ========================================================= */
 
   function renderAppearance(
-    state
+    currentState
   ) {
 
     const race =
       getCurrentRace(
-        state
+        currentState
       );
 
 
-    const range =
+    const height =
       getRaceHeight(
         race,
-        state
+        currentState
       );
 
 
-    const current =
+    const currentHeight =
       clamp(
         number(
-          state?.appearance?.height,
+          currentState?.appearance?.height,
           (
-            range.min +
-            range.max
+            height.min +
+            height.max
           ) / 2
         ),
-        range.min,
-        range.max
+        height.min,
+        height.max
       );
 
 
@@ -1435,26 +1363,27 @@
       $("#appearanceHeight");
 
 
-    if (
-      slider
-    ) {
+    if (slider) {
 
       slider.min =
         String(
-          range.min
+          height.min
         );
+
 
       slider.max =
         String(
-          range.max
+          height.max
         );
+
 
       slider.step =
         "1";
 
+
       slider.value =
         String(
-          current
+          currentHeight
         );
 
     }
@@ -1464,13 +1393,11 @@
       $("#appearanceHeightValue");
 
 
-    if (
-      value
-    ) {
+    if (value) {
 
       value.textContent =
         `${(
-          current /
+          currentHeight /
           100
         ).toFixed(2)} m`;
 
@@ -1481,12 +1408,10 @@
       $("#appearanceHeightMin");
 
 
-    if (
-      min
-    ) {
+    if (min) {
 
       min.textContent =
-        `${range.min} cm`;
+        `${height.min} cm`;
 
     }
 
@@ -1495,372 +1420,107 @@
       $("#appearanceHeightMax");
 
 
-    if (
-      max
-    ) {
+    if (max) {
 
       max.textContent =
-        `${range.max} cm`;
+        `${height.max} cm`;
 
     }
 
-  }
 
+    /*
+     * Garante que o renderizador simples da imagem
+     * seja atualizado.
+     */
 
-  /* =========================================================
-     ATRIBUTOS
-     ========================================================= */
-
-  function renderAttributes(
-    state
-  ) {
-
-    const attributes =
-      state?.attributes ||
-      {};
-
-
-    $$(
-      "[data-attribute]"
-    ).forEach(
-      element => {
-
-        const id =
-          normalize(
-            element.dataset.attribute
-          );
-
-
-        if (
-          !Object.prototype.hasOwnProperty.call(
-            attributes,
-            id
-          )
-        ) {
-
-          return;
+    window.dispatchEvent(
+      new CustomEvent(
+        "aerion:personagem:render",
+        {
+          detail: {
+            state:
+              currentState
+          }
         }
-
-
-        const value =
-          attributes[
-            id
-          ];
-
-
-        if (
-          element.matches(
-            "input, select, textarea"
-          )
-        ) {
-
-          element.value =
-            value ??
-            "";
-
-        } else {
-
-          element.textContent =
-            value ??
-            "—";
-
-        }
-
-      }
+      )
     );
-
-
-    renderAttributeGraph(
-      state
-    );
-
   }
 
 
   /* =========================================================
-     GRÁFICO
+     ANIMALHA
      ========================================================= */
 
-  function renderAttributeGraph(
-    state
+  function renderAnimalha(
+    currentState
   ) {
 
-    const graph =
-      $(
-        "[data-attribute-graph]"
-      );
-
-
-    if (
-      !graph
-    ) {
-
-      return;
-    }
-
-
-    const attributes =
-      state?.attributes ||
-      {};
-
-
-    Object.entries(
-      attributes
-    ).forEach(
-      (
-        [
-          id,
-          value
-        ]
-      ) => {
-
-        const normalized =
-          number(
-            value,
-            0
-          );
-
-
-        graph.style.setProperty(
-          `--attribute-${id}`,
-          String(
-            normalized
-          )
-        );
-
-      }
-    );
-
-
-    graph.dataset.updated =
-      String(
-        Date.now()
-      );
-
-  }
-
-
-  /* =========================================================
-     DADOS ATRIBUÍDOS
-     ========================================================= */
-
-  function renderDiceAssignments(
-    state
-  ) {
-
-    const assigned =
-      state?.assignedDice ||
-      {};
-
-
-    $$(
-      "[data-attribute-die]"
-    ).forEach(
-      element => {
-
-        const attribute =
-          normalize(
-            element.dataset.attributeDie
-          );
-
-
-        const diceId =
-          assigned[
-            attribute
-          ] ||
-          "";
-
-
-        element.dataset.assignedDice =
-          diceId;
-
-
-        element.classList.toggle(
-          "is-assigned",
-          Boolean(
-            diceId
-          )
-        );
-
-
-        const label =
-          element.querySelector(
-            "[data-die-label]"
-          );
-
-
-        if (
-          label
-        ) {
-
-          label.textContent =
-            diceId ||
-            "Adicionar dado";
-
-        }
-
-      }
-    );
-
-
-    $$(
-      "[data-dice-assigned]"
-    ).forEach(
-      element => {
-
-        const attribute =
-          normalize(
-            element.dataset.diceAssigned
-          );
-
-
-        const diceId =
-          assigned[
-            attribute
-          ] ||
-          "";
-
-
-        element.textContent =
-          diceId ||
-          "—";
-
-
-        element.dataset.dice =
-          diceId;
-
-      }
-    );
-
-  }
-
-
-  /* =========================================================
-     RESULTADOS DOS DADOS
-     ========================================================= */
-
-  function renderDiceResults(
-    state
-  ) {
-
-    const results =
-      state?.diceResults ||
-      {};
-
-
-    $$(
-      "[data-roll-result]"
-    ).forEach(
-      element => {
-
-        const diceId =
-          element.dataset.rollResult;
-
-
-        const value =
-          results[
-            diceId
-          ];
-
-
-        element.textContent =
-          value ??
-          "—";
-
-      }
-    );
-
-
-    $$(
-      "[data-attribute-result]"
-    ).forEach(
-      element => {
-
-        const attribute =
-          normalize(
-            element.dataset.attributeResult
-          );
-
-
-        const value =
-          state?.attributes?.[
-            attribute
-          ];
-
-
-        element.textContent =
-          value ??
-          "—";
-
-      }
-    );
-
-  }
-
-
-  /* =========================================================
-     DADOS DISPONÍVEIS
-     ========================================================= */
-
-  function renderAvailableDice(
-    state
-  ) {
-
-    const assigned =
-      state?.assignedDice ||
-      {};
-
-
-    const used =
-      new Set(
-        Object.values(
-          assigned
-        ).filter(
-          Boolean
-        )
+    const selectedCategory =
+      normalize(
+        currentState?.animalhaCategory
       );
 
 
     $$(
-      "[data-dice-id], [data-die-id]"
-    ).forEach(
-      element => {
+      "[data-animalha-category]"
+    )
+      .forEach(
+        element => {
 
-        const id =
-          element.dataset.diceId ||
-          element.dataset.dieId;
-
-
-        if (
-          !id
-        ) {
-
-          return;
-        }
+          const selected =
+            normalize(
+              element.dataset.animalhaCategory
+            ) ===
+            selectedCategory;
 
 
-        const active =
-          used.has(
-            id
+          element.classList.toggle(
+            "selected",
+            selected
           );
 
 
-        element.classList.toggle(
-          "is-used",
-          active
-        );
+          element.classList.toggle(
+            "is-selected",
+            selected
+          );
+
+        }
+      );
 
 
-        element.setAttribute(
-          "aria-pressed",
-          active
-            ? "true"
-            : "false"
-        );
+    $$(
+      "[data-animalha]"
+    )
+      .forEach(
+        element => {
 
-      }
-    );
+          const animalId =
+            normalize(
+              element.dataset.animalha
+            );
 
+
+          const selected =
+            animalId ===
+            normalize(
+              currentState?.animalha
+            );
+
+
+          element.classList.toggle(
+            "selected",
+            selected
+          );
+
+
+          element.classList.toggle(
+            "is-selected",
+            selected
+          );
+
+        }
+      );
   }
 
 
@@ -1869,65 +1529,486 @@
      ========================================================= */
 
   function renderClasses(
-    state
+    currentState
   ) {
 
-    const current =
+    const selected =
       normalize(
-        state?.class
+        currentState?.class
       );
 
 
     $$(
+
       "[data-class-id], [data-class]"
-    ).forEach(
-      element => {
 
-        const id =
-          normalize(
-            element.dataset.classId ||
-            element.dataset.class
+    )
+      .forEach(
+        card => {
+
+          const id =
+            normalize(
+              card.dataset.classId ||
+              card.dataset.class
+            );
+
+
+          const active =
+            id ===
+            selected;
+
+
+          card.classList.toggle(
+            "selected",
+            active
           );
 
 
-        const selected =
-          id ===
-          current;
-
-
-        element.classList.toggle(
-          "selected",
-          selected
-        );
-
-
-        element.classList.toggle(
-          "is-selected",
-          selected
-        );
-
-
-        if (
-          selected
-        ) {
-
-          element.setAttribute(
-            "aria-selected",
-            "true"
+          card.classList.toggle(
+            "is-selected",
+            active
           );
 
-        } else {
 
-          element.setAttribute(
+          card.setAttribute(
             "aria-selected",
-            "false"
+            active
+              ? "true"
+              : "false"
           );
 
         }
+      );
+  }
 
-      }
+
+  /* =========================================================
+     ATRIBUTOS
+     ========================================================= */
+
+  const ATTRIBUTE_IDS = [
+    "forca",
+    "vigor",
+    "agilidade",
+    "precisao",
+    "intelecto",
+    "controle",
+    "presenca",
+    "percepcao"
+  ];
+
+
+  function normalizeAttribute(
+    value
+  ) {
+
+    const id =
+      normalize(
+        value
+      );
+
+
+    const aliases = {
+
+      forca:
+        "forca",
+
+      força:
+        "forca",
+
+      vigor:
+        "vigor",
+
+      agilidade:
+        "agilidade",
+
+      precisao:
+        "precisao",
+
+      precisão:
+        "precisao",
+
+      intelecto:
+        "intelecto",
+
+      controle:
+        "controle",
+
+      presenca:
+        "presenca",
+
+      presença:
+        "presenca",
+
+      percepcao:
+        "percepcao",
+
+      percepção:
+        "percepcao"
+
+    };
+
+
+    return (
+      aliases[id] ||
+      id
     );
+  }
 
+
+  function renderAttributes(
+    currentState
+  ) {
+
+    const attributes =
+      currentState?.attributes ||
+      {};
+
+
+    $$(
+      "[data-attribute]"
+    )
+      .forEach(
+        element => {
+
+          const id =
+            normalizeAttribute(
+              element.dataset.attribute
+            );
+
+
+          if (
+            !ATTRIBUTE_IDS.includes(
+              id
+            )
+          ) {
+
+            return;
+          }
+
+
+          const value =
+            attributes[id];
+
+
+          if (
+            element.matches(
+              "input, select, textarea"
+            )
+          ) {
+
+            element.value =
+              value ??
+              "";
+
+          } else {
+
+            element.textContent =
+              value ??
+              "—";
+
+          }
+
+        }
+      );
+
+
+    renderAttributeGraph(
+      currentState
+    );
+  }
+
+
+  /* =========================================================
+     GRÁFICO DE ATRIBUTOS
+     ========================================================= */
+
+  function renderAttributeGraph(
+    currentState
+  ) {
+
+    const attributes =
+      currentState?.attributes ||
+      {};
+
+
+    /*
+     * 1. Atualiza qualquer elemento que use
+     * data-attribute-value.
+     */
+
+    $$(
+      "[data-attribute-value]"
+    )
+      .forEach(
+        element => {
+
+          const id =
+            normalizeAttribute(
+              element.dataset.attributeValue
+            );
+
+
+          element.textContent =
+            attributes[id] ??
+            "—";
+
+        }
+      );
+
+
+    /*
+     * 2. Atualiza variáveis CSS para gráficos
+     * existentes no projeto.
+     */
+
+    const graph =
+      $(
+        "[data-attribute-graph]"
+      );
+
+
+    if (
+      graph
+    ) {
+
+      ATTRIBUTE_IDS.forEach(
+        id => {
+
+          const value =
+            number(
+              attributes[id],
+              0
+            );
+
+
+          graph.style.setProperty(
+            `--attribute-${id}`,
+            String(
+              value
+            )
+          );
+
+        }
+      );
+
+
+      graph.dataset.updated =
+        String(
+          Date.now()
+        );
+
+    }
+
+
+    /*
+     * 3. Informa ao sistema de gráfico.
+     */
+
+    window.dispatchEvent(
+      new CustomEvent(
+        "aerion:attributes:graph",
+        {
+          detail: {
+            attributes:
+              {
+                ...attributes
+              }
+          }
+        }
+      )
+    );
+  }
+
+
+  /* =========================================================
+     DADOS
+     ========================================================= */
+
+  function renderDice(
+    currentState
+  ) {
+
+    const assigned =
+      currentState?.assignedDice ||
+      {};
+
+
+    /*
+     * Cards ligados diretamente ao atributo.
+     */
+
+    $$(
+      "[data-attribute-die]"
+    )
+      .forEach(
+        element => {
+
+          const attribute =
+            normalizeAttribute(
+              element.dataset.attributeDie
+            );
+
+
+          const diceId =
+            assigned[
+              attribute
+            ] ||
+            "";
+
+
+          element.dataset.assignedDice =
+            diceId;
+
+
+          element.classList.toggle(
+            "is-assigned",
+            Boolean(
+              diceId
+            )
+          );
+
+
+          const label =
+            $(
+              "[data-die-label]",
+              element
+            );
+
+
+          if (label) {
+
+            label.textContent =
+              diceId ||
+              "Adicionar dado";
+
+          }
+
+        }
+      );
+
+
+    /*
+     * Elementos específicos do dado atribuído.
+     */
+
+    $$(
+      "[data-dice-assigned]"
+    )
+      .forEach(
+        element => {
+
+          const attribute =
+            normalizeAttribute(
+              element.dataset.diceAssigned
+            );
+
+
+          element.textContent =
+            assigned[
+              attribute
+            ] ||
+            "—";
+
+        }
+      );
+
+
+    /*
+     * Resultados conhecidos.
+     */
+
+    const results =
+      currentState?.diceResults ||
+      {};
+
+
+    $$(
+      "[data-roll-result]"
+    )
+      .forEach(
+        element => {
+
+          const diceId =
+            element.dataset.rollResult;
+
+
+          element.textContent =
+            results[
+              diceId
+            ] ??
+            "—";
+
+        }
+      );
+
+
+    $$(
+      "[data-attribute-result]"
+    )
+      .forEach(
+        element => {
+
+          const attribute =
+            normalizeAttribute(
+              element.dataset.attributeResult
+            );
+
+
+          element.textContent =
+            currentState?.attributes?.[
+              attribute
+            ] ??
+            "—";
+
+        }
+      );
+
+
+    /*
+     * Dados já usados.
+     */
+
+    const used =
+      new Set(
+        Object.values(
+          assigned
+        )
+          .filter(
+            Boolean
+          )
+      );
+
+
+    $$(
+      "[data-dice-id], [data-die-id]"
+    )
+      .forEach(
+        element => {
+
+          const diceId =
+            element.dataset.diceId ||
+            element.dataset.dieId;
+
+
+          if (!diceId) {
+            return;
+          }
+
+
+          const isUsed =
+            used.has(
+              diceId
+            );
+
+
+          element.classList.toggle(
+            "is-used",
+            isUsed
+          );
+
+        }
+      );
   }
 
 
@@ -1935,1090 +2016,797 @@
      MANA
      ========================================================= */
 
-  function resolveManaType(
-    element
-  ) {
+  const MANA_META = Object.freeze({
 
-    const value =
-      normalize(
-        element.dataset.mana ||
-        element.dataset.manaType ||
-        element.dataset.type ||
-        ""
-      );
+    azul: {
+      className:
+        "mana-azul",
 
+      label:
+        "Mana Azul"
+    },
 
-    return (
-      MANA_TYPES[
-        value
-      ] ||
-      null
-    );
+    dourada: {
+      className:
+        "mana-dourada",
 
-  }
+      label:
+        "Mana Dourada"
+    },
+
+    branca: {
+      className:
+        "mana-branca",
+
+      label:
+        "Mana Branca"
+    },
+
+    vermelha: {
+      className:
+        "mana-vermelha",
+
+      label:
+        "Mana Vermelha"
+    },
+
+    negra: {
+      className:
+        "mana-negra",
+
+      label:
+        "Mana Negra"
+    }
+
+  });
 
 
   function renderMana() {
 
-    const cards =
-      $$(
-        ".mana-card, .mana-option, [data-mana]"
-      );
-
-
-    cards.forEach(
-      card => {
-
-        const type =
-          resolveManaType(
-            card
-          );
-
-
-        if (
-          !type
-        ) {
-
-          return;
-        }
-
-
-        Object.values(
-          MANA_TYPES
-        ).forEach(
-          mana => {
-
-            card.classList.remove(
-              mana.className
-            );
-
-          }
-        );
-
-
-        card.classList.add(
-          "aerion-mana-card",
-          type.className
-        );
-
-
-        let icon =
-          card.querySelector(
-            ".mana-icon"
-          );
-
-
-        if (
-          !icon
-        ) {
-
-          icon =
-            document.createElement(
-              "span"
-            );
-
-          icon.className =
-            "mana-icon";
-
-          icon.setAttribute(
-            "aria-hidden",
-            "true"
-          );
-
-          card.prepend(
-            icon
-          );
-
-        }
-
-
-        icon.textContent =
-          type.symbol;
-
-
-        const name =
-          card.querySelector(
-            ".mana-name"
-          );
-
-
-        if (
-          name
-        ) {
-
-          name.textContent =
-            type.name;
-
-        }
-
-      }
-    );
-
-  }
-
-
-  /* =========================================================
-     PROGRESSO
-     ========================================================= */
-
-  function renderProgress(
-    state
-  ) {
-
-    const current =
-      clamp(
-        number(
-          state?.currentStep,
-          0
-        ),
-        0,
-        CONFIG.totalSteps - 1
-      );
-
-
-    const completed =
-      Array.isArray(
-        state?.completedSteps
-      )
-        ? state.completedSteps
-        : [];
-
-
-    const denominator =
-      Math.max(
-        1,
-        CONFIG.totalSteps - 1
-      );
-
-
-    const percent =
-      Math.round(
-        (
-          current /
-          denominator
-        ) *
-        100
-      );
-
-
-    const progressBar =
-      $("#progressBar");
-
-
-    if (
-      progressBar
-    ) {
-
-      progressBar.style.width =
-        `${percent}%`;
-
-    }
-
-
-    const percentElement =
-      $("#progressPercent");
-
-
-    if (
-      percentElement
-    ) {
-
-      percentElement.textContent =
-        `${percent}%`;
-
-    }
-
-
-    const title =
-      $("#progressTitle");
-
-
-    if (
-      title
-    ) {
-
-      title.textContent =
-        CONFIG.progressTitles[
-          current
-        ] ||
-        "Identidade";
-
-    }
-
-
-    const track =
-      $(".progress-track");
-
-
-    if (
-      track
-    ) {
-
-      track.setAttribute(
-        "aria-valuenow",
-        String(
-          percent
-        )
-      );
-
-    }
-
-
-    /*
-     * Contadores existentes.
-     */
-
-    $$(
-      "[data-current-step]"
-    ).forEach(
-      element => {
-
-        element.textContent =
-          String(
-            current + 1
-          );
-
-      }
+    $(
+      ".mana-card"
     );
 
 
     $$(
-      "[data-total-steps]"
-    ).forEach(
-      element => {
-
-        element.textContent =
-          String(
-            CONFIG.totalSteps
-          );
-
-      }
-    );
-
-
-    /*
-     * Caso o projeto possua explicitamente:
-     * #stepNumber
-     */
-
-    const stepNumber =
-      $("#stepNumber");
-
-
-    if (
-      stepNumber
-    ) {
-
-      stepNumber.textContent =
-        String(
-          current + 1
-        );
-
-    }
-
-
-    /*
-     * Abas superiores.
-     */
-
-    $$(".creation-step")
+      ".mana-card, .mana-option, [data-mana]"
+    )
       .forEach(
-        (
-          button,
-          index
-        ) => {
+        card => {
 
-          const active =
-            index ===
-            current;
-
-
-          const unlocked =
-            index <=
-            current ||
-            completed[index] ===
-              true;
+          const type =
+            normalize(
+              card.dataset.mana ||
+              card.dataset.manaType ||
+              card.dataset.type
+            );
 
 
-          button.classList.toggle(
-            "active",
-            active
+          const meta =
+            MANA_META[
+              type
+            ];
+
+
+          if (!meta) {
+            return;
+          }
+
+
+          Object.values(
+            MANA_META
+          )
+          .forEach(
+            item => {
+
+              card.classList.remove(
+                item.className
+              );
+
+            }
           );
 
 
-          button.classList.toggle(
-            "locked",
-            !unlocked
+          card.classList.add(
+            "aerion-mana-card",
+            meta.className
           );
 
 
-          /*
-           * Apenas futuras ficam desabilitadas.
-           *
-           * Etapas passadas continuam acessíveis.
-           */
+          card.dataset.manaNormalized =
+            type;
 
-          button.disabled =
-            !unlocked;
+
+          const title =
+            $(
+              ".mana-name",
+              card
+            );
 
 
           if (
-            active
+            title &&
+            !title.textContent.trim()
           ) {
 
-            button.setAttribute(
-              "aria-current",
-              "step"
-            );
-
-          } else {
-
-            button.removeAttribute(
-              "aria-current"
-            );
+            title.textContent =
+              meta.label;
 
           }
 
         }
       );
-
   }
 
 
   /* =========================================================
-     NAVEGAÇÃO
+     AVATAR
      ========================================================= */
 
-  function syncPanels(
-    state
+  function renderAvatar(
+    currentState
   ) {
 
-    const current =
-      clamp(
-        number(
-          state?.currentStep,
-          0
-        ),
-        0,
-        CONFIG.totalSteps - 1
-      );
+    const image =
+      $("#avatarImage");
 
 
-    const currentId =
-      STEP_IDS[
-        current
-      ];
+    const placeholder =
+      $("#avatarPlaceholder");
 
 
-    $$(
-      "[data-panel]"
-    ).forEach(
-      panel => {
-
-        const active =
-          panel.dataset.panel ===
-          currentId;
+    const removeButton =
+      $("#removeAvatarButton");
 
 
-        panel.hidden =
-          !active;
+    if (
+      image
+    ) {
 
+      if (
+        currentState?.avatar
+      ) {
 
-        panel.classList.toggle(
-          "is-active",
-          active
+        image.src =
+          currentState.avatar;
+
+        image.hidden =
+          false;
+
+      } else {
+
+        image.removeAttribute(
+          "src"
         );
 
-
-        panel.setAttribute(
-          "aria-hidden",
-          active
-            ? "false"
-            : "true"
-        );
+        image.hidden =
+          true;
 
       }
-    );
+
+    }
 
 
-    /*
-     * Compatibilidade.
-     */
+    if (
+      placeholder
+    ) {
 
-    $$(
-      "[data-step-panel]"
-    ).forEach(
-      panel => {
-
-        const active =
-          normalize(
-            panel.dataset.stepPanel
-          ) ===
-          normalize(
-            currentId
-          );
-
-
-        panel.hidden =
-          !active;
-
-
-        panel.classList.toggle(
-          "is-active",
-          active
+      placeholder.hidden =
+        Boolean(
+          currentState?.avatar
         );
 
-      }
-    );
-
-  }
+    }
 
 
-  function syncNavigation(
-    state
-  ) {
+    if (
+      removeButton
+    ) {
 
-    renderProgress(
-      state
-    );
+      removeButton.disabled =
+        !currentState?.avatar;
 
-
-    syncPanels(
-      state
-    );
-
+    }
   }
 
 
   /* =========================================================
-     ATUALIZAÇÃO GERAL
+     RENDER GERAL
      ========================================================= */
 
-  function renderAll(
-    state
+  function render(
+    nextState = null
   ) {
 
-    currentState =
-      state ||
-      getState();
+    state =
+      nextState ||
+      getCurrentState();
 
 
-    syncNavigation(
-      currentState
+    renderNavigation(
+      state
     );
 
 
     renderRace(
-      currentState
+      state
     );
 
 
     renderAnimalha(
-      currentState
+      state
     );
 
 
     renderAppearance(
-      currentState
-    );
-
-
-    renderAttributes(
-      currentState
-    );
-
-
-    renderDiceAssignments(
-      currentState
-    );
-
-
-    renderDiceResults(
-      currentState
-    );
-
-
-    renderAvailableDice(
-      currentState
+      state
     );
 
 
     renderClasses(
-      currentState
+      state
+    );
+
+
+    renderAttributes(
+      state
+    );
+
+
+    renderDice(
+      state
     );
 
 
     renderMana();
 
+
+    renderAvatar(
+      state
+    );
+
+
+    return true;
   }
 
 
   /* =========================================================
-     CLIQUES
+     AÇÕES
      ========================================================= */
 
-  function bindActions() {
+  function handleAction(
+    element
+  ) {
+
+    if (
+      !element
+    ) {
+      return;
+    }
+
 
     /*
-     * Capture = true
-     * para impedir listeners antigos de executarem
-     * ações conflitantes antes deste renderizador.
+     * IMPORTANTE:
+     * NÃO normalizamos para snake_case aqui.
+     *
+     * O HTML usa os nomes reais com hífen.
      */
 
-    document.addEventListener(
-      "click",
-      event => {
+    const action =
+      text(
+        element.dataset.action
+      );
 
-        const element =
-          event.target.closest(
-            "[data-action]"
+
+    if (
+      !action
+    ) {
+      return;
+    }
+
+
+    const core =
+      getCore();
+
+
+    /* ---------------------------------------------
+       PRÓXIMO
+       --------------------------------------------- */
+
+    if (
+      action === "next" ||
+      action === "next-step"
+    ) {
+
+      const result =
+        core?.completeCurrentStep?.();
+
+
+      if (
+        result &&
+        result.ok === false
+      ) {
+
+        toast(
+          result.reason ||
+          "Conclua esta etapa antes de avançar."
+        );
+
+
+        return;
+      }
+
+
+      const next =
+        core?.nextStep?.();
+
+
+      if (
+        next === false
+      ) {
+
+        toast(
+          "Não é possível avançar ainda."
+        );
+
+        return;
+      }
+
+
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+      });
+
+
+      return;
+    }
+
+
+    /* ---------------------------------------------
+       VOLTAR
+       --------------------------------------------- */
+
+    if (
+      action === "previous" ||
+      action === "previous-step" ||
+      action === "back" ||
+      action === "go-back"
+    ) {
+
+      core?.previousStep?.();
+
+
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+      });
+
+
+      return;
+    }
+
+
+    /* ---------------------------------------------
+       IR PARA ETAPA
+       --------------------------------------------- */
+
+    if (
+      action === "go-step"
+    ) {
+
+      const target =
+        number(
+          element.dataset.step,
+          0
+        );
+
+
+      const current =
+        getCurrentStep(
+          getCurrentState()
+        );
+
+
+      /*
+       * Não pode pular etapas futuras.
+       */
+
+      if (
+        target >
+        current
+      ) {
+
+        toast(
+          "Conclua as etapas anteriores primeiro."
+        );
+
+
+        return;
+      }
+
+
+      const result =
+        core?.goToStep?.(
+          target
+        );
+
+
+      if (
+        result === false
+      ) {
+
+        toast(
+          "Essa etapa ainda está bloqueada."
+        );
+
+        return;
+      }
+
+
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+      });
+
+
+      return;
+    }
+
+
+    /* ---------------------------------------------
+       RAÇA ANTERIOR
+       --------------------------------------------- */
+
+    if (
+      action === "race-previous"
+    ) {
+
+      previousRace();
+
+      return;
+    }
+
+
+    /* ---------------------------------------------
+       RAÇA PRÓXIMA
+       --------------------------------------------- */
+
+    if (
+      action === "race-next"
+    ) {
+
+      nextRace();
+
+      return;
+    }
+
+
+    /* ---------------------------------------------
+       IR PARA RAÇA
+       --------------------------------------------- */
+
+    if (
+      action === "race-goto"
+    ) {
+
+      gotoRace(
+        element.dataset.raceIndex
+      );
+
+      return;
+    }
+
+
+    /* ---------------------------------------------
+       SELECIONAR RAÇA
+       --------------------------------------------- */
+
+    if (
+      action === "select-race" ||
+      action === "select-race-current"
+    ) {
+
+      const race =
+        element.dataset.race ||
+        element.dataset.raceId ||
+        getCurrentRace(
+          getCurrentState()
+        )?.id;
+
+
+      if (
+        race
+      ) {
+
+        core?.selectRace?.(
+          race,
+          getRaceIndex(
+            getCurrentState()
+          )
+        );
+
+
+        toast(
+          "Raça selecionada."
+        );
+
+      }
+
+
+      return;
+    }
+
+
+    /* ---------------------------------------------
+       ANIMALHA
+       --------------------------------------------- */
+
+    if (
+      action ===
+      "select-animalha-category"
+    ) {
+
+      core?.selectAnimalhaCategory?.(
+        element.dataset.animalhaCategory ||
+        element.dataset.category ||
+        ""
+      );
+
+
+      return;
+    }
+
+
+    if (
+      action ===
+      "select-animalha"
+    ) {
+
+      core?.selectAnimalha?.(
+        element.dataset.animalha ||
+        element.dataset.animalId ||
+        ""
+      );
+
+
+      return;
+    }
+
+
+    /* ---------------------------------------------
+       CLASSE
+       --------------------------------------------- */
+
+    if (
+      action ===
+      "select-class"
+    ) {
+
+      core?.selectClass?.(
+        element.dataset.class ||
+        element.dataset.classId ||
+        ""
+      );
+
+
+      return;
+    }
+
+
+    /* ---------------------------------------------
+       DADO — ATRIBUIR
+       --------------------------------------------- */
+
+    if (
+      action ===
+        "assign-die" ||
+      action ===
+        "assign-dice"
+    ) {
+
+      core?.assignDieToAttribute?.(
+        element.dataset.diceId ||
+        element.dataset.dieId ||
+        "",
+
+        element.dataset.attribute ||
+        element.dataset.attributeId ||
+        ""
+      );
+
+
+      return;
+    }
+
+
+    /* ---------------------------------------------
+       DADO — REMOVER
+       --------------------------------------------- */
+
+    if (
+      action ===
+        "remove-die" ||
+      action ===
+        "remove-dice"
+    ) {
+
+      core?.removeDieFromAttribute?.(
+        element.dataset.attribute ||
+        element.dataset.attributeId ||
+        ""
+      );
+
+
+      return;
+    }
+
+
+    /* ---------------------------------------------
+       ROLAR ATRIBUTO
+
+       ESTE É O BUG QUE ESTAVA QUEBRADO.
+
+       O HTML usa:
+       data-action="roll-attribute"
+       --------------------------------------------- */
+
+    if (
+      action ===
+        "roll-attribute"
+    ) {
+
+      const attribute =
+        element.dataset.attribute ||
+        element.dataset.attributeId;
+
+
+      if (
+        !attribute
+      ) {
+
+        toast(
+          "Atributo não identificado."
+        );
+
+
+        return;
+      }
+
+
+      const result =
+        core?.rollAttribute?.(
+          attribute
+        );
+
+
+      if (
+        result?.ok
+      ) {
+
+        toast(
+          `Resultado: ${result.result}`
+        );
+
+
+        announce(
+          `Resultado ${result.result}`
+        );
+
+      } else {
+
+        toast(
+          result?.error ||
+          "Nenhum dado atribuído a este atributo."
+        );
+
+      }
+
+
+      return;
+    }
+
+
+    /* ---------------------------------------------
+       ROLAR DADO NORMAL
+       --------------------------------------------- */
+
+    if (
+      action ===
+        "roll-die" ||
+      action ===
+        "roll-dice"
+    ) {
+
+      const attribute =
+        element.dataset.attribute ||
+        element.dataset.attributeId;
+
+
+      if (
+        attribute
+      ) {
+
+        const result =
+          core?.rollAttribute?.(
+            attribute
           );
 
 
         if (
-          !element
+          result?.ok
         ) {
-
-          return;
-        }
-
-
-        const action =
-          normalize(
-            element.dataset.action
-          );
-
-
-        /* -------------------------------------------
-           Próximo
-           ------------------------------------------- */
-
-        if (
-          action ===
-            "next" ||
-          action ===
-            "next_step"
-        ) {
-
-          event.preventDefault();
-          event.stopPropagation();
-
-
-          const core =
-            getCore();
-
-
-          if (
-            core &&
-            typeof core.completeCurrentStep ===
-              "function"
-          ) {
-
-            const validation =
-              core.completeCurrentStep();
-
-
-            if (
-              !validation?.ok
-            ) {
-
-              toast(
-                validation?.reason ||
-                "Conclua a etapa atual."
-              );
-
-
-              return;
-            }
-
-          }
-
-
-          const result =
-            core?.nextStep?.();
-
-
-          if (
-            result ===
-            false
-          ) {
-
-            toast(
-              "Não é possível avançar ainda."
-            );
-
-          }
-
-
-          return;
-
-        }
-
-
-        /* -------------------------------------------
-           Voltar
-           ------------------------------------------- */
-
-        if (
-          action ===
-            "previous" ||
-          action ===
-            "previous_step" ||
-          action ===
-            "back" ||
-          action ===
-            "go_back"
-        ) {
-
-          event.preventDefault();
-          event.stopPropagation();
-
-
-          getCore()
-            ?.previousStep?.();
-
-
-          return;
-
-        }
-
-
-        /* -------------------------------------------
-           Aba
-           ------------------------------------------- */
-
-        if (
-          action ===
-          "go_step"
-        ) {
-
-          event.preventDefault();
-          event.stopPropagation();
-
-
-          const target =
-            number(
-              element.dataset.step,
-              0
-            );
-
-
-          const state =
-            getState();
-
-
-          const current =
-            number(
-              state?.currentStep,
-              0
-            );
-
-
-          /*
-           * Não deixa saltar para frente.
-           */
-
-          if (
-            target >
-            current
-          ) {
-
-            toast(
-              "Conclua as etapas anteriores primeiro."
-            );
-
-
-            return;
-
-          }
-
-
-          getCore()
-            ?.goToStep?.(
-              target
-            );
-
-
-          return;
-
-        }
-
-
-        /* -------------------------------------------
-           Raça
-           ------------------------------------------- */
-
-        if (
-          action ===
-          "race_next"
-        ) {
-
-          event.preventDefault();
-          event.stopPropagation();
-
-
-          changeRace(
-            +1
-          );
-
-
-          return;
-
-        }
-
-
-        if (
-          action ===
-          "race_previous"
-        ) {
-
-          event.preventDefault();
-          event.stopPropagation();
-
-
-          changeRace(
-            -1
-          );
-
-
-          return;
-
-        }
-
-
-        if (
-          action ===
-          "race_goto"
-        ) {
-
-          event.preventDefault();
-          event.stopPropagation();
-
-
-          goToRaceIndex(
-            element.dataset.raceIndex
-          );
-
-
-          return;
-
-        }
-
-
-        if (
-          action ===
-            "select_race" ||
-          action ===
-            "select_race_current"
-        ) {
-
-          event.preventDefault();
-          event.stopPropagation();
-
-
-          const raceId =
-            element.dataset.race ||
-            element.dataset.raceId ||
-            getCurrentRace(
-              getState()
-            )?.id;
-
-
-          getCore()
-            ?.selectRace?.(
-              raceId,
-              getRaceIndex(
-                getState()
-              )
-            );
-
 
           toast(
-            "Raça selecionada."
+            `Resultado: ${result.result}`
+          );
+
+        } else {
+
+          toast(
+            result?.error ||
+            "Não foi possível rolar."
+          );
+
+        }
+
+      } else {
+
+        const result =
+          core?.rollDie?.(
+            element.dataset.diceId ||
+            element.dataset.dieId ||
+            ""
           );
 
 
-          return;
-
-        }
-
-
-        /* -------------------------------------------
-           Animalha
-           ------------------------------------------- */
-
         if (
-          action ===
-            "select_animalha_category"
+          result?.ok
         ) {
 
-          event.preventDefault();
-          event.stopPropagation();
-
-
-          getCore()
-            ?.selectAnimalhaCategory?.(
-              element.dataset.animalhaCategory ||
-              element.dataset.category ||
-              ""
-            );
-
-
-          return;
+          toast(
+            `Resultado: ${result.result}`
+          );
 
         }
 
+      }
 
-        if (
-          action ===
-            "select_animalha"
-        ) {
 
-          event.preventDefault();
-          event.stopPropagation();
+      return;
+    }
 
 
-          getCore()
-            ?.selectAnimalha?.(
-              element.dataset.animalha ||
-              element.dataset.animalId ||
-              ""
-            );
+    /* ---------------------------------------------
+       LIMPAR DADOS
+       --------------------------------------------- */
 
+    if (
+      action ===
+        "clear-dice"
+    ) {
 
-          return;
+      core?.clearDiceAssignments?.();
 
-        }
 
+      return;
+    }
 
-        /* -------------------------------------------
-           Classe
-           ------------------------------------------- */
 
-        if (
-          action ===
-          "select_class"
-        ) {
+    /* ---------------------------------------------
+       AVATAR
+       --------------------------------------------- */
 
-          event.preventDefault();
-          event.stopPropagation();
+    if (
+      action ===
+        "remove-avatar"
+    ) {
 
+      core?.removeAvatar?.();
 
-          getCore()
-            ?.selectClass?.(
-              element.dataset.class ||
-              element.dataset.classId ||
-              ""
-            );
 
-
-          return;
-
-        }
-
-
-        /* -------------------------------------------
-           Dado
-           ------------------------------------------- */
-
-        if (
-          action ===
-            "assign_die" ||
-          action ===
-            "assign_dice"
-        ) {
-
-          event.preventDefault();
-          event.stopPropagation();
-
-
-          getCore()
-            ?.assignDieToAttribute?.(
-              element.dataset.diceId ||
-              element.dataset.dieId ||
-              "",
-
-              element.dataset.attribute ||
-              element.dataset.attributeId ||
-              ""
-            );
-
-
-          return;
-
-        }
-
-
-        if (
-          action ===
-            "remove_die" ||
-          action ===
-            "remove_dice"
-        ) {
-
-          event.preventDefault();
-          event.stopPropagation();
-
-
-          getCore()
-            ?.removeDieFromAttribute?.(
-              element.dataset.attribute ||
-              element.dataset.attributeId ||
-              ""
-            );
-
-
-          return;
-
-        }
-
-
-        /* -------------------------------------------
-           ROLAR ATRIBUTO
-           ------------------------------------------- */
-
-        if (
-          action ===
-            "roll_attribute"
-        ) {
-
-          event.preventDefault();
-          event.stopPropagation();
-
-
-          const attribute =
-            element.dataset.attribute ||
-            element.dataset.attributeId;
-
-
-          const result =
-            getCore()
-              ?.rollAttribute?.(
-                attribute
-              );
-
-
-          if (
-            result?.ok
-          ) {
-
-            toast(
-              `${attribute}: ${result.result}`
-            );
-
-
-            announce(
-              `Resultado ${result.result}`
-            );
-
-
-          } else {
-
-            toast(
-              result?.error ||
-              "Nenhum dado atribuído."
-            );
-
-          }
-
-
-          return;
-
-        }
-
-
-        /* -------------------------------------------
-           ROLAR DADO
-           ------------------------------------------- */
-
-        if (
-          action ===
-            "roll_die" ||
-          action ===
-            "roll_dice"
-        ) {
-
-          event.preventDefault();
-          event.stopPropagation();
-
-
-          const attribute =
-            element.dataset.attribute ||
-            element.dataset.attributeId;
-
-
-          if (
-            attribute
-          ) {
-
-            getCore()
-              ?.rollAttribute?.(
-                attribute
-              );
-
-          } else {
-
-            getCore()
-              ?.rollDie?.(
-                element.dataset.diceId ||
-                element.dataset.dieId ||
-                ""
-              );
-
-          }
-
-
-          return;
-
-        }
-
-
-        /* -------------------------------------------
-           Limpar dados
-           ------------------------------------------- */
-
-        if (
-          action ===
-          "clear_dice"
-        ) {
-
-          event.preventDefault();
-          event.stopPropagation();
-
-
-          getCore()
-            ?.clearDiceAssignments?.();
-
-
-          return;
-
-        }
-
-
-        /* -------------------------------------------
-           Avatar
-           ------------------------------------------- */
-
-        if (
-          action ===
-            "remove_avatar"
-        ) {
-
-          event.preventDefault();
-          event.stopPropagation();
-
-
-          getCore()
-            ?.removeAvatar?.();
-
-
-          return;
-
-        }
-
-      },
-      true
-    );
+      return;
+    }
 
   }
 
@@ -3040,14 +2828,13 @@
         if (
           !element
         ) {
-
           return;
         }
 
 
-        /*
-         * Altura.
-         */
+        /* -----------------------------------------
+           ALTURA
+           ----------------------------------------- */
 
         if (
           element.id ===
@@ -3064,13 +2851,12 @@
 
 
           return;
-
         }
 
 
-        /*
-         * Aparência genérica.
-         */
+        /* -----------------------------------------
+           APARÊNCIA
+           ----------------------------------------- */
 
         const appearanceField =
           element.dataset.appearanceField;
@@ -3101,13 +2887,12 @@
 
 
           return;
-
         }
 
 
-        /*
-         * Identidade.
-         */
+        /* -----------------------------------------
+           IDENTIDADE
+           ----------------------------------------- */
 
         if (
           element.id ===
@@ -3122,7 +2907,6 @@
 
 
           return;
-
         }
 
 
@@ -3139,7 +2923,6 @@
 
 
           return;
-
         }
 
 
@@ -3156,7 +2939,6 @@
 
 
           return;
-
         }
 
 
@@ -3173,7 +2955,6 @@
 
 
           return;
-
         }
 
       }
@@ -3191,14 +2972,13 @@
         if (
           !element
         ) {
-
           return;
         }
 
 
-        /*
-         * Gênero.
-         */
+        /* -----------------------------------------
+           GÊNERO
+           ----------------------------------------- */
 
         if (
           element.name ===
@@ -3213,13 +2993,12 @@
 
 
           return;
-
         }
 
 
-        /*
-         * Aparência.
-         */
+        /* -----------------------------------------
+           APARÊNCIA
+           ----------------------------------------- */
 
         const appearanceField =
           element.dataset.appearanceField;
@@ -3237,13 +3016,12 @@
 
 
           return;
-
         }
 
 
-        /*
-         * Atributo.
-         */
+        /* -----------------------------------------
+           ATRIBUTO
+           ----------------------------------------- */
 
         const attribute =
           element.dataset.attribute ||
@@ -3262,13 +3040,12 @@
 
 
           return;
-
         }
 
 
-        /*
-         * Perícia.
-         */
+        /* -----------------------------------------
+           PERÍCIA
+           ----------------------------------------- */
 
         if (
           element.dataset.skill
@@ -3289,7 +3066,69 @@
 
 
   /* =========================================================
-     EVENTOS DO ESTADO
+     AVATAR
+     ========================================================= */
+
+  function bindAvatar() {
+
+    const input =
+      $("#avatarInput");
+
+
+    if (
+      !input
+    ) {
+      return;
+    }
+
+
+    input.addEventListener(
+      "change",
+      async event => {
+
+        const file =
+          event.target.files?.[0];
+
+
+        if (
+          !file
+        ) {
+          return;
+        }
+
+
+        try {
+
+          await getCore()
+            ?.setAvatarFile?.(
+              file
+            );
+
+        } catch (
+          error
+        ) {
+
+          console.error(
+            "[AERION] Erro no avatar:",
+            error
+          );
+
+
+          toast(
+            error?.message ||
+            "Não foi possível carregar a imagem."
+          );
+
+        }
+
+      }
+    );
+
+  }
+
+
+  /* =========================================================
+     EVENTOS DE ESTADO
      ========================================================= */
 
   function bindStateEvents() {
@@ -3298,139 +3137,9 @@
       "aerion:ficha:updated",
       event => {
 
-        renderAll(
+        render(
           event?.detail?.state ||
-          getState()
-        );
-
-      }
-    );
-
-
-    window.addEventListener(
-      "aerion:race:selected",
-      event => {
-
-        renderAll(
-          event?.detail?.state ||
-          getState()
-        );
-
-      }
-    );
-
-
-    window.addEventListener(
-      "aerion:animalha:selected",
-      event => {
-
-        renderAll(
-          event?.detail?.state ||
-          getState()
-        );
-
-      }
-    );
-
-
-    window.addEventListener(
-      "aerion:animalha:category-selected",
-      event => {
-
-        renderAll(
-          event?.detail?.state ||
-          getState()
-        );
-
-      }
-    );
-
-
-    window.addEventListener(
-      "aerion:class:selected",
-      event => {
-
-        renderAll(
-          event?.detail?.state ||
-          getState()
-        );
-
-      }
-    );
-
-
-    window.addEventListener(
-      "aerion:dice:assigned",
-      event => {
-
-        renderAll(
-          event?.detail?.state ||
-          getState()
-        );
-
-      }
-    );
-
-
-    window.addEventListener(
-      "aerion:dice:rolled",
-      event => {
-
-        renderAll(
-          event?.detail?.state ||
-          getState()
-        );
-
-      }
-    );
-
-
-    window.addEventListener(
-      "aerion:dice:removed",
-      event => {
-
-        renderAll(
-          event?.detail?.state ||
-          getState()
-        );
-
-      }
-    );
-
-
-    window.addEventListener(
-      "aerion:dice:cleared",
-      event => {
-
-        renderAll(
-          event?.detail?.state ||
-          getState()
-        );
-
-      }
-    );
-
-
-    window.addEventListener(
-      "aerion:appearance:updated",
-      event => {
-
-        renderAll(
-          event?.detail?.state ||
-          getState()
-        );
-
-      }
-    );
-
-
-    window.addEventListener(
-      "aerion:mana:updated",
-      event => {
-
-        renderAll(
-          event?.detail?.state ||
-          getState()
+          getCurrentState()
         );
 
       }
@@ -3441,9 +3150,165 @@
       "aerion:navigation:changed",
       event => {
 
-        renderAll(
+        render(
           event?.detail?.state ||
-          getState()
+          getCurrentState()
+        );
+
+      }
+    );
+
+
+    window.addEventListener(
+      "aerion:race:selected",
+      event => {
+
+        render(
+          event?.detail?.state ||
+          getCurrentState()
+        );
+
+      }
+    );
+
+
+    window.addEventListener(
+      "aerion:animalha:selected",
+      event => {
+
+        render(
+          event?.detail?.state ||
+          getCurrentState()
+        );
+
+      }
+    );
+
+
+    window.addEventListener(
+      "aerion:animalha:category-selected",
+      event => {
+
+        render(
+          event?.detail?.state ||
+          getCurrentState()
+        );
+
+      }
+    );
+
+
+    window.addEventListener(
+      "aerion:class:selected",
+      event => {
+
+        render(
+          event?.detail?.state ||
+          getCurrentState()
+        );
+
+      }
+    );
+
+
+    window.addEventListener(
+      "aerion:dice:assigned",
+      event => {
+
+        render(
+          event?.detail?.state ||
+          getCurrentState()
+        );
+
+      }
+    );
+
+
+    window.addEventListener(
+      "aerion:dice:removed",
+      event => {
+
+        render(
+          event?.detail?.state ||
+          getCurrentState()
+        );
+
+      }
+    );
+
+
+    window.addEventListener(
+      "aerion:dice:cleared",
+      event => {
+
+        render(
+          event?.detail?.state ||
+          getCurrentState()
+        );
+
+      }
+    );
+
+
+    window.addEventListener(
+      "aerion:dice:rolled",
+      event => {
+
+        render(
+          event?.detail?.state ||
+          getCurrentState()
+        );
+
+      }
+    );
+
+
+    window.addEventListener(
+      "aerion:appearance:updated",
+      event => {
+
+        render(
+          event?.detail?.state ||
+          getCurrentState()
+        );
+
+      }
+    );
+
+
+    window.addEventListener(
+      "aerion:mana:updated",
+      event => {
+
+        render(
+          event?.detail?.state ||
+          getCurrentState()
+        );
+
+      }
+    );
+
+
+    window.addEventListener(
+      "aerion:avatar:updated",
+      event => {
+
+        render(
+          event?.detail?.state ||
+          getCurrentState()
+        );
+
+      }
+    );
+
+
+    window.addEventListener(
+      "aerion:avatar:removed",
+      event => {
+
+        render(
+          event?.detail?.state ||
+          getCurrentState()
         );
 
       }
@@ -3454,8 +3319,8 @@
       "aerion:personagem-assets:ready",
       () => {
 
-        renderAll(
-          getState()
+        render(
+          getCurrentState()
         );
 
       }
@@ -3465,103 +3330,125 @@
 
 
   /* =========================================================
-     EXPORTAÇÃO
+     API
      ========================================================= */
 
-  const API = Object.freeze({
+  const API = {
 
     init() {
 
-      currentState =
-        getState();
+      if (
+        initialized
+      ) {
+        render(
+          getCurrentState()
+        );
+
+        return true;
+      }
 
 
-      bindActions();
+      initialized =
+        true;
+
 
       bindFields();
+
+      bindAvatar();
 
       bindStateEvents();
 
 
-      renderAll(
-        currentState
+      render(
+        getCurrentState()
+      );
+
+
+      console.info(
+        "[AERION][FICHA-RENDER] Inicializado."
       );
 
 
       return true;
-
     },
 
 
-    render:
-
-      renderAll,
+    render,
 
 
     refresh() {
 
-      renderAll(
-        getState()
+      render(
+        getCurrentState()
       );
 
     },
 
 
-    nextStep() {
+    nextRace,
 
-      return getCore()
-        ?.nextStep?.();
+    previousRace,
 
-    },
-
-
-    previousStep() {
-
-      return getCore()
-        ?.previousStep?.();
-
-    },
-
-
-    nextRace() {
-
-      changeRace(
-        +1
-      );
-
-    },
-
-
-    previousRace() {
-
-      changeRace(
-        -1
-      );
-
-    },
+    gotoRace,
 
 
     getCurrentRace() {
 
       return getCurrentRace(
-        getState()
+        getCurrentState()
       );
 
     }
 
-  });
+  };
 
 
   /* =========================================================
-     GLOBAL
+     EXPORTAÇÃO
      ========================================================= */
 
   window.AERIONFichaRender =
     API;
 
-
   window.AERION_FICHA_RENDER =
     API;
+
+
+  /* =========================================================
+     CLIQUES
+     ========================================================= */
+
+  /*
+   * Um único listener de ações.
+   *
+   * Isso é importante porque versões anteriores
+   * poderiam deixar vários listeners competindo.
+   */
+
+  document.addEventListener(
+    "click",
+    event => {
+
+      const target =
+        event.target.closest(
+          "[data-action]"
+        );
+
+
+      if (
+        !target
+      ) {
+        return;
+      }
+
+
+      handleAction(
+        target
+      );
+
+    },
+    true
+  );
 
 
   /* =========================================================
@@ -3570,15 +3457,7 @@
 
   function boot() {
 
-    if (
-      !API.init()
-    ) {
-
-      window.requestAnimationFrame(
-        boot
-      );
-
-    }
+    API.init();
 
   }
 
