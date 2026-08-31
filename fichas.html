@@ -63,27 +63,27 @@
        4. ficha
 
        ====================================================== -->
+<!-- ORDEM CORRETA -->
 
-  <script
-    src="./js/core/ficha-render.js"
-    defer
-  ></script>
+<script
+  src="./js/core/personagem-assets.js"
+  defer
+></script>
 
-  <script
-    src="./js/core/personagem-assets.js"
-    defer
-  ></script>
+<script
+  src="./js/core/ficha.js"
+  defer
+></script>
 
-  <script
-    src="./js/core/personagem-render.js"
-    defer
-  ></script>
+<script
+  src="./js/core/personagem-render.js"
+  defer
+></script>
 
-  <script
-    src="./js/core/ficha.js"
-    defer
-  ></script>
-
+<script
+  src="./js/core/ficha-render.js"
+  defer
+></script>
 </head>
 
 
@@ -964,30 +964,99 @@
            ================================================== -->
 
       <section
-        class="creation-panel"
-        data-panel="appearance"
-        hidden
-      >
+  class="creation-panel"
+  data-panel="appearance"
+  hidden
+>
+  <div class="section-heading">
 
-        <div class="section-heading">
+    <span class="eyebrow">
+      TERCEIRA ETAPA
+    </span>
 
-          <span class="eyebrow">
-            TERCEIRA ETAPA
-          </span>
+    <h2>
+      Aparência
+    </h2>
 
-          <h2>
-            Aparência
-          </h2>
+    <p>
+      Ajuste a apresentação visual do personagem.
+    </p>
 
-          <p>
-            Monte visualmente o seu personagem.
-          </p>
+  </div>
 
+
+  <div class="appearance-layout">
+
+    <div
+      id="appearanceFigure"
+      class="appearance-render"
+      aria-label="Visualizador do personagem"
+    >
+      <!--
+        O personagem-render.js coloca aqui
+        a imagem real da raça selecionada.
+      -->
+    </div>
+
+
+    <div class="appearance-controls">
+
+      <article class="appearance-control-card">
+
+        <div class="appearance-control-title">
+          <span>Altura</span>
+
+          <strong
+            id="appearanceHeightValue"
+          >
+            —
+          </strong>
         </div>
 
 
-        <div class="appearance-editor">
+        <label
+          class="appearance-control-label"
+          for="appearanceHeight"
+        >
+          Altura do personagem
+        </label>
 
+
+        <input
+          id="appearanceHeight"
+          class="appearance-range"
+          type="range"
+          min="1"
+          max="2"
+          step="0.01"
+          value="1"
+          data-appearance-field="height"
+        />
+
+
+        <div class="range-value">
+
+          <span
+            id="appearanceHeightMin"
+          >
+            —
+          </span>
+
+          <span
+            id="appearanceHeightMax"
+          >
+            —
+          </span>
+
+        </div>
+
+      </article>
+
+    </div>
+
+  </div>
+
+</section>
 
           <!-- =================================================
                RENDER
