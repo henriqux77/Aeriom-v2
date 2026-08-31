@@ -884,7 +884,7 @@
       "height",
       String(
         CONFIG.svgHeight
-      );
+      )
 
     );
 
@@ -6801,3 +6801,4 @@
   }
 
 })();
+
