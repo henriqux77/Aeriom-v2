@@ -369,15 +369,8 @@ function createSupabaseClient(
 
 
         global: {
-
-          headers: {
-
-            "x-application-name":
-              "aeriom-v2"
-
-          }
-
-        }
+  headers: {}
+}
 
       }
     );
