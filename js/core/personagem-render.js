@@ -2,24 +2,36 @@
    AERION — PERSONAGEM RENDER
    js/core/personagem-render.js
 
-   Motor visual 2D do editor de personagem.
+   MOTOR VISUAL 2D DO CRIADOR DE PERSONAGEM
+
+   Depende de:
+     window.AERIONPersonagemAssets
+     window.AERIONFicha
 
    Responsável por:
-   - Corpo
-   - Proporções
-   - Altura
-   - Pele
-   - Cabelo
-   - Olhos
-   - Cicatrizes
-   - Tatuagens
-   - Roupas
-   - Asas
-   - Cauda
-   - Elementos raciais
+   - Ler estado da ficha
+   - Aplicar restrições raciais
+   - Aplicar Animalha
+   - Montar personagem em camadas
+   - Atualizar altura
+   - Atualizar proporções
+   - Atualizar pele / pelagem
+   - Atualizar cabelo
+   - Atualizar olhos
+   - Atualizar roupas
+   - Atualizar acessórios
+   - Atualizar armas
+   - Atualizar asas / cauda
+   - Atualizar cicatrizes
+   - Atualizar tatuagens
+   - Atualizar marcas
 
-   NÃO altera regras da ficha.
-   Apenas lê o estado exposto pelo ficha.js.
+   NÃO responsável por:
+   - dados
+   - atributos
+   - regras de combate
+   - regras de classe
+   - salvar a ficha
 
    ========================================================= */
 
@@ -28,51 +40,63 @@
 
 
   /* =========================================================
-     CONFIGURAÇÃO
+     CONFIG
      ========================================================= */
 
   const CONFIG = Object.freeze({
-    selector: "#appearanceFigure",
+    rootSelector:
+      "#appearanceFigure",
 
-    svgClass:
-      "aerion-character-svg",
+    svgWidth:
+      360,
+
+    svgHeight:
+      620,
 
     viewBox:
-      "0 0 180 340"
+      "0 0 360 620",
+
+    updateEvent:
+      "aerion:personagem:updated"
   });
 
 
   /* =========================================================
-     ESTADO LOCAL
+     ESTADO
      ========================================================= */
 
-  let lastRenderKey = "";
+  let root = null;
+
+  let currentState = null;
+
+  let currentCharacter = null;
+
+  let lastRenderHash = "";
+
+
+  /* =========================================================
+     ASSETS
+     ========================================================= */
+
+  function getAssets() {
+    return (
+      window.AERIONPersonagemAssets ||
+      null
+    );
+  }
+
+
+  function getFicha() {
+    return (
+      window.AERIONFicha ||
+      null
+    );
+  }
 
 
   /* =========================================================
      UTILITÁRIOS
      ========================================================= */
-
-  function getFicha() {
-    return window.AERIONFicha || null;
-  }
-
-
-  function getState() {
-    const ficha =
-      getFicha();
-
-    if (
-      !ficha ||
-      typeof ficha.getState !==
-        "function"
-    ) {
-      return null;
-    }
-
-    return ficha.getState();
-  }
-
 
   function clamp(
     value,
@@ -89,11 +113,55 @@
   }
 
 
-  function escapeHtml(
+  function num(
+    value,
+    fallback = 0
+  ) {
+    const result =
+      Number(
+        value
+      );
+
+    return Number.isFinite(
+      result
+    )
+      ? result
+      : fallback;
+  }
+
+
+  function safeText(
     value
   ) {
     return String(
       value ?? ""
+    )
+      .trim();
+  }
+
+
+  function normalize(
+    value
+  ) {
+    return safeText(
+      value
+    )
+      .toLowerCase()
+      .normalize(
+        "NFD"
+      )
+      .replace(
+        /[\u0300-\u036f]/g,
+        ""
+      );
+  }
+
+
+  function escapeHtml(
+    value
+  ) {
+    return safeText(
+      value
     )
       .replaceAll(
         "&",
@@ -113,366 +181,167 @@
       )
       .replaceAll(
         "'",
-        "&#39;"
+        "&#039;"
       );
   }
 
 
-  /* =========================================================
-     NORMALIZAÇÃO DE APARÊNCIA
-     ========================================================= */
-
-  function normalizeText(
-    value
+  function hashState(
+    state
   ) {
-    return String(
-      value ?? ""
-    )
-      .trim()
-      .toLowerCase();
+    try {
+      return JSON.stringify(
+        {
+          race:
+            state?.race,
+
+          animalha:
+            state?.animalha,
+
+          gender:
+            state?.gender,
+
+          appearance:
+            state?.appearance,
+
+          raceData:
+            state?.raceData,
+
+          combat:
+            state?.combat
+        }
+      );
+    } catch {
+      return "";
+    }
   }
 
 
   /* =========================================================
-     PALETA
+     OBTENÇÃO DO ESTADO
      ========================================================= */
 
-  function getPalette(
-    appearance
-  ) {
-    const skinText =
-      normalizeText(
-        appearance.skin
-      );
-
-    const hairText =
-      normalizeText(
-        appearance.hair
-      );
-
-    let skin =
-      "#b99f8b";
-
-    let skinShadow =
-      "#806c5f";
-
-    let hair =
-      "#27211c";
-
-    let hairHighlight =
-      "#4a3a2f";
-
-
-    /* -------------------------------------------------------
-       PELE
-       ------------------------------------------------------- */
+  function readState() {
+    const ficha =
+      getFicha();
 
     if (
-      skinText.includes(
-        "muito clara"
-      ) ||
-      skinText.includes(
-        "pálida"
-      )
+      !ficha ||
+      typeof
+        ficha.getState !==
+        "function"
     ) {
-      skin =
-        "#e2c8b2";
-
-      skinShadow =
-        "#ae907b";
+      return null;
     }
 
-    else if (
-      skinText.includes(
-        "clara"
-      )
-    ) {
-      skin =
-        "#d2b39b";
-
-      skinShadow =
-        "#987d69";
-    }
-
-    else if (
-      skinText.includes(
-        "morena"
-      )
-    ) {
-      skin =
-        "#a98268";
-
-      skinShadow =
-        "#725543";
-    }
-
-    else if (
-      skinText.includes(
-        "escura"
-      ) ||
-      skinText.includes(
-        "negra"
-      )
-    ) {
-      skin =
-        "#704d3d";
-
-      skinShadow =
-        "#4c3429";
-    }
-
-    else if (
-      skinText.includes(
-        "verde"
-      )
-    ) {
-      skin =
-        "#718765";
-
-      skinShadow =
-        "#4f6248";
-    }
-
-    else if (
-      skinText.includes(
-        "azul"
-      )
-    ) {
-      skin =
-        "#7196aa";
-
-      skinShadow =
-        "#4d6877";
-    }
-
-    else if (
-      skinText.includes(
-        "vermelha"
-      )
-    ) {
-      skin =
-        "#9a5b50";
-
-      skinShadow =
-        "#653c35";
-    }
-
-
-    /* -------------------------------------------------------
-       CABELO
-       ------------------------------------------------------- */
-
-    if (
-      hairText.includes(
-        "loiro"
-      ) ||
-      hairText.includes(
-        "dourado"
-      )
-    ) {
-      hair =
-        "#c8a95d";
-
-      hairHighlight =
-        "#ecd58f";
-    }
-
-    else if (
-      hairText.includes(
-        "castanho claro"
-      )
-    ) {
-      hair =
-        "#72523a";
-
-      hairHighlight =
-        "#a47955";
-    }
-
-    else if (
-      hairText.includes(
-        "castanho"
-      )
-    ) {
-      hair =
-        "#513726";
-
-      hairHighlight =
-        "#79583c";
-    }
-
-    else if (
-      hairText.includes(
-        "ruivo"
-      ) ||
-      hairText.includes(
-        "vermelho"
-      )
-    ) {
-      hair =
-        "#8c4932";
-
-      hairHighlight =
-        "#bd7250";
-    }
-
-    else if (
-      hairText.includes(
-        "branco"
-      ) ||
-      hairText.includes(
-        "prata"
-      ) ||
-      hairText.includes(
-        "prateado"
-      )
-    ) {
-      hair =
-        "#d8d8d2";
-
-      hairHighlight =
-        "#f3f3ee";
-    }
-
-    else if (
-      hairText.includes(
-        "azul"
-      )
-    ) {
-      hair =
-        "#4f7494";
-
-      hairHighlight =
-        "#7fa7c8";
-    }
-
-    else if (
-      hairText.includes(
-        "verde"
-      )
-    ) {
-      hair =
-        "#527452";
-
-      hairHighlight =
-        "#7faa70";
-    }
-
-
-    return {
-      skin,
-      skinShadow,
-      hair,
-      hairHighlight
-    };
+    return ficha.getState();
   }
 
 
   /* =========================================================
-     CARACTERÍSTICAS RACIAIS
+     DADOS RACIAIS
      ========================================================= */
 
-  function getRaceVisualData(
+  function getRaceData(
+    state
+  ) {
+    if (
+      !state
+    ) {
+      return null;
+    }
+
+    return (
+      state.raceData ||
+      null
+    );
+  }
+
+
+  function getRaceRules(
+    state
+  ) {
+    const assets =
+      getAssets();
+
+    if (
+      !assets
+    ) {
+      return null;
+    }
+
+    return (
+      assets.raceRules?.[
+        state?.race ||
+        ""
+      ] ||
+      null
+    );
+  }
+
+
+  function getAnimalData(
+    state
+  ) {
+    const assets =
+      getAssets();
+
+    if (
+      !assets
+    ) {
+      return null;
+    }
+
+    const animalId =
+      state?.animalha ||
+      "";
+
+    return (
+      assets.animalhaAnimals?.[
+        animalId
+      ] ||
+      null
+    );
+  }
+
+
+  /* =========================================================
+     DIMENSÕES
+     ========================================================= */
+
+  function getHeightData(
     state
   ) {
     const race =
-      state?.raceData ||
-      {};
-
-    const raceId =
-      normalizeText(
-        state?.race
+      getRaceData(
+        state
       );
-
-    const animal =
-      normalizeText(
-        state?.animalha
-      );
-
-    return {
-      race,
-      raceId,
-      animal,
-
-      isAnimalha:
-        raceId ===
-        "animalha",
-
-      hasWings:
-        Boolean(
-          race.flight
-        ),
-
-      isSmall:
-        race.size ===
-        "pequeno",
-
-      isLarge:
-        race.size ===
-        "grande",
-
-      isColossal:
-        race.size ===
-        "colossal",
-
-      isDwarf:
-        raceId ===
-        "anao",
-
-      isOrc:
-        raceId ===
-        "orc",
-
-      isTroll:
-        raceId ===
-        "troll",
-
-      isColossus:
-        raceId ===
-        "colosso",
-
-      isFairy:
-        raceId ===
-        "fada"
-    };
-  }
-
-
-  /* =========================================================
-     ESCALA CORPORAL
-     ========================================================= */
-
-  function calculateBody(
-    state
-  ) {
-    const race =
-      state?.raceData ||
-      {};
 
     const min =
-      Number(
-        race.height?.min
-      ) ||
-      140;
+      num(
+        race?.height?.min,
+        140
+      );
 
     const max =
-      Number(
-        race.height?.max
-      ) ||
-      200;
+      num(
+        race?.height?.max,
+        200
+      );
 
-    const current =
+    let current =
+      num(
+        state?.appearance
+          ?.height,
+        (
+          min +
+          max
+        ) / 2
+      );
+
+    current =
       clamp(
-        Number(
-          state?.appearance
-            ?.height
-        ) ||
-          (
-            min +
-            max
-          ) /
-            2,
-
+        current,
         min,
         max
       );
@@ -488,162 +357,1125 @@
           min
       );
 
+    return {
+      min,
+      max,
+      current,
+      normalized
+    };
+  }
 
-    let height =
-      245 +
-      normalized *
-        72;
+
+  function getBodyProfile(
+    state
+  ) {
+    const race =
+      getRaceData(
+        state
+      );
+
+    const rules =
+      getRaceRules(
+        state
+      );
+
+    const animal =
+      getAnimalData(
+        state
+      );
+
+    const appearance =
+      state?.appearance ||
+      {};
 
     let width =
       1;
 
+    let shoulder =
+      1;
+
+    let torso =
+      1;
+
+    let arms =
+      1;
+
+    let legs =
+      1;
+
+    let head =
+      1;
+
+
+    const bodyType =
+      normalize(
+        appearance.bodyType
+      );
+
+    switch (
+      bodyType
+    ) {
+      case "delgado":
+      case "slim":
+        width *= .88;
+        shoulder *= .86;
+        break;
+
+      case "atletico":
+      case "lean":
+        width *= .95;
+        shoulder *= .94;
+        break;
+
+      case "robusto":
+      case "broad":
+        width *= 1.12;
+        shoulder *= 1.12;
+        torso *= 1.08;
+        break;
+
+      case "pesado":
+      case "heavy":
+        width *= 1.20;
+        shoulder *= 1.18;
+        torso *= 1.14;
+        break;
+
+      default:
+        break;
+    }
+
 
     if (
-      race.size ===
+      race?.size ===
       "pequeno"
     ) {
-      height *=
-        .90;
-
-      width *=
-        .94;
+      width *= .92;
+      shoulder *= .92;
+      head *= 1.02;
     }
 
+
     if (
-      race.size ===
+      race?.size ===
       "grande"
     ) {
-      height *=
-        1.07;
-
-      width *=
-        1.14;
+      width *= 1.10;
+      shoulder *= 1.10;
+      torso *= 1.08;
     }
+
 
     if (
-      race.size ===
+      race?.size ===
       "colossal"
     ) {
-      height *=
-        1.13;
-
-      width *=
-        1.28;
+      width *= 1.22;
+      shoulder *= 1.24;
+      torso *= 1.15;
+      arms *= 1.08;
+      legs *= 1.08;
     }
+
+
+    if (
+      animal?.body ===
+      "slim"
+    ) {
+      width *= .93;
+    }
+
+
+    if (
+      animal?.body ===
+      "lean"
+    ) {
+      width *= .97;
+    }
+
+
+    if (
+      animal?.body ===
+      "broad"
+    ) {
+      width *= 1.08;
+      shoulder *= 1.08;
+    }
+
+
+    if (
+      animal?.body ===
+      "heavy"
+    ) {
+      width *= 1.15;
+      shoulder *= 1.12;
+    }
+
+
+    width =
+      num(
+        appearance.width,
+        width
+      );
+
+    shoulder =
+      num(
+        appearance.shoulders,
+        shoulder
+      );
+
+    torso =
+      num(
+        appearance.torso,
+        torso
+      );
+
+    arms =
+      num(
+        appearance.arms,
+        arms
+      );
+
+    legs =
+      num(
+        appearance.legs,
+        legs
+      );
+
+    head =
+      num(
+        appearance.head,
+        head
+      );
 
 
     return {
-      current,
+      width:
+        clamp(
+          width,
+          .78,
+          1.35
+        ),
 
-      normalized,
+      shoulder:
+        clamp(
+          shoulder,
+          .78,
+          1.35
+        ),
 
-      height,
+      torso:
+        clamp(
+          torso,
+          .80,
+          1.30
+        ),
 
-      width
+      arms:
+        clamp(
+          arms,
+          .82,
+          1.25
+        ),
+
+      legs:
+        clamp(
+          legs,
+          .82,
+          1.25
+        ),
+
+      head:
+        clamp(
+          head,
+          .82,
+          1.25
+        ),
+
+      raceRules:
+        rules
     };
   }
 
 
   /* =========================================================
-     CABELO
+     PALETA PERMITIDA
      ========================================================= */
 
-  function getHairGeometry(
-    appearance,
-    palette
+  function getAllowedSkinPalette(
+    state
   ) {
-    const hair =
-      normalizeText(
+    const assets =
+      getAssets();
+
+    if (
+      !assets
+    ) {
+      return null;
+    }
+
+    const raceId =
+      state?.race ||
+      "humano";
+
+    const paletteIds =
+      assets.skinRestrictions?.[
+        raceId
+      ] ||
+      [
+        "humana"
+      ];
+
+    const primaryPalette =
+      paletteIds[0];
+
+    return (
+      assets.skinPalettes?.[
+        primaryPalette
+      ] ||
+      null
+    );
+  }
+
+
+  function getCurrentSkinColor(
+    state
+  ) {
+    const palette =
+      getAllowedSkinPalette(
+        state
+      );
+
+    if (
+      !palette ||
+      !Array.isArray(
+        palette.colors
+      ) ||
+      !palette.colors.length
+    ) {
+      return "#b99f8b";
+    }
+
+    const appearance =
+      state?.appearance ||
+      {};
+
+    const selected =
+      appearance.skinVariant;
+
+
+    if (
+      selected &&
+      palette.colors.includes(
+        selected
+      )
+    ) {
+      return selected;
+    }
+
+
+    const skinText =
+      normalize(
+        appearance.skin
+      );
+
+
+    if (
+      skinText.includes(
+        "escura"
+      ) ||
+      skinText.includes(
+        "negra"
+      )
+    ) {
+      return (
+        palette.colors[
+          palette.colors.length -
+            2
+        ] ||
+        palette.colors[0]
+      );
+    }
+
+
+    if (
+      skinText.includes(
+        "clara"
+      )
+    ) {
+      return (
+        palette.colors[1] ||
+        palette.colors[0]
+      );
+    }
+
+
+    return (
+      palette.colors[
+        Math.floor(
+          palette.colors.length /
+            2
+        )
+      ] ||
+      palette.colors[0]
+    );
+  }
+
+
+  function getHairColor(
+    state
+  ) {
+    const assets =
+      getAssets();
+
+    const colors =
+      assets?.hairColors ||
+      [];
+
+    const appearance =
+      state?.appearance ||
+      {};
+
+    const text =
+      normalize(
         appearance.hair
       );
 
-    const long =
-      hair.includes(
-        "longo"
+
+    const found =
+      colors.find(
+        entry =>
+          text.includes(
+            normalize(
+              entry.name
+            )
+          )
       );
 
-    const short =
-      hair.includes(
-        "curto"
+
+    return (
+      found?.colors?.[0] ||
+      "#27211c"
+    );
+  }
+
+
+  function getEyeColor(
+    state
+  ) {
+    const assets =
+      getAssets();
+
+    const colors =
+      assets?.eyeColors ||
+      [];
+
+    const text =
+      normalize(
+        state?.appearance
+          ?.eyes
       );
 
-    const mohawk =
-      hair.includes(
-        "moicano"
+
+    const found =
+      colors.find(
+        entry =>
+          text.includes(
+            normalize(
+              entry.name
+            )
+          )
       );
 
-    if (mohawk) {
-      return `
-        <path
-          d="
-            M61 69
-            Q65 32 80 19
-            Q95 32 99 69
-            Q91 57 80 48
-            Q69 57 61 69
-            Z
-          "
-          fill="${palette.hair}"
-          stroke="${palette.hairHighlight}"
-          stroke-width="2"
-        />
-      `;
+
+    return (
+      found?.colors?.[0] ||
+      "#302c29"
+    );
+  }
+
+
+  function getAnimalColor(
+    state
+  ) {
+    const animal =
+      getAnimalData(
+        state
+      );
+
+    const appearance =
+      state?.appearance ||
+      {};
+
+    const chosen =
+      safeText(
+        appearance
+          .furColor
+      );
+
+
+    if (
+      chosen
+    ) {
+      return chosen;
     }
 
-    if (long) {
-      return `
-        <path
-          d="
-            M47 70
-            Q45 34 80 28
-            Q115 34 113 70
-            L108 120
-            Q98 108 94 89
-            Q90 72 80 57
-            Q70 72 66 89
-            Q62 108 52 120
-            Z
-          "
-          fill="${palette.hair}"
-          stroke="${palette.hairHighlight}"
-          stroke-width="2"
-        />
-      `;
+
+    if (
+      animal?.fur?.length
+    ) {
+      return animal.fur[0];
     }
 
-    if (short) {
-      return `
-        <path
-          d="
-            M48 68
-            Q47 37 80 28
-            Q113 37 112 68
-            Q100 50 80 51
-            Q60 50 48 68
-            Z
-          "
-          fill="${palette.hair}"
-          stroke="${palette.hairHighlight}"
-          stroke-width="2"
-        />
-      `;
+
+    if (
+      animal?.feathers?.length
+    ) {
+      return animal.feathers[0];
     }
 
-    return `
-      <path
-        d="
-          M48 68
-          Q47 35 80 29
-          Q113 35 112 68
-          Q100 49 80 50
-          Q60 49 48 68
-          Z
-        "
-        fill="${palette.hair}"
-        stroke="${palette.hairHighlight}"
-        stroke-width="2"
-      />
-    `;
+
+    if (
+      animal?.scales?.length
+    ) {
+      return animal.scales[0];
+    }
+
+
+    if (
+      animal?.skin?.length
+    ) {
+      return animal.skin[0];
+    }
+
+
+    return getCurrentSkinColor(
+      state
+    );
+  }
+
+
+  /* =========================================================
+     SVG BASE
+     ========================================================= */
+
+  function createSvg(
+    state
+  ) {
+    const svg =
+      document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "svg"
+      );
+
+    svg.setAttribute(
+      "viewBox",
+      CONFIG.viewBox
+    );
+
+    svg.setAttribute(
+      "width",
+      String(
+        CONFIG.svgWidth
+      )
+    );
+
+    svg.setAttribute(
+      "height",
+      String(
+        CONFIG.svgHeight
+      );
+
+    );
+
+    svg.classList.add(
+      "aerion-character-svg"
+    );
+
+    svg.setAttribute(
+      "role",
+      "img"
+    );
+
+    svg.setAttribute(
+      "aria-label",
+      "Personagem em pré-visualização"
+    );
+
+    svg.dataset.race =
+      state?.race ||
+      "";
+
+    svg.dataset.animalha =
+      state?.animalha ||
+      "";
+
+    return svg;
+  }
+
+
+  function svgElement(
+    name,
+    attributes = {}
+  ) {
+    const element =
+      document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        name
+      );
+
+    Object.entries(
+      attributes
+    ).forEach(
+      ([
+        key,
+        value
+      ]) => {
+
+        if (
+          value !==
+            undefined &&
+          value !==
+            null
+        ) {
+          element.setAttribute(
+            key,
+            String(
+              value
+            )
+          );
+        }
+      }
+    );
+
+    return element;
+  }
+
+
+  /* =========================================================
+     DEFINIÇÕES SVG
+     ========================================================= */
+
+  function addDefs(
+    svg
+  ) {
+    const defs =
+      svgElement(
+        "defs"
+      );
+
+
+    const skinGradient =
+      svgElement(
+        "linearGradient",
+        {
+          id:
+            "aerion-skin-gradient",
+
+          x1:
+            "0",
+
+          y1:
+            "0",
+
+          x2:
+            "1",
+
+          y2:
+            "1"
+        }
+      );
+
+
+    skinGradient.append(
+      svgElement(
+        "stop",
+        {
+          offset:
+            "0%",
+
+          "stop-color":
+            "var(--character-skin)"
+        }
+      )
+    );
+
+
+    skinGradient.append(
+      svgElement(
+        "stop",
+        {
+          offset:
+            "100%",
+
+          "stop-color":
+            "var(--character-skin-shadow)"
+        }
+      )
+    );
+
+
+    defs.append(
+      skinGradient
+    );
+
+
+    const clothesGradient =
+      svgElement(
+        "linearGradient",
+        {
+          id:
+            "aerion-clothes-gradient",
+
+          x1:
+            "0",
+
+          y1:
+            "0",
+
+          x2:
+            "0",
+
+          y2:
+            "1"
+        }
+      );
+
+
+    clothesGradient.append(
+      svgElement(
+        "stop",
+        {
+          offset:
+            "0%",
+
+          "stop-color":
+            "var(--character-clothes)"
+        }
+      )
+    );
+
+
+    clothesGradient.append(
+      svgElement(
+        "stop",
+        {
+          offset:
+            "100%",
+
+          "stop-color":
+            "var(--character-clothes-shadow)"
+        }
+      )
+    );
+
+
+    defs.append(
+      clothesGradient
+    );
+
+
+    svg.append(
+      defs
+    );
+  }
+
+
+  /* =========================================================
+     SOMBRA
+     ========================================================= */
+
+  function buildShadow() {
+    return svgElement(
+      "ellipse",
+      {
+        cx:
+          "180",
+
+        cy:
+          "575",
+
+        rx:
+          "82",
+
+        ry:
+          "16",
+
+        class:
+          "character-shadow"
+      }
+    );
+  }
+
+
+  /* =========================================================
+     ALTURA
+     ========================================================= */
+
+  function calculateGeometry(
+    state
+  ) {
+    const height =
+      getHeightData(
+        state
+      );
+
+    const body =
+      getBodyProfile(
+        state
+      );
+
+    const totalHeight =
+      470 +
+      height.normalized *
+        100;
+
+    const headScale =
+      body.head;
+
+
+    const headWidth =
+      52 *
+      headScale *
+      (
+        state.gender ===
+        "feminino"
+          ? .97
+          : 1
+      );
+
+
+    const torsoWidth =
+      112 *
+      body.width;
+
+
+    const shoulderWidth =
+      154 *
+      body.shoulder;
+
+
+    const torsoHeight =
+      155 *
+      body.torso;
+
+
+    const armLength =
+      145 *
+      body.arms;
+
+
+    const legLength =
+      175 *
+      body.legs;
+
+
+    return {
+      ...height,
+
+      body,
+
+      totalHeight,
+
+      headWidth,
+
+      torsoWidth,
+
+      shoulderWidth,
+
+      torsoHeight,
+
+      armLength,
+
+      legLength
+    };
+  }
+
+
+  /* =========================================================
+     PERNAS
+     ========================================================= */
+
+  function buildLegs(
+    geometry
+  ) {
+    const {
+      legLength
+    } =
+      geometry;
+
+
+    const left =
+      svgElement(
+        "path",
+        {
+          d:
+            `
+              M154 362
+              C152 397 151 452 149 515
+              Q150 530 163 532
+              L179 532
+              Q184 529 182 515
+              L180 364
+              Z
+            `,
+
+          class:
+            "character-leg character-leg-left"
+        }
+      );
+
+
+    const right =
+      svgElement(
+        "path",
+        {
+          d:
+            `
+              M206 362
+              C208 397 209 452 211 515
+              Q210 530 197 532
+              L181 532
+              Q176 529 178 515
+              L180 364
+              Z
+            `,
+
+          class:
+            "character-leg character-leg-right"
+        }
+      );
+
+
+    left.style.strokeWidth =
+      `${Math.max(
+        1,
+        legLength / 105
+      )}px`;
+
+
+    right.style.strokeWidth =
+      `${Math.max(
+        1,
+        legLength / 105
+      )}px`;
+
+
+    return [
+      left,
+      right
+    ];
+  }
+
+
+  /* =========================================================
+     BRAÇOS
+     ========================================================= */
+
+  function buildArms(
+    geometry
+  ) {
+    const arms = [];
+
+
+    const left =
+      svgElement(
+        "path",
+        {
+          d:
+            `
+              M112 208
+              C91 237 85 292 96 337
+            `,
+
+          class:
+            "character-arm character-arm-left"
+        }
+      );
+
+
+    const right =
+      svgElement(
+        "path",
+        {
+          d:
+            `
+              M248 208
+              C269 237 275 292 264 337
+            `,
+
+          class:
+            "character-arm character-arm-right"
+        }
+      );
+
+
+    const stroke =
+      22 *
+      geometry.body.arms;
+
+
+    left.style.strokeWidth =
+      `${stroke}px`;
+
+    right.style.strokeWidth =
+      `${stroke}px`;
+
+
+    arms.push(
+      left,
+      right
+    );
+
+
+    return arms;
+  }
+
+
+  /* =========================================================
+     CORPO
+     ========================================================= */
+
+  function buildBody(
+    geometry
+  ) {
+    const {
+      torsoWidth,
+      torsoHeight,
+      shoulderWidth
+    } =
+      geometry;
+
+
+    const top =
+      186;
+
+    const bottom =
+      top +
+      torsoHeight;
+
+
+    return svgElement(
+      "path",
+      {
+        d:
+          `
+            M${180 - torsoWidth / 2}
+            ${top + 18}
+
+            Q180
+            ${top - 12}
+            ${180 + torsoWidth / 2}
+            ${top + 18}
+
+            Q
+            ${180 + shoulderWidth / 2}
+            ${top + 38}
+            ${180 + torsoWidth / 2 - 10}
+            ${bottom - 18}
+
+            Q180
+            ${bottom + 12}
+            ${180 - torsoWidth / 2 + 10}
+            ${bottom - 18}
+
+            Q
+            ${180 - shoulderWidth / 2}
+            ${top + 38}
+            ${180 - torsoWidth / 2}
+            ${top + 18}
+
+            Z
+          `,
+
+        class:
+          "character-body"
+      }
+    );
+  }
+
+
+  /* =========================================================
+     CABEÇA
+     ========================================================= */
+
+  function buildHead(
+    state,
+    geometry
+  ) {
+    const {
+      headWidth
+    } =
+      geometry;
+
+
+    const head =
+      svgElement(
+        "ellipse",
+        {
+          cx:
+            "180",
+
+          cy:
+            "133",
+
+          rx:
+            headWidth / 2,
+
+          ry:
+            headWidth *
+            .62,
+
+          class:
+            "character-head"
+        }
+      );
+
+
+    return head;
+  }
+
+
+  /* =========================================================
+     PESCOÇO
+     ========================================================= */
+
+  function buildNeck(
+    geometry
+  ) {
+    const neckWidth =
+      geometry.headWidth *
+      .45;
+
+
+    return svgElement(
+      "path",
+      {
+        d:
+          `
+            M
+            ${180 - neckWidth / 2}
+            160
+
+            L
+            ${180 - neckWidth / 2}
+            200
+
+            L
+            ${180 + neckWidth / 2}
+            200
+
+            L
+            ${180 + neckWidth / 2}
+            160
+
+            Z
+          `,
+
+        class:
+          "character-neck"
+      }
+    );
   }
 
 
@@ -653,180 +1485,471 @@
 
   function buildFace(
     state,
-    palette,
-    visual
+    geometry
   ) {
-    const appearance =
-      state.appearance ||
-      {};
-
-    const female =
-      state.gender ===
-      "feminino";
-
-    const headWidth =
-      visual.isLarge ||
-      visual.isColossal
-        ? 56
-        : visual.isSmall
-          ? 44
-          : female
-            ? 45
-            : 50;
-
-    const eyeText =
-      normalizeText(
-        appearance.eyes
+    const group =
+      svgElement(
+        "g",
+        {
+          class:
+            "character-face"
+        }
       );
 
-    const narrowEyes =
-      eyeText.includes(
-        "estreito"
-      ) ||
-      eyeText.includes(
-        "fino"
-      );
 
     const eyeColor =
-      eyeText.includes(
-        "azul"
-      )
-        ? "#789cb9"
-        : eyeText.includes(
-              "verde"
-            )
-          ? "#70906c"
-          : eyeText.includes(
-                "vermelho"
-              )
-            ? "#9f5e56"
-            : "#302c29";
-
-
-    const ears =
-      visual.isAnimalha
-        ? `
-          <path
-            d="
-              M53 69
-              L34 49
-              L48 45
-              L60 63
-              Z
-            "
-            class="character-racial"
-          />
-
-          <path
-            d="
-              M107 69
-              L126 49
-              L112 45
-              L100 63
-              Z
-            "
-            class="character-racial"
-          />
-        `
-        : "";
-
-
-    const horns =
-      visual.isOrc ||
-      visual.isTroll ||
-      visual.isColossus
-        ? `
-          <path
-            d="
-              M61 55
-              Q45 41 48 25
-              Q60 31 69 52
-              Z
-            "
-            class="character-racial"
-          />
-
-          <path
-            d="
-              M99 55
-              Q115 41 112 25
-              Q100 31 91 52
-              Z
-            "
-            class="character-racial"
-          />
-        `
-        : "";
-
-
-    const hair =
-      getHairGeometry(
-        appearance,
-        palette
+      getEyeColor(
+        state
       );
+
+
+    const eyeShape =
+      normalize(
+        state?.appearance
+          ?.eyeShape ||
+        state?.appearance
+          ?.eyes
+      );
+
+
+    const eyeRy =
+      eyeShape.includes(
+        "grande"
+      ) ||
+      eyeShape.includes(
+        "large"
+      )
+        ? 5
+        : 3.5;
 
 
     const eyeY =
-      71;
+      131;
 
-    const eyeRx =
-      narrowEyes
-        ? 5
-        : 3.6;
 
-    return `
-      <g
-        class="character-head"
-      >
+    const leftEye =
+      svgElement(
+        "ellipse",
+        {
+          cx:
+            "166",
 
-        <ellipse
-          cx="80"
-          cy="70"
-          rx="${headWidth / 2}"
-          ry="32"
-          fill="${palette.skin}"
-          stroke="${palette.skinShadow}"
-          stroke-width="2"
-        />
+          cy:
+            String(
+              eyeY
+            ),
 
-        ${ears}
+          rx:
+            "4.5",
 
-        ${horns}
+          ry:
+            String(
+              eyeRy
+            ),
 
-        ${hair}
+          fill:
+            eyeColor,
 
-        <ellipse
-          cx="65"
-          cy="${eyeY}"
-          rx="${eyeRx}"
-          ry="2.5"
-          fill="${eyeColor}"
-        />
+          class:
+            "character-eye"
+        }
+      );
 
-        <ellipse
-          cx="95"
-          cy="${eyeY}"
-          rx="${eyeRx}"
-          ry="2.5"
-          fill="${eyeColor}"
-        />
 
-        <path
-          d="M79 73 L76 83 L82 83"
-          class="character-face-line"
-        />
+    const rightEye =
+      svgElement(
+        "ellipse",
+        {
+          cx:
+            "194",
 
-        <path
-          d="
-            M72 90
-            Q80 ${female ? 94 : 92}
-            88 90
-          "
-          class="character-face-line"
-        />
+          cy:
+            String(
+              eyeY
+            ),
 
-      </g>
-    `;
+          rx:
+            "4.5",
+
+          ry:
+            String(
+              eyeRy
+            ),
+
+          fill:
+            eyeColor,
+
+          class:
+            "character-eye"
+        }
+      );
+
+
+    const nose =
+      svgElement(
+        "path",
+        {
+          d:
+            "M180 135 L175 151 L182 151",
+
+          class:
+            "character-face-line"
+        }
+      );
+
+
+    const mouth =
+      svgElement(
+        "path",
+        {
+          d:
+            "M171 160 Q180 165 189 160",
+
+          class:
+            "character-mouth"
+        }
+      );
+
+
+    group.append(
+      leftEye,
+      rightEye,
+      nose,
+      mouth
+    );
+
+
+    return group;
+  }
+
+
+  /* =========================================================
+     ORELHAS
+     ========================================================= */
+
+  function buildEars(
+    state
+  ) {
+    const raceId =
+      normalize(
+        state?.race
+      );
+
+    const group =
+      svgElement(
+        "g",
+        {
+          class:
+            "character-ears"
+        }
+      );
+
+
+    if (
+      raceId ===
+      "elfo"
+    ) {
+      group.append(
+        svgElement(
+          "path",
+          {
+            d:
+              "M157 133 L113 104 L157 153 Z",
+
+            class:
+              "character-ear"
+          }
+        ),
+
+        svgElement(
+          "path",
+          {
+            d:
+              "M203 133 L247 104 L203 153 Z",
+
+            class:
+              "character-ear"
+          }
+        )
+      );
+
+      return group;
+    }
+
+
+    const animal =
+      getAnimalData(
+        state
+      );
+
+
+    if (
+      state?.race ===
+      "animalha" &&
+      animal?.ears
+    ) {
+      switch (
+        normalize(
+          animal.ears
+        )
+      ) {
+        case "feline":
+        case "canine":
+        case "large":
+
+          group.append(
+            svgElement(
+              "path",
+              {
+                d:
+                  "M158 116 L133 79 L167 92 L174 120 Z",
+
+                class:
+                  "character-animal-ear"
+              }
+            ),
+
+            svgElement(
+              "path",
+              {
+                d:
+                  "M202 116 L227 79 L193 92 L186 120 Z",
+
+                class:
+                  "character-animal-ear"
+              }
+            )
+          );
+
+          break;
+
+        case "bird":
+
+          group.append(
+            svgElement(
+              "path",
+              {
+                d:
+                  "M158 125 L121 111 L159 143 Z",
+
+                class:
+                  "character-animal-ear"
+              }
+            ),
+
+            svgElement(
+              "path",
+              {
+                d:
+                  "M202 125 L239 111 L201 143 Z",
+
+                class:
+                  "character-animal-ear"
+              }
+            )
+          );
+
+          break;
+
+        default:
+          break;
+      }
+    }
+
+
+    return group;
+  }
+
+
+  /* =========================================================
+     CABELO
+     ========================================================= */
+
+  function buildHair(
+    state
+  ) {
+    const hair =
+      normalize(
+        state?.appearance
+          ?.hair
+      );
+
+
+    const color =
+      getHairColor(
+        state
+      );
+
+
+    const group =
+      svgElement(
+        "g",
+        {
+          class:
+            "character-hair"
+        }
+      );
+
+
+    let path =
+      `
+        M137 130
+        Q138 77 180 68
+        Q222 77 223 130
+        Q211 99 180 100
+        Q149 99 137 130
+        Z
+      `;
+
+
+    if (
+      hair.includes(
+        "longo"
+      ) ||
+      hair.includes(
+        "long"
+      )
+    ) {
+      path =
+        `
+          M136 131
+          Q132 77 180 67
+          Q228 77 224 131
+          L213 213
+          Q198 177 180 110
+          Q162 177 147 213
+          Z
+        `;
+    }
+
+
+    if (
+      hair.includes(
+        "moicano"
+      ) ||
+      hair.includes(
+        "mohawk"
+      )
+    ) {
+      path =
+        `
+          M157 105
+          Q159 60 180 37
+          Q201 60 203 105
+          Q189 91 180 75
+          Q171 91 157 105
+          Z
+        `;
+    }
+
+
+    if (
+      hair.includes(
+        "tranca"
+      ) ||
+      hair.includes(
+        "braid"
+      )
+    ) {
+      path =
+        `
+          M136 131
+          Q139 79 180 68
+          Q221 79 224 131
+          L216 218
+          Q196 190 180 108
+          Q164 190 144 218
+          Z
+        `;
+    }
+
+
+    group.append(
+      svgElement(
+        "path",
+        {
+          d:
+            path,
+
+          fill:
+            color,
+
+          class:
+            "character-hair-shape"
+        }
+      )
+    );
+
+
+    return group;
+  }
+
+
+  /* =========================================================
+     BARBA
+     ========================================================= */
+
+  function buildFacialHair(
+    state
+  ) {
+    const value =
+      normalize(
+        state?.appearance
+          ?.facialHair
+      );
+
+
+    if (
+      !value ||
+      value ===
+        "nenhum" ||
+      value ===
+        "none"
+    ) {
+      return null;
+    }
+
+
+    const color =
+      getHairColor(
+        state
+      );
+
+
+    const group =
+      svgElement(
+        "g",
+        {
+          class:
+            "character-facial-hair"
+        }
+      );
+
+
+    group.append(
+      svgElement(
+        "path",
+        {
+          d:
+            `
+              M162 155
+              Q180 177 198 155
+              Q193 188 180 194
+              Q167 188 162 155
+              Z
+            `,
+
+          fill:
+            color,
+
+          class:
+            "facial-hair-shape"
+        }
+      )
+    );
+
+
+    return group;
   }
 
 
@@ -835,59 +1958,66 @@
      ========================================================= */
 
   function buildWings(
-    visual
+    state
   ) {
+    const race =
+      getRaceData(
+        state
+      );
+
     if (
-      !visual.hasWings
+      !race?.flight
     ) {
-      return "";
+      return null;
     }
 
-    return `
-      <g
-        class="character-wings"
-      >
 
-        <path
-          d="
-            M55 117
-            C29 103 14 83 20 63
-            C40 66 57 84 64 106
-            Z
-          "
-          fill="rgba(225,225,218,.30)"
-          stroke="currentColor"
-          stroke-width="3"
-        />
+    const group =
+      svgElement(
+        "g",
+        {
+          class:
+            "character-wings"
+        }
+      );
 
-        <path
-          d="
-            M105 117
-            C131 103 146 83 140 63
-            C120 66 103 84 96 106
-            Z
-          "
-          fill="rgba(225,225,218,.30)"
-          stroke="currentColor"
-          stroke-width="3"
-        />
 
-        <path
-          d="
-            M26 70
-            C40 75 50 87 57 101
+    group.append(
+      svgElement(
+        "path",
+        {
+          d:
+            `
+              M150 210
+              C105 198 66 165 53 112
+              C99 122 139 151 166 194
+              Z
+            `,
 
-            M136 70
-            C122 75 112 87 105 101
-          "
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          opacity=".55"
-        />
+          class:
+            "character-wing character-wing-left"
+        }
+      ),
 
-      </g>
-    `;
+      svgElement(
+        "path",
+        {
+          d:
+            `
+              M210 210
+              C255 198 294 165 307 112
+              C261 122 221 151 194 194
+              Z
+            `,
+
+          class:
+            "character-wing character-wing-right"
+        }
+      )
+    );
+
+
+    return group;
   }
 
 
@@ -896,291 +2026,735 @@
      ========================================================= */
 
   function buildTail(
-    visual
+    state
   ) {
-    if (
-      !visual.isAnimalha
-    ) {
-      return "";
-    }
+    const race =
+      getRaceData(
+        state
+      );
 
     const animal =
-      visual.animal;
+      getAnimalData(
+        state
+      );
 
-    let tailShape = `
-      M127 181
-      C154 174 163 191 151 204
-      C143 213 132 209 138 201
-      C144 194 143 189 130 192
-    `;
 
-    if (
-      animal ===
-      "raposa"
-    ) {
-      tailShape = `
-        M125 181
-        C158 169 169 200 144 214
-        C131 221 124 209 139 201
-        C151 195 145 187 129 194
-      `;
-    }
+    let type =
+      animal?.tail ||
+      race?.tail ||
+      "";
+
+
+    type =
+      normalize(
+        type
+      );
+
 
     if (
-      animal ===
-      "gato"
+      !type ||
+      type ===
+        "none"
     ) {
-      tailShape = `
-        M125 184
-        C149 165 164 184 151 199
-        C142 209 130 204 140 197
-      `;
+      return null;
     }
+
+
+    const group =
+      svgElement(
+        "g",
+        {
+          class:
+            "character-tail"
+        }
+      );
+
+
+    let path =
+      `
+        M245 350
+        C286 346 311 372 297 394
+        C288 408 270 407 262 397
+      `;
+
 
     if (
-      animal ===
-      "cobra"
+      type ===
+      "fox"
     ) {
-      tailShape = `
-        M124 180
-        C154 177 159 194 145 202
-        C134 208 132 217 149 221
-      `;
+      path =
+        `
+          M245 350
+          C302 332 323 379 292 405
+          C273 421 257 410 269 398
+          C284 383 278 363 250 372
+        `;
     }
 
-    return `
-      <path
-        d="${tailShape}"
-        class="character-racial character-tail"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="9"
-        stroke-linecap="round"
-      />
-    `;
+
+    if (
+      type ===
+      "wolf"
+    ) {
+      path =
+        `
+          M244 350
+          C293 339 317 369 296 395
+          C282 412 268 407 274 394
+        `;
+    }
+
+
+    if (
+      type ===
+      "feline"
+    ) {
+      path =
+        `
+          M244 350
+          C282 329 306 349 294 376
+          C288 390 274 392 268 382
+        `;
+    }
+
+
+    group.append(
+      svgElement(
+        "path",
+        {
+          d:
+            path,
+
+          class:
+            "character-tail-shape"
+        }
+      )
+    );
+
+
+    return group;
   }
 
 
   /* =========================================================
-     BRAÇOS
+     ROUPAS
      ========================================================= */
 
-  function buildArms(
-    visual
+  function getClothingColor(
+    state
   ) {
-    const broad =
-      visual.isLarge ||
-      visual.isColossal;
-
-    const armWidth =
-      broad
-        ? 17
-        : 14;
-
-    return `
-      <path
-        d="
-          M${58 - armWidth}
-          116
-          Q${36 - armWidth}
-          137
-          ${48 - armWidth}
-          169
-        "
-        class="character-limb"
-        stroke-width="${armWidth}"
-      />
-
-      <path
-        d="
-          M${102 + armWidth}
-          116
-          Q${124 + armWidth}
-          137
-          ${112 + armWidth}
-          169
-        "
-        class="character-limb"
-        stroke-width="${armWidth}"
-      />
-    `;
-  }
-
-
-  /* =========================================================
-     CORPO
-     ========================================================= */
-
-  function buildBody(
-    state,
-    palette,
-    visual,
-    body
-  ) {
-    const female =
-      state.gender ===
-      "feminino";
-
-    const width =
-      visual.isColossal
-        ? 77
-        : visual.isLarge
-          ? 70
-          : visual.isDwarf
-            ? 58
-            : female
-              ? 58
-              : 64;
-
-
-    const clothing =
-      normalizeText(
-        state.appearance
+    const text =
+      normalize(
+        state?.appearance
           ?.clothing
       );
 
-    const armor =
-      clothing.includes(
-        "armadura"
-      );
 
-    const robe =
-      clothing.includes(
-        "manto"
-      ) ||
-      clothing.includes(
-        "vestido"
-      );
-
-    const bodyColor =
-      armor
-        ? "#383632"
-        : robe
-          ? "#292724"
-          : "url(#character-clothes)";
+    if (
+      text.includes(
+        "branco"
+      )
+    ) {
+      return "#ddd4c5";
+    }
 
 
-    return `
-      <g
-        class="character-body"
-      >
+    if (
+      text.includes(
+        "vermelho"
+      )
+    ) {
+      return "#6d3231";
+    }
 
-        <path
-          d="
-            M${80 - width / 2}
-            105
 
-            Q${80 - width / 2 - 8}
-            134
-            ${80 - width / 2 + 4}
-            177
+    if (
+      text.includes(
+        "azul"
+      )
+    ) {
+      return "#344967";
+    }
 
-            Q80
-            196
-            ${80 + width / 2 - 4}
-            177
 
-            Q${80 + width / 2 + 8}
-            134
-            ${80 + width / 2}
-            105
+    if (
+      text.includes(
+        "verde"
+      )
+    ) {
+      return "#42583e";
+    }
 
-            Q80
-            92
-            ${80 - width / 2}
-            105
 
-            Z
-          "
-          fill="${bodyColor}"
-          stroke="#11100e"
-          stroke-width="2"
-        />
+    return "#4d473f";
+  }
 
-        ${robe
-          ? `
-            <path
-              d="
-                M56 111
-                Q80 101
-                104 111
-                L116 210
-                Q80 224
-                44 210
-                Z
-              "
-              fill="#26231f"
-              stroke="#141311"
-              stroke-width="2"
-            />
-          `
-          : ""
+
+  function buildClothing(
+    state,
+    geometry
+  ) {
+    const group =
+      svgElement(
+        "g",
+        {
+          class:
+            "character-clothing"
         }
+      );
 
-        ${buildArms(
-          visual
-        )}
 
-        <path
-          d="
-            M${63}
-            181
-            L${58}
-            264
+    const color =
+      getClothingColor(
+        state
+      );
 
-            Q${64}
-            270
-            ${73}
-            265
 
-            L${79}
-            187
-          "
-          class="character-leg"
-        />
+    const chest =
+      svgElement(
+        "path",
+        {
+          d:
+            `
+              M130 214
+              Q180 196
+              230 214
+              L239 347
+              Q180 366
+              121 347
+              Z
+            `,
 
-        <path
-          d="
-            M${97}
-            181
-            L${102}
-            264
+          fill:
+            color,
 
-            Q${96}
-            270
-            ${87}
-            265
+          class:
+            "character-clothes-main"
+        }
+      );
 
-            L${81}
-            187
-          "
-          class="character-leg"
-        />
 
-        <path
-          d="
-            M53 263
-            L77 263
-            L77 273
-            L50 273
+    group.append(
+      chest
+    );
+
+
+    return group;
+  }
+
+
+  /* =========================================================
+     CAPA
+     ========================================================= */
+
+  function buildCape(
+    state
+  ) {
+    const clothing =
+      normalize(
+        state?.appearance
+          ?.clothing
+      );
+
+
+    if (
+      !clothing.includes(
+        "capa"
+      ) &&
+      !clothing.includes(
+        "cape"
+      )
+    ) {
+      return null;
+    }
+
+
+    return svgElement(
+      "path",
+      {
+        d:
+          `
+            M130 206
+            Q180 190
+            230 206
+            L275 485
+            Q180 520
+            85 485
             Z
-          "
-          class="character-foot"
-        />
+          `,
 
-        <path
-          d="
-            M83 263
-            L107 263
-            L110 273
-            L83 273
+        class:
+          "character-cape"
+      }
+    );
+  }
+
+
+  /* =========================================================
+     ARMADURA
+     ========================================================= */
+
+  function buildArmor(
+    state
+  ) {
+    const clothing =
+      normalize(
+        state?.appearance
+          ?.clothing
+      );
+
+
+    if (
+      !clothing.includes(
+        "armadura"
+      ) &&
+      !clothing.includes(
+        "armor"
+      )
+    ) {
+      return null;
+    }
+
+
+    const group =
+      svgElement(
+        "g",
+        {
+          class:
+            "character-armor"
+        }
+      );
+
+
+    group.append(
+      svgElement(
+        "path",
+        {
+          d:
+            `
+              M128 214
+              L154 199
+              L180 213
+              L206 199
+              L232 214
+              L240 348
+              Q180 365 120 348
+              Z
+            `,
+
+          class:
+            "character-armor-chest"
+        }
+      ),
+
+      svgElement(
+        "path",
+        {
+          d:
+            "M138 214 L110 238 L96 317",
+
+          class:
+            "character-armor-left"
+        }
+      ),
+
+      svgElement(
+        "path",
+        {
+          d:
+            "M222 214 L250 238 L264 317",
+
+          class:
+            "character-armor-right"
+        }
+      )
+    );
+
+
+    return group;
+  }
+
+
+  /* =========================================================
+     CINTO
+     ========================================================= */
+
+  function buildBelt(
+    state
+  ) {
+    const clothing =
+      normalize(
+        state?.appearance
+          ?.clothing
+      );
+
+
+    if (
+      !clothing.includes(
+        "cinto"
+      ) &&
+      !clothing.includes(
+        "belt"
+      )
+    ) {
+      return null;
+    }
+
+
+    return svgElement(
+      "path",
+      {
+        d:
+          `
+            M116 333
+            Q180 350
+            244 333
+            L247 350
+            Q180 368
+            113 350
             Z
-          "
-          class="character-foot"
-        />
+          `,
 
-      </g>
-    `;
+        class:
+          "character-belt"
+      }
+    );
+  }
+
+
+  /* =========================================================
+     ACESSÓRIOS
+     ========================================================= */
+
+  function buildNecklace(
+    state
+  ) {
+    const value =
+      normalize(
+        state?.appearance
+          ?.necklace
+      );
+
+
+    if (
+      !value ||
+      value ===
+        "nenhum" ||
+      value ===
+        "none"
+    ) {
+      return null;
+    }
+
+
+    const group =
+      svgElement(
+        "g",
+        {
+          class:
+            "character-necklace"
+        }
+      );
+
+
+    group.append(
+      svgElement(
+        "path",
+        {
+          d:
+            "M156 178 Q180 206 204 178",
+
+          class:
+            "necklace-chain"
+        }
+      ),
+
+      svgElement(
+        "circle",
+        {
+          cx:
+            "180",
+
+          cy:
+            "201",
+
+          r:
+            "7",
+
+          class:
+            "necklace-pendant"
+        }
+      )
+    );
+
+
+    return group;
+  }
+
+
+  function buildGlasses(
+    state
+  ) {
+    const value =
+      normalize(
+        state?.appearance
+          ?.glasses
+      );
+
+
+    if (
+      !value ||
+      value ===
+        "nenhum" ||
+      value ===
+        "none"
+    ) {
+      return null;
+    }
+
+
+    const group =
+      svgElement(
+        "g",
+        {
+          class:
+            "character-glasses"
+        }
+      );
+
+
+    group.append(
+      svgElement(
+        "rect",
+        {
+          x:
+            "153",
+
+          y:
+            "122",
+
+          width:
+            "22",
+
+          height:
+            "17",
+
+          rx:
+            "7",
+
+          class:
+            "glasses-frame"
+        }
+      ),
+
+      svgElement(
+        "rect",
+        {
+          x:
+            "185",
+
+          y:
+            "122",
+
+          width:
+            "22",
+
+          height:
+            "17",
+
+          rx:
+            "7",
+
+          class:
+            "glasses-frame"
+        }
+      ),
+
+      svgElement(
+        "path",
+        {
+          d:
+            "M175 130 H185",
+
+          class:
+            "glasses-bridge"
+        }
+      )
+    );
+
+
+    return group;
+  }
+
+
+  /* =========================================================
+     CHAPÉU / CAPUZ
+     ========================================================= */
+
+  function buildHeadwear(
+    state
+  ) {
+    const appearance =
+      state?.appearance ||
+      {};
+
+
+    const text =
+      normalize(
+        appearance.headwear ||
+        appearance.hat ||
+        appearance.hood ||
+        ""
+      );
+
+
+    if (
+      !text ||
+      text ===
+        "nenhum" ||
+      text ===
+        "none"
+    ) {
+      return null;
+    }
+
+
+    if (
+      text.includes(
+        "capuz"
+      ) ||
+      text.includes(
+        "hood"
+      )
+    ) {
+      return svgElement(
+        "path",
+        {
+          d:
+            `
+              M132 126
+              Q136 63
+              180 48
+              Q224 63
+              228 126
+              L212 164
+              Q180 146
+              148 164
+              Z
+            `,
+
+          class:
+            "character-hood"
+        }
+      );
+    }
+
+
+    return svgElement(
+      "path",
+      {
+        d:
+          `
+            M132 94
+            Q180 50
+            228 94
+            L240 105
+            Q180 89
+            120 105
+            Z
+          `,
+
+        class:
+          "character-hat"
+      }
+    );
+  }
+
+
+  /* =========================================================
+     MÁSCARA
+     ========================================================= */
+
+  function buildMask(
+    state
+  ) {
+    const value =
+      normalize(
+        state?.appearance
+          ?.mask
+      );
+
+
+    if (
+      !value ||
+      value ===
+        "nenhuma" ||
+      value ===
+        "none"
+    ) {
+      return null;
+    }
+
+
+    return svgElement(
+      "path",
+      {
+        d:
+          `
+            M149 118
+            Q180 104
+            211 118
+            L209 153
+            Q180 173
+            151 153
+            Z
+          `,
+
+        class:
+          "character-mask"
+      }
+    );
+  }
+
+
+  /* =========================================================
+     TATUAGENS
+     ========================================================= */
+
+  function buildTattoo(
+    state
+  ) {
+    const value =
+      normalize(
+        state?.appearance
+          ?.tattoos
+      );
+
+
+    if (
+      !value
+    ) {
+      return null;
+    }
+
+
+    return svgElement(
+      "path",
+      {
+        d:
+          `
+            M155 259
+            Q180 240
+            205 259
+            Q180 281
+            155 259
+            Z
+          `,
+
+        class:
+          "character-tattoo"
+      }
+    );
   }
 
 
@@ -1189,477 +2763,904 @@
      ========================================================= */
 
   function buildScars(
-    appearance
-  ) {
-    const scars =
-      normalizeText(
-        appearance.scars
-      );
-
-    if (
-      !scars
-    ) {
-      return "";
-    }
-
-    return `
-      <g
-        class="character-scars"
-        fill="none"
-        stroke="#684941"
-        stroke-width="2"
-        stroke-linecap="round"
-      >
-
-        <path
-          d="
-            M52 77
-            L66 91
-          "
-        />
-
-        <path
-          d="
-            M55 74
-            L69 88
-          "
-        />
-
-      </g>
-    `;
-  }
-
-
-  /* =========================================================
-     TATUAGENS
-     ========================================================= */
-
-  function buildTattoos(
-    appearance
-  ) {
-    const tattoos =
-      normalizeText(
-        appearance.tattoos
-      );
-
-    if (
-      !tattoos
-    ) {
-      return "";
-    }
-
-    return `
-      <g
-        class="character-tattoos"
-        fill="none"
-        stroke="#4a3b35"
-        stroke-width="2"
-        opacity=".9"
-      >
-
-        <path
-          d="
-            M51 123
-            Q61 133
-            55 148
-
-            M55 129
-            L63 136
-
-            M109 123
-            Q99 133
-            105 148
-
-            M105 129
-            L97 136
-          "
-        />
-
-      </g>
-    `;
-  }
-
-
-  /* =========================================================
-     DETALHES RACIAIS
-     ========================================================= */
-
-  function buildRacialDetails(
-    visual
-  ) {
-    if (
-      visual.isDwarf
-    ) {
-      return `
-        <path
-          d="
-            M55 88
-            Q80 108
-            105 88
-          "
-          class="character-racial-detail"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="4"
-          opacity=".65"
-        />
-      `;
-    }
-
-    if (
-      visual.isOrc
-    ) {
-      return `
-        <path
-          d="
-            M61 93
-            L68 99
-            M99 93
-            L92 99
-          "
-          class="character-racial-detail"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-        />
-      `;
-    }
-
-    if (
-      visual.isFairy
-    ) {
-      return `
-        <circle
-          cx="43"
-          cy="111"
-          r="4"
-          fill="currentColor"
-          opacity=".50"
-        />
-
-        <circle
-          cx="117"
-          cy="111"
-          r="4"
-          fill="currentColor"
-          opacity=".50"
-        />
-      `;
-    }
-
-    return "";
-  }
-
-
-  /* =========================================================
-     SVG COMPLETO
-     ========================================================= */
-
-  function buildSvg(
     state
   ) {
-    const appearance =
-      state.appearance ||
-      {};
-
-    const visual =
-      getRaceVisualData(
-        state
-      );
-
-    const palette =
-      getPalette(
-        appearance
-      );
-
-    const body =
-      calculateBody(
-        state
+    const value =
+      normalize(
+        state?.appearance
+          ?.scars
       );
 
 
-    const transform =
-      `translate(
-        ${90 - 90 * body.width}
-        ${body.height >= 285 ? 3 : 8}
-      ) scale(
-        ${body.width}
-        ${body.height / 285}
-      )`;
+    if (
+      !value
+    ) {
+      return null;
+    }
 
 
-    return `
-      <svg
-        class="${CONFIG.svgClass}"
-        viewBox="${CONFIG.viewBox}"
-        role="img"
-        aria-label="Pré-visualização do personagem"
-        data-race="${escapeHtml(
-          state.race || ""
-        )}"
-        data-animalha="${escapeHtml(
-          state.animalha || ""
-        )}"
-        data-gender="${escapeHtml(
-          state.gender || ""
-        )}"
-      >
-
-        <defs>
-
-          <linearGradient
-            id="character-clothes"
-            x1="0"
-            y1="0"
-            x2="0"
-            y2="1"
-          >
-
-            <stop
-              offset="0%"
-              stop-color="#514c45"
-            />
-
-            <stop
-              offset="100%"
-              stop-color="#1e1c19"
-            />
-
-          </linearGradient>
-
-        </defs>
+    const group =
+      svgElement(
+        "g",
+        {
+          class:
+            "character-scars"
+        }
+      );
 
 
-        <g
-          transform="${transform}"
-        >
+    group.append(
+      svgElement(
+        "path",
+        {
+          d:
+            "M158 145 L170 158",
+
+          class:
+            "character-scar"
+        }
+      ),
+
+      svgElement(
+        "path",
+        {
+          d:
+            "M158 158 L170 145",
+
+          class:
+            "character-scar"
+        }
+      )
+    );
 
 
-          <!-- =========================================
-               ASAS
-               ========================================= -->
-
-          ${buildWings(
-            visual
-          )}
-
-
-          <!-- =========================================
-               SOMBRA
-               ========================================= -->
-
-          <ellipse
-            cx="90"
-            cy="308"
-            rx="43"
-            ry="8"
-            class="character-shadow"
-          />
-
-
-          <!-- =========================================
-               CAUDA
-               ========================================= -->
-
-          ${buildTail(
-            visual
-          )}
-
-
-          <!-- =========================================
-               CORPO
-               ========================================= -->
-
-          ${buildBody(
-            state,
-            palette,
-            visual,
-            body
-          )}
-
-
-          <!-- =========================================
-               ROSTO
-               ========================================= -->
-
-          ${buildFace(
-            state,
-            palette,
-            visual
-          )}
-
-
-          <!-- =========================================
-               CICATRIZES
-               ========================================= -->
-
-          ${buildScars(
-            appearance
-          )}
-
-
-          <!-- =========================================
-               TATUAGENS
-               ========================================= -->
-
-          ${buildTattoos(
-            appearance
-          )}
-
-
-          <!-- =========================================
-               DETALHES RACIAIS
-               ========================================= -->
-
-          ${buildRacialDetails(
-            visual
-          )}
-
-        </g>
-
-      </svg>
-    `;
+    return group;
   }
 
 
   /* =========================================================
-     RENDER
+     MARCA DE NASCENÇA
+     ========================================================= */
+
+  function buildBirthmark(
+    state
+  ) {
+    const value =
+      normalize(
+        state?.appearance
+          ?.birthmark
+      );
+
+
+    if (
+      !value
+    ) {
+      return null;
+    }
+
+
+    return svgElement(
+      "ellipse",
+      {
+        cx:
+          "193",
+
+        cy:
+          "144",
+
+        rx:
+          "7",
+
+        ry:
+          "4",
+
+        class:
+          "character-birthmark"
+      }
+    );
+  }
+
+
+  /* =========================================================
+     MANCHAS
+     ========================================================= */
+
+  function buildMarkings(
+    state
+  ) {
+    const animal =
+      getAnimalData(
+        state
+      );
+
+
+    const requested =
+      normalize(
+        state?.appearance
+          ?.markings
+      );
+
+
+    if (
+      !requested &&
+      !animal?.markings?.length
+    ) {
+      return null;
+    }
+
+
+    const group =
+      svgElement(
+        "g",
+        {
+          class:
+            "character-markings"
+        }
+      );
+
+
+    if (
+      animal?.markings?.includes(
+        "spots"
+      ) ||
+      requested.includes(
+        "manchas"
+      ) ||
+      requested.includes(
+        "spots"
+      )
+    ) {
+      [
+        [
+          155,
+          228,
+          7
+        ],
+
+        [
+          208,
+          252,
+          5
+        ],
+
+        [
+          150,
+          283,
+          4
+        ],
+
+        [
+          211,
+          296,
+          6
+        ]
+      ].forEach(
+        ([
+          cx,
+          cy,
+          r
+        ]) => {
+
+          group.append(
+            svgElement(
+              "circle",
+              {
+                cx,
+                cy,
+                r,
+
+                class:
+                  "character-spot"
+              }
+            )
+          );
+        }
+      );
+    }
+
+
+    if (
+      animal?.markings?.includes(
+        "stripes"
+      ) ||
+      requested.includes(
+        "listras"
+      ) ||
+      requested.includes(
+        "stripes"
+      )
+    ) {
+
+      [
+        225,
+        240,
+        255,
+        270
+      ].forEach(
+        y => {
+
+          group.append(
+            svgElement(
+              "path",
+              {
+                d:
+                  `M140 ${y} L162 ${y - 10}`,
+
+                class:
+                  "character-stripe"
+              }
+            )
+          );
+
+
+          group.append(
+            svgElement(
+              "path",
+              {
+                d:
+                  `M198 ${y - 10} L220 ${y}`,
+
+                class:
+                  "character-stripe"
+              }
+            )
+          );
+        }
+      );
+    }
+
+
+    return group;
+  }
+
+
+  /* =========================================================
+     CHIFRES
+     ========================================================= */
+
+  function buildHorns(
+    state
+  ) {
+    const race =
+      getRaceData(
+        state
+      );
+
+
+    const animal =
+      getAnimalData(
+        state
+      );
+
+
+    const raceId =
+      normalize(
+        state?.race
+      );
+
+
+    const enabled =
+      race?.horns ||
+      animal?.horns ||
+      raceId ===
+        "orc" ||
+      raceId ===
+        "troll" ||
+      raceId ===
+        "colosso";
+
+
+    if (
+      !enabled
+    ) {
+      return null;
+    }
+
+
+    const group =
+      svgElement(
+        "g",
+        {
+          class:
+            "character-horns"
+        }
+      );
+
+
+    group.append(
+      svgElement(
+        "path",
+        {
+          d:
+            `
+              M158 101
+              Q141 76
+              151 57
+              Q169 78
+              170 103
+              Z
+            `,
+
+          class:
+            "character-horn"
+        }
+      ),
+
+      svgElement(
+        "path",
+        {
+          d:
+            `
+              M202 101
+              Q219 76
+              209 57
+              Q191 78
+              190 103
+              Z
+            `,
+
+          class:
+            "character-horn"
+        }
+      )
+    );
+
+
+    return group;
+  }
+
+
+  /* =========================================================
+     OBJETOS / ARMA
+     ========================================================= */
+
+  function buildWeapon(
+    state
+  ) {
+    const value =
+      normalize(
+        state?.appearance
+          ?.weapon
+      );
+
+
+    if (
+      !value
+    ) {
+      return null;
+    }
+
+
+    if (
+      value.includes(
+        "espada"
+      ) ||
+      value.includes(
+        "sword"
+      )
+    ) {
+      return svgElement(
+        "g",
+        {
+          class:
+            "character-weapon"
+        }
+      );
+    }
+
+
+    return null;
+  }
+
+
+  /* =========================================================
+     PERSONAGEM COMPLETO
+     ========================================================= */
+
+  function buildCharacter(
+    state
+  ) {
+    const svg =
+      createSvg(
+        state
+      );
+
+
+    addDefs(
+      svg
+    );
+
+
+    const geometry =
+      calculateGeometry(
+        state
+      );
+
+
+    const skin =
+      getCurrentSkinColor(
+        state
+      );
+
+
+    const animalColor =
+      getAnimalColor(
+        state
+      );
+
+
+    const hairColor =
+      getHairColor(
+        state
+      );
+
+
+    const clothesColor =
+      getClothingColor(
+        state
+      );
+
+
+    const style =
+      document.createElement(
+        "style"
+      );
+
+
+    style.textContent = `
+      .aerion-character-svg {
+        --character-skin:
+          ${skin};
+
+        --character-skin-shadow:
+          color-mix(
+            in srgb,
+            ${skin} 72%,
+            #2c211c 28%
+          );
+
+        --character-animal:
+          ${animalColor};
+
+        --character-clothes:
+          ${clothesColor};
+
+        --character-clothes-shadow:
+          color-mix(
+            in srgb,
+            ${clothesColor} 65%,
+            #080706 35%
+          );
+
+        --character-hair:
+          ${hairColor};
+      }
+    `;
+
+
+    svg.append(
+      style
+    );
+
+
+    /* ---------------------------------------------
+       CAMADAS
+       --------------------------------------------- */
+
+    const shadow =
+      buildShadow();
+
+
+    const wings =
+      buildWings(
+        state
+      );
+
+
+    const tail =
+      buildTail(
+        state
+      );
+
+
+    const body =
+      buildBody(
+        geometry
+      );
+
+
+    const legs =
+      buildLegs(
+        geometry
+      );
+
+
+    const arms =
+      buildArms(
+        geometry
+      );
+
+
+    const neck =
+      buildNeck(
+        geometry
+      );
+
+
+    const head =
+      buildHead(
+        state,
+        geometry
+      );
+
+
+    const ears =
+      buildEars(
+        state
+      );
+
+
+    const horns =
+      buildHorns(
+        state
+      );
+
+
+    const face =
+      buildFace(
+        state,
+        geometry
+      );
+
+
+    const hair =
+      buildHair(
+        state
+      );
+
+
+    const facialHair =
+      buildFacialHair(
+        state
+      );
+
+
+    const clothing =
+      buildClothing(
+        state,
+        geometry
+      );
+
+
+    const cape =
+      buildCape(
+        state
+      );
+
+
+    const armor =
+      buildArmor(
+        state
+      );
+
+
+    const belt =
+      buildBelt(
+        state
+      );
+
+
+    const necklace =
+      buildNecklace(
+        state
+      );
+
+
+    const glasses =
+      buildGlasses(
+        state
+      );
+
+
+    const headwear =
+      buildHeadwear(
+        state
+      );
+
+
+    const mask =
+      buildMask(
+        state
+      );
+
+
+    const markings =
+      buildMarkings(
+        state
+      );
+
+
+    const birthmark =
+      buildBirthmark(
+        state
+      );
+
+
+    const scars =
+      buildScars(
+        state
+      );
+
+
+    const tattoo =
+      buildTattoo(
+        state
+      );
+
+
+    const weapon =
+      buildWeapon(
+        state
+      );
+
+
+    /* ---------------------------------------------
+       ORDEM
+       --------------------------------------------- */
+
+    const layers = [
+      shadow,
+
+      wings,
+
+      tail,
+
+      ...legs,
+
+      body,
+
+      ...arms,
+
+      clothing,
+
+      cape,
+
+      armor,
+
+      belt,
+
+      neck,
+
+      head,
+
+      ears,
+
+      horns,
+
+      face,
+
+      markings,
+
+      birthmark,
+
+      scars,
+
+      tattoo,
+
+      hair,
+
+      facialHair,
+
+      necklace,
+
+      glasses,
+
+      headwear,
+
+      mask,
+
+      weapon
+    ];
+
+
+    layers.forEach(
+      layer => {
+
+        if (
+          !layer
+        ) {
+          return;
+        }
+
+        svg.append(
+          layer
+        );
+      }
+    );
+
+
+    applyGeometryStyles(
+      svg,
+      geometry
+    );
+
+
+    return svg;
+  }
+
+
+  /* =========================================================
+     ESTILO / ESCALA
+     ========================================================= */
+
+  function applyGeometryStyles(
+    svg,
+    geometry
+  ) {
+    const scale =
+      0.80 +
+      geometry.normalized *
+        0.24;
+
+
+    const width =
+      geometry.body.width;
+
+
+    svg.style.setProperty(
+      "--character-scale",
+      String(
+        scale
+      )
+    );
+
+
+    svg.style.setProperty(
+      "--character-width",
+      String(
+        width
+      )
+    );
+
+
+    svg.dataset.height =
+      String(
+        geometry.current
+      );
+
+
+    svg.dataset.heightMin =
+      String(
+        geometry.min
+      );
+
+
+    svg.dataset.heightMax =
+      String(
+        geometry.max
+      );
+  }
+
+
+  /* =========================================================
+     RENDER ROOT
      ========================================================= */
 
   function render(
-    state = getState()
+    state = readState()
   ) {
-    if (!state) {
+    if (
+      !state
+    ) {
       return false;
     }
-
-    const container =
-      document.querySelector(
-        CONFIG.selector
-      );
-
-    if (!container) {
-      return false;
-    }
-
-
-    const key =
-      JSON.stringify({
-        race:
-          state.race,
-
-        animalha:
-          state.animalha,
-
-        gender:
-          state.gender,
-
-        height:
-          state.appearance
-            ?.height,
-
-        hair:
-          state.appearance
-            ?.hair,
-
-        eyes:
-          state.appearance
-            ?.eyes,
-
-        skin:
-          state.appearance
-            ?.skin,
-
-        clothing:
-          state.appearance
-            ?.clothing,
-
-        scars:
-          state.appearance
-            ?.scars,
-
-        tattoos:
-          state.appearance
-            ?.tattoos
-      });
 
 
     if (
-      key ===
-      lastRenderKey
+      !root
+    ) {
+      root =
+        document.querySelector(
+          CONFIG.rootSelector
+        );
+    }
+
+
+    if (
+      !root
+    ) {
+      return false;
+    }
+
+
+    const newHash =
+      hashState(
+        state
+      );
+
+
+    if (
+      newHash ===
+      lastRenderHash
     ) {
       return true;
     }
 
 
-    lastRenderKey =
-      key;
+    lastRenderHash =
+      newHash;
 
 
-    container.innerHTML =
-      buildSvg(
+    currentState =
+      state;
+
+    currentCharacter =
+      buildCharacter(
         state
       );
 
 
-    const race =
-      state.raceData ||
-      {};
-
-    const body =
-      calculateBody(
-        state
-      );
+    root.innerHTML =
+      "";
 
 
-    container.dataset.race =
+    root.append(
+      currentCharacter
+    );
+
+
+    root.dataset.race =
       state.race ||
       "";
 
-    container.dataset.animalha =
+
+    root.dataset.animalha =
       state.animalha ||
       "";
 
-    container.dataset.gender =
+
+    root.dataset.gender =
       state.gender ||
       "";
 
-    container.dataset.size =
-      race.size ||
+
+    root.dataset.size =
+      state.raceData?.size ||
       "medio";
 
-    container.style.setProperty(
-      "--character-scale",
-      String(
-        body.width
-      )
-    );
 
-    container.style.setProperty(
-      "--character-height",
-      `${body.height}px`
-    );
-
-
-    container.classList.toggle(
+    root.classList.toggle(
       "has-wings",
       Boolean(
-        race.flight
+        state.raceData?.flight
       )
     );
 
 
-    container.classList.toggle(
+    root.classList.toggle(
       "is-animalha",
       state.race ===
         "animalha"
     );
 
 
-    container.classList.toggle(
+    root.classList.toggle(
       "is-female",
       state.gender ===
         "feminino"
+    );
+
+
+    window.dispatchEvent(
+      new CustomEvent(
+        CONFIG.updateEvent,
+        {
+          detail: {
+            state,
+            root
+          }
+        }
+      )
     );
 
 
@@ -1672,8 +3673,2898 @@
      ========================================================= */
 
   function refresh() {
-    lastRenderKey = "";
+    lastRenderHash =
+      "";
+
     return render();
+  }
+
+
+  /* =========================================================
+     CONTROLES DO EDITOR
+     ========================================================= */
+
+  function getEditorOptions(
+    state
+  ) {
+    const assets =
+      getAssets();
+
+    if (
+      !assets
+    ) {
+      return {};
+    }
+
+
+    const rules =
+      getRaceRules(
+        state
+      );
+
+
+    const result = {
+
+
+      /* -----------------------------------------------
+         Corpo
+         ----------------------------------------------- */
+
+      bodyTypes:
+        (
+          assets.bodyTypes ||
+          []
+        ).filter(
+          item =>
+            !rules?.bodyTypes ||
+            rules.bodyTypes.includes(
+              item.id
+            )
+        ),
+
+
+      /* -----------------------------------------------
+         Pele
+         ----------------------------------------------- */
+
+      skinPalettes:
+        (
+          assets.skinRestrictions?.[
+            state?.race ||
+            ""
+          ] ||
+          [
+            "humana"
+          ]
+        )
+          .map(
+            paletteId =>
+              assets.skinPalettes?.[
+                paletteId
+              ]
+          )
+          .filter(
+            Boolean
+          ),
+
+
+      /* -----------------------------------------------
+         Cabelo
+         ----------------------------------------------- */
+
+      hairStyles:
+        assets.hairStyles ||
+        [],
+
+      hairColors:
+        assets.hairColors ||
+        [],
+
+
+      /* -----------------------------------------------
+         Face
+         ----------------------------------------------- */
+
+      eyeShapes:
+        assets.eyeShapes ||
+        [],
+
+      eyeColors:
+        assets.eyeColors ||
+        [],
+
+      eyebrows:
+        assets.eyebrows ||
+        [],
+
+      noses:
+        assets.noses ||
+        [],
+
+      mouths:
+        assets.mouths ||
+        [],
+
+
+      /* -----------------------------------------------
+         Racial
+         ----------------------------------------------- */
+
+      ears:
+        getAllowedPart(
+          state,
+          "ears"
+        ),
+
+      horns:
+        getAllowedPart(
+          state,
+          "horns"
+        ),
+
+      wings:
+        getAllowedPart(
+          state,
+          "wings"
+        ),
+
+      tails:
+        getAllowedPart(
+          state,
+          "tail"
+        ),
+
+
+      /* -----------------------------------------------
+         Marcas
+         ----------------------------------------------- */
+
+      markings:
+        rules?.markings
+          ? assets.bodyMarkings
+          : [],
+
+      birthmarks:
+        rules?.birthmarks
+          ? assets.birthmarks
+          : [],
+
+      scars:
+        rules?.scars
+          ? assets.scars
+          : [],
+
+      tattoos:
+        rules?.tattoos
+          ? assets.tattoos
+          : [],
+
+      piercings:
+        rules?.piercings
+          ? assets.piercings
+          : [],
+
+
+      /* -----------------------------------------------
+         Roupa
+         ----------------------------------------------- */
+
+      clothingStyles:
+        assets.clothingStyles ||
+        [],
+
+      shirts:
+        assets.shirts ||
+        [],
+
+      pants:
+        assets.pants ||
+        [],
+
+      dresses:
+        assets.dresses ||
+        [],
+
+      coats:
+        assets.coats ||
+        [],
+
+      capes:
+        assets.capes ||
+        [],
+
+      robes:
+        assets.robes ||
+        [],
+
+      belts:
+        assets.belts ||
+        [],
+
+      gloves:
+        assets.gloves ||
+        [],
+
+      boots:
+        assets.boots ||
+        [],
+
+
+      /* -----------------------------------------------
+         Armadura
+         ----------------------------------------------- */
+
+      armorStyles:
+        assets.armorStyles ||
+        [],
+
+      helmets:
+        assets.helmets ||
+        [],
+
+
+      /* -----------------------------------------------
+         Cabeça
+         ----------------------------------------------- */
+
+      hats:
+        assets.hats ||
+        [],
+
+      hoods:
+        assets.hoods ||
+        [],
+
+      masks:
+        assets.masks ||
+        [],
+
+      glasses:
+        assets.glasses ||
+        [],
+
+
+      /* -----------------------------------------------
+         Joias
+         ----------------------------------------------- */
+
+      necklaces:
+        assets.necklaces ||
+        [],
+
+      earrings:
+        assets.earrings ||
+        [],
+
+      bracelets:
+        assets.bracelets ||
+        [],
+
+      rings:
+        assets.rings ||
+        [],
+
+
+      /* -----------------------------------------------
+         Equipamentos
+         ----------------------------------------------- */
+
+      bags:
+        assets.bags ||
+        [],
+
+      backpacks:
+        assets.backpacks ||
+        [],
+
+      quivers:
+        assets.quivers ||
+        [],
+
+      weapons:
+        assets.weapons ||
+        [],
+
+      handItems:
+        assets.handItems ||
+        [],
+
+
+      /* -----------------------------------------------
+         Animalha
+         ----------------------------------------------- */
+
+      animalhaCategories:
+        assets.animalhaCategories ||
+        {},
+
+      animalhaAnimals:
+        assets.animalhaAnimals ||
+        {}
+    };
+
+
+    return result;
+  }
+
+
+  /* =========================================================
+     RESTRIÇÕES DE PEÇAS
+     ========================================================= */
+
+  function getAllowedPart(
+    state,
+    part
+  ) {
+    const assets =
+      getAssets();
+
+    const rules =
+      getRaceRules(
+        state
+      );
+
+
+    if (
+      !assets ||
+      !rules
+    ) {
+      return [];
+    }
+
+
+    const value =
+      rules[
+        part
+      ];
+
+
+    if (
+      value ===
+      false
+    ) {
+      return [];
+    }
+
+
+    if (
+      value ===
+      "required"
+    ) {
+      return assets[
+        part ===
+        "tail"
+          ? "tailTypes"
+          : part ===
+              "wings"
+            ? "wingTypes"
+            : part ===
+                "ears"
+              ? "humanEars"
+              : part ===
+                  "horns"
+                ? "hornStyles"
+                : []
+      ] || [];
+    }
+
+
+    if (
+      value ===
+      "animal-dependent"
+    ) {
+      const animal =
+        getAnimalData(
+          state
+        );
+
+      if (
+        !animal
+      ) {
+        return [];
+      }
+
+
+      return [{
+        id:
+          animal[
+            part
+          ],
+
+        name:
+          animal[
+            part
+          ]
+      }];
+    }
+
+
+    let source =
+      [];
+
+
+    switch (
+      part
+    ) {
+      case "ears":
+        source =
+          assets.humanEars ||
+          [];
+        break;
+
+      case "horns":
+        source =
+          assets.hornStyles ||
+          [];
+        break;
+
+      case "wings":
+        source =
+          assets.wingTypes ||
+          [];
+        break;
+
+      case "tail":
+        source =
+          assets.tailTypes ||
+          [];
+        break;
+    }
+
+
+    return source;
+  }
+
+
+  /* =========================================================
+     ANIMALHA
+     ========================================================= */
+
+  function getAnimalhaCategoryAnimals(
+    categoryId
+  ) {
+    const assets =
+      getAssets();
+
+    const category =
+      assets?.animalhaCategories?.[
+        categoryId
+      ];
+
+
+    if (
+      !category
+    ) {
+      return [];
+    }
+
+
+    return (
+      category.animals ||
+      []
+    )
+      .map(
+        id =>
+          assets.animalhaAnimals?.[
+            id
+          ]
+      )
+      .filter(
+        Boolean
+      );
+  }
+
+
+  function getAnimalhaCategories() {
+    const assets =
+      getAssets();
+
+    return Object.values(
+      assets?.animalhaCategories ||
+      {}
+    );
+  }
+
+
+  /* =========================================================
+     UI DO EDITOR
+     ========================================================= */
+
+  function findAppearancePanel() {
+    return document.querySelector(
+      '[data-panel="appearance"]'
+    );
+  }
+
+
+  function ensureEditorShell() {
+    const panel =
+      findAppearancePanel();
+
+
+    if (
+      !panel
+    ) {
+      return null;
+    }
+
+
+    let editor =
+      panel.querySelector(
+        "[data-character-customizer]"
+      );
+
+
+    if (
+      editor
+    ) {
+      return editor;
+    }
+
+
+    editor =
+      document.createElement(
+        "section"
+      );
+
+
+    editor.className =
+      "character-customizer";
+
+
+    editor.dataset.characterCustomizer =
+      "true";
+
+
+    editor.innerHTML = `
+      <div
+        class="character-customizer-heading"
+      >
+        <span class="eyebrow">
+          PERSONALIZAÇÃO
+        </span>
+
+        <h3>
+          Construa seu personagem
+        </h3>
+
+        <p>
+          As opções mostradas aqui respeitam a raça e as
+          características selecionadas.
+        </p>
+      </div>
+
+
+      <div
+        class="character-customizer-tabs"
+        data-character-tabs
+      ></div>
+
+
+      <div
+        class="character-customizer-body"
+        data-character-controls
+      ></div>
+    `;
+
+
+    const controls =
+      panel.querySelector(
+        ".appearance-controls"
+      );
+
+
+    if (
+      controls
+    ) {
+      controls.before(
+        editor
+      );
+    } else {
+      panel.append(
+        editor
+      );
+    }
+
+
+    return editor;
+  }
+
+
+  /* =========================================================
+     ABAS
+     ========================================================= */
+
+  const EDITOR_TABS = Object.freeze([
+    {
+      id:
+        "body",
+
+      label:
+        "Corpo"
+    },
+
+    {
+      id:
+        "face",
+
+      label:
+        "Rosto"
+    },
+
+    {
+      id:
+        "hair",
+
+      label:
+        "Cabelo"
+    },
+
+    {
+      id:
+        "racial",
+
+      label:
+        "Raça"
+    },
+
+    {
+      id:
+        "clothing",
+
+      label:
+        "Roupas"
+    },
+
+    {
+      id:
+        "accessories",
+
+      label:
+        "Acessórios"
+    },
+
+    {
+      id:
+        "marks",
+
+      label:
+        "Marcas"
+    },
+
+    {
+      id:
+        "equipment",
+
+      label:
+        "Equipamento"
+    }
+  ]);
+
+
+  let activeTab =
+    "body";
+
+
+  function renderEditorTabs(
+    editor
+  ) {
+    const root =
+      editor.querySelector(
+        "[data-character-tabs]"
+      );
+
+
+    if (
+      !root
+    ) {
+      return;
+    }
+
+
+    root.innerHTML =
+      "";
+
+
+    EDITOR_TABS.forEach(
+      tab => {
+
+        const button =
+          document.createElement(
+            "button"
+          );
+
+
+        button.type =
+          "button";
+
+
+        button.className =
+          "character-editor-tab";
+
+
+        button.classList.toggle(
+          "active",
+          activeTab ===
+            tab.id
+        );
+
+
+        button.dataset.tab =
+          tab.id;
+
+
+        button.textContent =
+          tab.label;
+
+
+        button.addEventListener(
+          "click",
+          () => {
+
+            activeTab =
+              tab.id;
+
+            renderEditor(
+              editor,
+              currentState
+            );
+          }
+        );
+
+
+        root.append(
+          button
+        );
+      }
+    );
+  }
+
+
+  /* =========================================================
+     CONTROLES GENÉRICOS
+     ========================================================= */
+
+  function addSectionTitle(
+    root,
+    label,
+    title
+  ) {
+    const heading =
+      document.createElement(
+        "div"
+      );
+
+
+    heading.className =
+      "character-editor-section-title";
+
+
+    heading.innerHTML = `
+      <span class="eyebrow">
+        ${escapeHtml(
+          label
+        )}
+      </span>
+
+      <h4>
+        ${escapeHtml(
+          title
+        )}
+      </h4>
+    `;
+
+
+    root.append(
+      heading
+    );
+  }
+
+
+  function addSelect(
+    root,
+    {
+      id,
+      label,
+      value,
+      options,
+      onChange
+    }
+  ) {
+    if (
+      !Array.isArray(
+        options
+      )
+    ) {
+      return null;
+    }
+
+
+    const wrapper =
+      document.createElement(
+        "label"
+      );
+
+
+    wrapper.className =
+      "character-editor-field";
+
+
+    const text =
+      document.createElement(
+        "span"
+      );
+
+
+    text.className =
+      "character-editor-label";
+
+
+    text.textContent =
+      label;
+
+
+    const select =
+      document.createElement(
+        "select"
+      );
+
+
+    select.id =
+      id;
+
+
+    select.className =
+      "character-editor-select";
+
+
+    select.innerHTML = `
+      <option value="">
+        Padrão
+      </option>
+
+      ${options.map(
+        option => `
+          <option
+            value="${escapeHtml(
+              option.id ??
+              option
+            )}"
+          >
+            ${escapeHtml(
+              option.name ??
+              option
+            )}
+          </option>
+        `
+      ).join("")}
+    `;
+
+
+    if (
+      value !=
+      null
+    ) {
+      select.value =
+        String(
+          value
+        );
+    }
+
+
+    select.addEventListener(
+      "change",
+      () => {
+
+        onChange(
+          select.value
+        );
+      }
+    );
+
+
+    wrapper.append(
+      text,
+      select
+    );
+
+
+    root.append(
+      wrapper
+    );
+
+
+    return select;
+  }
+
+
+  function addColorGrid(
+    root,
+    {
+      label,
+      colors,
+      value,
+      onChange
+    }
+  ) {
+    const wrapper =
+      document.createElement(
+        "div"
+      );
+
+
+    wrapper.className =
+      "character-color-field";
+
+
+    const title =
+      document.createElement(
+        "span"
+      );
+
+
+    title.className =
+      "character-editor-label";
+
+
+    title.textContent =
+      label;
+
+
+    const grid =
+      document.createElement(
+        "div"
+      );
+
+
+    grid.className =
+      "character-color-grid";
+
+
+    (
+      colors ||
+      []
+    ).forEach(
+      color => {
+
+        const button =
+          document.createElement(
+            "button"
+          );
+
+
+        button.type =
+          "button";
+
+
+        button.className =
+          "character-color-option";
+
+
+        button.style.background =
+          color;
+
+
+        button.dataset.color =
+          color;
+
+
+        button.classList.toggle(
+          "selected",
+          color ===
+            value
+        );
+
+
+        button.setAttribute(
+          "aria-label",
+          color
+        );
+
+
+        button.addEventListener(
+          "click",
+          () => {
+
+            onChange(
+              color
+            );
+
+            $$(
+              ".character-color-option",
+              grid
+            ).forEach(
+              item => {
+
+                item.classList.toggle(
+                  "selected",
+                  item ===
+                    button
+                );
+              }
+            );
+          }
+        );
+
+
+        grid.append(
+          button
+        );
+      }
+    );
+
+
+    wrapper.append(
+      title,
+      grid
+    );
+
+
+    root.append(
+      wrapper
+    );
+  }
+
+
+  function addRange(
+    root,
+    {
+      label,
+      id,
+      value,
+      min,
+      max,
+      step,
+      suffix,
+      onChange
+    }
+  ) {
+    const wrapper =
+      document.createElement(
+        "label"
+      );
+
+
+    wrapper.className =
+      "character-editor-range";
+
+
+    const top =
+      document.createElement(
+        "span"
+      );
+
+
+    top.className =
+      "character-editor-label";
+
+
+    const valueLabel =
+      document.createElement(
+        "strong"
+      );
+
+
+    valueLabel.textContent =
+      `${value}${suffix || ""}`;
+
+
+    top.textContent =
+      label;
+
+
+    top.append(
+      valueLabel
+    );
+
+
+    const input =
+      document.createElement(
+        "input"
+      );
+
+
+    input.type =
+      "range";
+
+
+    input.id =
+      id;
+
+
+    input.min =
+      String(
+        min
+      );
+
+
+    input.max =
+      String(
+        max
+      );
+
+
+    input.step =
+      String(
+        step ??
+        0.01
+      );
+
+
+    input.value =
+      String(
+        value
+      );
+
+
+    input.addEventListener(
+      "input",
+      () => {
+
+        const next =
+          Number(
+            input.value
+          );
+
+
+        valueLabel.textContent =
+          `${next}${suffix || ""}`;
+
+
+        onChange(
+          next
+        );
+      }
+    );
+
+
+    wrapper.append(
+      top,
+      input
+    );
+
+
+    root.append(
+      wrapper
+    );
+  }
+
+
+  /* =========================================================
+     ABAS DO EDITOR
+     ========================================================= */
+
+  function renderBodyControls(
+    root,
+    state,
+    options
+  ) {
+    addSectionTitle(
+      root,
+      "CORPO",
+      "Estrutura"
+    );
+
+
+    addSelect(
+      root,
+      {
+        id:
+          "characterBodyType",
+
+        label:
+          "Tipo corporal",
+
+        value:
+          state.appearance
+            ?.bodyType,
+
+        options:
+          options.bodyTypes,
+
+        onChange:
+          value => {
+
+            updateAppearance(
+              "bodyType",
+              value
+            );
+          }
+      }
+    );
+
+
+    const height =
+      getHeightData(
+        state
+      );
+
+
+    addRange(
+      root,
+      {
+        id:
+          "characterHeightControl",
+
+        label:
+          "Altura",
+
+        value:
+          height.current,
+
+        min:
+          height.min,
+
+        max:
+          height.max,
+
+        step:
+          1,
+
+        suffix:
+          " cm",
+
+        onChange:
+          value => {
+
+            const ficha =
+              getFicha();
+
+
+            ficha?.setHeight?.(
+              value
+            );
+          }
+      }
+    );
+
+
+    addRange(
+      root,
+      {
+        id:
+          "characterWidthControl",
+
+        label:
+          "Largura corporal",
+
+        value:
+          num(
+            state.appearance
+              ?.width,
+            1
+          ),
+
+        min:
+          .82,
+
+        max:
+          1.20,
+
+        step:
+          .01,
+
+        suffix:
+          "",
+
+        onChange:
+          value => {
+
+            updateAppearance(
+              "width",
+              value
+            );
+          }
+      }
+    );
+
+
+    addRange(
+      root,
+      {
+        id:
+          "characterShouldersControl",
+
+        label:
+          "Ombros",
+
+        value:
+          num(
+            state.appearance
+              ?.shoulders,
+            1
+          ),
+
+        min:
+          .85,
+
+        max:
+          1.20,
+
+        step:
+          .01,
+
+        onChange:
+          value => {
+
+            updateAppearance(
+              "shoulders",
+              value
+            );
+          }
+      }
+    );
+  }
+
+
+  function renderFaceControls(
+    root,
+    state,
+    options
+  ) {
+    addSectionTitle(
+      root,
+      "ROSTO",
+      "Traços faciais"
+    );
+
+
+    addSelect(
+      root,
+      {
+        id:
+          "characterEyeShape",
+
+        label:
+          "Formato dos olhos",
+
+        value:
+          state.appearance
+            ?.eyeShape,
+
+        options:
+          options.eyeShapes,
+
+        onChange:
+          value => {
+
+            updateAppearance(
+              "eyeShape",
+              value
+            );
+          }
+      }
+    );
+
+
+    addSelect(
+      root,
+      {
+        id:
+          "characterEyebrows",
+
+        label:
+          "Sobrancelhas",
+
+        value:
+          state.appearance
+            ?.eyebrows,
+
+        options:
+          options.eyebrows,
+
+        onChange:
+          value => {
+
+            updateAppearance(
+              "eyebrows",
+              value
+            );
+          }
+      }
+    );
+
+
+    addSelect(
+      root,
+      {
+        id:
+          "characterNose",
+
+        label:
+          "Nariz",
+
+        value:
+          state.appearance
+            ?.nose,
+
+        options:
+          options.noses,
+
+        onChange:
+          value => {
+
+            updateAppearance(
+              "nose",
+              value
+            );
+          }
+      }
+    );
+
+
+    addSelect(
+      root,
+      {
+        id:
+          "characterMouth",
+
+        label:
+          "Boca",
+
+        value:
+          state.appearance
+            ?.mouth,
+
+        options:
+          options.mouths,
+
+        onChange:
+          value => {
+
+            updateAppearance(
+              "mouth",
+              value
+            );
+          }
+      }
+    );
+
+
+    addSelect(
+      root,
+      {
+        id:
+          "characterEyeColor",
+
+        label:
+          "Cor dos olhos",
+
+        value:
+          state.appearance
+            ?.eyeColor,
+
+        options:
+          options.eyeColors,
+
+        onChange:
+          value => {
+
+            updateAppearance(
+              "eyeColor",
+              value
+            );
+          }
+      }
+    );
+  }
+
+
+  function renderHairControls(
+    root,
+    state,
+    options
+  ) {
+    addSectionTitle(
+      root,
+      "CABELO",
+      "Estilo"
+    );
+
+
+    addSelect(
+      root,
+      {
+        id:
+          "characterHairStyle",
+
+        label:
+          "Penteado",
+
+        value:
+          state.appearance
+            ?.hairStyle,
+
+        options:
+          options.hairStyles,
+
+        onChange:
+          value => {
+
+            updateAppearance(
+              "hairStyle",
+              value
+            );
+          }
+      }
+    );
+
+
+    addSelect(
+      root,
+      {
+        id:
+          "characterHairColor",
+
+        label:
+          "Cor do cabelo",
+
+        value:
+          state.appearance
+            ?.hairColor,
+
+        options:
+          options.hairColors,
+
+        onChange:
+          value => {
+
+            updateAppearance(
+              "hairColor",
+              value
+            );
+          }
+      }
+    );
+
+
+    addSelect(
+      root,
+      {
+        id:
+          "characterFacialHair",
+
+        label:
+          "Pelagem facial",
+
+        value:
+          state.appearance
+            ?.facialHair,
+
+        options:
+          options.facialHair ||
+          [],
+
+        onChange:
+          value => {
+
+            updateAppearance(
+              "facialHair",
+              value
+            );
+          }
+      }
+    );
+  }
+
+
+  function renderRacialControls(
+    root,
+    state,
+    options
+  ) {
+    addSectionTitle(
+      root,
+      "RAÇA",
+      "Características raciais"
+    );
+
+
+    const race =
+      state.raceData;
+
+
+    if (
+      race?.flight
+    ) {
+      root.insertAdjacentHTML(
+        "beforeend",
+        `
+          <div
+            class="character-feature-notice"
+          >
+            Asas disponíveis
+          </div>
+        `
+      );
+    }
+
+
+    addSelect(
+      root,
+      {
+        id:
+          "characterEars",
+
+        label:
+          "Orelhas",
+
+        value:
+          state.appearance
+            ?.ears,
+
+        options:
+          options.ears,
+
+        onChange:
+          value => {
+
+            updateAppearance(
+              "ears",
+              value
+            );
+          }
+      }
+    );
+
+
+    if (
+      options.horns?.length
+    ) {
+      addSelect(
+        root,
+        {
+          id:
+            "characterHorns",
+
+          label:
+            "Chifres",
+
+          value:
+            state.appearance
+              ?.horns,
+
+          options:
+            options.horns,
+
+          onChange:
+            value => {
+
+              updateAppearance(
+                "horns",
+                value
+              );
+            }
+        }
+      );
+    }
+
+
+    if (
+      options.wings?.length
+    ) {
+      addSelect(
+        root,
+        {
+          id:
+            "characterWings",
+
+          label:
+            "Asas",
+
+          value:
+            state.appearance
+              ?.wings,
+
+          options:
+            options.wings,
+
+          onChange:
+            value => {
+
+              updateAppearance(
+                "wings",
+                value
+              );
+            }
+        }
+      );
+    }
+
+
+    if (
+      options.tails?.length
+    ) {
+      addSelect(
+        root,
+        {
+          id:
+            "characterTail",
+
+          label:
+            "Cauda",
+
+          value:
+            state.appearance
+              ?.tail,
+
+          options:
+            options.tails,
+
+          onChange:
+            value => {
+
+              updateAppearance(
+                "tail",
+                value
+              );
+            }
+        }
+      );
+    }
+
+
+    if (
+      state.race ===
+      "animalha"
+    ) {
+      renderAnimalhaControls(
+        root,
+        state,
+        options
+      );
+    }
+  }
+
+
+  function renderAnimalhaControls(
+    root,
+    state,
+    options
+  ) {
+    addSectionTitle(
+      root,
+      "ANIMALHA",
+      "Linhagem animal"
+    );
+
+
+    const categories =
+      getAnimalhaCategories();
+
+
+    addSelect(
+      root,
+      {
+        id:
+          "characterAnimalCategory",
+
+        label:
+          "Categoria",
+
+        value:
+          findAnimalCategory(
+            state.animalha
+          ),
+
+        options:
+          categories,
+
+        onChange:
+          value => {
+
+            if (
+              !value
+            ) {
+              return;
+            }
+
+            const animals =
+              getAnimalhaCategoryAnimals(
+                value
+              );
+
+
+            if (
+              animals[0]
+            ) {
+              const ficha =
+                getFicha();
+
+
+              ficha?.selectAnimalha?.(
+                animals[0].id
+              );
+            }
+          }
+      }
+    );
+
+
+    const category =
+      findAnimalCategory(
+        state.animalha
+      );
+
+
+    if (
+      category
+    ) {
+      const animals =
+        getAnimalhaCategoryAnimals(
+          category
+        );
+
+
+      addSelect(
+        root,
+        {
+          id:
+            "characterAnimal",
+
+          label:
+            "Animal",
+
+          value:
+            state.animalha,
+
+          options:
+            animals,
+
+          onChange:
+            value => {
+
+              if (
+                value
+              ) {
+                getFicha()?.selectAnimalha?.(
+                  value
+                );
+              }
+            }
+        }
+      );
+    }
+
+
+    const animal =
+      getAnimalData(
+        state
+      );
+
+
+    if (
+      animal
+    ) {
+      root.insertAdjacentHTML(
+        "beforeend",
+        `
+          <div
+            class="character-animal-profile"
+          >
+
+            <span class="eyebrow">
+              PERFIL NATURAL
+            </span>
+
+            <strong>
+              ${escapeHtml(
+                animal.name
+              )}
+            </strong>
+
+            <p>
+              Categoria:
+              ${escapeHtml(
+                animal.category
+              )}
+            </p>
+
+          </div>
+        `
+      );
+    }
+  }
+
+
+  function findAnimalCategory(
+    animalId
+  ) {
+    const assets =
+      getAssets();
+
+
+    for (
+      const [
+        id,
+        category
+      ] of Object.entries(
+        assets?.animalhaCategories ||
+        {}
+      )
+    ) {
+      if (
+        category.animals?.includes(
+          animalId
+        )
+      ) {
+        return id;
+      }
+    }
+
+
+    return "";
+  }
+
+
+  function renderClothingControls(
+    root,
+    state,
+    options
+  ) {
+    addSectionTitle(
+      root,
+      "ROUPAS",
+      "Vestimenta"
+    );
+
+
+    addSelect(
+      root,
+      {
+        id:
+          "characterClothingStyle",
+
+        label:
+          "Estilo",
+
+        value:
+          state.appearance
+            ?.clothingStyle,
+
+        options:
+          options.clothingStyles,
+
+        onChange:
+          value => {
+
+            updateAppearance(
+              "clothingStyle",
+              value
+            );
+          }
+      }
+    );
+
+
+    addSelect(
+      root,
+      {
+        id:
+          "characterShirt",
+
+        label:
+          "Parte superior",
+
+        value:
+          state.appearance
+            ?.shirt,
+
+        options:
+          options.shirts,
+
+        onChange:
+          value => {
+
+            updateAppearance(
+              "shirt",
+              value
+            );
+          }
+      }
+    );
+
+
+    addSelect(
+      root,
+      {
+        id:
+          "characterPants",
+
+        label:
+          "Calça",
+
+        value:
+          state.appearance
+            ?.pants,
+
+        options:
+          options.pants,
+
+        onChange:
+          value => {
+
+            updateAppearance(
+              "pants",
+              value
+            );
+          }
+      }
+    );
+
+
+    addSelect(
+      root,
+      {
+        id:
+          "characterCoat",
+
+        label:
+          "Casaco",
+
+        value:
+          state.appearance
+            ?.coat,
+
+        options:
+          options.coats,
+
+        onChange:
+          value => {
+
+            updateAppearance(
+              "coat",
+              value
+            );
+          }
+      }
+    );
+
+
+    addSelect(
+      root,
+      {
+        id:
+          "characterCape",
+
+        label:
+          "Capa",
+
+        value:
+          state.appearance
+            ?.cape,
+
+        options:
+          options.capes,
+
+        onChange:
+          value => {
+
+            updateAppearance(
+              "cape",
+              value
+            );
+          }
+      }
+    );
+
+
+    addSelect(
+      root,
+      {
+        id:
+          "characterRobe",
+
+        label:
+          "Manto / robe",
+
+        value:
+          state.appearance
+            ?.robe,
+
+        options:
+          options.robes,
+
+        onChange:
+          value => {
+
+            updateAppearance(
+              "robe",
+              value
+            );
+          }
+      }
+    );
+
+
+    addSelect(
+      root,
+      {
+        id:
+          "characterGloves",
+
+        label:
+          "Luvas",
+
+        value:
+          state.appearance
+            ?.gloves,
+
+        options:
+          options.gloves,
+
+        onChange:
+          value => {
+
+            updateAppearance(
+              "gloves",
+              value
+            );
+          }
+      }
+    );
+
+
+    addSelect(
+      root,
+      {
+        id:
+          "characterBoots",
+
+        label:
+          "Botas",
+
+        value:
+          state.appearance
+            ?.boots,
+
+        options:
+          options.boots,
+
+        onChange:
+          value => {
+
+            updateAppearance(
+              "boots",
+              value
+            );
+          }
+      }
+    );
+  }
+
+
+  function renderAccessoryControls(
+    root,
+    state,
+    options
+  ) {
+    addSectionTitle(
+      root,
+      "ACESSÓRIOS",
+      "Detalhes"
+    );
+
+
+    addSelect(
+      root,
+      {
+        id:
+          "characterHat",
+
+        label:
+          "Chapéu",
+
+        value:
+          state.appearance
+            ?.hat,
+
+        options:
+          options.hats,
+
+        onChange:
+          value => {
+
+            updateAppearance(
+              "hat",
+              value
+            );
+          }
+      }
+    );
+
+
+    addSelect(
+      root,
+      {
+        id:
+          "characterHood",
+
+        label:
+          "Capuz",
+
+        value:
+          state.appearance
+            ?.hood,
+
+        options:
+          options.hoods,
+
+        onChange:
+          value => {
+
+            updateAppearance(
+              "hood",
+              value
+            );
+          }
+      }
+    );
+
+
+    addSelect(
+      root,
+      {
+        id:
+          "characterMask",
+
+        label:
+          "Máscara",
+
+        value:
+          state.appearance
+            ?.mask,
+
+        options:
+          options.masks,
+
+        onChange:
+          value => {
+
+            updateAppearance(
+              "mask",
+              value
+            );
+          }
+      }
+    );
+
+
+    addSelect(
+      root,
+      {
+        id:
+          "characterGlasses",
+
+        label:
+          "Óculos",
+
+        value:
+          state.appearance
+            ?.glasses,
+
+        options:
+          options.glasses,
+
+        onChange:
+          value => {
+
+            updateAppearance(
+              "glasses",
+              value
+            );
+          }
+      }
+    );
+
+
+    addSelect(
+      root,
+      {
+        id:
+          "characterNecklace",
+
+        label:
+          "Colar",
+
+        value:
+          state.appearance
+            ?.necklace,
+
+        options:
+          options.necklaces,
+
+        onChange:
+          value => {
+
+            updateAppearance(
+              "necklace",
+              value
+            );
+          }
+      }
+    );
+
+
+    addSelect(
+      root,
+      {
+        id:
+          "characterEarrings",
+
+        label:
+          "Brincos",
+
+        value:
+          state.appearance
+            ?.earrings,
+
+        options:
+          options.earrings,
+
+        onChange:
+          value => {
+
+            updateAppearance(
+              "earrings",
+              value
+            );
+          }
+      }
+    );
+
+
+    addSelect(
+      root,
+      {
+        id:
+          "characterBracelet",
+
+        label:
+          "Bracelete",
+
+        value:
+          state.appearance
+            ?.bracelet,
+
+        options:
+          options.bracelets,
+
+        onChange:
+          value => {
+
+            updateAppearance(
+              "bracelet",
+              value
+            );
+          }
+      }
+    );
+
+
+    addSelect(
+      root,
+      {
+        id:
+          "characterRing",
+
+        label:
+          "Anel",
+
+        value:
+          state.appearance
+            ?.ring,
+
+        options:
+          options.rings,
+
+        onChange:
+          value => {
+
+            updateAppearance(
+              "ring",
+              value
+            );
+          }
+      }
+    );
+
+
+    addSelect(
+      root,
+      {
+        id:
+          "characterBag",
+
+        label:
+          "Bolsa",
+
+        value:
+          state.appearance
+            ?.bag,
+
+        options:
+          options.bags,
+
+        onChange:
+          value => {
+
+            updateAppearance(
+              "bag",
+              value
+            );
+          }
+      }
+    );
+
+
+    addSelect(
+      root,
+      {
+        id:
+          "characterBackpack",
+
+        label:
+          "Mochila",
+
+        value:
+          state.appearance
+            ?.backpack,
+
+        options:
+          options.backpacks,
+
+        onChange:
+          value => {
+
+            updateAppearance(
+              "backpack",
+              value
+            );
+          }
+      }
+    );
+  }
+
+
+  function renderMarkControls(
+    root,
+    state,
+    options
+  ) {
+    addSectionTitle(
+      root,
+      "MARCAS",
+      "Detalhes pessoais"
+    );
+
+
+    addColorGrid(
+      root,
+      {
+        label:
+          "Tom de pele permitido",
+
+        colors:
+          getAllowedSkinPalette(
+            state
+          )?.colors ||
+          [],
+
+        value:
+          getCurrentSkinColor(
+            state
+          ),
+
+        onChange:
+          value => {
+
+            updateAppearance(
+              "skinVariant",
+              value
+            );
+          }
+      }
+    );
+
+
+    addSelect(
+      root,
+      {
+        id:
+          "characterMarkings",
+
+        label:
+          "Manchas / padrão",
+
+        value:
+          state.appearance
+            ?.markings,
+
+        options:
+          options.markings,
+
+        onChange:
+          value => {
+
+            updateAppearance(
+              "markings",
+              value
+            );
+          }
+      }
+    );
+
+
+    addSelect(
+      root,
+      {
+        id:
+          "characterBirthmark",
+
+        label:
+          "Marca de nascença",
+
+        value:
+          state.appearance
+            ?.birthmark,
+
+        options:
+          options.birthmarks,
+
+        onChange:
+          value => {
+
+            updateAppearance(
+              "birthmark",
+              value
+            );
+          }
+      }
+    );
+
+
+    addSelect(
+      root,
+      {
+        id:
+          "characterScars",
+
+        label:
+          "Cicatrizes",
+
+        value:
+          state.appearance
+            ?.scars,
+
+        options:
+          options.scars,
+
+        onChange:
+          value => {
+
+            updateAppearance(
+              "scars",
+              value
+            );
+          }
+      }
+    );
+
+
+    addSelect(
+      root,
+      {
+        id:
+          "characterTattoos",
+
+        label:
+          "Tatuagens",
+
+        value:
+          state.appearance
+            ?.tattoos,
+
+        options:
+          options.tattoos,
+
+        onChange:
+          value => {
+
+            updateAppearance(
+              "tattoos",
+              value
+            );
+          }
+      }
+    );
+
+
+    addSelect(
+      root,
+      {
+        id:
+          "characterPiercings",
+
+        label:
+          "Piercings",
+
+        value:
+          state.appearance
+            ?.piercings,
+
+        options:
+          options.piercings,
+
+        onChange:
+          value => {
+
+            updateAppearance(
+              "piercings",
+              value
+            );
+          }
+      }
+    );
+  }
+
+
+  function renderEquipmentControls(
+    root,
+    state,
+    options
+  ) {
+    addSectionTitle(
+      root,
+      "EQUIPAMENTO",
+      "Itens visíveis"
+    );
+
+
+    addSelect(
+      root,
+      {
+        id:
+          "characterWeapon",
+
+        label:
+          "Arma principal",
+
+        value:
+          state.appearance
+            ?.weapon,
+
+        options:
+          options.weapons,
+
+        onChange:
+          value => {
+
+            updateAppearance(
+              "weapon",
+              value
+            );
+          }
+      }
+    );
+
+
+    addSelect(
+      root,
+      {
+        id:
+          "characterHandItem",
+
+        label:
+          "Objeto de mão",
+
+        value:
+          state.appearance
+            ?.handItem,
+
+        options:
+          options.handItems,
+
+        onChange:
+          value => {
+
+            updateAppearance(
+              "handItem",
+              value
+            );
+          }
+      }
+    );
+
+
+    addSelect(
+      root,
+      {
+        id:
+          "characterQuiver",
+
+        label:
+          "Aljava",
+
+        value:
+          state.appearance
+            ?.quiver,
+
+        options:
+          options.quivers,
+
+        onChange:
+          value => {
+
+            updateAppearance(
+              "quiver",
+              value
+            );
+          }
+      }
+    );
+  }
+
+
+  function updateAppearance(
+    field,
+    value
+  ) {
+    const ficha =
+      getFicha();
+
+
+    if (
+      !ficha ||
+      typeof
+        ficha.setAppearanceField !==
+        "function"
+    ) {
+      return;
+    }
+
+
+    ficha.setAppearanceField(
+      field,
+      value
+    );
+  }
+
+
+  /* =========================================================
+     RENDER DO EDITOR
+     ========================================================= */
+
+  function renderEditor(
+    editor,
+    state
+  ) {
+    if (
+      !editor ||
+      !state
+    ) {
+      return;
+    }
+
+
+    renderEditorTabs(
+      editor
+    );
+
+
+    const controls =
+      editor.querySelector(
+        "[data-character-controls]"
+      );
+
+
+    if (
+      !controls
+    ) {
+      return;
+    }
+
+
+    controls.innerHTML =
+      "";
+
+
+    const options =
+      getEditorOptions(
+        state
+      );
+
+
+    switch (
+      activeTab
+    ) {
+      case "body":
+
+        renderBodyControls(
+          controls,
+          state,
+          options
+        );
+
+        break;
+
+
+      case "face":
+
+        renderFaceControls(
+          controls,
+          state,
+          options
+        );
+
+        break;
+
+
+      case "hair":
+
+        renderHairControls(
+          controls,
+          state,
+          options
+        );
+
+        break;
+
+
+      case "racial":
+
+        renderRacialControls(
+          controls,
+          state,
+          options
+        );
+
+        break;
+
+
+      case "clothing":
+
+        renderClothingControls(
+          controls,
+          state,
+          options
+        );
+
+        break;
+
+
+      case "accessories":
+
+        renderAccessoryControls(
+          controls,
+          state,
+          options
+        );
+
+        break;
+
+
+      case "marks":
+
+        renderMarkControls(
+          controls,
+          state,
+          options
+        );
+
+        break;
+
+
+      case "equipment":
+
+        renderEquipmentControls(
+          controls,
+          state,
+          options
+        );
+
+        break;
+    }
   }
 
 
@@ -1686,15 +6577,21 @@
     window.addEventListener(
       "aerion:ficha:ready",
       () => {
+
         refresh();
-      }
-    );
+
+        const editor =
+          ensureEditorShell();
 
 
-    window.addEventListener(
-      "aerion:ficha:complete",
-      () => {
-        refresh();
+        if (
+          editor
+        ) {
+          renderEditor(
+            editor,
+            currentState
+          );
+        }
       }
     );
 
@@ -1706,27 +6603,60 @@
         const target =
           event.target;
 
+
         if (
-          target?.id ===
+          !target
+        ) {
+          return;
+        }
+
+
+        if (
+          target.closest(
+            "[data-character-customizer]"
+          )
+        ) {
+          return;
+        }
+
+
+        if (
+          target.id ===
             "heightRange" ||
-          target?.id ===
+          target.id ===
             "hair" ||
-          target?.id ===
+          target.id ===
             "eyes" ||
-          target?.id ===
+          target.id ===
             "skin" ||
-          target?.id ===
+          target.id ===
             "clothing" ||
-          target?.id ===
+          target.id ===
             "scars" ||
-          target?.id ===
+          target.id ===
             "tattoos" ||
-          target?.id ===
+          target.id ===
             "physicalNotes"
         ) {
           requestAnimationFrame(
             () => {
+
+              currentState =
+                readState();
+
               refresh();
+
+              const editor =
+                ensureEditorShell();
+
+              if (
+                editor
+              ) {
+                renderEditor(
+                  editor,
+                  currentState
+                );
+              }
             }
           );
         }
@@ -1741,19 +6671,84 @@
         const target =
           event.target;
 
+
         if (
-          target?.name ===
-            "gender" ||
-          target?.id ===
-            "animalhaVariant"
+          !target
         ) {
-          requestAnimationFrame(
-            () => {
-              refresh();
-            }
-          );
+          return;
         }
+
+
+        requestAnimationFrame(
+          () => {
+
+            currentState =
+              readState();
+
+            refresh();
+
+            const editor =
+              ensureEditorShell();
+
+            if (
+              editor
+            ) {
+              renderEditor(
+                editor,
+                currentState
+              );
+            }
+          }
+        );
       }
+    );
+  }
+
+
+  /* =========================================================
+     INICIALIZAÇÃO
+     ========================================================= */
+
+  function init() {
+
+    root =
+      document.querySelector(
+        CONFIG.rootSelector
+      );
+
+
+    bindEvents();
+
+
+    if (
+      root
+    ) {
+      currentState =
+        readState();
+
+      render(
+        currentState
+      );
+
+
+      const editor =
+        ensureEditorShell();
+
+
+      if (
+        editor &&
+        currentState
+      ) {
+        renderEditor(
+          editor,
+          currentState
+        );
+      }
+    }
+
+
+    console.info(
+      "[AERION] personagem-render.js inicializado."
     );
   }
 
@@ -1769,23 +6764,25 @@
 
       refresh,
 
-      buildSvg
+      getEditorOptions,
+
+      getAnimalhaCategories,
+
+      getAnimalhaCategoryAnimals,
+
+      getRaceRules,
+
+      getRaceData,
+
+      getAnimalData,
+
+      getAllowedSkinPalette
     });
 
 
   /* =========================================================
      START
      ========================================================= */
-
-  function init() {
-    bindEvents();
-    refresh();
-
-    console.info(
-      "[AERION] personagem-render.js inicializado."
-    );
-  }
-
 
   if (
     document.readyState ===
@@ -1795,7 +6792,8 @@
       "DOMContentLoaded",
       init,
       {
-        once: true
+        once:
+          true
       }
     );
   } else {
