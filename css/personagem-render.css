@@ -1,27 +1,22 @@
 /* =========================================================
    AERION — PERSONAGEM RENDER
-   js/core/personagem-render.css
+   css/personagem-render.css
 
-   INTERFACE DO GERADOR DE APARÊNCIA
+   VISUALIZADOR SIMPLIFICADO
+
+   O personagem é uma IMAGEM REAL da raça selecionada.
 
    Responsável por:
-   - palco do personagem;
-   - moldura visual;
+   - palco;
+   - posicionamento;
    - escala;
-   - controles de aparência;
-   - cards;
-   - sliders;
-   - selects;
    - loading;
-   - responsividade;
-   - estados de interação.
+   - erro;
+   - responsividade.
 
-   NÃO controla:
-   - regras;
-   - atributos;
-   - dados;
-   - autenticação.
-
+   Não cria personagem.
+   Não desenha SVG.
+   Não altera ficha.
    ========================================================= */
 
 
@@ -30,65 +25,37 @@
    ========================================================= */
 
 :root {
-  --aerion-character-bg:
-    #0b0a08;
+  --character-gold: #d7b96b;
+  --character-gold-light: #ecd798;
 
-  --aerion-character-surface:
-    #11100d;
+  --character-bg: #0b0a08;
+  --character-bg-light: #12100d;
 
-  --aerion-character-surface-2:
-    #161410;
+  --character-border:
+    rgba(215, 185, 107, 0.18);
 
-  --aerion-character-border:
-    rgba(214, 179, 99, 0.18);
+  --character-border-strong:
+    rgba(215, 185, 107, 0.34);
 
-  --aerion-character-border-strong:
-    rgba(214, 179, 99, 0.34);
+  --character-text: #eee7db;
+  --character-muted: #999184;
 
-  --aerion-character-gold:
-    #d8b968;
+  --character-radius: 28px;
 
-  --aerion-character-gold-light:
-    #ecd28d;
-
-  --aerion-character-text:
-    #eee7da;
-
-  --aerion-character-muted:
-    #918b80;
-
-  --aerion-character-danger:
-    #ad5a52;
-
-  --aerion-character-shadow:
-    0 22px 60px rgba(0, 0, 0, 0.38);
-
-  --aerion-character-radius:
-    28px;
-
-  --aerion-character-radius-small:
-    18px;
-
-  --aerion-character-transition:
-    180ms ease;
+  --character-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.38);
 }
 
 
 /* =========================================================
-   CONTAINER PRINCIPAL
+   CONTAINER
    ========================================================= */
 
-.personagem-render,
-.character-render,
-.appearance-render {
+.aerion-character-render {
   position: relative;
 
   width: 100%;
-
   min-width: 0;
-
-  color:
-    var(--aerion-character-text);
 }
 
 
@@ -100,79 +67,72 @@
   position: relative;
 
   display: flex;
-
-  align-items: center;
-
+  align-items: flex-end;
   justify-content: center;
 
   width: 100%;
-
   min-height: 620px;
 
-  padding: 24px;
+  padding:
+    28px 24px 22px;
 
   overflow: hidden;
 
   border:
-    1px solid
-    var(--aerion-character-border);
+    1px solid var(--character-border);
 
   border-radius:
-    var(--aerion-character-radius);
+    var(--character-radius);
 
   background:
     radial-gradient(
-      circle at 50% 38%,
-      rgba(173, 142, 76, 0.09),
+      circle at 50% 28%,
+      rgba(215,185,107,0.075),
       transparent 34%
     ),
     radial-gradient(
-      circle at 50% 78%,
-      rgba(255, 255, 255, 0.025),
+      circle at 50% 80%,
+      rgba(255,255,255,0.025),
       transparent 38%
     ),
     linear-gradient(
       180deg,
-      #0d0c0a 0%,
-      #090807 100%
+      var(--character-bg-light) 0%,
+      var(--character-bg) 100%
     );
 
   box-shadow:
-    var(--aerion-character-shadow);
+    var(--character-shadow);
 
   isolation: isolate;
 }
 
 
 /* =========================================================
-   BRILHO DO PALCO
+   ILUMINAÇÃO
    ========================================================= */
 
 #appearanceFigure::before {
   content: "";
 
   position: absolute;
-
   inset: 0;
 
   pointer-events: none;
 
   background:
-    linear-gradient(
-      180deg,
-      rgba(255,255,255,0.028),
-      transparent 24%,
-      transparent 74%,
-      rgba(213,177,93,0.018)
+    radial-gradient(
+      ellipse at center 20%,
+      rgba(255,255,255,0.035),
+      transparent 34%
     );
 
-  border-radius:
-    inherit;
+  z-index: 0;
 }
 
 
 /* =========================================================
-   LINHA DE BASE
+   LINHA DE APOIO
    ========================================================= */
 
 #appearanceFigure::after {
@@ -180,11 +140,9 @@
 
   position: absolute;
 
-  left: 10%;
-
-  right: 10%;
-
-  bottom: 10%;
+  left: 12%;
+  right: 12%;
+  bottom: 9%;
 
   height: 1px;
 
@@ -192,74 +150,418 @@
     linear-gradient(
       90deg,
       transparent,
-      var(--aerion-character-border-strong),
+      var(--character-border-strong),
       transparent
     );
 
   pointer-events: none;
+
+  z-index: 1;
 }
 
 
 /* =========================================================
-   SVG
+   STAGE
    ========================================================= */
 
-.aerion-character-svg {
+.aerion-character-stage {
   position: relative;
 
   z-index: 2;
 
-  display: block;
+  display: flex;
 
-  width:
-    min(100%, 360px);
+  align-items: flex-end;
+  justify-content: center;
 
-  height: auto;
+  width: 100%;
+  height: 100%;
 
-  max-height: 620px;
+  min-height: 570px;
+
+  overflow: hidden;
+
+  border-radius:
+    22px;
+}
+
+
+/* =========================================================
+   BRILHO ATRÁS DO PERSONAGEM
+   ========================================================= */
+
+.aerion-character-glow {
+  position: absolute;
+
+  left: 50%;
+  bottom: 14%;
+
+  width: 52%;
+  height: 58%;
+
+  transform:
+    translateX(-50%);
+
+  border-radius: 50%;
+
+  background:
+    radial-gradient(
+      ellipse,
+      rgba(215,185,107,0.085),
+      transparent 70%
+    );
+
+  filter:
+    blur(18px);
+
+  pointer-events: none;
+
+  z-index: 0;
+}
+
+
+/* =========================================================
+   CAMADA DA IMAGEM
+   ========================================================= */
+
+.aerion-character-image-layer {
+  position: absolute;
+
+  inset: 0;
+
+  display: flex;
+
+  align-items: flex-end;
+  justify-content: center;
 
   overflow: visible;
 
-  filter:
-    drop-shadow(
-      0 24px 28px rgba(0,0,0,0.30)
-    );
+  z-index: 2;
+}
+
+
+/* =========================================================
+   IMAGEM DO PERSONAGEM
+   ========================================================= */
+
+.aerion-character-base-image {
+  position: absolute;
+
+  left: 50%;
+  bottom: 3%;
+
+  display: block;
+
+  width: auto;
+
+  height: 82%;
+
+  max-width: none;
+  max-height: none;
+
+  object-fit: contain;
+  object-position: center bottom;
+
+  transform:
+    translateX(-50%)
+    scale(1);
 
   transform-origin:
     center bottom;
 
+  opacity: 1;
+
+  user-select: none;
+  -webkit-user-drag: none;
+
+  pointer-events: none;
+
+  filter:
+    drop-shadow(
+      0 22px 25px
+      rgba(0,0,0,0.28)
+    );
+
   transition:
-    transform
-    var(--aerion-character-transition),
-    filter
-    var(--aerion-character-transition);
+    transform 220ms ease,
+    opacity 180ms ease,
+    filter 180ms ease;
 }
 
 
 /* =========================================================
-   EFEITO HOVER
+   HOVER
    ========================================================= */
 
 #appearanceFigure:hover
-.aerion-character-svg {
+.aerion-character-base-image {
   filter:
     drop-shadow(
-      0 28px 34px rgba(0,0,0,0.36)
+      0 27px 32px
+      rgba(0,0,0,0.34)
     );
 }
 
 
 /* =========================================================
-   ÁREA DE CONTROLES
+   OVERLAY
+   ========================================================= */
+
+.aerion-character-overlay {
+  position: absolute;
+
+  inset: 0;
+
+  pointer-events: none;
+
+  z-index: 4;
+}
+
+
+/* =========================================================
+   GUIA DE ALTURA
+   ========================================================= */
+
+.aerion-character-height-guide {
+  position: absolute;
+
+  top: 8%;
+  right: 14px;
+  bottom: 8%;
+
+  display: flex;
+
+  flex-direction: column;
+
+  justify-content: space-between;
+
+  align-items: center;
+
+  z-index: 5;
+
+  pointer-events: none;
+
+  color:
+    var(--character-muted);
+
+  font-size: 9px;
+
+  font-weight: 800;
+
+  letter-spacing:
+    0.12em;
+}
+
+
+.aerion-character-height-guide::before {
+  content: "";
+
+  position: absolute;
+
+  top: 18px;
+  bottom: 18px;
+
+  width: 1px;
+
+  background:
+    linear-gradient(
+      180deg,
+      transparent,
+      var(--character-border),
+      transparent
+    );
+
+  opacity:
+    0.65;
+}
+
+
+/* =========================================================
+   VAZIO
+   ========================================================= */
+
+.aerion-character-empty {
+  position: absolute;
+
+  left: 50%;
+  bottom: 18%;
+
+  transform:
+    translateX(-50%);
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  width: min(80%, 320px);
+
+  min-height: 100px;
+
+  padding: 20px;
+
+  border:
+    1px solid var(--character-border);
+
+  border-radius: 18px;
+
+  background:
+    rgba(10,9,8,0.72);
+
+  color:
+    var(--character-muted);
+
+  font-size: 13px;
+
+  text-align: center;
+
+  z-index: 6;
+}
+
+
+/* =========================================================
+   LOADING
+   ========================================================= */
+
+.aerion-character-loading {
+  position: absolute;
+
+  inset: 0;
+
+  z-index: 20;
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 12px;
+
+  color:
+    var(--character-text);
+
+  font-size: 13px;
+
+  font-weight: 700;
+
+  background:
+    rgba(8,7,6,0.58);
+
+  backdrop-filter:
+    blur(5px);
+
+  -webkit-backdrop-filter:
+    blur(5px);
+}
+
+
+/* =========================================================
+   SPINNER
+   ========================================================= */
+
+.aerion-character-spinner {
+  width: 42px;
+  height: 42px;
+
+  border:
+    3px solid
+    rgba(255,255,255,0.10);
+
+  border-top-color:
+    var(--character-gold-light);
+
+  border-right-color:
+    var(--character-gold);
+
+  border-radius: 50%;
+
+  animation:
+    aerion-character-spin
+    .75s linear infinite;
+}
+
+
+@keyframes aerion-character-spin {
+  to {
+    transform:
+      rotate(360deg);
+  }
+}
+
+
+/* =========================================================
+   ERRO
+   ========================================================= */
+
+.aerion-character-error {
+  position: absolute;
+
+  left: 50%;
+  bottom: 17%;
+
+  z-index: 21;
+
+  transform:
+    translateX(-50%);
+
+  width: min(82%, 340px);
+
+  padding:
+    16px 18px;
+
+  border:
+    1px solid
+    rgba(173,90,82,0.28);
+
+  border-radius:
+    16px;
+
+  background:
+    rgba(80,35,32,0.18);
+
+  color:
+    #c9958f;
+
+  font-size: 12px;
+
+  line-height:
+    1.45;
+
+  text-align: center;
+}
+
+
+/* =========================================================
+   ESTADOS
+   ========================================================= */
+
+.aerion-character-render.is-loading
+.aerion-character-base-image {
+  opacity:
+    0.1;
+}
+
+
+.aerion-character-render.has-error
+.aerion-character-base-image {
+  opacity:
+    0;
+}
+
+
+/* =========================================================
+   PAINEL DE CONTROLES
    ========================================================= */
 
 .character-controls,
 .appearance-controls {
   display: grid;
 
-  gap: 16px;
+  gap: 14px;
 
-  margin-top: 18px;
+  margin-top: 16px;
 }
 
 
@@ -268,18 +570,16 @@
    ========================================================= */
 
 .character-control-card,
-.appearance-control-card,
-.appearance-section {
-  position: relative;
-
-  padding: 20px;
+.appearance-control-card {
+  padding:
+    16px;
 
   border:
     1px solid
-    var(--aerion-character-border);
+    var(--character-border);
 
   border-radius:
-    var(--aerion-character-radius-small);
+    18px;
 
   background:
     linear-gradient(
@@ -287,51 +587,30 @@
       rgba(255,255,255,0.018),
       rgba(255,255,255,0.008)
     );
-
-  box-shadow:
-    0 12px 30px rgba(0,0,0,0.18);
-
-  backdrop-filter:
-    blur(14px);
-
-  -webkit-backdrop-filter:
-    blur(14px);
 }
 
 
 /* =========================================================
-   TITULOS
+   TÍTULO
    ========================================================= */
 
 .character-control-title,
-.appearance-control-title,
-.appearance-section-title {
+.appearance-control-title {
   display: flex;
 
   align-items: center;
-
   justify-content: space-between;
 
   gap: 12px;
 
-  margin: 0 0 12px;
+  margin:
+    0 0 10px;
 
   color:
-    var(--aerion-character-text);
+    var(--character-text);
 
-  font-size: 15px;
-
+  font-size: 14px;
   font-weight: 700;
-
-  letter-spacing:
-    0.01em;
-}
-
-
-.character-control-title span:first-child,
-.appearance-control-title span:first-child {
-  color:
-    var(--aerion-character-text);
 }
 
 
@@ -343,14 +622,14 @@
 .appearance-control-label {
   display: block;
 
-  margin-bottom: 8px;
+  margin-bottom: 7px;
 
   color:
-    var(--aerion-character-muted);
+    var(--character-muted);
 
-  font-size: 12px;
+  font-size: 11px;
 
-  font-weight: 700;
+  font-weight: 800;
 
   letter-spacing:
     0.08em;
@@ -361,129 +640,29 @@
 
 
 /* =========================================================
-   SELECT
+   INPUT
    ========================================================= */
 
-.character-control select,
-.appearance-control select,
 .character-control input,
-.appearance-control input {
+.appearance-control input,
+.character-control select,
+.appearance-control select {
   width: 100%;
-
   min-width: 0;
 }
 
 
 /* =========================================================
-   SELECT CUSTOMIZADO
-   ========================================================= */
-
-.character-control select,
-.appearance-control select {
-  appearance: none;
-
-  -webkit-appearance: none;
-
-  padding:
-    15px 46px 15px 16px;
-
-  border:
-    1px solid
-    var(--aerion-character-border);
-
-  border-radius:
-    16px;
-
-  background:
-    linear-gradient(
-      180deg,
-      rgba(255,255,255,0.025),
-      rgba(255,255,255,0.008)
-    );
-
-  color:
-    var(--aerion-character-text);
-
-  font: inherit;
-
-  font-size: 15px;
-
-  outline: none;
-
-  cursor: pointer;
-
-  transition:
-    border-color
-    var(--aerion-character-transition),
-    background
-    var(--aerion-character-transition),
-    transform
-    var(--aerion-character-transition);
-}
-
-
-.character-control select:hover,
-.appearance-control select:hover {
-  border-color:
-    var(--aerion-character-border-strong);
-}
-
-
-.character-control select:focus,
-.appearance-control select:focus {
-  border-color:
-    rgba(216, 185, 104, 0.56);
-
-  box-shadow:
-    0 0 0 3px
-    rgba(216, 185, 104, 0.08);
-}
-
-
-/* =========================================================
-   WRAPPER DO SELECT
-   ========================================================= */
-
-.character-select-wrap,
-.appearance-select-wrap {
-  position: relative;
-}
-
-
-.character-select-wrap::after,
-.appearance-select-wrap::after {
-  content: "⌄";
-
-  position: absolute;
-
-  right: 16px;
-
-  top: 50%;
-
-  transform:
-    translateY(-54%);
-
-  color:
-    var(--aerion-character-muted);
-
-  font-size: 19px;
-
-  pointer-events: none;
-}
-
-
-/* =========================================================
-   SLIDER
+   RANGE
    ========================================================= */
 
 .character-range,
 .appearance-range {
   width: 100%;
 
-  margin: 8px 0 0;
+  margin: 8px 0;
 
   appearance: none;
-
   -webkit-appearance: none;
 
   background:
@@ -506,8 +685,8 @@
   background:
     linear-gradient(
       90deg,
-      var(--aerion-character-gold),
-      rgba(255,255,255,0.16)
+      var(--character-gold),
+      rgba(255,255,255,0.14)
     );
 }
 
@@ -521,8 +700,8 @@
   background:
     linear-gradient(
       90deg,
-      var(--aerion-character-gold),
-      rgba(255,255,255,0.16)
+      var(--character-gold),
+      rgba(255,255,255,0.14)
     );
 }
 
@@ -534,59 +713,50 @@
 .character-range::-webkit-slider-thumb,
 .appearance-range::-webkit-slider-thumb {
   appearance: none;
-
   -webkit-appearance: none;
 
-  width: 22px;
+  width: 20px;
+  height: 20px;
 
-  height: 22px;
-
-  margin-top: -8px;
+  margin-top: -7px;
 
   border:
     2px solid
-    #f0d489;
+    var(--character-gold-light);
 
   border-radius: 50%;
 
   background:
-    #d6b45e;
+    var(--character-gold);
 
   box-shadow:
-    0 0 0 6px
-    rgba(214, 180, 94, 0.10),
-
-    0 4px 15px
-    rgba(0,0,0,0.35);
+    0 0 0 5px
+    rgba(215,185,107,0.10);
 }
 
 
 .character-range::-moz-range-thumb,
 .appearance-range::-moz-range-thumb {
-  width: 22px;
-
-  height: 22px;
+  width: 20px;
+  height: 20px;
 
   border:
     2px solid
-    #f0d489;
+    var(--character-gold-light);
 
   border-radius: 50%;
 
   background:
-    #d6b45e;
+    var(--character-gold);
 
   box-shadow:
-    0 0 0 6px
-    rgba(214, 180, 94, 0.10),
-
-    0 4px 15px
-    rgba(0,0,0,0.35);
+    0 0 0 5px
+    rgba(215,185,107,0.10);
 }
 
 
 /* =========================================================
-   VALORES DO SLIDER
+   VALOR
    ========================================================= */
 
 .range-value,
@@ -595,12 +765,11 @@
   display: flex;
 
   align-items: baseline;
-
   justify-content: space-between;
 
-  gap: 12px;
+  gap: 10px;
 
-  margin-top: 10px;
+  margin-top: 6px;
 }
 
 
@@ -608,14 +777,14 @@
 .character-range-value strong,
 .appearance-range-value strong {
   color:
-    var(--aerion-character-gold-light);
+    var(--character-gold-light);
 
   font-family:
     Georgia,
     "Times New Roman",
     serif;
 
-  font-size: 24px;
+  font-size: 22px;
 
   font-weight: 500;
 }
@@ -625,536 +794,14 @@
 .character-range-value span,
 .appearance-range-value span {
   color:
-    var(--aerion-character-muted);
+    var(--character-muted);
 
-  font-size: 12px;
+  font-size: 11px;
 }
 
 
 /* =========================================================
-   PALETA DE CORES
-   ========================================================= */
-
-.character-color-grid,
-.appearance-color-grid {
-  display: grid;
-
-  grid-template-columns:
-    repeat(
-      auto-fit,
-      minmax(
-        38px,
-        1fr
-      )
-    );
-
-  gap: 10px;
-}
-
-
-.character-color-option,
-.appearance-color-option {
-  position: relative;
-
-  width: 100%;
-
-  aspect-ratio: 1;
-
-  padding: 0;
-
-  border:
-    1px solid
-    rgba(255,255,255,0.12);
-
-  border-radius: 13px;
-
-  cursor: pointer;
-
-  overflow: hidden;
-
-  box-shadow:
-    inset 0 0 0 1px
-    rgba(0,0,0,0.18);
-
-  transition:
-    transform
-    var(--aerion-character-transition),
-    border-color
-    var(--aerion-character-transition),
-    box-shadow
-    var(--aerion-character-transition);
-}
-
-
-.character-color-option:hover,
-.appearance-color-option:hover {
-  transform:
-    translateY(-2px);
-
-  border-color:
-    rgba(255,255,255,0.36);
-}
-
-
-.character-color-option.is-active,
-.appearance-color-option.is-active,
-.character-color-option[aria-selected="true"],
-.appearance-color-option[aria-selected="true"] {
-  border-color:
-    var(--aerion-character-gold-light);
-
-  box-shadow:
-    0 0 0 2px
-    rgba(216,185,104,0.16),
-
-    0 7px 18px
-    rgba(0,0,0,0.24);
-}
-
-
-/* =========================================================
-   BOTÕES
-   ========================================================= */
-
-.character-action-button,
-.appearance-action-button {
-  display: inline-flex;
-
-  align-items: center;
-
-  justify-content: center;
-
-  gap: 8px;
-
-  min-height: 46px;
-
-  padding:
-    0 18px;
-
-  border:
-    1px solid
-    var(--aerion-character-border-strong);
-
-  border-radius:
-    14px;
-
-  background:
-    rgba(216,185,104,0.055);
-
-  color:
-    var(--aerion-character-gold-light);
-
-  font: inherit;
-
-  font-size: 14px;
-
-  font-weight: 700;
-
-  cursor: pointer;
-
-  transition:
-    transform
-    var(--aerion-character-transition),
-    background
-    var(--aerion-character-transition),
-    border-color
-    var(--aerion-character-transition);
-}
-
-
-.character-action-button:hover,
-.appearance-action-button:hover {
-  transform:
-    translateY(-1px);
-
-  background:
-    rgba(216,185,104,0.09);
-
-  border-color:
-    rgba(236,210,141,0.5);
-}
-
-
-.character-action-button:active,
-.appearance-action-button:active {
-  transform:
-    translateY(0);
-}
-
-
-/* =========================================================
-   BOTÃO DOURADO PRINCIPAL
-   ========================================================= */
-
-.character-action-button.primary,
-.appearance-action-button.primary {
-  color:
-    #17130d;
-
-  background:
-    linear-gradient(
-      180deg,
-      #ecd38d,
-      #cda956
-    );
-
-  border-color:
-    transparent;
-
-  box-shadow:
-    0 10px 22px
-    rgba(205,169,86,0.16);
-}
-
-
-.character-action-button.primary:hover,
-.appearance-action-button.primary:hover {
-  background:
-    linear-gradient(
-      180deg,
-      #f2dc9c,
-      #d7b562
-    );
-}
-
-
-/* =========================================================
-   GRUPO DE BOTÕES
-   ========================================================= */
-
-.character-button-row,
-.appearance-button-row {
-  display: flex;
-
-  flex-wrap: wrap;
-
-  gap: 10px;
-
-  align-items: center;
-}
-
-
-/* =========================================================
-   LOADING DO PERSONAGEM
-   ========================================================= */
-
-.character-loading,
-.appearance-loading {
-  position: absolute;
-
-  inset: 0;
-
-  z-index: 20;
-
-  display: flex;
-
-  align-items: center;
-
-  justify-content: center;
-
-  padding: 24px;
-
-  background:
-    rgba(7, 6, 5, 0.66);
-
-  backdrop-filter:
-    blur(5px);
-
-  -webkit-backdrop-filter:
-    blur(5px);
-
-  border-radius:
-    inherit;
-
-  opacity: 0;
-
-  visibility: hidden;
-
-  pointer-events: none;
-
-  transition:
-    opacity
-    180ms ease,
-    visibility
-    180ms ease;
-}
-
-
-.character-loading.is-visible,
-.appearance-loading.is-visible,
-.character-loading[aria-hidden="false"],
-.appearance-loading[aria-hidden="false"] {
-  opacity: 1;
-
-  visibility: visible;
-}
-
-
-.character-loading-content,
-.appearance-loading-content {
-  display: flex;
-
-  flex-direction: column;
-
-  align-items: center;
-
-  gap: 12px;
-}
-
-
-/* =========================================================
-   SPINNER
-   ========================================================= */
-
-.character-spinner,
-.appearance-spinner {
-  width: 42px;
-
-  height: 42px;
-
-  border:
-    3px solid
-    rgba(255,255,255,0.10);
-
-  border-top-color:
-    var(--aerion-character-gold-light);
-
-  border-right-color:
-    var(--aerion-character-gold);
-
-  border-radius: 50%;
-
-  animation:
-    aerion-character-spin
-    0.8s linear infinite;
-}
-
-
-@keyframes aerion-character-spin {
-  to {
-    transform:
-      rotate(360deg);
-  }
-}
-
-
-/* =========================================================
-   TEXTO DO LOADING
-   ========================================================= */
-
-.character-loading-text,
-.appearance-loading-text {
-  color:
-    var(--aerion-character-text);
-
-  font-size: 13px;
-
-  font-weight: 700;
-
-  letter-spacing:
-    0.03em;
-}
-
-
-/* =========================================================
-   ERRO
-   ========================================================= */
-
-.character-error,
-.appearance-error {
-  display: flex;
-
-  align-items: center;
-
-  justify-content: center;
-
-  min-height: 120px;
-
-  padding: 20px;
-
-  text-align: center;
-
-  color:
-    var(--aerion-character-danger);
-
-  border:
-    1px solid
-    rgba(173,90,82,0.20);
-
-  border-radius:
-    18px;
-
-  background:
-    rgba(173,90,82,0.05);
-}
-
-
-/* =========================================================
-   ESTADO VAZIO
-   ========================================================= */
-
-.character-empty,
-.appearance-empty {
-  display: flex;
-
-  align-items: center;
-
-  justify-content: center;
-
-  min-height: 260px;
-
-  color:
-    var(--aerion-character-muted);
-
-  text-align: center;
-
-  padding: 30px;
-}
-
-
-/* =========================================================
-   BADGE DE RAÇA
-   ========================================================= */
-
-.character-race-badge,
-.appearance-race-badge {
-  position: absolute;
-
-  left: 20px;
-
-  top: 20px;
-
-  z-index: 5;
-
-  padding:
-    7px 11px;
-
-  border:
-    1px solid
-    var(--aerion-character-border);
-
-  border-radius:
-    999px;
-
-  background:
-    rgba(10,9,8,0.72);
-
-  color:
-    var(--aerion-character-gold-light);
-
-  font-size: 10px;
-
-  font-weight: 800;
-
-  letter-spacing:
-    0.10em;
-
-  text-transform:
-    uppercase;
-
-  backdrop-filter:
-    blur(10px);
-
-  -webkit-backdrop-filter:
-    blur(10px);
-}
-
-
-/* =========================================================
-   DETALHES DO PERSONAGEM
-   ========================================================= */
-
-.character-meta,
-.appearance-meta {
-  display: grid;
-
-  grid-template-columns:
-    repeat(
-      2,
-      minmax(
-        0,
-        1fr
-      )
-    );
-
-  gap: 10px;
-
-  margin-top: 14px;
-}
-
-
-.character-meta-item,
-.appearance-meta-item {
-  padding:
-    13px 14px;
-
-  border:
-    1px solid
-    var(--aerion-character-border);
-
-  border-radius:
-    14px;
-
-  background:
-    rgba(255,255,255,0.012);
-}
-
-
-.character-meta-item small,
-.appearance-meta-item small {
-  display: block;
-
-  margin-bottom: 4px;
-
-  color:
-    var(--aerion-character-muted);
-
-  font-size: 10px;
-
-  font-weight: 800;
-
-  letter-spacing:
-    0.08em;
-
-  text-transform:
-    uppercase;
-}
-
-
-.character-meta-item strong,
-.appearance-meta-item strong {
-  color:
-    var(--aerion-character-text);
-
-  font-size: 14px;
-}
-
-
-/* =========================================================
-   SEPARADOR
-   ========================================================= */
-
-.character-divider,
-.appearance-divider {
-  width: 100%;
-
-  height: 1px;
-
-  margin:
-    8px 0;
-
-  background:
-    linear-gradient(
-      90deg,
-      transparent,
-      var(--aerion-character-border),
-      transparent
-    );
-}
-
-
-/* =========================================================
-   RESPONSIVIDADE — TABLET
+   RESPONSIVO
    ========================================================= */
 
 @media (max-width: 900px) {
@@ -1164,77 +811,65 @@
       560px;
 
     padding:
-      18px;
+      22px 18px 18px;
   }
 
-  .aerion-character-svg {
-    width:
-      min(100%, 340px);
+  .aerion-character-stage {
+    min-height:
+      520px;
   }
 
-  .character-control-card,
-  .appearance-control-card,
-  .appearance-section {
-    padding:
-      17px;
+  .aerion-character-base-image {
+    height:
+      80%;
   }
+
 }
 
 
 /* =========================================================
-   RESPONSIVIDADE — MOBILE
+   MOBILE
    ========================================================= */
 
 @media (max-width: 640px) {
 
   #appearanceFigure {
     min-height:
-      540px;
+      500px;
 
     padding:
-      12px;
+      14px 10px 12px;
 
     border-radius:
-      24px;
+      22px;
   }
 
-  .aerion-character-svg {
+  .aerion-character-stage {
+    min-height:
+      470px;
+  }
+
+  .aerion-character-base-image {
+    height:
+      78%;
+
+    bottom:
+      4%;
+  }
+
+  .aerion-character-height-guide {
+    right:
+      8px;
+
+    font-size:
+      8px;
+  }
+
+  .aerion-character-error {
     width:
-      min(100%, 320px);
+      86%;
   }
 
-  .character-meta,
-  .appearance-meta {
-    grid-template-columns:
-      1fr;
-  }
-
-  .character-button-row,
-  .appearance-button-row {
-    display: grid;
-
-    grid-template-columns:
-      1fr;
-
-    width: 100%;
-  }
-
-  .character-action-button,
-  .appearance-action-button {
-    width: 100%;
-  }
-
-  .character-color-grid,
-  .appearance-color-grid {
-    grid-template-columns:
-      repeat(
-        auto-fit,
-        minmax(
-          34px,
-          1fr
-        )
-      );
-  }
 }
 
 
@@ -1246,32 +881,19 @@
 
   #appearanceFigure {
     min-height:
-      500px;
-
-    padding:
-      8px;
+      450px;
   }
 
-  .character-control-card,
-  .appearance-control-card,
-  .appearance-section {
-    padding:
-      15px;
+  .aerion-character-stage {
+    min-height:
+      420px;
   }
 
-  .character-control-title,
-  .appearance-control-title,
-  .appearance-section-title {
-    font-size:
-      14px;
+  .aerion-character-base-image {
+    height:
+      75%;
   }
 
-  .range-value strong,
-  .character-range-value strong,
-  .appearance-range-value strong {
-    font-size:
-      21px;
-  }
 }
 
 
@@ -1281,101 +903,14 @@
 
 @media (prefers-reduced-motion: reduce) {
 
-  .aerion-character-svg,
-  .character-action-button,
-  .appearance-action-button,
-  .character-color-option,
-  .appearance-color-option,
-  .character-control select,
-  .appearance-control select {
+  .aerion-character-base-image {
     transition:
       none;
   }
 
-  .character-spinner,
-  .appearance-spinner {
+  .aerion-character-spinner {
     animation:
       none;
   }
-}
 
-
-/* =========================================================
-   FOCO POR TECLADO
-   ========================================================= */
-
-.character-action-button:focus-visible,
-.appearance-action-button:focus-visible,
-.character-color-option:focus-visible,
-.appearance-color-option:focus-visible,
-.character-control select:focus-visible,
-.appearance-control select:focus-visible,
-.character-range:focus-visible,
-.appearance-range:focus-visible {
-  outline:
-    2px solid
-    var(--aerion-character-gold-light);
-
-  outline-offset:
-    3px;
-}
-
-
-/* =========================================================
-   ESTADO DESABILITADO
-   ========================================================= */
-
-.character-action-button:disabled,
-.appearance-action-button:disabled,
-.character-control select:disabled,
-.appearance-control select:disabled {
-  opacity:
-    0.46;
-
-  cursor:
-    not-allowed;
-
-  transform:
-    none;
-}
-
-
-/* =========================================================
-   CLASSE UTILITÁRIA
-   ========================================================= */
-
-.aerion-hidden {
-  display:
-    none !important;
-}
-
-
-/* =========================================================
-   IMPRESSÃO
-   ========================================================= */
-
-@media print {
-
-  #appearanceFigure {
-    border:
-      1px solid
-      #777;
-
-    box-shadow:
-      none;
-
-    background:
-      #fff;
-  }
-
-  .aerion-character-svg {
-    filter:
-      none;
-  }
-
-  .character-loading,
-  .appearance-loading {
-    display:
-      none !important;
-  }
 }
