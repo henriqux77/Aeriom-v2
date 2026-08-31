@@ -1,13 +1,26 @@
 /* =========================================================
    AERION — PERSONAGEM RENDER
-   css/personagem-render.css
+   js/core/personagem-render.css
 
-   Editor visual 2D de personagem.
+   INTERFACE DO GERADOR DE APARÊNCIA
 
-   Compatível com:
-   - personagem-assets.js
-   - personagem-render.js
-   - fichas.html
+   Responsável por:
+   - palco do personagem;
+   - moldura visual;
+   - escala;
+   - controles de aparência;
+   - cards;
+   - sliders;
+   - selects;
+   - loading;
+   - responsividade;
+   - estados de interação.
+
+   NÃO controla:
+   - regras;
+   - atributos;
+   - dados;
+   - autenticação.
 
    ========================================================= */
 
@@ -17,271 +30,1043 @@
    ========================================================= */
 
 :root {
+  --aerion-character-bg:
+    #0b0a08;
 
-  --character-panel:
-    rgba(255,255,255,.018);
+  --aerion-character-surface:
+    #11100d;
 
-  --character-panel-strong:
-    rgba(255,255,255,.028);
+  --aerion-character-surface-2:
+    #161410;
 
-  --character-border:
-    rgba(216,180,90,.13);
+  --aerion-character-border:
+    rgba(214, 179, 99, 0.18);
 
-  --character-border-hover:
-    rgba(216,180,90,.31);
+  --aerion-character-border-strong:
+    rgba(214, 179, 99, 0.34);
 
-  --character-border-active:
-    rgba(216,180,90,.52);
+  --aerion-character-gold:
+    #d8b968;
 
-  --character-gold:
-    #d8b45a;
+  --aerion-character-gold-light:
+    #ecd28d;
 
-  --character-gold-light:
-    #f1d990;
+  --aerion-character-text:
+    #eee7da;
 
-  --character-text:
-    #eee9df;
+  --aerion-character-muted:
+    #918b80;
 
-  --character-muted:
-    #918b82;
+  --aerion-character-danger:
+    #ad5a52;
 
-  --character-muted-dark:
-    #625d55;
+  --aerion-character-shadow:
+    0 22px 60px rgba(0, 0, 0, 0.38);
 
-  --character-radius-sm:
-    10px;
+  --aerion-character-radius:
+    28px;
 
-  --character-radius-md:
-    15px;
+  --aerion-character-radius-small:
+    18px;
 
-  --character-radius-lg:
-    21px;
-
-  --character-shadow:
-    0 22px 60px rgba(0,0,0,.28);
+  --aerion-character-transition:
+    180ms ease;
 }
 
 
 /* =========================================================
-   EDITOR
+   CONTAINER PRINCIPAL
    ========================================================= */
 
-.character-customizer {
+.personagem-render,
+.character-render,
+.appearance-render {
+  position: relative;
 
-  display:
-    grid;
+  width: 100%;
 
-  gap:
-    18px;
+  min-width: 0;
 
-  margin-top:
-    20px;
+  color:
+    var(--aerion-character-text);
+}
 
-  padding:
-    21px;
+
+/* =========================================================
+   PALCO
+   ========================================================= */
+
+#appearanceFigure {
+  position: relative;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  width: 100%;
+
+  min-height: 620px;
+
+  padding: 24px;
+
+  overflow: hidden;
 
   border:
     1px solid
-    var(--character-border);
+    var(--aerion-character-border);
 
   border-radius:
-    var(--character-radius-lg);
+    var(--aerion-character-radius);
 
   background:
+    radial-gradient(
+      circle at 50% 38%,
+      rgba(173, 142, 76, 0.09),
+      transparent 34%
+    ),
+    radial-gradient(
+      circle at 50% 78%,
+      rgba(255, 255, 255, 0.025),
+      transparent 38%
+    ),
     linear-gradient(
-      145deg,
-      rgba(255,255,255,.025),
-      rgba(255,255,255,.008)
+      180deg,
+      #0d0c0a 0%,
+      #090807 100%
     );
 
   box-shadow:
-    var(--character-shadow);
+    var(--aerion-character-shadow);
+
+  isolation: isolate;
 }
 
 
 /* =========================================================
-   CABEÇALHO
+   BRILHO DO PALCO
    ========================================================= */
 
-.character-customizer-heading {
+#appearanceFigure::before {
+  content: "";
 
-  display:
-    grid;
+  position: absolute;
 
-  gap:
-    5px;
+  inset: 0;
+
+  pointer-events: none;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,0.028),
+      transparent 24%,
+      transparent 74%,
+      rgba(213,177,93,0.018)
+    );
+
+  border-radius:
+    inherit;
 }
 
 
-.character-customizer-heading h3 {
+/* =========================================================
+   LINHA DE BASE
+   ========================================================= */
 
-  margin:
-    0;
+#appearanceFigure::after {
+  content: "";
+
+  position: absolute;
+
+  left: 10%;
+
+  right: 10%;
+
+  bottom: 10%;
+
+  height: 1px;
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      var(--aerion-character-border-strong),
+      transparent
+    );
+
+  pointer-events: none;
+}
+
+
+/* =========================================================
+   SVG
+   ========================================================= */
+
+.aerion-character-svg {
+  position: relative;
+
+  z-index: 2;
+
+  display: block;
+
+  width:
+    min(100%, 360px);
+
+  height: auto;
+
+  max-height: 620px;
+
+  overflow: visible;
+
+  filter:
+    drop-shadow(
+      0 24px 28px rgba(0,0,0,0.30)
+    );
+
+  transform-origin:
+    center bottom;
+
+  transition:
+    transform
+    var(--aerion-character-transition),
+    filter
+    var(--aerion-character-transition);
+}
+
+
+/* =========================================================
+   EFEITO HOVER
+   ========================================================= */
+
+#appearanceFigure:hover
+.aerion-character-svg {
+  filter:
+    drop-shadow(
+      0 28px 34px rgba(0,0,0,0.36)
+    );
+}
+
+
+/* =========================================================
+   ÁREA DE CONTROLES
+   ========================================================= */
+
+.character-controls,
+.appearance-controls {
+  display: grid;
+
+  gap: 16px;
+
+  margin-top: 18px;
+}
+
+
+/* =========================================================
+   CARD DE CONTROLE
+   ========================================================= */
+
+.character-control-card,
+.appearance-control-card,
+.appearance-section {
+  position: relative;
+
+  padding: 20px;
+
+  border:
+    1px solid
+    var(--aerion-character-border);
+
+  border-radius:
+    var(--aerion-character-radius-small);
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,0.018),
+      rgba(255,255,255,0.008)
+    );
+
+  box-shadow:
+    0 12px 30px rgba(0,0,0,0.18);
+
+  backdrop-filter:
+    blur(14px);
+
+  -webkit-backdrop-filter:
+    blur(14px);
+}
+
+
+/* =========================================================
+   TITULOS
+   ========================================================= */
+
+.character-control-title,
+.appearance-control-title,
+.appearance-section-title {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  gap: 12px;
+
+  margin: 0 0 12px;
 
   color:
-    var(--character-text);
+    var(--aerion-character-text);
+
+  font-size: 15px;
+
+  font-weight: 700;
+
+  letter-spacing:
+    0.01em;
+}
+
+
+.character-control-title span:first-child,
+.appearance-control-title span:first-child {
+  color:
+    var(--aerion-character-text);
+}
+
+
+/* =========================================================
+   LABEL
+   ========================================================= */
+
+.character-control-label,
+.appearance-control-label {
+  display: block;
+
+  margin-bottom: 8px;
+
+  color:
+    var(--aerion-character-muted);
+
+  font-size: 12px;
+
+  font-weight: 700;
+
+  letter-spacing:
+    0.08em;
+
+  text-transform:
+    uppercase;
+}
+
+
+/* =========================================================
+   SELECT
+   ========================================================= */
+
+.character-control select,
+.appearance-control select,
+.character-control input,
+.appearance-control input {
+  width: 100%;
+
+  min-width: 0;
+}
+
+
+/* =========================================================
+   SELECT CUSTOMIZADO
+   ========================================================= */
+
+.character-control select,
+.appearance-control select {
+  appearance: none;
+
+  -webkit-appearance: none;
+
+  padding:
+    15px 46px 15px 16px;
+
+  border:
+    1px solid
+    var(--aerion-character-border);
+
+  border-radius:
+    16px;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,0.025),
+      rgba(255,255,255,0.008)
+    );
+
+  color:
+    var(--aerion-character-text);
+
+  font: inherit;
+
+  font-size: 15px;
+
+  outline: none;
+
+  cursor: pointer;
+
+  transition:
+    border-color
+    var(--aerion-character-transition),
+    background
+    var(--aerion-character-transition),
+    transform
+    var(--aerion-character-transition);
+}
+
+
+.character-control select:hover,
+.appearance-control select:hover {
+  border-color:
+    var(--aerion-character-border-strong);
+}
+
+
+.character-control select:focus,
+.appearance-control select:focus {
+  border-color:
+    rgba(216, 185, 104, 0.56);
+
+  box-shadow:
+    0 0 0 3px
+    rgba(216, 185, 104, 0.08);
+}
+
+
+/* =========================================================
+   WRAPPER DO SELECT
+   ========================================================= */
+
+.character-select-wrap,
+.appearance-select-wrap {
+  position: relative;
+}
+
+
+.character-select-wrap::after,
+.appearance-select-wrap::after {
+  content: "⌄";
+
+  position: absolute;
+
+  right: 16px;
+
+  top: 50%;
+
+  transform:
+    translateY(-54%);
+
+  color:
+    var(--aerion-character-muted);
+
+  font-size: 19px;
+
+  pointer-events: none;
+}
+
+
+/* =========================================================
+   SLIDER
+   ========================================================= */
+
+.character-range,
+.appearance-range {
+  width: 100%;
+
+  margin: 8px 0 0;
+
+  appearance: none;
+
+  -webkit-appearance: none;
+
+  background:
+    transparent;
+
+  cursor: pointer;
+}
+
+
+/* =========================================================
+   TRACK
+   ========================================================= */
+
+.character-range::-webkit-slider-runnable-track,
+.appearance-range::-webkit-slider-runnable-track {
+  height: 5px;
+
+  border-radius: 999px;
+
+  background:
+    linear-gradient(
+      90deg,
+      var(--aerion-character-gold),
+      rgba(255,255,255,0.16)
+    );
+}
+
+
+.character-range::-moz-range-track,
+.appearance-range::-moz-range-track {
+  height: 5px;
+
+  border-radius: 999px;
+
+  background:
+    linear-gradient(
+      90deg,
+      var(--aerion-character-gold),
+      rgba(255,255,255,0.16)
+    );
+}
+
+
+/* =========================================================
+   THUMB
+   ========================================================= */
+
+.character-range::-webkit-slider-thumb,
+.appearance-range::-webkit-slider-thumb {
+  appearance: none;
+
+  -webkit-appearance: none;
+
+  width: 22px;
+
+  height: 22px;
+
+  margin-top: -8px;
+
+  border:
+    2px solid
+    #f0d489;
+
+  border-radius: 50%;
+
+  background:
+    #d6b45e;
+
+  box-shadow:
+    0 0 0 6px
+    rgba(214, 180, 94, 0.10),
+
+    0 4px 15px
+    rgba(0,0,0,0.35);
+}
+
+
+.character-range::-moz-range-thumb,
+.appearance-range::-moz-range-thumb {
+  width: 22px;
+
+  height: 22px;
+
+  border:
+    2px solid
+    #f0d489;
+
+  border-radius: 50%;
+
+  background:
+    #d6b45e;
+
+  box-shadow:
+    0 0 0 6px
+    rgba(214, 180, 94, 0.10),
+
+    0 4px 15px
+    rgba(0,0,0,0.35);
+}
+
+
+/* =========================================================
+   VALORES DO SLIDER
+   ========================================================= */
+
+.range-value,
+.character-range-value,
+.appearance-range-value {
+  display: flex;
+
+  align-items: baseline;
+
+  justify-content: space-between;
+
+  gap: 12px;
+
+  margin-top: 10px;
+}
+
+
+.range-value strong,
+.character-range-value strong,
+.appearance-range-value strong {
+  color:
+    var(--aerion-character-gold-light);
 
   font-family:
     Georgia,
     "Times New Roman",
     serif;
 
-  font-size:
-    clamp(
-      23px,
-      4vw,
-      30px
-    );
+  font-size: 24px;
 
-  font-weight:
-    500;
-
-  letter-spacing:
-    -.02em;
+  font-weight: 500;
 }
 
 
-.character-customizer-heading p {
-
-  max-width:
-    750px;
-
-  margin:
-    3px 0 0;
-
+.range-value span,
+.character-range-value span,
+.appearance-range-value span {
   color:
-    var(--character-muted);
+    var(--aerion-character-muted);
 
-  font-size:
-    11px;
-
-  line-height:
-    1.65;
+  font-size: 12px;
 }
 
 
 /* =========================================================
-   ABAS
+   PALETA DE CORES
    ========================================================= */
 
-.character-customizer-tabs {
+.character-color-grid,
+.appearance-color-grid {
+  display: grid;
 
-  display:
-    flex;
+  grid-template-columns:
+    repeat(
+      auto-fit,
+      minmax(
+        38px,
+        1fr
+      )
+    );
 
-  gap:
-    6px;
-
-  overflow-x:
-    auto;
-
-  padding:
-    3px 2px 7px;
-
-  scrollbar-width:
-    none;
+  gap: 10px;
 }
 
 
-.character-customizer-tabs::-webkit-scrollbar {
-  display:
-    none;
-}
+.character-color-option,
+.appearance-color-option {
+  position: relative;
 
+  width: 100%;
 
-.character-editor-tab {
+  aspect-ratio: 1;
 
-  display:
-    inline-flex;
-
-  flex:
-    0 0 auto;
-
-  align-items:
-    center;
-
-  justify-content:
-    center;
-
-  min-height:
-    37px;
-
-  padding:
-    8px 13px;
+  padding: 0;
 
   border:
-    1px solid transparent;
+    1px solid
+    rgba(255,255,255,0.12);
+
+  border-radius: 13px;
+
+  cursor: pointer;
+
+  overflow: hidden;
+
+  box-shadow:
+    inset 0 0 0 1px
+    rgba(0,0,0,0.18);
+
+  transition:
+    transform
+    var(--aerion-character-transition),
+    border-color
+    var(--aerion-character-transition),
+    box-shadow
+    var(--aerion-character-transition);
+}
+
+
+.character-color-option:hover,
+.appearance-color-option:hover {
+  transform:
+    translateY(-2px);
+
+  border-color:
+    rgba(255,255,255,0.36);
+}
+
+
+.character-color-option.is-active,
+.appearance-color-option.is-active,
+.character-color-option[aria-selected="true"],
+.appearance-color-option[aria-selected="true"] {
+  border-color:
+    var(--aerion-character-gold-light);
+
+  box-shadow:
+    0 0 0 2px
+    rgba(216,185,104,0.16),
+
+    0 7px 18px
+    rgba(0,0,0,0.24);
+}
+
+
+/* =========================================================
+   BOTÕES
+   ========================================================= */
+
+.character-action-button,
+.appearance-action-button {
+  display: inline-flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 8px;
+
+  min-height: 46px;
+
+  padding:
+    0 18px;
+
+  border:
+    1px solid
+    var(--aerion-character-border-strong);
+
+  border-radius:
+    14px;
+
+  background:
+    rgba(216,185,104,0.055);
+
+  color:
+    var(--aerion-character-gold-light);
+
+  font: inherit;
+
+  font-size: 14px;
+
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition:
+    transform
+    var(--aerion-character-transition),
+    background
+    var(--aerion-character-transition),
+    border-color
+    var(--aerion-character-transition);
+}
+
+
+.character-action-button:hover,
+.appearance-action-button:hover {
+  transform:
+    translateY(-1px);
+
+  background:
+    rgba(216,185,104,0.09);
+
+  border-color:
+    rgba(236,210,141,0.5);
+}
+
+
+.character-action-button:active,
+.appearance-action-button:active {
+  transform:
+    translateY(0);
+}
+
+
+/* =========================================================
+   BOTÃO DOURADO PRINCIPAL
+   ========================================================= */
+
+.character-action-button.primary,
+.appearance-action-button.primary {
+  color:
+    #17130d;
+
+  background:
+    linear-gradient(
+      180deg,
+      #ecd38d,
+      #cda956
+    );
+
+  border-color:
+    transparent;
+
+  box-shadow:
+    0 10px 22px
+    rgba(205,169,86,0.16);
+}
+
+
+.character-action-button.primary:hover,
+.appearance-action-button.primary:hover {
+  background:
+    linear-gradient(
+      180deg,
+      #f2dc9c,
+      #d7b562
+    );
+}
+
+
+/* =========================================================
+   GRUPO DE BOTÕES
+   ========================================================= */
+
+.character-button-row,
+.appearance-button-row {
+  display: flex;
+
+  flex-wrap: wrap;
+
+  gap: 10px;
+
+  align-items: center;
+}
+
+
+/* =========================================================
+   LOADING DO PERSONAGEM
+   ========================================================= */
+
+.character-loading,
+.appearance-loading {
+  position: absolute;
+
+  inset: 0;
+
+  z-index: 20;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  padding: 24px;
+
+  background:
+    rgba(7, 6, 5, 0.66);
+
+  backdrop-filter:
+    blur(5px);
+
+  -webkit-backdrop-filter:
+    blur(5px);
+
+  border-radius:
+    inherit;
+
+  opacity: 0;
+
+  visibility: hidden;
+
+  pointer-events: none;
+
+  transition:
+    opacity
+    180ms ease,
+    visibility
+    180ms ease;
+}
+
+
+.character-loading.is-visible,
+.appearance-loading.is-visible,
+.character-loading[aria-hidden="false"],
+.appearance-loading[aria-hidden="false"] {
+  opacity: 1;
+
+  visibility: visible;
+}
+
+
+.character-loading-content,
+.appearance-loading-content {
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: center;
+
+  gap: 12px;
+}
+
+
+/* =========================================================
+   SPINNER
+   ========================================================= */
+
+.character-spinner,
+.appearance-spinner {
+  width: 42px;
+
+  height: 42px;
+
+  border:
+    3px solid
+    rgba(255,255,255,0.10);
+
+  border-top-color:
+    var(--aerion-character-gold-light);
+
+  border-right-color:
+    var(--aerion-character-gold);
+
+  border-radius: 50%;
+
+  animation:
+    aerion-character-spin
+    0.8s linear infinite;
+}
+
+
+@keyframes aerion-character-spin {
+  to {
+    transform:
+      rotate(360deg);
+  }
+}
+
+
+/* =========================================================
+   TEXTO DO LOADING
+   ========================================================= */
+
+.character-loading-text,
+.appearance-loading-text {
+  color:
+    var(--aerion-character-text);
+
+  font-size: 13px;
+
+  font-weight: 700;
+
+  letter-spacing:
+    0.03em;
+}
+
+
+/* =========================================================
+   ERRO
+   ========================================================= */
+
+.character-error,
+.appearance-error {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  min-height: 120px;
+
+  padding: 20px;
+
+  text-align: center;
+
+  color:
+    var(--aerion-character-danger);
+
+  border:
+    1px solid
+    rgba(173,90,82,0.20);
+
+  border-radius:
+    18px;
+
+  background:
+    rgba(173,90,82,0.05);
+}
+
+
+/* =========================================================
+   ESTADO VAZIO
+   ========================================================= */
+
+.character-empty,
+.appearance-empty {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  min-height: 260px;
+
+  color:
+    var(--aerion-character-muted);
+
+  text-align: center;
+
+  padding: 30px;
+}
+
+
+/* =========================================================
+   BADGE DE RAÇA
+   ========================================================= */
+
+.character-race-badge,
+.appearance-race-badge {
+  position: absolute;
+
+  left: 20px;
+
+  top: 20px;
+
+  z-index: 5;
+
+  padding:
+    7px 11px;
+
+  border:
+    1px solid
+    var(--aerion-character-border);
 
   border-radius:
     999px;
 
   background:
-    transparent;
+    rgba(10,9,8,0.72);
 
   color:
-    var(--character-muted);
+    var(--aerion-character-gold-light);
 
-  cursor:
-    pointer;
+  font-size: 10px;
 
-  font-size:
-    9px;
+  font-weight: 800;
 
-  font-weight:
-    800;
+  letter-spacing:
+    0.10em;
 
-  white-space:
-    nowrap;
+  text-transform:
+    uppercase;
 
-  transition:
-    transform .16s ease,
-    color .20s ease,
-    background .20s ease,
-    border-color .20s ease;
-}
+  backdrop-filter:
+    blur(10px);
 
-
-.character-editor-tab:hover {
-
-  transform:
-    translateY(-1px);
-
-  border-color:
-    var(--character-border);
-
-  background:
-    rgba(216,180,90,.035);
-
-  color:
-    var(--character-text);
-}
-
-
-.character-editor-tab.active {
-
-  border-color:
-    var(--character-border-active);
-
-  background:
-    rgba(216,180,90,.085);
-
-  color:
-    var(--character-gold-light);
-
-  box-shadow:
-    0 7px 24px
-    rgba(216,180,90,.055);
+  -webkit-backdrop-filter:
+    blur(10px);
 }
 
 
 /* =========================================================
-   ÁREA DOS CONTROLES
+   DETALHES DO PERSONAGEM
    ========================================================= */
 
-.character-customizer-body {
-
-  display:
-    grid;
+.character-meta,
+.appearance-meta {
+  display: grid;
 
   grid-template-columns:
     repeat(
@@ -292,1859 +1077,305 @@
       )
     );
 
-  gap:
-    12px;
+  gap: 10px;
+
+  margin-top: 14px;
 }
 
 
-.character-editor-section-title {
-
-  grid-column:
-    1 / -1;
-
-  display:
-    grid;
-
-  gap:
-    4px;
-
+.character-meta-item,
+.appearance-meta-item {
   padding:
-    3px 2px 4px;
-}
-
-
-.character-editor-section-title h4 {
-
-  margin:
-    0;
-
-  color:
-    var(--character-text);
-
-  font-family:
-    Georgia,
-    serif;
-
-  font-size:
-    20px;
-
-  font-weight:
-    500;
-}
-
-
-/* =========================================================
-   CAMPOS
-   ========================================================= */
-
-.character-editor-field {
-
-  display:
-    grid;
-
-  gap:
-    7px;
-
-  min-width:
-    0;
-
-  padding:
-    13px;
+    13px 14px;
 
   border:
     1px solid
-    rgba(255,255,255,.06);
+    var(--aerion-character-border);
 
   border-radius:
-    var(--character-radius-md);
+    14px;
 
   background:
-    rgba(255,255,255,.012);
-
-  transition:
-    border-color .2s ease,
-    background .2s ease;
+    rgba(255,255,255,0.012);
 }
 
 
-.character-editor-field:hover {
+.character-meta-item small,
+.appearance-meta-item small {
+  display: block;
 
-  border-color:
-    var(--character-border);
-
-  background:
-    rgba(255,255,255,.018);
-}
-
-
-.character-editor-label {
-
-  display:
-    block;
+  margin-bottom: 4px;
 
   color:
-    var(--character-muted);
+    var(--aerion-character-muted);
 
-  font-size:
-    8px;
+  font-size: 10px;
 
-  font-weight:
-    850;
+  font-weight: 800;
 
   letter-spacing:
-    .10em;
-
-  line-height:
-    1.3;
+    0.08em;
 
   text-transform:
     uppercase;
 }
 
 
-.character-editor-select {
-
-  width:
-    100%;
-
-  min-height:
-    40px;
-
-  padding:
-    8px 11px;
-
-  border:
-    1px solid
-    rgba(255,255,255,.07);
-
-  border-radius:
-    10px;
-
-  outline:
-    none;
-
-  background:
-    #131210;
-
+.character-meta-item strong,
+.appearance-meta-item strong {
   color:
-    var(--character-text);
+    var(--aerion-character-text);
 
-  cursor:
-    pointer;
-
-  font-size:
-    10px;
-
-  transition:
-    border-color .2s ease,
-    background .2s ease,
-    box-shadow .2s ease;
-}
-
-
-.character-editor-select:hover {
-
-  border-color:
-    var(--character-border);
-}
-
-
-.character-editor-select:focus {
-
-  border-color:
-    var(--character-border-active);
-
-  box-shadow:
-    0 0 0 3px
-    rgba(216,180,90,.045);
+  font-size: 14px;
 }
 
 
 /* =========================================================
-   RANGE
+   SEPARADOR
    ========================================================= */
 
-.character-editor-range {
+.character-divider,
+.appearance-divider {
+  width: 100%;
 
-  display:
-    grid;
-
-  gap:
-    9px;
-
-  min-width:
-    0;
-
-  padding:
-    13px;
-
-  border:
-    1px solid
-    rgba(255,255,255,.06);
-
-  border-radius:
-    var(--character-radius-md);
-
-  background:
-    rgba(255,255,255,.012);
-}
-
-
-.character-editor-range > span {
-
-  display:
-    flex;
-
-  align-items:
-    center;
-
-  justify-content:
-    space-between;
-
-  gap:
-    10px;
-}
-
-
-.character-editor-range strong {
-
-  color:
-    var(--character-gold-light);
-
-  font-size:
-    9px;
-
-  font-variant-numeric:
-    tabular-nums;
-}
-
-
-.character-editor-range input[type="range"] {
-
-  appearance:
-    none;
-
-  width:
-    100%;
-
-  height:
-    5px;
+  height: 1px;
 
   margin:
-    5px 0 0;
-
-  border-radius:
-    999px;
-
-  background:
-    rgba(255,255,255,.08);
-
-  outline:
-    none;
-
-  cursor:
-    pointer;
-}
-
-
-.character-editor-range
-input[type="range"]::-webkit-slider-runnable-track {
-
-  height:
-    5px;
-
-  border-radius:
-    999px;
-
-  background:
-    rgba(255,255,255,.08);
-}
-
-
-.character-editor-range
-input[type="range"]::-webkit-slider-thumb {
-
-  appearance:
-    none;
-
-  width:
-    17px;
-
-  height:
-    17px;
-
-  margin-top:
-    -6px;
-
-  border:
-    2px solid
-    var(--character-gold-light);
-
-  border-radius:
-    50%;
-
-  background:
-    var(--character-gold);
-
-  box-shadow:
-    0 0 0 4px
-    rgba(216,180,90,.07);
-
-  cursor:
-    grab;
-}
-
-
-.character-editor-range
-input[type="range"]::-webkit-slider-thumb:active {
-  cursor:
-    grabbing;
-}
-
-
-.character-editor-range
-input[type="range"]::-moz-range-track {
-
-  height:
-    5px;
-
-  border-radius:
-    999px;
-
-  background:
-    rgba(255,255,255,.08);
-}
-
-
-.character-editor-range
-input[type="range"]::-moz-range-thumb {
-
-  width:
-    17px;
-
-  height:
-    17px;
-
-  border:
-    2px solid
-    var(--character-gold-light);
-
-  border-radius:
-    50%;
-
-  background:
-    var(--character-gold);
-
-  box-shadow:
-    0 0 0 4px
-    rgba(216,180,90,.07);
-
-  cursor:
-    grab;
-}
-
-
-/* =========================================================
-   PALETA
-   ========================================================= */
-
-.character-color-field {
-
-  grid-column:
-    1 / -1;
-
-  display:
-    grid;
-
-  gap:
-    10px;
-
-  padding:
-    13px;
-
-  border:
-    1px solid
-    rgba(255,255,255,.06);
-
-  border-radius:
-    var(--character-radius-md);
-
-  background:
-    rgba(255,255,255,.012);
-}
-
-
-.character-color-grid {
-
-  display:
-    grid;
-
-  grid-template-columns:
-    repeat(
-      auto-fill,
-      minmax(
-        31px,
-        1fr
-      )
-    );
-
-  gap:
-    7px;
-}
-
-
-.character-color-option {
-
-  position:
-    relative;
-
-  width:
-    100%;
-
-  aspect-ratio:
-    1;
-
-  min-width:
-    28px;
-
-  padding:
-    0;
-
-  border:
-    1px solid
-    rgba(255,255,255,.12);
-
-  border-radius:
-    9px;
-
-  cursor:
-    pointer;
-
-  box-shadow:
-    inset
-    0 0 0 1px
-    rgba(0,0,0,.10);
-
-  transition:
-    transform .15s ease,
-    border-color .2s ease,
-    box-shadow .2s ease;
-}
-
-
-.character-color-option:hover {
-
-  transform:
-    translateY(-2px)
-    scale(1.03);
-
-  border-color:
-    rgba(255,255,255,.35);
-}
-
-
-.character-color-option.selected {
-
-  border-color:
-    var(--character-gold-light);
-
-  box-shadow:
-    0 0 0 2px
-    rgba(216,180,90,.15),
-    0 6px 18px
-    rgba(0,0,0,.20);
-
-  transform:
-    scale(1.05);
-}
-
-
-.character-color-option.selected::after {
-
-  content:
-    "✓";
-
-  position:
-    absolute;
-
-  top:
-    50%;
-
-  left:
-    50%;
-
-  transform:
-    translate(
-      -50%,
-      -50%
-    );
-
-  color:
-    #fff;
-
-  font-size:
-    10px;
-
-  font-weight:
-    900;
-
-  text-shadow:
-    0 1px 4px
-    rgba(0,0,0,.7);
-}
-
-
-/* =========================================================
-   AVISO RACIAL
-   ========================================================= */
-
-.character-feature-notice {
-
-  grid-column:
-    1 / -1;
-
-  display:
-    flex;
-
-  align-items:
-    center;
-
-  min-height:
-    39px;
-
-  padding:
-    9px 12px;
-
-  border:
-    1px solid
-    rgba(216,180,90,.18);
-
-  border-radius:
-    10px;
-
-  background:
-    rgba(216,180,90,.04);
-
-  color:
-    var(--character-gold-light);
-
-  font-size:
-    9px;
-
-  font-weight:
-    750;
-}
-
-
-/* =========================================================
-   PERFIL ANIMALHA
-   ========================================================= */
-
-.character-animal-profile {
-
-  grid-column:
-    1 / -1;
-
-  display:
-    grid;
-
-  gap:
-    4px;
-
-  padding:
-    14px;
-
-  border:
-    1px solid
-    rgba(216,180,90,.13);
-
-  border-radius:
-    var(--character-radius-md);
-
-  background:
-    linear-gradient(
-      135deg,
-      rgba(216,180,90,.055),
-      rgba(216,180,90,.012)
-    );
-}
-
-
-.character-animal-profile strong {
-
-  color:
-    var(--character-gold-light);
-
-  font-family:
-    Georgia,
-    serif;
-
-  font-size:
-    21px;
-
-  font-weight:
-    500;
-}
-
-
-.character-animal-profile p {
-
-  margin:
-    0;
-
-  color:
-    var(--character-muted);
-
-  font-size:
-    9px;
-}
-
-
-/* =========================================================
-   PERSONAGEM
-   ========================================================= */
-
-#appearanceFigure {
-
-  position:
-    relative;
-
-  display:
-    flex;
-
-  align-items:
-    flex-end;
-
-  justify-content:
-    center;
-
-  width:
-    100%;
-
-  min-height:
-    515px;
-
-  overflow:
-    hidden;
-
-  isolation:
-    isolate;
-
-  padding:
-    22px 15px 30px;
-
-  border:
-    1px solid
-    rgba(255,255,255,.075);
-
-  border-radius:
-    24px;
-
-  background:
-    radial-gradient(
-      circle at 50% 30%,
-      rgba(255,255,255,.055),
-      transparent 45%
-    ),
-
-    radial-gradient(
-      ellipse at 50% 100%,
-      rgba(216,180,90,.035),
-      transparent 55%
-    ),
-
-    linear-gradient(
-      180deg,
-      #181715,
-      #0d0c0b
-    );
-
-  box-shadow:
-    var(--character-shadow);
-}
-
-
-/* =========================================================
-   LUZ INTERNA
-   ========================================================= */
-
-#appearanceFigure::before {
-
-  content:
-    "";
-
-  position:
-    absolute;
-
-  left:
-    50%;
-
-  top:
-    9%;
-
-  width:
-    73%;
-
-  height:
-    73%;
-
-  transform:
-    translateX(-50%);
-
-  border-radius:
-    50%;
-
-  background:
-    radial-gradient(
-      circle,
-      rgba(255,255,255,.045),
-      transparent 68%
-    );
-
-  filter:
-    blur(18px);
-
-  pointer-events:
-    none;
-
-  z-index:
-    -1;
-}
-
-
-/* =========================================================
-   LINHA DE SOLO
-   ========================================================= */
-
-#appearanceFigure::after {
-
-  content:
-    "";
-
-  position:
-    absolute;
-
-  left:
-    12%;
-
-  right:
-    12%;
-
-  bottom:
-    19px;
-
-  height:
-    1px;
+    8px 0;
 
   background:
     linear-gradient(
       90deg,
       transparent,
-      rgba(216,180,90,.23),
+      var(--aerion-character-border),
       transparent
     );
-
-  pointer-events:
-    none;
 }
 
 
 /* =========================================================
-   SVG
+   RESPONSIVIDADE — TABLET
    ========================================================= */
 
-.aerion-character-svg {
+@media (max-width: 900px) {
 
-  display:
-    block;
+  #appearanceFigure {
+    min-height:
+      560px;
 
-  width:
-    min(
-      100%,
-      390px
-    );
-
-  height:
-    auto;
-
-  max-height:
-    505px;
-
-  overflow:
-    visible;
-
-  transform-origin:
-    center bottom;
-
-  animation:
-    aerionCharacterEnter
-    .38s
-    cubic-bezier(
-      .22,
-      1,
-      .36,
-      1
-    );
-}
-
-
-@keyframes aerionCharacterEnter {
-
-  from {
-    opacity:
-      0;
-
-    transform:
-      translateY(
-        10px
-      )
-      scale(
-        .985
-      );
+    padding:
+      18px;
   }
 
-  to {
-    opacity:
-      1;
+  .aerion-character-svg {
+    width:
+      min(100%, 340px);
+  }
 
-    transform:
-      translateY(
-        0
-      )
-      scale(
-        1
-      );
+  .character-control-card,
+  .appearance-control-card,
+  .appearance-section {
+    padding:
+      17px;
   }
 }
 
 
 /* =========================================================
-   CORPO
+   RESPONSIVIDADE — MOBILE
    ========================================================= */
 
-.character-body {
+@media (max-width: 640px) {
 
-  fill:
-    url(
-      "#aerion-skin-gradient"
-    );
+  #appearanceFigure {
+    min-height:
+      540px;
 
-  stroke:
-    rgba(0,0,0,.28);
+    padding:
+      12px;
 
-  stroke-width:
-    2;
-
-  vector-effect:
-    non-scaling-stroke;
-
-  transition:
-    all .24s ease;
-}
-
-
-.character-neck {
-
-  fill:
-    url(
-      "#aerion-skin-gradient"
-    );
-
-  stroke:
-    rgba(0,0,0,.25);
-
-  stroke-width:
-    2;
-
-  vector-effect:
-    non-scaling-stroke;
-}
-
-
-.character-head {
-
-  fill:
-    url(
-      "#aerion-skin-gradient"
-    );
-
-  stroke:
-    rgba(0,0,0,.28);
-
-  stroke-width:
-    2;
-
-  vector-effect:
-    non-scaling-stroke;
-
-  transition:
-    all .24s ease;
-}
-
-
-/* =========================================================
-   MEMBROS
-   ========================================================= */
-
-.character-arm {
-
-  fill:
-    none;
-
-  stroke:
-    var(
-      --character-skin,
-      #b99f8b
-    );
-
-  stroke-linecap:
-    round;
-
-  stroke-linejoin:
-    round;
-
-  vector-effect:
-    non-scaling-stroke;
-
-  transition:
-    all .24s ease;
-}
-
-
-.character-leg {
-
-  fill:
-    var(
-      --character-clothes,
-      #34312d
-    );
-
-  stroke:
-    rgba(0,0,0,.32);
-
-  stroke-width:
-    2;
-
-  vector-effect:
-    non-scaling-stroke;
-}
-
-
-/* =========================================================
-   ROSTO
-   ========================================================= */
-
-.character-face-line {
-
-  fill:
-    none;
-
-  stroke:
-    rgba(45,34,29,.75);
-
-  stroke-width:
-    2;
-
-  stroke-linecap:
-    round;
-
-  stroke-linejoin:
-    round;
-
-  vector-effect:
-    non-scaling-stroke;
-}
-
-
-.character-mouth {
-
-  fill:
-    none;
-
-  stroke:
-    rgba(55,34,31,.82);
-
-  stroke-width:
-    2;
-
-  stroke-linecap:
-    round;
-
-  vector-effect:
-    non-scaling-stroke;
-}
-
-
-.character-eye {
-
-  stroke:
-    rgba(0,0,0,.20);
-
-  stroke-width:
-    1;
-}
-
-
-/* =========================================================
-   CABELO
-   ========================================================= */
-
-.character-hair-shape {
-
-  fill:
-    var(
-      --character-hair,
-      #27211c
-    );
-
-  stroke:
-    rgba(0,0,0,.32);
-
-  stroke-width:
-    2;
-
-  vector-effect:
-    non-scaling-stroke;
-
-  transition:
-    fill .2s ease,
-    transform .2s ease;
-}
-
-
-.character-facial-hair {
-
-  opacity:
-    .96;
-}
-
-
-.facial-hair-shape {
-
-  fill:
-    var(
-      --character-hair,
-      #27211c
-    );
-
-  stroke:
-    rgba(0,0,0,.30);
-
-  stroke-width:
-    2;
-
-  vector-effect:
-    non-scaling-stroke;
-}
-
-
-/* =========================================================
-   ORELHAS
-   ========================================================= */
-
-.character-ear,
-.character-animal-ear {
-
-  fill:
-    var(
-      --character-skin,
-      #b99f8b
-    );
-
-  stroke:
-    rgba(0,0,0,.28);
-
-  stroke-width:
-    2;
-
-  vector-effect:
-    non-scaling-stroke;
-}
-
-
-/* =========================================================
-   CHIFRES
-   ========================================================= */
-
-.character-horn {
-
-  fill:
-    #75695a;
-
-  stroke:
-    #302b25;
-
-  stroke-width:
-    2;
-
-  vector-effect:
-    non-scaling-stroke;
-}
-
-
-/* =========================================================
-   ASAS
-   ========================================================= */
-
-.character-wing {
-
-  fill:
-    rgba(
-      225,
-      225,
-      218,
-      .25
-    );
-
-  stroke:
-    rgba(
-      235,
-      232,
-      220,
-      .58
-    );
-
-  stroke-width:
-    2;
-
-  vector-effect:
-    non-scaling-stroke;
-}
-
-
-.character-wings {
-
-  transform-origin:
-    center;
-
-  animation:
-    aerionWingFloat
-    4.8s
-    ease-in-out
-    infinite;
-}
-
-
-@keyframes aerionWingFloat {
-
-  0%,
-  100% {
-    transform:
-      translateY(0);
+    border-radius:
+      24px;
   }
 
-  50% {
-    transform:
-      translateY(-2px);
-  }
-}
-
-
-/* =========================================================
-   CAUDA
-   ========================================================= */
-
-.character-tail-shape {
-
-  fill:
-    none;
-
-  stroke:
-    var(
-      --character-animal,
-      #76513b
-    );
-
-  stroke-width:
-    13;
-
-  stroke-linecap:
-    round;
-
-  vector-effect:
-    non-scaling-stroke;
-
-  filter:
-    drop-shadow(
-      0 2px 2px
-      rgba(0,0,0,.16)
-    );
-}
-
-
-/* =========================================================
-   ROUPAS
-   ========================================================= */
-
-.character-clothes-main {
-
-  fill:
-    url(
-      "#aerion-clothes-gradient"
-    );
-
-  stroke:
-    rgba(0,0,0,.32);
-
-  stroke-width:
-    2;
-
-  vector-effect:
-    non-scaling-stroke;
-}
-
-
-.character-cape {
-
-  fill:
-    rgba(
-      38,
-      34,
-      30,
-      .96
-    );
-
-  stroke:
-    rgba(0,0,0,.35);
-
-  stroke-width:
-    2;
-
-  vector-effect:
-    non-scaling-stroke;
-}
-
-
-.character-belt {
-
-  fill:
-    #463729;
-
-  stroke:
-    #201b17;
-
-  stroke-width:
-    2;
-
-  vector-effect:
-    non-scaling-stroke;
-}
-
-
-/* =========================================================
-   ARMADURA
-   ========================================================= */
-
-.character-armor-chest {
-
-  fill:
-    #454039;
-
-  stroke:
-    #191714;
-
-  stroke-width:
-    2.5;
-
-  vector-effect:
-    non-scaling-stroke;
-}
-
-
-.character-armor-left,
-.character-armor-right {
-
-  fill:
-    none;
-
-  stroke:
-    #49443c;
-
-  stroke-width:
-    16;
-
-  stroke-linecap:
-    round;
-
-  vector-effect:
-    non-scaling-stroke;
-}
-
-
-/* =========================================================
-   ACESSÓRIOS
-   ========================================================= */
-
-.character-necklace .necklace-chain {
-
-  fill:
-    none;
-
-  stroke:
-    #ad955e;
-
-  stroke-width:
-    2;
-
-  vector-effect:
-    non-scaling-stroke;
-}
-
-
-.character-necklace .necklace-pendant {
-
-  fill:
-    #d5b76a;
-
-  stroke:
-    #5b4a2c;
-
-  stroke-width:
-    1.5;
-
-  vector-effect:
-    non-scaling-stroke;
-}
-
-
-.glasses-frame {
-
-  fill:
-    rgba(20,20,20,.10);
-
-  stroke:
-    #b9b1a2;
-
-  stroke-width:
-    2;
-
-  vector-effect:
-    non-scaling-stroke;
-}
-
-
-.glasses-bridge {
-
-  fill:
-    none;
-
-  stroke:
-    #b9b1a2;
-
-  stroke-width:
-    2;
-
-  vector-effect:
-    non-scaling-stroke;
-}
-
-
-.character-hat {
-
-  fill:
-    #35302a;
-
-  stroke:
-    #171513;
-
-  stroke-width:
-    2;
-
-  vector-effect:
-    non-scaling-stroke;
-}
-
-
-.character-hood {
-
-  fill:
-    #282522;
-
-  stroke:
-    #151311;
-
-  stroke-width:
-    2;
-
-  vector-effect:
-    non-scaling-stroke;
-}
-
-
-.character-mask {
-
-  fill:
-    #3d3934;
-
-  stroke:
-    #161411;
-
-  stroke-width:
-    2;
-
-  vector-effect:
-    non-scaling-stroke;
-}
-
-
-/* =========================================================
-   MARCAS
-   ========================================================= */
-
-.character-spot {
-
-  fill:
-    rgba(43,34,28,.40);
-}
-
-
-.character-stripe {
-
-  fill:
-    none;
-
-  stroke:
-    rgba(38,31,26,.50);
-
-  stroke-width:
-    6;
-
-  stroke-linecap:
-    round;
-}
-
-
-.character-birthmark {
-
-  fill:
-    rgba(120,79,70,.28);
-
-  stroke:
-    none;
-}
-
-
-.character-scar {
-
-  fill:
-    none;
-
-  stroke:
-    #704d44;
-
-  stroke-width:
-    2.2;
-
-  stroke-linecap:
-    round;
-
-  vector-effect:
-    non-scaling-stroke;
-}
-
-
-.character-tattoo {
-
-  fill:
-    none;
-
-  stroke:
-    #4a3f39;
-
-  stroke-width:
-    2;
-
-  opacity:
-    .82;
-
-  vector-effect:
-    non-scaling-stroke;
-}
-
-
-/* =========================================================
-   SOMBRA DO PERSONAGEM
-   ========================================================= */
-
-.character-shadow {
-
-  fill:
-    rgba(
-      0,
-      0,
-      0,
-      .36
-    );
-
-  filter:
-    blur(5px);
-
-  transform-origin:
-    center;
-
-  animation:
-    aerionShadowBreath
-    3.7s
-    ease-in-out
-    infinite;
-}
-
-
-@keyframes aerionShadowBreath {
-
-  0%,
-  100% {
-    transform:
-      scaleX(1);
+  .aerion-character-svg {
+    width:
+      min(100%, 320px);
   }
 
-  50% {
-    transform:
-      scaleX(.93);
-  }
-}
-
-
-/* =========================================================
-   TAMANHO RACIAL
-   ========================================================= */
-
-#appearanceFigure[data-size="pequeno"] {
-
-  min-height:
-    455px;
-}
-
-
-#appearanceFigure[data-size="medio"] {
-
-  min-height:
-    515px;
-}
-
-
-#appearanceFigure[data-size="grande"] {
-
-  min-height:
-    565px;
-}
-
-
-#appearanceFigure[data-size="colossal"] {
-
-  min-height:
-    620px;
-}
-
-
-/* =========================================================
-   ANIMALHA
-   ========================================================= */
-
-#appearanceFigure.is-animalha {
-
-  background:
-    radial-gradient(
-      circle at 50% 30%,
-      rgba(
-        216,
-        180,
-        90,
-        .038
-      ),
-      transparent 47%
-    ),
-
-    linear-gradient(
-      180deg,
-      #181614,
-      #0c0b0a
-    );
-}
-
-
-#appearanceFigure.is-animalha
-.character-body {
-
-  stroke:
-    rgba(
-      30,
-      25,
-      20,
-      .50
-    );
-}
-
-
-/* =========================================================
-   VOO
-   ========================================================= */
-
-#appearanceFigure.has-wings {
-
-  background:
-    radial-gradient(
-      circle at 50% 30%,
-      rgba(
-        230,
-        230,
-        220,
-        .055
-      ),
-      transparent 50%
-    ),
-
-    linear-gradient(
-      180deg,
-      #181817,
-      #0c0b0a
-    );
-}
-
-
-/* =========================================================
-   SEXO
-   ========================================================= */
-
-#appearanceFigure.is-female
-.character-head {
-
-  transform:
-    scaleX(.965);
-}
-
-
-/* =========================================================
-   PERFIL DE HOVER
-   ========================================================= */
-
-#appearanceFigure:hover {
-
-  border-color:
-    rgba(
-      216,
-      180,
-      90,
-      .18
-    );
-
-  box-shadow:
-    0 28px 70px
-    rgba(
-      0,
-      0,
-      0,
-      .34
-    );
-}
-
-
-/* =========================================================
-   TRANSIÇÕES
-   ========================================================= */
-
-.character-racial,
-.character-racial-detail,
-.character-hair-shape,
-.character-clothes-main,
-.character-wing,
-.character-tail-shape {
-
-  transition:
-    opacity .20s ease,
-    transform .20s ease,
-    fill .20s ease,
-    stroke .20s ease;
-}
-
-
-/* =========================================================
-   MOBILE
-   ========================================================= */
-
-@media (
-  max-width: 900px
-) {
-
-  .character-customizer-body {
-
+  .character-meta,
+  .appearance-meta {
     grid-template-columns:
       1fr;
   }
 
-  .character-color-field,
-  .character-editor-section-title,
-  .character-feature-notice,
-  .character-animal-profile {
-
-    grid-column:
-      auto;
-  }
-
-
-  #appearanceFigure {
-
-    min-height:
-      470px;
-  }
-
-
-  #appearanceFigure[data-size="grande"] {
-
-    min-height:
-      515px;
-  }
-
-
-  #appearanceFigure[data-size="colossal"] {
-
-    min-height:
-      570px;
-  }
-
-}
-
-
-@media (
-  max-width: 600px
-) {
-
-  .character-customizer {
-
-    padding:
-      15px;
-
-    border-radius:
-      17px;
-  }
-
-
-  .character-customizer-tabs {
-
-    margin-right:
-      -4px;
-  }
-
-
-  .character-editor-tab {
-
-    min-height:
-      35px;
-
-    padding:
-      8px 11px;
-
-    font-size:
-      8px;
-  }
-
-
-  #appearanceFigure {
-
-    min-height:
-      410px;
-
-    border-radius:
-      20px;
-  }
-
-
-  #appearanceFigure[data-size="grande"] {
-
-    min-height:
-      455px;
-  }
-
-
-  #appearanceFigure[data-size="colossal"] {
-
-    min-height:
-      510px;
-  }
-
-
-  .aerion-character-svg {
-
-    max-height:
-      430px;
-  }
-
-}
-
-
-@media (
-  max-width: 420px
-) {
-
-  .character-customizer {
-
-    padding:
-      12px;
-  }
-
-
-  .character-customizer-heading h3 {
-
-    font-size:
-      22px;
-  }
-
-
-  .character-color-grid {
+  .character-button-row,
+  .appearance-button-row {
+    display: grid;
 
     grid-template-columns:
+      1fr;
+
+    width: 100%;
+  }
+
+  .character-action-button,
+  .appearance-action-button {
+    width: 100%;
+  }
+
+  .character-color-grid,
+  .appearance-color-grid {
+    grid-template-columns:
       repeat(
-        7,
+        auto-fit,
         minmax(
-          25px,
+          34px,
           1fr
         )
       );
   }
-
-
-  #appearanceFigure {
-
-    min-height:
-      365px;
-  }
-
-
-  #appearanceFigure[data-size="grande"] {
-
-    min-height:
-      410px;
-  }
-
-
-  #appearanceFigure[data-size="colossal"] {
-
-    min-height:
-      465px;
-  }
-
 }
 
 
 /* =========================================================
-   REDUÇÃO DE MOVIMENTO
+   MOBILE PEQUENO
    ========================================================= */
 
-@media (
-  prefers-reduced-motion: reduce
-) {
+@media (max-width: 420px) {
 
-  .aerion-character-svg,
-  .character-wings,
-  .character-shadow {
+  #appearanceFigure {
+    min-height:
+      500px;
 
-    animation:
-      none !important;
+    padding:
+      8px;
   }
 
-  * {
+  .character-control-card,
+  .appearance-control-card,
+  .appearance-section {
+    padding:
+      15px;
+  }
 
-    scroll-behavior:
-      auto !important;
+  .character-control-title,
+  .appearance-control-title,
+  .appearance-section-title {
+    font-size:
+      14px;
+  }
+
+  .range-value strong,
+  .character-range-value strong,
+  .appearance-range-value strong {
+    font-size:
+      21px;
+  }
+}
+
+
+/* =========================================================
+   ACESSIBILIDADE
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+  .aerion-character-svg,
+  .character-action-button,
+  .appearance-action-button,
+  .character-color-option,
+  .appearance-color-option,
+  .character-control select,
+  .appearance-control select {
+    transition:
+      none;
+  }
+
+  .character-spinner,
+  .appearance-spinner {
+    animation:
+      none;
+  }
+}
+
+
+/* =========================================================
+   FOCO POR TECLADO
+   ========================================================= */
+
+.character-action-button:focus-visible,
+.appearance-action-button:focus-visible,
+.character-color-option:focus-visible,
+.appearance-color-option:focus-visible,
+.character-control select:focus-visible,
+.appearance-control select:focus-visible,
+.character-range:focus-visible,
+.appearance-range:focus-visible {
+  outline:
+    2px solid
+    var(--aerion-character-gold-light);
+
+  outline-offset:
+    3px;
+}
+
+
+/* =========================================================
+   ESTADO DESABILITADO
+   ========================================================= */
+
+.character-action-button:disabled,
+.appearance-action-button:disabled,
+.character-control select:disabled,
+.appearance-control select:disabled {
+  opacity:
+    0.46;
+
+  cursor:
+    not-allowed;
+
+  transform:
+    none;
+}
+
+
+/* =========================================================
+   CLASSE UTILITÁRIA
+   ========================================================= */
+
+.aerion-hidden {
+  display:
+    none !important;
+}
+
+
+/* =========================================================
+   IMPRESSÃO
+   ========================================================= */
+
+@media print {
+
+  #appearanceFigure {
+    border:
+      1px solid
+      #777;
+
+    box-shadow:
+      none;
+
+    background:
+      #fff;
+  }
+
+  .aerion-character-svg {
+    filter:
+      none;
+  }
+
+  .character-loading,
+  .appearance-loading {
+    display:
+      none !important;
   }
 }
