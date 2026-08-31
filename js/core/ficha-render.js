@@ -2693,8 +2693,7 @@
   } else {
 
     boot();
-  }
-/* =========================================================
+  }/* =========================================================
    AERION — CONTROLADOR DE NAVEGAÇÃO DAS ETAPAS
    CORREÇÃO:
    - Próximo funciona
@@ -3217,5 +3216,439 @@
       getCore();
 
 
-   
+    if (
+      !core ||
+      typeof core.nextStep !==
+        "function"
+    ) {
+      return false;
+    }
+
+
+    const result =
+      core.nextStep();
+
+
+    if (
+      result === false
+    ) {
+      return false;
+    }
+
+
+    /*
+     * Atualiza a interface imediatamente.
+     */
+
+    window.setTimeout(
+      () => {
+
+        syncNavigation(
+          getState()
+        );
+
+        scrollToTop();
+
+      },
+      0
+    );
+
+
+    return true;
+  }
+
+
+  /* =========================================================
+     VOLTAR
+     ========================================================= */
+
+  function previousStep() {
+    const current =
+      getCurrentStep();
+
+
+    if (
+      current <=
+      0
+    ) {
+      return false;
+    }
+
+
+    const core =
+      getCore();
+
+
+    if (
+      !core ||
+      typeof core.previousStep !==
+        "function"
+    ) {
+      return false;
+    }
+
+
+    const result =
+      core.previousStep();
+
+
+    if (
+      result === false
+    ) {
+      return false;
+    }
+
+
+    window.setTimeout(
+      () => {
+
+        syncNavigation(
+          getState()
+        );
+
+        scrollToTop();
+
+      },
+      0
+    );
+
+
+    return true;
+  }
+
+
+  /* =========================================================
+     SINCRONIZAR TUDO
+     ========================================================= */
+
+  function syncNavigation(
+    state = getState()
+  ) {
+
+    const current =
+      getCurrentStep(
+        state
+      );
+
+
+    showStepPanel(
+      current
+    );
+
+
+    updateStepTabs(
+      state
+    );
+
+
+    updateProgress(
+      state
+    );
+
+
+    /*
+     * Mantém a contagem visual.
+     */
+
+    document
+      .querySelectorAll(
+        "[data-current-step]"
+      )
+      .forEach(
+        element => {
+
+          element.textContent =
+            String(
+              current + 1
+            );
+
+        }
+      );
+
+
+    document
+      .querySelectorAll(
+        "[data-total-steps]"
+      )
+      .forEach(
+        element => {
+
+          element.textContent =
+            String(
+              TOTAL_STEPS
+            );
+
+        }
+      );
+  }
+
+
+  /* =========================================================
+     TOPO DA PÁGINA
+     ========================================================= */
+
+  function scrollToTop() {
+
+    window.scrollTo(
+      {
+        top:
+          0,
+
+        left:
+          0,
+
+        behavior:
+          "smooth"
+      }
+    );
+  }
+
+
+  /* =========================================================
+     CLIQUES
+     ========================================================= */
+
+  /*
+   * capture=true
+   *
+   * Isso garante que esse controlador receba
+   * o clique ANTES de outros listeners antigos.
+   */
+
+  document.addEventListener(
+    "click",
+    event => {
+
+      const element =
+        event.target.closest(
+          "[data-action]"
+        );
+
+
+      if (
+        !element
+      ) {
+        return;
+      }
+
+
+      const action =
+        element.dataset.action;
+
+
+      /* ------------------------------
+         PRÓXIMO
+         ------------------------------ */
+
+      if (
+        action ===
+          "next" ||
+        action ===
+          "next-step"
+      ) {
+
+        event.preventDefault();
+        event.stopPropagation();
+
+        nextStep();
+
+        return;
+      }
+
+
+      /* ------------------------------
+         VOLTAR
+         ------------------------------ */
+
+      if (
+        action ===
+          "previous" ||
+        action ===
+          "previous-step" ||
+        action ===
+          "back" ||
+        action ===
+          "go-back"
+      ) {
+
+        event.preventDefault();
+        event.stopPropagation();
+
+        previousStep();
+
+        return;
+      }
+
+
+      /* ------------------------------
+         ABA
+         ------------------------------ */
+
+      if (
+        action ===
+        "go-step"
+      ) {
+
+        event.preventDefault();
+        event.stopPropagation();
+
+
+        const state =
+          getState();
+
+
+        const current =
+          getCurrentStep(
+            state
+          );
+
+
+        const target =
+          toNumber(
+            element.dataset.step,
+            current
+          );
+
+
+        /*
+         * Não permite clicar em uma
+         * etapa futura ainda bloqueada.
+         */
+
+        if (
+          target >
+          current
+        ) {
+
+          const unlocked =
+            state?.completedSteps?.[
+              target - 1
+            ] === true;
+
+
+          if (
+            !unlocked
+          ) {
+
+            toast(
+              "Conclua a etapa anterior primeiro."
+            );
+
+            return;
+          }
+        }
+
+
+        goToStep(
+          target
+        );
+
+        return;
+      }
+
+    },
+    true
+  );
+
+
+  /* =========================================================
+     MOUSE / TOUCH — GARANTIR QUE BOTÃO
+     DESABILITADO CONTINUE BLOQUEADO
+     ========================================================= */
+
+  document.addEventListener(
+    "pointerdown",
+    event => {
+
+      const button =
+        event.target.closest(
+          ".creation-step[data-step]"
+        );
+
+
+      if (
+        !button
+      ) {
+        return;
+      }
+
+
+      if (
+        button.disabled
+      ) {
+
+        event.preventDefault();
+        event.stopPropagation();
+
+      }
+
+    },
+    true
+  );
+
+
+  /* =========================================================
+     EVENTOS DO ESTADO
+     ========================================================= */
+
+  window.addEventListener(
+    "aerion:ficha:updated",
+    event => {
+
+      syncNavigation(
+        event?.detail?.state ||
+        getState()
+      );
+
+    }
+  );
+
+
+  window.addEventListener(
+    "aerion:navigation:changed",
+    event => {
+
+      syncNavigation(
+        event?.detail?.state ||
+        getState()
+      );
+
+    }
+  );
+
+
+  /* =========================================================
+     INICIALIZAÇÃO
+     ========================================================= */
+
+  function bootNavigation() {
+
+    syncNavigation(
+      getState()
+    );
+
+  }
+
+
+  if (
+    document.readyState ===
+    "loading"
+  ) {
+
+    document.addEventListener(
+      "DOMContentLoaded",
+      bootNavigation,
+      {
+        once:
+          true
+      }
+    );
+
+  } else {
+
+    bootNavigation();
+
+  }
+
+})();   
 })();
