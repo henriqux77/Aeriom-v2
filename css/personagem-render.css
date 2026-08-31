@@ -1,766 +1,284 @@
 /* =========================================================
-   AERION — PERSONAGEM RENDER CSS
-   personagem-render.css
+   AERION — PERSONAGEM RENDER
+   css/personagem-render.css
 
-   Estilo visual do editor 2D de personagem.
+   Editor visual 2D de personagem.
+
+   Compatível com:
+   - personagem-assets.js
+   - personagem-render.js
+   - fichas.html
+
    ========================================================= */
 
 
 /* =========================================================
-   CONTAINER
+   VARIÁVEIS
    ========================================================= */
 
-#appearanceFigure {
-  --character-scale: 1;
-  --character-height: 280px;
+:root {
 
-  position: relative;
+  --character-panel:
+    rgba(255,255,255,.018);
 
-  width: min(
-    100%,
-    430px
-  );
+  --character-panel-strong:
+    rgba(255,255,255,.028);
 
-  min-height: 380px;
+  --character-border:
+    rgba(216,180,90,.13);
 
-  display: flex;
+  --character-border-hover:
+    rgba(216,180,90,.31);
 
-  align-items: flex-end;
+  --character-border-active:
+    rgba(216,180,90,.52);
 
-  justify-content: center;
+  --character-gold:
+    #d8b45a;
 
-  padding:
-    24px
-    24px
-    30px;
+  --character-gold-light:
+    #f1d990;
 
-  margin:
-    0 auto;
+  --character-text:
+    #eee9df;
 
-  overflow: hidden;
+  --character-muted:
+    #918b82;
 
-  isolation: isolate;
+  --character-muted-dark:
+    #625d55;
 
-  border-radius:
-    28px;
+  --character-radius-sm:
+    10px;
 
-  background:
-    radial-gradient(
-      circle at 50% 28%,
-      rgba(
-        255,
-        255,
-        255,
-        .08
-      ),
-      transparent 48%
-    ),
+  --character-radius-md:
+    15px;
 
-    linear-gradient(
-      180deg,
-      #191817 0%,
-      #100f0e 100%
-    );
+  --character-radius-lg:
+    21px;
 
-  border:
-    1px solid
-    rgba(
-      255,
-      255,
-      255,
-      .08
-    );
-
-  box-shadow:
-    0 22px 55px
-    rgba(
-      0,
-      0,
-      0,
-      .28
-    );
-
-  transition:
-    min-height .3s ease,
-    border-color .25s ease,
-    box-shadow .25s ease;
+  --character-shadow:
+    0 22px 60px rgba(0,0,0,.28);
 }
 
 
 /* =========================================================
-   ATMOSFERA
+   EDITOR
    ========================================================= */
 
-#appearanceFigure::before {
-  content: "";
-
-  position: absolute;
-
-  inset:
-    12% 10% 12%;
-
-  z-index: -1;
-
-  border-radius:
-    50%;
-
-  background:
-    radial-gradient(
-      circle,
-      rgba(
-        255,
-        255,
-        255,
-        .055
-      ),
-      transparent 68%
-    );
-
-  filter:
-    blur(18px);
-
-  pointer-events:
-    none;
-}
-
-
-#appearanceFigure::after {
-  content: "";
-
-  position: absolute;
-
-  left: 12%;
-  right: 12%;
-  bottom: 16px;
-
-  height: 1px;
-
-  background:
-    linear-gradient(
-      90deg,
-      transparent,
-      rgba(
-        255,
-        255,
-        255,
-        .12
-      ),
-      transparent
-    );
-
-  pointer-events:
-    none;
-}
-
-
-/* =========================================================
-   SVG
-   ========================================================= */
-
-#appearanceFigure
-.aerion-character-svg {
-
-  width:
-    100%;
-
-  height:
-    auto;
-
-  max-height:
-    470px;
-
-  display:
-    block;
-
-  overflow:
-    visible;
-
-  transform-origin:
-    center bottom;
-
-  animation:
-    characterAppear
-    .45s
-    cubic-bezier(
-      .2,
-      .8,
-      .2,
-      1
-    );
-
-  filter:
-    drop-shadow(
-      0 18px 18px
-      rgba(
-        0,
-        0,
-        0,
-        .24
-      )
-    );
-}
-
-
-/* =========================================================
-   ANIMAÇÃO DE ENTRADA
-   ========================================================= */
-
-@keyframes characterAppear {
-
-  from {
-    opacity: 0;
-
-    transform:
-      translateY(12px)
-      scale(.97);
-  }
-
-  to {
-    opacity: 1;
-
-    transform:
-      translateY(0)
-      scale(1);
-  }
-
-}
-
-
-/* =========================================================
-   SOMBRA
-   ========================================================= */
-
-.character-shadow {
-
-  fill:
-    rgba(
-      0,
-      0,
-      0,
-      .38
-    );
-
-  filter:
-    blur(4px);
-
-  transform-origin:
-    center;
-
-  animation:
-    shadowBreath
-    3.5s
-    ease-in-out
-    infinite;
-}
-
-
-@keyframes shadowBreath {
-
-  0%,
-  100% {
-    transform:
-      scaleX(1);
-  }
-
-  50% {
-    transform:
-      scaleX(.92);
-  }
-
-}
-
-
-/* =========================================================
-   CORPO
-   ========================================================= */
-
-.character-body {
-
-  transform-origin:
-    center bottom;
-
-  transition:
-    transform .25s ease;
-}
-
-
-.character-body path {
-
-  vector-effect:
-    non-scaling-stroke;
-
-}
-
-
-/* =========================================================
-   MEMBROS
-   ========================================================= */
-
-.character-limb {
-
-  fill:
-    none;
-
-  stroke:
-    currentColor;
-
-  stroke-linecap:
-    round;
-
-  stroke-linejoin:
-    round;
-
-  vector-effect:
-    non-scaling-stroke;
-
-  color:
-    #b99f8b;
-}
-
-
-.character-leg {
-
-  fill:
-    #34312d;
-
-  stroke:
-    #11100e;
-
-  stroke-width:
-    2;
-
-}
-
-
-.character-foot {
-
-  fill:
-    #24211e;
-
-  stroke:
-    #11100e;
-
-  stroke-width:
-    2;
-
-}
-
-
-/* =========================================================
-   ROSTO
-   ========================================================= */
-
-.character-head {
-
-  transform-origin:
-    center;
-
-  transition:
-    transform .25s ease;
-}
-
-
-.character-face-line {
-
-  fill:
-    none;
-
-  stroke:
-    #3c302b;
-
-  stroke-width:
-    1.6;
-
-  stroke-linecap:
-    round;
-
-  stroke-linejoin:
-    round;
-
-  opacity:
-    .82;
-}
-
-
-/* =========================================================
-   CABELO
-   ========================================================= */
-
-.character-head
-path[fill] {
-
-  vector-effect:
-    non-scaling-stroke;
-}
-
-
-/* =========================================================
-   ASAS
-   ========================================================= */
-
-.character-wings {
-
-  transform-origin:
-    center;
-
-  opacity:
-    .92;
-
-  animation:
-    wingFloat
-    4.5s
-    ease-in-out
-    infinite;
-}
-
-
-@keyframes wingFloat {
-
-  0%,
-  100% {
-    transform:
-      translateY(0);
-  }
-
-  50% {
-    transform:
-      translateY(-2px);
-  }
-
-}
-
-
-/* =========================================================
-   CAUDA
-   ========================================================= */
-
-.character-tail {
-
-  opacity:
-    .95;
-
-  transform-origin:
-    center;
-}
-
-
-/* =========================================================
-   ELEMENTOS RACIAIS
-   ========================================================= */
-
-.character-racial,
-.character-racial-detail {
-
-  vector-effect:
-    non-scaling-stroke;
-
-  transition:
-    opacity .2s ease,
-    transform .2s ease;
-}
-
-
-/* =========================================================
-   CICATRIZES
-   ========================================================= */
-
-.character-scars {
-
-  pointer-events:
-    none;
-
-  opacity:
-    .9;
-}
-
-
-/* =========================================================
-   TATUAGENS
-   ========================================================= */
-
-.character-tattoos {
-
-  pointer-events:
-    none;
-
-  opacity:
-    .85;
-}
-
-
-/* =========================================================
-   RAÇAS PEQUENAS
-   ========================================================= */
-
-#appearanceFigure.is-animalha[data-size="pequeno"] {
-
-  min-height:
-    340px;
-}
-
-
-/* =========================================================
-   RAÇAS GRANDES
-   ========================================================= */
-
-#appearanceFigure[data-size="grande"] {
-
-  min-height:
-    410px;
-}
-
-
-/* =========================================================
-   COLOSSO
-   ========================================================= */
-
-#appearanceFigure[data-size="colossal"] {
-
-  min-height:
-    460px;
-}
-
-
-/* =========================================================
-   PERSONAGEM COM ASAS
-   ========================================================= */
-
-#appearanceFigure.has-wings {
-
-  background:
-    radial-gradient(
-      circle at 50% 40%,
-      rgba(
-        255,
-        255,
-        255,
-        .065
-      ),
-      transparent 55%
-    ),
-
-    linear-gradient(
-      180deg,
-      #191817 0%,
-      #0e0d0c 100%
-    );
-}
-
-
-/* =========================================================
-   ESTADO FEMININO
-   ========================================================= */
-
-#appearanceFigure.is-female
-.character-head {
-
-  transform:
-    scaleX(.96);
-}
-
-
-/* =========================================================
-   HOVER
-   ========================================================= */
-
-#appearanceFigure:hover {
-
-  border-color:
-    rgba(
-      255,
-      255,
-      255,
-      .13
-    );
-
-  box-shadow:
-    0 25px 65px
-    rgba(
-      0,
-      0,
-      0,
-      .34
-    );
-}
-
-
-/* =========================================================
-   CONTROLES DE ALTURA
-   ========================================================= */
-
-.appearance-height-control {
+.character-customizer {
 
   display:
     grid;
 
-  grid-template-columns:
-    auto
-    1fr
-    auto;
-
-  align-items:
-    center;
-
   gap:
-    12px;
+    18px;
 
-  width:
-    min(
-      100%,
-      430px
+  margin-top:
+    20px;
+
+  padding:
+    21px;
+
+  border:
+    1px solid
+    var(--character-border);
+
+  border-radius:
+    var(--character-radius-lg);
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255,255,255,.025),
+      rgba(255,255,255,.008)
     );
 
-  margin:
-    14px auto 0;
+  box-shadow:
+    var(--character-shadow);
 }
 
 
-.appearance-height-control
-input[type="range"] {
+/* =========================================================
+   CABEÇALHO
+   ========================================================= */
 
-  width:
-    100%;
+.character-customizer-heading {
+
+  display:
+    grid;
+
+  gap:
+    5px;
+}
+
+
+.character-customizer-heading h3 {
 
   margin:
     0;
 
-  appearance:
-    none;
+  color:
+    var(--character-text);
 
-  height:
+  font-family:
+    Georgia,
+    "Times New Roman",
+    serif;
+
+  font-size:
+    clamp(
+      23px,
+      4vw,
+      30px
+    );
+
+  font-weight:
+    500;
+
+  letter-spacing:
+    -.02em;
+}
+
+
+.character-customizer-heading p {
+
+  max-width:
+    750px;
+
+  margin:
+    3px 0 0;
+
+  color:
+    var(--character-muted);
+
+  font-size:
+    11px;
+
+  line-height:
+    1.65;
+}
+
+
+/* =========================================================
+   ABAS
+   ========================================================= */
+
+.character-customizer-tabs {
+
+  display:
+    flex;
+
+  gap:
     6px;
+
+  overflow-x:
+    auto;
+
+  padding:
+    3px 2px 7px;
+
+  scrollbar-width:
+    none;
+}
+
+
+.character-customizer-tabs::-webkit-scrollbar {
+  display:
+    none;
+}
+
+
+.character-editor-tab {
+
+  display:
+    inline-flex;
+
+  flex:
+    0 0 auto;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+  min-height:
+    37px;
+
+  padding:
+    8px 13px;
+
+  border:
+    1px solid transparent;
 
   border-radius:
     999px;
 
   background:
-    rgba(
-      255,
-      255,
-      255,
-      .12
-    );
+    transparent;
+
+  color:
+    var(--character-muted);
 
   cursor:
     pointer;
 
-  outline:
-    none;
-}
-
-
-.appearance-height-control
-input[type="range"]::-webkit-slider-thumb {
-
-  appearance:
-    none;
-
-  width:
-    19px;
-
-  height:
-    19px;
-
-  border-radius:
-    50%;
-
-  background:
-    #e6e0d7;
-
-  border:
-    3px solid
-    #2a2825;
-
-  box-shadow:
-    0 3px 10px
-    rgba(
-      0,
-      0,
-      0,
-      .35
-    );
-
-  cursor:
-    grab;
-
-  transition:
-    transform .15s ease;
-}
-
-
-.appearance-height-control
-input[type="range"]::-webkit-slider-thumb:hover {
-
-  transform:
-    scale(1.12);
-}
-
-
-.appearance-height-control
-input[type="range"]::-moz-range-thumb {
-
-  width:
-    19px;
-
-  height:
-    19px;
-
-  border-radius:
-    50%;
-
-  background:
-    #e6e0d7;
-
-  border:
-    3px solid
-    #2a2825;
-
-  box-shadow:
-    0 3px 10px
-    rgba(
-      0,
-      0,
-      0,
-      .35
-    );
-
-  cursor:
-    grab;
-}
-
-
-.appearance-height-value {
-
-  min-width:
-    54px;
-
-  text-align:
-    center;
-
   font-size:
-    .9rem;
+    9px;
 
   font-weight:
-    700;
+    800;
 
-  font-variant-numeric:
-    tabular-nums;
+  white-space:
+    nowrap;
+
+  transition:
+    transform .16s ease,
+    color .20s ease,
+    background .20s ease,
+    border-color .20s ease;
+}
+
+
+.character-editor-tab:hover {
+
+  transform:
+    translateY(-1px);
+
+  border-color:
+    var(--character-border);
+
+  background:
+    rgba(216,180,90,.035);
 
   color:
-    rgba(
-      255,
-      255,
-      255,
-      .82
-    );
+    var(--character-text);
+}
+
+
+.character-editor-tab.active {
+
+  border-color:
+    var(--character-border-active);
+
+  background:
+    rgba(216,180,90,.085);
+
+  color:
+    var(--character-gold-light);
+
+  box-shadow:
+    0 7px 24px
+    rgba(216,180,90,.055);
 }
 
 
 /* =========================================================
-   PAINEL DE OPÇÕES
+   ÁREA DOS CONTROLES
    ========================================================= */
 
-.appearance-options {
+.character-customizer-body {
 
   display:
     grid;
@@ -775,138 +293,1668 @@ input[type="range"]::-moz-range-thumb {
     );
 
   gap:
-    10px;
-
-  width:
-    min(
-      100%,
-      430px
-    );
-
-  margin:
-    18px auto 0;
+    12px;
 }
 
 
-.appearance-option {
+.character-editor-section-title {
+
+  grid-column:
+    1 / -1;
 
   display:
-    flex;
-
-  flex-direction:
-    column;
+    grid;
 
   gap:
-    5px;
+    4px;
 
   padding:
-    12px 14px;
+    3px 2px 4px;
+}
+
+
+.character-editor-section-title h4 {
+
+  margin:
+    0;
+
+  color:
+    var(--character-text);
+
+  font-family:
+    Georgia,
+    serif;
+
+  font-size:
+    20px;
+
+  font-weight:
+    500;
+}
+
+
+/* =========================================================
+   CAMPOS
+   ========================================================= */
+
+.character-editor-field {
+
+  display:
+    grid;
+
+  gap:
+    7px;
+
+  min-width:
+    0;
+
+  padding:
+    13px;
 
   border:
     1px solid
-    rgba(
-      255,
-      255,
-      255,
-      .08
-    );
+    rgba(255,255,255,.06);
 
   border-radius:
-    14px;
+    var(--character-radius-md);
 
   background:
-    rgba(
-      255,
-      255,
-      255,
-      .035
-    );
+    rgba(255,255,255,.012);
 
   transition:
     border-color .2s ease,
-    background .2s ease,
-    transform .2s ease;
+    background .2s ease;
 }
 
 
-.appearance-option:hover {
-
-  transform:
-    translateY(-1px);
+.character-editor-field:hover {
 
   border-color:
-    rgba(
-      255,
-      255,
-      255,
-      .14
-    );
+    var(--character-border);
 
   background:
-    rgba(
-      255,
-      255,
-      255,
-      .055
-    );
+    rgba(255,255,255,.018);
 }
 
 
-.appearance-option
-label {
+.character-editor-label {
+
+  display:
+    block;
+
+  color:
+    var(--character-muted);
 
   font-size:
-    .75rem;
+    8px;
 
   font-weight:
-    700;
+    850;
+
+  letter-spacing:
+    .10em;
+
+  line-height:
+    1.3;
 
   text-transform:
     uppercase;
-
-  letter-spacing:
-    .06em;
-
-  color:
-    rgba(
-      255,
-      255,
-      255,
-      .48
-    );
 }
 
 
-.appearance-option
-input,
-.appearance-option
-select {
+.character-editor-select {
 
   width:
     100%;
 
   min-height:
-    36px;
+    40px;
+
+  padding:
+    8px 11px;
 
   border:
-    0;
+    1px solid
+    rgba(255,255,255,.07);
+
+  border-radius:
+    10px;
 
   outline:
     none;
 
   background:
-    transparent;
+    #131210;
 
   color:
-    rgba(
-      255,
-      255,
-      255,
-      .9
+    var(--character-text);
+
+  cursor:
+    pointer;
+
+  font-size:
+    10px;
+
+  transition:
+    border-color .2s ease,
+    background .2s ease,
+    box-shadow .2s ease;
+}
+
+
+.character-editor-select:hover {
+
+  border-color:
+    var(--character-border);
+}
+
+
+.character-editor-select:focus {
+
+  border-color:
+    var(--character-border-active);
+
+  box-shadow:
+    0 0 0 3px
+    rgba(216,180,90,.045);
+}
+
+
+/* =========================================================
+   RANGE
+   ========================================================= */
+
+.character-editor-range {
+
+  display:
+    grid;
+
+  gap:
+    9px;
+
+  min-width:
+    0;
+
+  padding:
+    13px;
+
+  border:
+    1px solid
+    rgba(255,255,255,.06);
+
+  border-radius:
+    var(--character-radius-md);
+
+  background:
+    rgba(255,255,255,.012);
+}
+
+
+.character-editor-range > span {
+
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    space-between;
+
+  gap:
+    10px;
+}
+
+
+.character-editor-range strong {
+
+  color:
+    var(--character-gold-light);
+
+  font-size:
+    9px;
+
+  font-variant-numeric:
+    tabular-nums;
+}
+
+
+.character-editor-range input[type="range"] {
+
+  appearance:
+    none;
+
+  width:
+    100%;
+
+  height:
+    5px;
+
+  margin:
+    5px 0 0;
+
+  border-radius:
+    999px;
+
+  background:
+    rgba(255,255,255,.08);
+
+  outline:
+    none;
+
+  cursor:
+    pointer;
+}
+
+
+.character-editor-range
+input[type="range"]::-webkit-slider-runnable-track {
+
+  height:
+    5px;
+
+  border-radius:
+    999px;
+
+  background:
+    rgba(255,255,255,.08);
+}
+
+
+.character-editor-range
+input[type="range"]::-webkit-slider-thumb {
+
+  appearance:
+    none;
+
+  width:
+    17px;
+
+  height:
+    17px;
+
+  margin-top:
+    -6px;
+
+  border:
+    2px solid
+    var(--character-gold-light);
+
+  border-radius:
+    50%;
+
+  background:
+    var(--character-gold);
+
+  box-shadow:
+    0 0 0 4px
+    rgba(216,180,90,.07);
+
+  cursor:
+    grab;
+}
+
+
+.character-editor-range
+input[type="range"]::-webkit-slider-thumb:active {
+  cursor:
+    grabbing;
+}
+
+
+.character-editor-range
+input[type="range"]::-moz-range-track {
+
+  height:
+    5px;
+
+  border-radius:
+    999px;
+
+  background:
+    rgba(255,255,255,.08);
+}
+
+
+.character-editor-range
+input[type="range"]::-moz-range-thumb {
+
+  width:
+    17px;
+
+  height:
+    17px;
+
+  border:
+    2px solid
+    var(--character-gold-light);
+
+  border-radius:
+    50%;
+
+  background:
+    var(--character-gold);
+
+  box-shadow:
+    0 0 0 4px
+    rgba(216,180,90,.07);
+
+  cursor:
+    grab;
+}
+
+
+/* =========================================================
+   PALETA
+   ========================================================= */
+
+.character-color-field {
+
+  grid-column:
+    1 / -1;
+
+  display:
+    grid;
+
+  gap:
+    10px;
+
+  padding:
+    13px;
+
+  border:
+    1px solid
+    rgba(255,255,255,.06);
+
+  border-radius:
+    var(--character-radius-md);
+
+  background:
+    rgba(255,255,255,.012);
+}
+
+
+.character-color-grid {
+
+  display:
+    grid;
+
+  grid-template-columns:
+    repeat(
+      auto-fill,
+      minmax(
+        31px,
+        1fr
+      )
     );
 
-  font:
-    inherit;
+  gap:
+    7px;
+}
+
+
+.character-color-option {
+
+  position:
+    relative;
+
+  width:
+    100%;
+
+  aspect-ratio:
+    1;
+
+  min-width:
+    28px;
+
+  padding:
+    0;
+
+  border:
+    1px solid
+    rgba(255,255,255,.12);
+
+  border-radius:
+    9px;
+
+  cursor:
+    pointer;
+
+  box-shadow:
+    inset
+    0 0 0 1px
+    rgba(0,0,0,.10);
+
+  transition:
+    transform .15s ease,
+    border-color .2s ease,
+    box-shadow .2s ease;
+}
+
+
+.character-color-option:hover {
+
+  transform:
+    translateY(-2px)
+    scale(1.03);
+
+  border-color:
+    rgba(255,255,255,.35);
+}
+
+
+.character-color-option.selected {
+
+  border-color:
+    var(--character-gold-light);
+
+  box-shadow:
+    0 0 0 2px
+    rgba(216,180,90,.15),
+    0 6px 18px
+    rgba(0,0,0,.20);
+
+  transform:
+    scale(1.05);
+}
+
+
+.character-color-option.selected::after {
+
+  content:
+    "✓";
+
+  position:
+    absolute;
+
+  top:
+    50%;
+
+  left:
+    50%;
+
+  transform:
+    translate(
+      -50%,
+      -50%
+    );
+
+  color:
+    #fff;
+
+  font-size:
+    10px;
+
+  font-weight:
+    900;
+
+  text-shadow:
+    0 1px 4px
+    rgba(0,0,0,.7);
+}
+
+
+/* =========================================================
+   AVISO RACIAL
+   ========================================================= */
+
+.character-feature-notice {
+
+  grid-column:
+    1 / -1;
+
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  min-height:
+    39px;
+
+  padding:
+    9px 12px;
+
+  border:
+    1px solid
+    rgba(216,180,90,.18);
+
+  border-radius:
+    10px;
+
+  background:
+    rgba(216,180,90,.04);
+
+  color:
+    var(--character-gold-light);
+
+  font-size:
+    9px;
+
+  font-weight:
+    750;
+}
+
+
+/* =========================================================
+   PERFIL ANIMALHA
+   ========================================================= */
+
+.character-animal-profile {
+
+  grid-column:
+    1 / -1;
+
+  display:
+    grid;
+
+  gap:
+    4px;
+
+  padding:
+    14px;
+
+  border:
+    1px solid
+    rgba(216,180,90,.13);
+
+  border-radius:
+    var(--character-radius-md);
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(216,180,90,.055),
+      rgba(216,180,90,.012)
+    );
+}
+
+
+.character-animal-profile strong {
+
+  color:
+    var(--character-gold-light);
+
+  font-family:
+    Georgia,
+    serif;
+
+  font-size:
+    21px;
+
+  font-weight:
+    500;
+}
+
+
+.character-animal-profile p {
+
+  margin:
+    0;
+
+  color:
+    var(--character-muted);
+
+  font-size:
+    9px;
+}
+
+
+/* =========================================================
+   PERSONAGEM
+   ========================================================= */
+
+#appearanceFigure {
+
+  position:
+    relative;
+
+  display:
+    flex;
+
+  align-items:
+    flex-end;
+
+  justify-content:
+    center;
+
+  width:
+    100%;
+
+  min-height:
+    515px;
+
+  overflow:
+    hidden;
+
+  isolation:
+    isolate;
+
+  padding:
+    22px 15px 30px;
+
+  border:
+    1px solid
+    rgba(255,255,255,.075);
+
+  border-radius:
+    24px;
+
+  background:
+    radial-gradient(
+      circle at 50% 30%,
+      rgba(255,255,255,.055),
+      transparent 45%
+    ),
+
+    radial-gradient(
+      ellipse at 50% 100%,
+      rgba(216,180,90,.035),
+      transparent 55%
+    ),
+
+    linear-gradient(
+      180deg,
+      #181715,
+      #0d0c0b
+    );
+
+  box-shadow:
+    var(--character-shadow);
+}
+
+
+/* =========================================================
+   LUZ INTERNA
+   ========================================================= */
+
+#appearanceFigure::before {
+
+  content:
+    "";
+
+  position:
+    absolute;
+
+  left:
+    50%;
+
+  top:
+    9%;
+
+  width:
+    73%;
+
+  height:
+    73%;
+
+  transform:
+    translateX(-50%);
+
+  border-radius:
+    50%;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(255,255,255,.045),
+      transparent 68%
+    );
+
+  filter:
+    blur(18px);
+
+  pointer-events:
+    none;
+
+  z-index:
+    -1;
+}
+
+
+/* =========================================================
+   LINHA DE SOLO
+   ========================================================= */
+
+#appearanceFigure::after {
+
+  content:
+    "";
+
+  position:
+    absolute;
+
+  left:
+    12%;
+
+  right:
+    12%;
+
+  bottom:
+    19px;
+
+  height:
+    1px;
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      rgba(216,180,90,.23),
+      transparent
+    );
+
+  pointer-events:
+    none;
+}
+
+
+/* =========================================================
+   SVG
+   ========================================================= */
+
+.aerion-character-svg {
+
+  display:
+    block;
+
+  width:
+    min(
+      100%,
+      390px
+    );
+
+  height:
+    auto;
+
+  max-height:
+    505px;
+
+  overflow:
+    visible;
+
+  transform-origin:
+    center bottom;
+
+  animation:
+    aerionCharacterEnter
+    .38s
+    cubic-bezier(
+      .22,
+      1,
+      .36,
+      1
+    );
+}
+
+
+@keyframes aerionCharacterEnter {
+
+  from {
+    opacity:
+      0;
+
+    transform:
+      translateY(
+        10px
+      )
+      scale(
+        .985
+      );
+  }
+
+  to {
+    opacity:
+      1;
+
+    transform:
+      translateY(
+        0
+      )
+      scale(
+        1
+      );
+  }
+}
+
+
+/* =========================================================
+   CORPO
+   ========================================================= */
+
+.character-body {
+
+  fill:
+    url(
+      "#aerion-skin-gradient"
+    );
+
+  stroke:
+    rgba(0,0,0,.28);
+
+  stroke-width:
+    2;
+
+  vector-effect:
+    non-scaling-stroke;
+
+  transition:
+    all .24s ease;
+}
+
+
+.character-neck {
+
+  fill:
+    url(
+      "#aerion-skin-gradient"
+    );
+
+  stroke:
+    rgba(0,0,0,.25);
+
+  stroke-width:
+    2;
+
+  vector-effect:
+    non-scaling-stroke;
+}
+
+
+.character-head {
+
+  fill:
+    url(
+      "#aerion-skin-gradient"
+    );
+
+  stroke:
+    rgba(0,0,0,.28);
+
+  stroke-width:
+    2;
+
+  vector-effect:
+    non-scaling-stroke;
+
+  transition:
+    all .24s ease;
+}
+
+
+/* =========================================================
+   MEMBROS
+   ========================================================= */
+
+.character-arm {
+
+  fill:
+    none;
+
+  stroke:
+    var(
+      --character-skin,
+      #b99f8b
+    );
+
+  stroke-linecap:
+    round;
+
+  stroke-linejoin:
+    round;
+
+  vector-effect:
+    non-scaling-stroke;
+
+  transition:
+    all .24s ease;
+}
+
+
+.character-leg {
+
+  fill:
+    var(
+      --character-clothes,
+      #34312d
+    );
+
+  stroke:
+    rgba(0,0,0,.32);
+
+  stroke-width:
+    2;
+
+  vector-effect:
+    non-scaling-stroke;
+}
+
+
+/* =========================================================
+   ROSTO
+   ========================================================= */
+
+.character-face-line {
+
+  fill:
+    none;
+
+  stroke:
+    rgba(45,34,29,.75);
+
+  stroke-width:
+    2;
+
+  stroke-linecap:
+    round;
+
+  stroke-linejoin:
+    round;
+
+  vector-effect:
+    non-scaling-stroke;
+}
+
+
+.character-mouth {
+
+  fill:
+    none;
+
+  stroke:
+    rgba(55,34,31,.82);
+
+  stroke-width:
+    2;
+
+  stroke-linecap:
+    round;
+
+  vector-effect:
+    non-scaling-stroke;
+}
+
+
+.character-eye {
+
+  stroke:
+    rgba(0,0,0,.20);
+
+  stroke-width:
+    1;
+}
+
+
+/* =========================================================
+   CABELO
+   ========================================================= */
+
+.character-hair-shape {
+
+  fill:
+    var(
+      --character-hair,
+      #27211c
+    );
+
+  stroke:
+    rgba(0,0,0,.32);
+
+  stroke-width:
+    2;
+
+  vector-effect:
+    non-scaling-stroke;
+
+  transition:
+    fill .2s ease,
+    transform .2s ease;
+}
+
+
+.character-facial-hair {
+
+  opacity:
+    .96;
+}
+
+
+.facial-hair-shape {
+
+  fill:
+    var(
+      --character-hair,
+      #27211c
+    );
+
+  stroke:
+    rgba(0,0,0,.30);
+
+  stroke-width:
+    2;
+
+  vector-effect:
+    non-scaling-stroke;
+}
+
+
+/* =========================================================
+   ORELHAS
+   ========================================================= */
+
+.character-ear,
+.character-animal-ear {
+
+  fill:
+    var(
+      --character-skin,
+      #b99f8b
+    );
+
+  stroke:
+    rgba(0,0,0,.28);
+
+  stroke-width:
+    2;
+
+  vector-effect:
+    non-scaling-stroke;
+}
+
+
+/* =========================================================
+   CHIFRES
+   ========================================================= */
+
+.character-horn {
+
+  fill:
+    #75695a;
+
+  stroke:
+    #302b25;
+
+  stroke-width:
+    2;
+
+  vector-effect:
+    non-scaling-stroke;
+}
+
+
+/* =========================================================
+   ASAS
+   ========================================================= */
+
+.character-wing {
+
+  fill:
+    rgba(
+      225,
+      225,
+      218,
+      .25
+    );
+
+  stroke:
+    rgba(
+      235,
+      232,
+      220,
+      .58
+    );
+
+  stroke-width:
+    2;
+
+  vector-effect:
+    non-scaling-stroke;
+}
+
+
+.character-wings {
+
+  transform-origin:
+    center;
+
+  animation:
+    aerionWingFloat
+    4.8s
+    ease-in-out
+    infinite;
+}
+
+
+@keyframes aerionWingFloat {
+
+  0%,
+  100% {
+    transform:
+      translateY(0);
+  }
+
+  50% {
+    transform:
+      translateY(-2px);
+  }
+}
+
+
+/* =========================================================
+   CAUDA
+   ========================================================= */
+
+.character-tail-shape {
+
+  fill:
+    none;
+
+  stroke:
+    var(
+      --character-animal,
+      #76513b
+    );
+
+  stroke-width:
+    13;
+
+  stroke-linecap:
+    round;
+
+  vector-effect:
+    non-scaling-stroke;
+
+  filter:
+    drop-shadow(
+      0 2px 2px
+      rgba(0,0,0,.16)
+    );
+}
+
+
+/* =========================================================
+   ROUPAS
+   ========================================================= */
+
+.character-clothes-main {
+
+  fill:
+    url(
+      "#aerion-clothes-gradient"
+    );
+
+  stroke:
+    rgba(0,0,0,.32);
+
+  stroke-width:
+    2;
+
+  vector-effect:
+    non-scaling-stroke;
+}
+
+
+.character-cape {
+
+  fill:
+    rgba(
+      38,
+      34,
+      30,
+      .96
+    );
+
+  stroke:
+    rgba(0,0,0,.35);
+
+  stroke-width:
+    2;
+
+  vector-effect:
+    non-scaling-stroke;
+}
+
+
+.character-belt {
+
+  fill:
+    #463729;
+
+  stroke:
+    #201b17;
+
+  stroke-width:
+    2;
+
+  vector-effect:
+    non-scaling-stroke;
+}
+
+
+/* =========================================================
+   ARMADURA
+   ========================================================= */
+
+.character-armor-chest {
+
+  fill:
+    #454039;
+
+  stroke:
+    #191714;
+
+  stroke-width:
+    2.5;
+
+  vector-effect:
+    non-scaling-stroke;
+}
+
+
+.character-armor-left,
+.character-armor-right {
+
+  fill:
+    none;
+
+  stroke:
+    #49443c;
+
+  stroke-width:
+    16;
+
+  stroke-linecap:
+    round;
+
+  vector-effect:
+    non-scaling-stroke;
+}
+
+
+/* =========================================================
+   ACESSÓRIOS
+   ========================================================= */
+
+.character-necklace .necklace-chain {
+
+  fill:
+    none;
+
+  stroke:
+    #ad955e;
+
+  stroke-width:
+    2;
+
+  vector-effect:
+    non-scaling-stroke;
+}
+
+
+.character-necklace .necklace-pendant {
+
+  fill:
+    #d5b76a;
+
+  stroke:
+    #5b4a2c;
+
+  stroke-width:
+    1.5;
+
+  vector-effect:
+    non-scaling-stroke;
+}
+
+
+.glasses-frame {
+
+  fill:
+    rgba(20,20,20,.10);
+
+  stroke:
+    #b9b1a2;
+
+  stroke-width:
+    2;
+
+  vector-effect:
+    non-scaling-stroke;
+}
+
+
+.glasses-bridge {
+
+  fill:
+    none;
+
+  stroke:
+    #b9b1a2;
+
+  stroke-width:
+    2;
+
+  vector-effect:
+    non-scaling-stroke;
+}
+
+
+.character-hat {
+
+  fill:
+    #35302a;
+
+  stroke:
+    #171513;
+
+  stroke-width:
+    2;
+
+  vector-effect:
+    non-scaling-stroke;
+}
+
+
+.character-hood {
+
+  fill:
+    #282522;
+
+  stroke:
+    #151311;
+
+  stroke-width:
+    2;
+
+  vector-effect:
+    non-scaling-stroke;
+}
+
+
+.character-mask {
+
+  fill:
+    #3d3934;
+
+  stroke:
+    #161411;
+
+  stroke-width:
+    2;
+
+  vector-effect:
+    non-scaling-stroke;
+}
+
+
+/* =========================================================
+   MARCAS
+   ========================================================= */
+
+.character-spot {
+
+  fill:
+    rgba(43,34,28,.40);
+}
+
+
+.character-stripe {
+
+  fill:
+    none;
+
+  stroke:
+    rgba(38,31,26,.50);
+
+  stroke-width:
+    6;
+
+  stroke-linecap:
+    round;
+}
+
+
+.character-birthmark {
+
+  fill:
+    rgba(120,79,70,.28);
+
+  stroke:
+    none;
+}
+
+
+.character-scar {
+
+  fill:
+    none;
+
+  stroke:
+    #704d44;
+
+  stroke-width:
+    2.2;
+
+  stroke-linecap:
+    round;
+
+  vector-effect:
+    non-scaling-stroke;
+}
+
+
+.character-tattoo {
+
+  fill:
+    none;
+
+  stroke:
+    #4a3f39;
+
+  stroke-width:
+    2;
+
+  opacity:
+    .82;
+
+  vector-effect:
+    non-scaling-stroke;
+}
+
+
+/* =========================================================
+   SOMBRA DO PERSONAGEM
+   ========================================================= */
+
+.character-shadow {
+
+  fill:
+    rgba(
+      0,
+      0,
+      0,
+      .36
+    );
+
+  filter:
+    blur(5px);
+
+  transform-origin:
+    center;
+
+  animation:
+    aerionShadowBreath
+    3.7s
+    ease-in-out
+    infinite;
+}
+
+
+@keyframes aerionShadowBreath {
+
+  0%,
+  100% {
+    transform:
+      scaleX(1);
+  }
+
+  50% {
+    transform:
+      scaleX(.93);
+  }
+}
+
+
+/* =========================================================
+   TAMANHO RACIAL
+   ========================================================= */
+
+#appearanceFigure[data-size="pequeno"] {
+
+  min-height:
+    455px;
+}
+
+
+#appearanceFigure[data-size="medio"] {
+
+  min-height:
+    515px;
+}
+
+
+#appearanceFigure[data-size="grande"] {
+
+  min-height:
+    565px;
+}
+
+
+#appearanceFigure[data-size="colossal"] {
+
+  min-height:
+    620px;
+}
+
+
+/* =========================================================
+   ANIMALHA
+   ========================================================= */
+
+#appearanceFigure.is-animalha {
+
+  background:
+    radial-gradient(
+      circle at 50% 30%,
+      rgba(
+        216,
+        180,
+        90,
+        .038
+      ),
+      transparent 47%
+    ),
+
+    linear-gradient(
+      180deg,
+      #181614,
+      #0c0b0a
+    );
+}
+
+
+#appearanceFigure.is-animalha
+.character-body {
+
+  stroke:
+    rgba(
+      30,
+      25,
+      20,
+      .50
+    );
+}
+
+
+/* =========================================================
+   VOO
+   ========================================================= */
+
+#appearanceFigure.has-wings {
+
+  background:
+    radial-gradient(
+      circle at 50% 30%,
+      rgba(
+        230,
+        230,
+        220,
+        .055
+      ),
+      transparent 50%
+    ),
+
+    linear-gradient(
+      180deg,
+      #181817,
+      #0c0b0a
+    );
+}
+
+
+/* =========================================================
+   SEXO
+   ========================================================= */
+
+#appearanceFigure.is-female
+.character-head {
+
+  transform:
+    scaleX(.965);
+}
+
+
+/* =========================================================
+   PERFIL DE HOVER
+   ========================================================= */
+
+#appearanceFigure:hover {
+
+  border-color:
+    rgba(
+      216,
+      180,
+      90,
+      .18
+    );
+
+  box-shadow:
+    0 28px 70px
+    rgba(
+      0,
+      0,
+      0,
+      .34
+    );
+}
+
+
+/* =========================================================
+   TRANSIÇÕES
+   ========================================================= */
+
+.character-racial,
+.character-racial-detail,
+.character-hair-shape,
+.character-clothes-main,
+.character-wing,
+.character-tail-shape {
+
+  transition:
+    opacity .20s ease,
+    transform .20s ease,
+    fill .20s ease,
+    stroke .20s ease;
 }
 
 
@@ -915,71 +1963,179 @@ select {
    ========================================================= */
 
 @media (
-  max-width: 600px
+  max-width: 900px
 ) {
+
+  .character-customizer-body {
+
+    grid-template-columns:
+      1fr;
+  }
+
+  .character-color-field,
+  .character-editor-section-title,
+  .character-feature-notice,
+  .character-animal-profile {
+
+    grid-column:
+      auto;
+  }
+
 
   #appearanceFigure {
 
-    width:
-      100%;
-
     min-height:
-      350px;
-
-    border-radius:
-      22px;
-
-    padding:
-      18px
-      14px
-      24px;
+      470px;
   }
 
 
   #appearanceFigure[data-size="grande"] {
 
     min-height:
-      385px;
+      515px;
   }
 
 
   #appearanceFigure[data-size="colossal"] {
 
     min-height:
-      430px;
+      570px;
+  }
+
+}
+
+
+@media (
+  max-width: 600px
+) {
+
+  .character-customizer {
+
+    padding:
+      15px;
+
+    border-radius:
+      17px;
   }
 
 
-  #appearanceFigure
+  .character-customizer-tabs {
+
+    margin-right:
+      -4px;
+  }
+
+
+  .character-editor-tab {
+
+    min-height:
+      35px;
+
+    padding:
+      8px 11px;
+
+    font-size:
+      8px;
+  }
+
+
+  #appearanceFigure {
+
+    min-height:
+      410px;
+
+    border-radius:
+      20px;
+  }
+
+
+  #appearanceFigure[data-size="grande"] {
+
+    min-height:
+      455px;
+  }
+
+
+  #appearanceFigure[data-size="colossal"] {
+
+    min-height:
+      510px;
+  }
+
+
   .aerion-character-svg {
 
     max-height:
       430px;
   }
 
+}
 
-  .appearance-options {
+
+@media (
+  max-width: 420px
+) {
+
+  .character-customizer {
+
+    padding:
+      12px;
+  }
+
+
+  .character-customizer-heading h3 {
+
+    font-size:
+      22px;
+  }
+
+
+  .character-color-grid {
 
     grid-template-columns:
-      1fr;
+      repeat(
+        7,
+        minmax(
+          25px,
+          1fr
+        )
+      );
+  }
+
+
+  #appearanceFigure {
+
+    min-height:
+      365px;
+  }
+
+
+  #appearanceFigure[data-size="grande"] {
+
+    min-height:
+      410px;
+  }
+
+
+  #appearanceFigure[data-size="colossal"] {
+
+    min-height:
+      465px;
   }
 
 }
 
 
 /* =========================================================
-   ACESSIBILIDADE
+   REDUÇÃO DE MOVIMENTO
    ========================================================= */
 
 @media (
   prefers-reduced-motion: reduce
 ) {
 
-  #appearanceFigure
   .aerion-character-svg,
-
   .character-wings,
-
   .character-shadow {
 
     animation:
@@ -991,26 +2147,4 @@ select {
     scroll-behavior:
       auto !important;
   }
-
-}
-
-
-/* =========================================================
-   FOCO
-   ========================================================= */
-
-.appearance-height-control
-input[type="range"]:focus-visible {
-
-  outline:
-    2px solid
-    rgba(
-      255,
-      255,
-      255,
-      .65
-    );
-
-  outline-offset:
-    4px;
 }
