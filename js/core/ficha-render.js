@@ -2,28 +2,19 @@
    AERION — FICHA RENDER
    js/core/ficha-render.js
 
-   RESPONSABILIDADE:
-   - renderização visual;
-   - raça;
-   - Animalha;
-   - aparência;
-   - classe;
-   - atributos;
-   - poder;
-   - mana;
-   - perícias;
-   - técnicas;
-   - inventário;
-   - revisão;
-   - navegação.
+   CAMADA VISUAL DA FICHA
 
-   NÃO RESPONSÁVEL POR:
-   - regras dos dados;
-   - geração dos resultados;
-   - persistência do estado;
-   - regras de atributos.
+   ficha.js
+     -> estado e regras
 
-   ficha.js é a autoridade dos dados.
+   personagem-assets.js
+     -> catálogo de imagens e raças
+
+   personagem-render.js
+     -> visualizador da imagem da raça
+
+   ficha-render.js
+     -> interface / apresentação
    ========================================================= */
 
 (() => {
@@ -31,14 +22,129 @@
 
 
   /* =========================================================
-     ESTADO
+     CONFIGURAÇÃO
      ========================================================= */
 
-  let lastState = null;
+  const CONFIG = Object.freeze({
 
-  let raceIndex = 0;
+    totalSteps:
+      11,
 
-  let raceImageObserver = null;
+    defaultRaceHeight:
+      {
+        min:
+          150,
+
+        max:
+          200
+      },
+
+    progressTitles:
+      [
+        "Identidade",
+        "Raça",
+        "Aparência",
+        "Classe",
+        "Atributos",
+        "Poder",
+        "Mana",
+        "Perícias",
+        "Técnicas",
+        "Inventário",
+        "Revisão"
+      ]
+
+  });
+
+
+  const STEP_IDS = Object.freeze([
+    "identity",
+    "race",
+    "appearance",
+    "class",
+    "attributes",
+    "power",
+    "mana",
+    "skills",
+    "techniques",
+    "inventory",
+    "review"
+  ]);
+
+
+  const MANA_TYPES = Object.freeze({
+
+    azul: {
+      id:
+        "azul",
+
+      name:
+        "Mana Azul",
+
+      className:
+        "mana-azul",
+
+      symbol:
+        "◆"
+    },
+
+    dourada: {
+      id:
+        "dourada",
+
+      name:
+        "Mana Dourada",
+
+      className:
+        "mana-dourada",
+
+      symbol:
+        "◆"
+    },
+
+    branca: {
+      id:
+        "branca",
+
+      name:
+        "Mana Branca",
+
+      className:
+        "mana-branca",
+
+      symbol:
+        "◆"
+    },
+
+    vermelha: {
+      id:
+        "vermelha",
+
+      name:
+        "Mana Vermelha",
+
+      className:
+        "mana-vermelha",
+
+      symbol:
+        "◆"
+    },
+
+    negra: {
+      id:
+        "negra",
+
+      name:
+        "Mana Negra",
+
+      className:
+        "mana-negra",
+
+      symbol:
+        "◆"
+    }
+
+  });
 
 
   /* =========================================================
@@ -46,12 +152,17 @@
      ========================================================= */
 
   function $(selector, root = document) {
-    return root.querySelector(selector);
+    return root.querySelector(
+      selector
+    );
   }
+
 
   function $$(selector, root = document) {
     return Array.from(
-      root.querySelectorAll(selector)
+      root.querySelectorAll(
+        selector
+      )
     );
   }
 
@@ -60,18 +171,31 @@
      UTILITÁRIOS
      ========================================================= */
 
-  function escapeHtml(value) {
-    return String(value ?? "")
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;")
-      .replaceAll("'", "&#39;");
+  function number(
+    value,
+    fallback = 0
+  ) {
+
+    const parsed =
+      Number(
+        value
+      );
+
+    return Number.isFinite(
+      parsed
+    )
+      ? parsed
+      : fallback;
   }
 
 
-  function normalize(value) {
-    return String(value ?? "")
+  function normalize(
+    value
+  ) {
+
+    return String(
+      value ?? ""
+    )
       .trim()
       .toLowerCase()
       .normalize("NFD")
@@ -83,19 +207,7 @@
         /\s+/g,
         "_"
       );
-  }
 
-
-  function number(
-    value,
-    fallback = 0
-  ) {
-    const parsed =
-      Number(value);
-
-    return Number.isFinite(parsed)
-      ? parsed
-      : fallback;
   }
 
 
@@ -104,6 +216,7 @@
     min,
     max
   ) {
+
     return Math.max(
       min,
       Math.min(
@@ -111,28 +224,34 @@
         value
       )
     );
+
   }
 
 
   function getCore() {
+
     return (
       window.AERIONFicha ||
       window.AERION_FICHA ||
       null
     );
+
   }
 
 
   function getAssets() {
+
     return (
       window.AERIONPersonagemAssets ||
       window.AERION_CHARACTER_ASSETS ||
       null
     );
+
   }
 
 
   function getState() {
+
     const core =
       getCore();
 
@@ -141,40 +260,86 @@
       typeof core.getState ===
         "function"
     ) {
+
       try {
+
         return core.getState();
+
       } catch {
-        return (
-          lastState ||
-          {}
-        );
+
+        return {};
       }
     }
 
-    return (
-      lastState ||
-      {}
-    );
+    return {};
+  }
+
+
+  function announce(
+    message
+  ) {
+
+    let region =
+      $("#aerionLiveRegion");
+
+    if (
+      !region
+    ) {
+
+      region =
+        document.createElement(
+          "div"
+        );
+
+      region.id =
+        "aerionLiveRegion";
+
+      region.className =
+        "visually-hidden";
+
+      region.setAttribute(
+        "aria-live",
+        "polite"
+      );
+
+      region.setAttribute(
+        "aria-atomic",
+        "true"
+      );
+
+      document.body.appendChild(
+        region
+      );
+    }
+
+
+    region.textContent =
+      String(
+        message
+      );
+
   }
 
 
   function toast(
-    message,
-    duration = 2200
+    message
   ) {
+
     let element =
-      $("#toast");
+      $("#aerionToast");
+
 
     if (
       !element
     ) {
+
       element =
         document.createElement(
           "div"
         );
 
       element.id =
-        "toast";
+        "aerionToast";
 
       element.className =
         "toast";
@@ -182,7 +347,9 @@
       document.body.appendChild(
         element
       );
+
     }
+
 
     element.textContent =
       message;
@@ -190,533 +357,158 @@
     element.hidden =
       false;
 
+
     clearTimeout(
-      element.__aerionTimer
+      element.__aerionToastTimer
     );
 
-    element.__aerionTimer =
+
+    element.__aerionToastTimer =
       setTimeout(
         () => {
+
           element.hidden =
             true;
+
         },
-        duration
+        1800
       );
+
   }
 
 
-  function announce(
-    message
-  ) {
-    let live =
-      $("#aerionLiveRegion");
+  /* =========================================================
+     ESTADO
+     ========================================================= */
 
-    if (
-      !live
-    ) {
-      live =
-        document.createElement(
-          "div"
-        );
-
-      live.id =
-        "aerionLiveRegion";
-
-      live.className =
-        "visually-hidden";
-
-      live.setAttribute(
-        "aria-live",
-        "polite"
-      );
-
-      live.setAttribute(
-        "aria-atomic",
-        "true"
-      );
-
-      document.body.appendChild(
-        live
-      );
-    }
-
-    live.textContent =
-      message;
-  }
+  let currentState =
+    getState();
 
 
   /* =========================================================
      RAÇAS
      ========================================================= */
 
-  const FALLBACK_RACES = [
-    {
-      id:
-        "humano",
-
-      name:
-        "Humano",
-
-      description:
-        "Versátil e equilibrado, com ampla capacidade de adaptação.",
-
-      profile:
-        "Equilibrado",
-
-      feature:
-        "Versatilidade",
-
-      height:
-        {
-          min:
-            150,
-
-          max:
-            200
-        }
-    },
-
-    {
-      id:
-        "elfo",
-
-      name:
-        "Elfo",
-
-      description:
-        "Povo ágil e perceptivo, ligado à natureza e à magia.",
-
-      profile:
-        "Ágil e perceptivo",
-
-      feature:
-        "Percepção elevada",
-
-      height:
-        {
-          min:
-            155,
-
-          max:
-            205
-        }
-    },
-
-    {
-      id:
-        "anao",
-
-      name:
-        "Anão",
-
-      description:
-        "Povo compacto e resistente, conhecido por sua robustez.",
-
-      profile:
-        "Robusto",
-
-      feature:
-        "Resistência",
-
-      height:
-        {
-          min:
-            125,
-
-          max:
-            155
-        }
-    },
-
-    {
-      id:
-        "orc",
-
-      name:
-        "Orc",
-
-      description:
-        "Corpo poderoso e presença marcante.",
-
-      profile:
-        "Forte e robusto",
-
-      feature:
-        "Potência física",
-
-      height:
-        {
-          min:
-            175,
-
-          max:
-            225
-        }
-    },
-
-    {
-      id:
-        "fada",
-
-      name:
-        "Fada",
-
-      description:
-        "Ser feérico capaz de manipular forças sobrenaturais.",
-
-      profile:
-        "Leve e ágil",
-
-      feature:
-        "Asas feéricas",
-
-      height:
-        {
-          min:
-            90,
-
-          max:
-            140
-        }
-    },
-
-    {
-      id:
-        "animalha",
-
-      name:
-        "Animalha",
-
-      description:
-        "Humanoides com características animais integradas à anatomia.",
-
-      profile:
-        "Definido pela linhagem animal",
-
-      feature:
-        "Características animais",
-
-      height:
-        {
-          min:
-            140,
-
-          max:
-            220
-        }
-    },
-
-    {
-      id:
-        "vampiro",
-
-      name:
-        "Vampiro",
-
-      description:
-        "Ser sobrenatural com grande afinidade com forças vitais.",
-
-      profile:
-        "Sobrenatural",
-
-      feature:
-        "Natureza vampírica",
-
-      height:
-        {
-          min:
-            150,
-
-          max:
-            200
-        }
-    },
-
-    {
-      id:
-        "centauro",
-
-      name:
-        "Centauro",
-
-      description:
-        "Humanoide de anatomia híbrida e grande capacidade física.",
-
-      profile:
-        "Potente e resistente",
-
-      feature:
-        "Anatomia híbrida",
-
-      height:
-        {
-          min:
-            180,
-
-          max:
-            230
-        }
-    },
-
-    {
-      id:
-        "duende",
-
-      name:
-        "Duende",
-
-      description:
-        "Pequeno povo conhecido por sua astúcia e adaptação.",
-
-      profile:
-        "Ágil e astuto",
-
-      feature:
-        "Pequeno porte",
-
-      height:
-        {
-          min:
-            100,
-
-          max:
-            145
-        }
-    },
-
-    {
-      id:
-        "povo_aquatico",
-
-      name:
-        "Povo Aquático",
-
-      description:
-        "Povo adaptado a ambientes aquáticos.",
-
-      profile:
-        "Adaptado à água",
-
-      feature:
-        "Adaptação aquática",
-
-      height:
-        {
-          min:
-            145,
-
-          max:
-            205
-        }
-    },
-
-    {
-      id:
-        "povo_natureza",
-
-      name:
-        "Povo da Natureza",
-
-      description:
-        "Seres ligados às forças naturais do mundo.",
-
-      profile:
-        "Ligado à natureza",
-
-      feature:
-        "Afinidade natural",
-
-      height:
-        {
-          min:
-            140,
-
-          max:
-            205
-        }
-    },
-
-    {
-      id:
-        "neraliano",
-
-      name:
-        "Neraliano",
-
-      description:
-        "Povo adaptado a ambientes aquáticos e costeiros.",
-
-      profile:
-        "Adaptável",
-
-      feature:
-        "Afinidade aquática",
-
-      height:
-        {
-          min:
-            145,
-
-          max:
-            205
-        }
-    },
-
-    {
-      id:
-        "aureano",
-
-      name:
-        "Aureano",
-
-      description:
-        "Povo de forte presença e características singulares.",
-
-      profile:
-        "Equilibrado",
-
-      feature:
-        "Afinidade especial",
-
-      height:
-        {
-          min:
-            150,
-
-          max:
-            205
-        }
-    },
-
-    {
-      id:
-        "povo_nuvens",
-
-      name:
-        "Povo das Nuvens",
-
-      description:
-        "Povo leve associado aos céus e às regiões elevadas.",
-
-      profile:
-        "Leve",
-
-      feature:
-        "Afinidade aérea",
-
-      height:
-        {
-          min:
-            145,
-
-          max:
-            200
-        }
-    },
-
-    {
-      id:
-        "colosso",
-
-      name:
-        "Colosso",
-
-      description:
-        "Ser de proporções extraordinárias e grande presença física.",
-
-      profile:
-        "Gigantesco",
-
-      feature:
-        "Grande porte",
-
-      height:
-        {
-          min:
-            250,
-
-          max:
-            400
-        }
-    },
-
-    {
-      id:
-        "troll",
-
-      name:
-        "Troll",
-
-      description:
-        "Criatura de grande resistência e estrutura corporal robusta.",
-
-      profile:
-        "Muito resistente",
-
-      feature:
-        "Resistência natural",
-
-      height:
-        {
-          min:
-            190,
-
-          max:
-            270
-        }
-    }
-  ];
-
-
   function getRaces() {
+
+    const assets =
+      getAssets();
+
+
+    if (
+      Array.isArray(
+        assets?.races
+      ) &&
+      assets.races.length
+    ) {
+
+      return assets.races;
+
+    }
+
+
     if (
       Array.isArray(
         window.AERION_RACES
       ) &&
       window.AERION_RACES.length
     ) {
+
       return window.AERION_RACES;
+
     }
 
-    return FALLBACK_RACES;
+
+    return [];
+
   }
 
 
-  function getCurrentRaceIndex(
+  function getRace(
+    raceId
+  ) {
+
+    const assets =
+      getAssets();
+
+
+    if (
+      assets &&
+      typeof assets.getRace ===
+        "function"
+    ) {
+
+      return assets.getRace(
+        raceId
+      );
+
+    }
+
+
+    const wanted =
+      normalize(
+        raceId
+      );
+
+
+    return (
+      getRaces().find(
+        race =>
+          normalize(
+            race.id
+          ) ===
+          wanted
+      ) ||
+      null
+    );
+
+  }
+
+
+  function getRaceIndex(
     state
   ) {
+
     const races =
       getRaces();
+
 
     if (
       !races.length
     ) {
+
       return 0;
     }
+
 
     const wanted =
       normalize(
         state?.race
       );
 
-    const fromState =
+
+    const explicitIndex =
       number(
         state?.raceIndex,
         -1
       );
 
+
     if (
-      fromState >= 0 &&
-      fromState < races.length &&
-      (
-        !wanted ||
-        normalize(
-          races[fromState]?.id
-        ) === wanted
-      )
+      explicitIndex >= 0 &&
+      explicitIndex < races.length &&
+      normalize(
+        races[
+          explicitIndex
+        ]?.id
+      ) ===
+        wanted
     ) {
-      return fromState;
+
+      return explicitIndex;
+
     }
+
 
     const found =
       races.findIndex(
@@ -727,348 +519,417 @@
           wanted
       );
 
+
     return found >= 0
       ? found
       : 0;
+
   }
 
 
   function getCurrentRace(
     state
   ) {
+
     const races =
       getRaces();
 
+
+    if (
+      !races.length
+    ) {
+
+      return null;
+    }
+
+
     return (
       races[
-        getCurrentRaceIndex(
+        getRaceIndex(
           state
         )
       ] ||
-      races[0] ||
-      null
+      races[0]
     );
+
   }
 
 
   /* =========================================================
-     IMAGENS DAS RAÇAS
+     GÊNERO
      ========================================================= */
 
-  /*
-   * Prioridade:
-   *
-   * 1. URL explicitamente definida na raça;
-   * 2. possíveis campos de imagem existentes;
-   * 3. URL que já esteja no #raceImage;
-   * 4. sem imagem.
-   *
-   * Isso evita inventar caminhos de arquivo.
-   */
-
-  function resolveRaceImage(
-    race
+  function getGenderKey(
+    state
   ) {
+
+    const value =
+      normalize(
+        state?.gender
+      );
+
+
+    if (
+      value ===
+        "feminino" ||
+      value ===
+        "feminina" ||
+      value ===
+        "female" ||
+      value ===
+        "f"
+    ) {
+
+      return "feminino";
+
+    }
+
+
+    return "masculino";
+
+  }
+
+
+  /* =========================================================
+     IMAGEM DA RAÇA
+     ========================================================= */
+
+  function getRaceImageUrl(
+    race,
+    state
+  ) {
+
     if (
       !race
     ) {
+
       return "";
     }
 
-    const possible =
-      [
-        race.image,
-        race.imageUrl,
-        race.imageURL,
-        race.src,
-        race.asset,
-        race.visual,
-        race.visualUrl,
-        race.img
-      ];
 
-    const found =
-      possible.find(
-        value =>
-          typeof value ===
-            "string" &&
-          value.trim()
-      );
-
-    if (
-      found
-    ) {
-      return found.trim();
-    }
-
-    const existing =
-      $("#raceImage");
-
-    if (
-      existing
-    ) {
-      const current =
-        existing.currentSrc ||
-        existing.getAttribute(
-          "src"
-        ) ||
-        "";
-
-      if (
-        current
-      ) {
-        return current;
-      }
-    }
-
-    return "";
-  }
-
-
-  function setImageLoading(
-    image,
-    loading
-  ) {
-    if (
-      !image
-    ) {
-      return;
-    }
-
-    image.classList.toggle(
-      "is-loading",
-      loading
-    );
-
-    image.parentElement
-      ?.classList.toggle(
-        "is-loading",
-        loading
-      );
-  }
-
-
-  function renderRaceImage(
-    state
-  ) {
-    const image =
-      $("#raceImage");
-
-    const race =
-      getCurrentRace(
+    const gender =
+      getGenderKey(
         state
       );
 
-    if (
-      !image ||
-      !race
-    ) {
-      return;
-    }
 
-    const source =
-      resolveRaceImage(
-        race
-      );
-
-    const name =
-      race.name ||
-      "Raça";
-
-
-    image.alt =
-      `Ilustração da raça ${name}`;
+    const assets =
+      getAssets();
 
 
     if (
-      !source
+      assets &&
+      typeof assets.getRaceImage ===
+        "function"
     ) {
-      image.hidden =
-        true;
 
-      image.removeAttribute(
-        "src"
-      );
+      const source =
+        assets.getRaceImage(
+          race.id,
+          gender
+        );
 
-      setImageLoading(
-        image,
-        false
-      );
 
-      return;
+      if (
+        source
+      ) {
+
+        return source;
+      }
+
     }
+
+
+    /*
+     * Catálogo novo:
+     *
+     * race.images.masculino
+     * race.images.feminino
+     */
+
+    const requested =
+      race.images?.[
+        gender
+      ];
 
 
     if (
-      image.getAttribute(
-        "src"
-      ) ===
-      source
+      requested
     ) {
-      image.hidden =
-        false;
 
-      return;
+      return requested;
     }
 
 
-    setImageLoading(
-      image,
-      true
+    const fallback =
+      gender ===
+        "feminino"
+        ? race.images?.masculino
+        : race.images?.feminino;
+
+
+    if (
+      fallback
+    ) {
+
+      return fallback;
+    }
+
+
+    /*
+     * Compatibilidade com catálogos antigos.
+     */
+
+    return (
+      race.image ||
+      race.imageUrl ||
+      race.src ||
+      ""
     );
 
-
-    const preload =
-      new Image();
-
-
-    preload.decoding =
-      "async";
-
-
-    preload.onload =
-      () => {
-
-        image.src =
-          source;
-
-        image.hidden =
-          false;
-
-        setImageLoading(
-          image,
-          false
-        );
-
-        announce(
-          `Imagem de ${name} carregada.`
-        );
-      };
-
-
-    preload.onerror =
-      () => {
-
-        setImageLoading(
-          image,
-          false
-        );
-
-        image.hidden =
-          true;
-
-        console.warn(
-          "[AERION][RAÇA] Não foi possível carregar:",
-          source
-        );
-      };
-
-
-    preload.src =
-      source;
   }
 
 
   /* =========================================================
-     CARD DA RAÇA
+     ALTURA DA RAÇA
      ========================================================= */
 
-  function renderRaceCard(
+  function getRaceHeight(
+    race,
     state
   ) {
+
+    const assets =
+      getAssets();
+
+
+    if (
+      assets &&
+      typeof assets.getRaceHeight ===
+        "function"
+    ) {
+
+      const result =
+        assets.getRaceHeight(
+          race?.id ||
+          state?.race
+        );
+
+
+      if (
+        result
+      ) {
+
+        return {
+
+          min:
+            number(
+              result.min,
+              CONFIG.defaultRaceHeight.min
+            ),
+
+          max:
+            number(
+              result.max,
+              CONFIG.defaultRaceHeight.max
+            )
+
+        };
+
+      }
+
+    }
+
+
+    return {
+
+      min:
+        number(
+          race?.height?.min,
+          CONFIG.defaultRaceHeight.min
+        ),
+
+      max:
+        number(
+          race?.height?.max,
+          CONFIG.defaultRaceHeight.max
+        )
+
+    };
+
+  }
+
+
+  /* =========================================================
+     RENDER DA RAÇA
+     ========================================================= */
+
+  function renderRace(
+    state
+  ) {
+
     const race =
       getCurrentRace(
         state
       );
 
+
     if (
       !race
     ) {
+
       return;
+    }
+
+
+    raceIndex =
+      getRaceIndex(
+        state
+      );
+
+
+    const image =
+      $("#raceImage");
+
+
+    if (
+      image
+    ) {
+
+      const src =
+        getRaceImageUrl(
+          race,
+          state
+        );
+
+
+      image.alt =
+        `${race.name || "Raça"} — ${getGenderKey(state)}`;
+
+
+      if (
+        src &&
+        image.getAttribute(
+          "src"
+        ) !==
+          src
+      ) {
+
+        image.src =
+          src;
+
+      }
+
+
+      image.hidden =
+        !src;
+
     }
 
 
     const name =
       $("#raceName");
 
-    const description =
-      $("#raceDescription");
-
-    const profile =
-      $("#raceProfile");
-
-    const feature =
-      $("#raceFeature");
-
-    const minHeight =
-      $("#raceHeightMin");
-
-    const maxHeight =
-      $("#raceHeightMax");
-
-    const selectButton =
-      $("#selectRaceButton");
-
 
     if (
       name
     ) {
+
       name.textContent =
         race.name ||
         "Raça";
+
     }
+
+
+    const description =
+      $("#raceDescription");
 
 
     if (
       description
     ) {
+
       description.textContent =
         race.description ||
         "";
+
     }
+
+
+    const profile =
+      $("#raceProfile");
 
 
     if (
       profile
     ) {
+
       profile.textContent =
         race.profile ||
         "—";
+
     }
+
+
+    const feature =
+      $("#raceFeature");
 
 
     if (
       feature
     ) {
+
       feature.textContent =
         race.feature ||
         "—";
+
     }
 
 
+    const height =
+      getRaceHeight(
+        race,
+        state
+      );
+
+
+    const min =
+      $("#raceHeightMin");
+
+
     if (
-      minHeight
+      min
     ) {
-      minHeight.textContent =
-        race.height?.min
-          ? `${race.height.min} cm`
-          : "—";
+
+      min.textContent =
+        `${height.min} cm`;
+
     }
 
 
+    const max =
+      $("#raceHeightMax");
+
+
     if (
-      maxHeight
+      max
     ) {
-      maxHeight.textContent =
-        race.height?.max
-          ? `${race.height.max} cm`
-          : "—";
+
+      max.textContent =
+        `${height.max} cm`;
+
     }
 
 
+    const select =
+      $("#selectRaceButton");
+
+
     if (
-      selectButton
+      select
     ) {
+
       const selected =
         normalize(
           state?.race
@@ -1077,37 +938,57 @@
           race.id
         );
 
-      selectButton.textContent =
+
+      select.dataset.race =
+        race.id;
+
+
+      select.dataset.raceId =
+        race.id;
+
+
+      select.classList.toggle(
+        "is-selected",
+        selected
+      );
+
+
+      select.textContent =
         selected
           ? "✓ Selecionada"
           : "Selecionar";
 
-
-      selectButton.dataset.race =
-        race.id;
-
-
-      selectButton.classList.toggle(
-        "is-selected",
-        selected
-      );
     }
+
+
+    renderRaceDots(
+      state
+    );
+
+
+    renderRaceImageSourceForAppearance(
+      state
+    );
+
   }
 
 
   /* =========================================================
-     DOTS DA RAÇA
+     DOTS
      ========================================================= */
 
   function renderRaceDots(
     state
   ) {
+
     const container =
       $("#raceDots");
+
 
     if (
       !container
     ) {
+
       return;
     }
 
@@ -1115,67 +996,151 @@
     const races =
       getRaces();
 
+
     const active =
-      getCurrentRaceIndex(
+      getRaceIndex(
         state
       );
 
 
     container.innerHTML =
-      races
-        .map(
-          (race, index) =>
-            `
-              <button
-                type="button"
-                class="race-dot${
-                  index === active
-                    ? " active"
-                    : ""
-                }"
-                data-action="race-goto"
-                data-race-index="${index}"
-                aria-label="Ir para ${escapeHtml(
-                  race.name
-                )}"
-                ${
-                  index === active
-                    ? 'aria-current="true"'
-                    : ""
-                }
-              ></button>
-            `
-        )
-        .join("");
+      "";
+
+
+    races.forEach(
+      (
+        race,
+        index
+      ) => {
+
+        const button =
+          document.createElement(
+            "button"
+          );
+
+
+        button.type =
+          "button";
+
+
+        button.className =
+          "race-dot";
+
+
+        if (
+          index ===
+          active
+        ) {
+
+          button.classList.add(
+            "active"
+          );
+
+          button.setAttribute(
+            "aria-current",
+            "true"
+          );
+
+        }
+
+
+        button.dataset.action =
+          "race-goto";
+
+
+        button.dataset.raceIndex =
+          String(
+            index
+          );
+
+
+        button.setAttribute(
+          "aria-label",
+          `Escolher ${race.name}`
+        );
+
+
+        container.appendChild(
+          button
+        );
+
+      }
+    );
+
   }
 
 
   /* =========================================================
-     NAVEGAÇÃO DAS RAÇAS
+     IMAGEM PARA A APARÊNCIA
      ========================================================= */
 
-  function changeRace(
-    direction
+  function renderRaceImageSourceForAppearance(
+    state
   ) {
-    const races =
-      getRaces();
+
+    /*
+     * O personagem-render.js lê o #raceImage.
+     * Portanto não criamos outra URL ou outra imagem aqui.
+     */
+
+    const image =
+      $("#raceImage");
+
 
     if (
-      !races.length
+      !image
     ) {
+
       return;
     }
 
 
-    const current =
-      getCurrentRaceIndex(
-        getState()
+    image.dataset.race =
+      getCurrentRace(
+        state
+      )?.id ||
+      "";
+
+
+    image.dataset.gender =
+      getGenderKey(
+        state
       );
 
+  }
 
-    const next =
+
+  /* =========================================================
+     RAÇA — NAVEGAÇÃO
+     ========================================================= */
+
+  let raceIndex =
+    getRaceIndex(
+      currentState
+    );
+
+
+  function changeRace(
+    direction
+  ) {
+
+    const races =
+      getRaces();
+
+
+    if (
+      !races.length
+    ) {
+
+      return;
+    }
+
+
+    raceIndex =
       (
-        current +
+        getRaceIndex(
+          getState()
+        ) +
         direction +
         races.length
       ) %
@@ -1183,7 +1148,9 @@
 
 
     const race =
-      races[next];
+      races[
+        raceIndex
+      ];
 
 
     const core =
@@ -1198,30 +1165,234 @@
 
       core.selectRace(
         race.id,
-        next
+        raceIndex
       );
 
-    } else {
-
-      lastState = {
-        ...getState(),
-
-        race:
-          race.id,
-
-        raceIndex:
-          next
-      };
-
-      render(
-        lastState
-      );
     }
 
 
     announce(
       `Raça: ${race.name}`
     );
+
+  }
+
+
+  function goToRaceIndex(
+    index
+  ) {
+
+    const races =
+      getRaces();
+
+
+    if (
+      !races.length
+    ) {
+
+      return;
+    }
+
+
+    raceIndex =
+      clamp(
+        number(
+          index,
+          0
+        ),
+        0,
+        races.length - 1
+      );
+
+
+    const race =
+      races[
+        raceIndex
+      ];
+
+
+    getCore()
+      ?.selectRace?.(
+        race.id,
+        raceIndex
+      );
+
+  }
+
+
+  /* =========================================================
+     ANIMALHA
+     ========================================================= */
+
+  function renderAnimalha(
+    state
+  ) {
+
+    const category =
+      normalize(
+        state?.animalhaCategory
+      );
+
+
+    const assets =
+      getAssets();
+
+
+    const categoryContainer =
+      $("#animalhaCategories");
+
+
+    const animalContainer =
+      $("#animalhaOptions");
+
+
+    if (
+      categoryContainer
+    ) {
+
+      if (
+        Array.isArray(
+          assets?.animalhaCategories
+        )
+      ) {
+
+        categoryContainer
+          .querySelectorAll(
+            "[data-animalha-category]"
+          )
+          .forEach(
+            element => {
+
+              const selected =
+                normalize(
+                  element.dataset.animalhaCategory
+                ) ===
+                category;
+
+
+              element.classList.toggle(
+                "selected",
+                selected
+              );
+
+
+              element.classList.toggle(
+                "is-selected",
+                selected
+              );
+
+            }
+          );
+
+      }
+
+    }
+
+
+    if (
+      !animalContainer
+    ) {
+
+      return;
+    }
+
+
+    if (
+      !category
+    ) {
+
+      animalContainer
+        .querySelectorAll(
+          "[data-animalha]"
+        )
+        .forEach(
+          element => {
+
+            element.hidden =
+              false;
+
+          }
+        );
+
+
+      return;
+    }
+
+
+    let animals = [];
+
+
+    if (
+      assets &&
+      typeof assets.getAnimalhaAnimals ===
+        "function"
+    ) {
+
+      animals =
+        assets.getAnimalhaAnimals(
+          category
+        );
+
+    } else if (
+      assets?.animalhaAnimals
+    ) {
+
+      animals =
+        Object.values(
+          assets.animalhaAnimals
+        )
+          .filter(
+            animal =>
+              normalize(
+                animal.category
+              ) ===
+              category
+          );
+
+    }
+
+
+    const existing =
+      $$(
+        "[data-animalha]",
+        animalContainer
+      );
+
+
+    existing.forEach(
+      element => {
+
+        const animalId =
+          normalize(
+            element.dataset.animalha
+          );
+
+
+        const available =
+          animals.some(
+            animal =>
+              normalize(
+                animal.id
+              ) ===
+              animalId
+          );
+
+
+        element.hidden =
+          !available;
+
+
+        element.classList.toggle(
+          "selected",
+          animalId ===
+            normalize(
+              state?.animalha
+            )
+        );
+
+      }
+    );
+
   }
 
 
@@ -1229,86 +1400,45 @@
      ALTURA
      ========================================================= */
 
-  function getHeightRange(
+  function renderAppearance(
     state
   ) {
+
     const race =
       getCurrentRace(
         state
       );
 
-    return {
-      min:
-        number(
-          race?.height?.min,
-          150
-        ),
 
-      max:
-        Math.max(
-          number(
-            race?.height?.min,
-            150
-          ),
-
-          number(
-            race?.height?.max,
-            200
-          )
-        )
-    };
-  }
-
-
-  function renderHeight(
-    state
-  ) {
     const range =
-      getHeightRange(
+      getRaceHeight(
+        race,
         state
       );
 
-    const requested =
-      number(
-        state?.appearance?.height,
-        (range.min + range.max) / 2
-      );
 
-    const height =
+    const current =
       clamp(
-        requested,
+        number(
+          state?.appearance?.height,
+          (
+            range.min +
+            range.max
+          ) / 2
+        ),
         range.min,
         range.max
       );
-
-
-    const value =
-      $("#appearanceHeightValue");
 
 
     const slider =
       $("#appearanceHeight");
 
 
-    const min =
-      $("#appearanceHeightMin");
-
-
-    const max =
-      $("#appearanceHeightMax");
-
-
-    if (
-      value
-    ) {
-      value.textContent =
-        `${(height / 100).toFixed(2)} m`;
-    }
-
-
     if (
       slider
     ) {
+
       slider.min =
         String(
           range.min
@@ -1319,216 +1449,61 @@
           range.max
         );
 
+      slider.step =
+        "1";
+
       slider.value =
         String(
-          height
+          current
         );
+
     }
+
+
+    const value =
+      $("#appearanceHeightValue");
+
+
+    if (
+      value
+    ) {
+
+      value.textContent =
+        `${(
+          current /
+          100
+        ).toFixed(2)} m`;
+
+    }
+
+
+    const min =
+      $("#appearanceHeightMin");
 
 
     if (
       min
     ) {
+
       min.textContent =
         `${range.min} cm`;
+
     }
+
+
+    const max =
+      $("#appearanceHeightMax");
 
 
     if (
       max
     ) {
+
       max.textContent =
         `${range.max} cm`;
+
     }
-  }
 
-
-  /* =========================================================
-     MANA
-     ========================================================= */
-
-  const MANA_STYLES = {
-    azul: {
-      label:
-        "Mana Azul",
-
-      className:
-        "mana-azul",
-
-      symbol:
-        "◆"
-    },
-
-    dourada: {
-      label:
-        "Mana Dourada",
-
-      className:
-        "mana-dourada",
-
-      symbol:
-        "◆"
-    },
-
-    branca: {
-      label:
-        "Mana Branca",
-
-      className:
-        "mana-branca",
-
-      symbol:
-        "◆"
-    },
-
-    vermelha: {
-      label:
-        "Mana Vermelha",
-
-      className:
-        "mana-vermelha",
-
-      symbol:
-        "◆"
-    },
-
-    negra: {
-      label:
-        "Mana Negra",
-
-      className:
-        "mana-negra",
-
-      symbol:
-        "◆"
-    }
-  };
-
-
-  function getManaKey(
-    value
-  ) {
-    return normalize(
-      value
-    )
-      .replace(
-        "mana_",
-        ""
-      );
-  }
-
-
-  function renderMana() {
-    /*
-     * Não substitui o HTML existente.
-     *
-     * Apenas transforma os cards encontrados em cards
-     * menores e visualmente identificáveis.
-     */
-
-    const cards =
-      $$(
-        "[data-mana], .mana-card, .mana-option"
-      );
-
-
-    cards.forEach(
-      card => {
-
-        const raw =
-          card.dataset.mana ||
-          card.dataset.manaType ||
-          card.dataset.type ||
-          card.textContent ||
-          "";
-
-
-        const key =
-          getManaKey(
-            raw
-          );
-
-
-        const data =
-          MANA_STYLES[
-            key
-          ];
-
-
-        if (
-          !data
-        ) {
-          return;
-        }
-
-
-        card.classList.add(
-          "aerion-mana-card"
-        );
-
-
-        card.classList.remove(
-          "mana-azul",
-          "mana-dourada",
-          "mana-branca",
-          "mana-vermelha",
-          "mana-negra"
-        );
-
-
-        card.classList.add(
-          data.className
-        );
-
-
-        let icon =
-          card.querySelector(
-            ".mana-icon"
-          );
-
-
-        if (
-          !icon
-        ) {
-
-          icon =
-            document.createElement(
-              "span"
-            );
-
-          icon.className =
-            "mana-icon";
-
-          icon.setAttribute(
-            "aria-hidden",
-            "true"
-          );
-
-          card.prepend(
-            icon
-          );
-        }
-
-
-        icon.textContent =
-          data.symbol;
-
-
-        const title =
-          card.querySelector(
-            ".mana-name, h3, h4, strong"
-          );
-
-
-        if (
-          title
-        ) {
-          title.textContent =
-            data.label;
-        }
-
-      }
-    );
   }
 
 
@@ -1539,33 +1514,37 @@
   function renderAttributes(
     state
   ) {
+
+    const attributes =
+      state?.attributes ||
+      {};
+
+
     $$(
-
       "[data-attribute]"
-
     ).forEach(
       element => {
 
-        const attribute =
+        const id =
           normalize(
             element.dataset.attribute
           );
 
 
         if (
-          !state?.attributes ||
           !Object.prototype.hasOwnProperty.call(
-            state.attributes,
-            attribute
+            attributes,
+            id
           )
         ) {
+
           return;
         }
 
 
         const value =
-          state.attributes[
-            attribute
+          attributes[
+            id
           ];
 
 
@@ -1584,10 +1563,80 @@
           element.textContent =
             value ??
             "—";
+
         }
 
       }
     );
+
+
+    renderAttributeGraph(
+      state
+    );
+
+  }
+
+
+  /* =========================================================
+     GRÁFICO
+     ========================================================= */
+
+  function renderAttributeGraph(
+    state
+  ) {
+
+    const graph =
+      $(
+        "[data-attribute-graph]"
+      );
+
+
+    if (
+      !graph
+    ) {
+
+      return;
+    }
+
+
+    const attributes =
+      state?.attributes ||
+      {};
+
+
+    Object.entries(
+      attributes
+    ).forEach(
+      (
+        [
+          id,
+          value
+        ]
+      ) => {
+
+        const normalized =
+          number(
+            value,
+            0
+          );
+
+
+        graph.style.setProperty(
+          `--attribute-${id}`,
+          String(
+            normalized
+          )
+        );
+
+      }
+    );
+
+
+    graph.dataset.updated =
+      String(
+        Date.now()
+      );
+
   }
 
 
@@ -1595,12 +1644,63 @@
      DADOS ATRIBUÍDOS
      ========================================================= */
 
-  function renderAssignedDice(
+  function renderDiceAssignments(
     state
   ) {
+
     const assigned =
       state?.assignedDice ||
       {};
+
+
+    $$(
+      "[data-attribute-die]"
+    ).forEach(
+      element => {
+
+        const attribute =
+          normalize(
+            element.dataset.attributeDie
+          );
+
+
+        const diceId =
+          assigned[
+            attribute
+          ] ||
+          "";
+
+
+        element.dataset.assignedDice =
+          diceId;
+
+
+        element.classList.toggle(
+          "is-assigned",
+          Boolean(
+            diceId
+          )
+        );
+
+
+        const label =
+          element.querySelector(
+            "[data-die-label]"
+          );
+
+
+        if (
+          label
+        ) {
+
+          label.textContent =
+            diceId ||
+            "Adicionar dado";
+
+        }
+
+      }
+    );
 
 
     $$(
@@ -1617,33 +1717,32 @@
         const diceId =
           assigned[
             attribute
-          ];
-
-
-        element.dataset.dice =
-          diceId ||
+          ] ||
           "";
 
 
-        element.classList.toggle(
-          "has-dice",
-          Boolean(
-            diceId
-          )
-        );
+        element.textContent =
+          diceId ||
+          "—";
+
+
+        element.dataset.dice =
+          diceId;
 
       }
     );
+
   }
 
 
   /* =========================================================
-     RESULTADOS DE DADOS
+     RESULTADOS DOS DADOS
      ========================================================= */
 
   function renderDiceResults(
     state
   ) {
+
     const results =
       state?.diceResults ||
       {};
@@ -1695,6 +1794,73 @@
 
       }
     );
+
+  }
+
+
+  /* =========================================================
+     DADOS DISPONÍVEIS
+     ========================================================= */
+
+  function renderAvailableDice(
+    state
+  ) {
+
+    const assigned =
+      state?.assignedDice ||
+      {};
+
+
+    const used =
+      new Set(
+        Object.values(
+          assigned
+        ).filter(
+          Boolean
+        )
+      );
+
+
+    $$(
+      "[data-dice-id], [data-die-id]"
+    ).forEach(
+      element => {
+
+        const id =
+          element.dataset.diceId ||
+          element.dataset.dieId;
+
+
+        if (
+          !id
+        ) {
+
+          return;
+        }
+
+
+        const active =
+          used.has(
+            id
+          );
+
+
+        element.classList.toggle(
+          "is-used",
+          active
+        );
+
+
+        element.setAttribute(
+          "aria-pressed",
+          active
+            ? "true"
+            : "false"
+        );
+
+      }
+    );
+
   }
 
 
@@ -1705,53 +1871,189 @@
   function renderClasses(
     state
   ) {
+
+    const current =
+      normalize(
+        state?.class
+      );
+
+
     $$(
       "[data-class-id], [data-class]"
     ).forEach(
-      card => {
+      element => {
 
         const id =
           normalize(
-            card.dataset.classId ||
-            card.dataset.class
+            element.dataset.classId ||
+            element.dataset.class
           );
 
 
         const selected =
-          normalize(
-            state?.class
-          ) ===
-          id;
+          id ===
+          current;
 
 
-        card.classList.toggle(
+        element.classList.toggle(
           "selected",
           selected
         );
 
-        card.classList.toggle(
+
+        element.classList.toggle(
           "is-selected",
           selected
         );
 
 
-        const icon =
-          card.querySelector(
-            ".class-icon, .class-card-icon"
-          );
-
-
         if (
-          icon
+          selected
         ) {
 
-          icon.classList.add(
-            "aerion-class-icon-large"
+          element.setAttribute(
+            "aria-selected",
+            "true"
           );
+
+        } else {
+
+          element.setAttribute(
+            "aria-selected",
+            "false"
+          );
+
         }
 
       }
     );
+
+  }
+
+
+  /* =========================================================
+     MANA
+     ========================================================= */
+
+  function resolveManaType(
+    element
+  ) {
+
+    const value =
+      normalize(
+        element.dataset.mana ||
+        element.dataset.manaType ||
+        element.dataset.type ||
+        ""
+      );
+
+
+    return (
+      MANA_TYPES[
+        value
+      ] ||
+      null
+    );
+
+  }
+
+
+  function renderMana() {
+
+    const cards =
+      $$(
+        ".mana-card, .mana-option, [data-mana]"
+      );
+
+
+    cards.forEach(
+      card => {
+
+        const type =
+          resolveManaType(
+            card
+          );
+
+
+        if (
+          !type
+        ) {
+
+          return;
+        }
+
+
+        Object.values(
+          MANA_TYPES
+        ).forEach(
+          mana => {
+
+            card.classList.remove(
+              mana.className
+            );
+
+          }
+        );
+
+
+        card.classList.add(
+          "aerion-mana-card",
+          type.className
+        );
+
+
+        let icon =
+          card.querySelector(
+            ".mana-icon"
+          );
+
+
+        if (
+          !icon
+        ) {
+
+          icon =
+            document.createElement(
+              "span"
+            );
+
+          icon.className =
+            "mana-icon";
+
+          icon.setAttribute(
+            "aria-hidden",
+            "true"
+          );
+
+          card.prepend(
+            icon
+          );
+
+        }
+
+
+        icon.textContent =
+          type.symbol;
+
+
+        const name =
+          card.querySelector(
+            ".mana-name"
+          );
+
+
+        if (
+          name
+        ) {
+
+          name.textContent =
+            type.name;
+
+        }
+
+      }
+    );
+
   }
 
 
@@ -1762,8 +2064,6 @@
   function renderProgress(
     state
   ) {
-    const total =
-      11;
 
     const current =
       clamp(
@@ -1772,7 +2072,22 @@
           0
         ),
         0,
-        total - 1
+        CONFIG.totalSteps - 1
+      );
+
+
+    const completed =
+      Array.isArray(
+        state?.completedSteps
+      )
+        ? state.completedSteps
+        : [];
+
+
+    const denominator =
+      Math.max(
+        1,
+        CONFIG.totalSteps - 1
       );
 
 
@@ -1780,22 +2095,55 @@
       Math.round(
         (
           current /
-          (total - 1)
+          denominator
         ) *
         100
       );
 
 
-    const bar =
+    const progressBar =
       $("#progressBar");
 
 
-    const percentText =
+    if (
+      progressBar
+    ) {
+
+      progressBar.style.width =
+        `${percent}%`;
+
+    }
+
+
+    const percentElement =
       $("#progressPercent");
+
+
+    if (
+      percentElement
+    ) {
+
+      percentElement.textContent =
+        `${percent}%`;
+
+    }
 
 
     const title =
       $("#progressTitle");
+
+
+    if (
+      title
+    ) {
+
+      title.textContent =
+        CONFIG.progressTitles[
+          current
+        ] ||
+        "Identidade";
+
+    }
 
 
     const track =
@@ -1803,75 +2151,93 @@
 
 
     if (
-      bar
-    ) {
-      bar.style.width =
-        `${percent}%`;
-    }
-
-
-    if (
-      percentText
-    ) {
-      percentText.textContent =
-        `${percent}%`;
-    }
-
-
-    if (
       track
     ) {
+
       track.setAttribute(
         "aria-valuenow",
         String(
           percent
         )
       );
+
     }
 
 
-    const titles = [
-      "Identidade",
-      "Raça",
-      "Aparência",
-      "Classe",
-      "Atributos",
-      "Poder",
-      "Mana",
-      "Perícias",
-      "Técnicas",
-      "Inventário",
-      "Revisão"
-    ];
+    /*
+     * Contadores existentes.
+     */
+
+    $$(
+      "[data-current-step]"
+    ).forEach(
+      element => {
+
+        element.textContent =
+          String(
+            current + 1
+          );
+
+      }
+    );
+
+
+    $$(
+      "[data-total-steps]"
+    ).forEach(
+      element => {
+
+        element.textContent =
+          String(
+            CONFIG.totalSteps
+          );
+
+      }
+    );
+
+
+    /*
+     * Caso o projeto possua explicitamente:
+     * #stepNumber
+     */
+
+    const stepNumber =
+      $("#stepNumber");
 
 
     if (
-      title
+      stepNumber
     ) {
-      title.textContent =
-        titles[
-          current
-        ] ||
-        "Identidade";
+
+      stepNumber.textContent =
+        String(
+          current + 1
+        );
+
     }
 
 
+    /*
+     * Abas superiores.
+     */
+
     $$(".creation-step")
       .forEach(
-        (button, index) => {
+        (
+          button,
+          index
+        ) => {
 
           const active =
             index ===
             current;
 
+
           const unlocked =
             index <=
             current ||
-            Boolean(
-              state?.completedSteps?.[
-                index
-              ]
-            );
+            completed[index] ===
+              true;
 
 
           button.classList.toggle(
@@ -1886,256 +2252,473 @@
           );
 
 
+          /*
+           * Apenas futuras ficam desabilitadas.
+           *
+           * Etapas passadas continuam acessíveis.
+           */
+
           button.disabled =
             !unlocked;
 
+
+          if (
+            active
+          ) {
+
+            button.setAttribute(
+              "aria-current",
+              "step"
+            );
+
+          } else {
+
+            button.removeAttribute(
+              "aria-current"
+            );
+
+          }
+
         }
       );
+
   }
 
 
   /* =========================================================
-     APARÊNCIA
+     NAVEGAÇÃO
      ========================================================= */
 
-  function renderAppearance(
+  function syncPanels(
     state
   ) {
-    renderHeight(
-      state
+
+    const current =
+      clamp(
+        number(
+          state?.currentStep,
+          0
+        ),
+        0,
+        CONFIG.totalSteps - 1
+      );
+
+
+    const currentId =
+      STEP_IDS[
+        current
+      ];
+
+
+    $$(
+      "[data-panel]"
+    ).forEach(
+      panel => {
+
+        const active =
+          panel.dataset.panel ===
+          currentId;
+
+
+        panel.hidden =
+          !active;
+
+
+        panel.classList.toggle(
+          "is-active",
+          active
+        );
+
+
+        panel.setAttribute(
+          "aria-hidden",
+          active
+            ? "false"
+            : "true"
+        );
+
+      }
     );
 
 
     /*
-     * O visualizador agora usa a mesma imagem da raça.
-     * O personagem-render.js cuida da cópia visual.
+     * Compatibilidade.
      */
 
-    window.dispatchEvent(
-      new CustomEvent(
-        "aerion:personagem:render",
-        {
-          detail: {
-            state
-          }
-        }
-      )
+    $$(
+      "[data-step-panel]"
+    ).forEach(
+      panel => {
+
+        const active =
+          normalize(
+            panel.dataset.stepPanel
+          ) ===
+          normalize(
+            currentId
+          );
+
+
+        panel.hidden =
+          !active;
+
+
+        panel.classList.toggle(
+          "is-active",
+          active
+        );
+
+      }
     );
+
+  }
+
+
+  function syncNavigation(
+    state
+  ) {
+
+    renderProgress(
+      state
+    );
+
+
+    syncPanels(
+      state
+    );
+
   }
 
 
   /* =========================================================
-     RENDER GERAL
+     ATUALIZAÇÃO GERAL
      ========================================================= */
 
-  function render(
-    state = null
+  function renderAll(
+    state
   ) {
-    lastState =
+
+    currentState =
       state ||
       getState();
 
 
-    renderProgress(
-      lastState
+    syncNavigation(
+      currentState
     );
 
 
-    renderRaceImage(
-      lastState
+    renderRace(
+      currentState
     );
 
 
-    renderRaceCard(
-      lastState
-    );
-
-
-    renderRaceDots(
-      lastState
+    renderAnimalha(
+      currentState
     );
 
 
     renderAppearance(
-      lastState
+      currentState
     );
 
 
     renderAttributes(
-      lastState
+      currentState
     );
 
 
-    renderAssignedDice(
-      lastState
+    renderDiceAssignments(
+      currentState
     );
 
 
     renderDiceResults(
-      lastState
+      currentState
+    );
+
+
+    renderAvailableDice(
+      currentState
     );
 
 
     renderClasses(
-      lastState
+      currentState
     );
 
 
     renderMana();
 
-
-    return true;
   }
 
 
   /* =========================================================
-     EVENTOS
+     CLIQUES
      ========================================================= */
 
-  function bindClicks() {
+  function bindActions() {
+
+    /*
+     * Capture = true
+     * para impedir listeners antigos de executarem
+     * ações conflitantes antes deste renderizador.
+     */
+
     document.addEventListener(
       "click",
       event => {
 
-        const target =
+        const element =
           event.target.closest(
             "[data-action]"
           );
 
 
         if (
-          !target
+          !element
         ) {
+
           return;
         }
 
 
         const action =
-          target.dataset.action;
+          normalize(
+            element.dataset.action
+          );
 
 
-        /* -----------------------------------------
-           Navegação
-           ----------------------------------------- */
+        /* -------------------------------------------
+           Próximo
+           ------------------------------------------- */
 
         if (
           action ===
             "next" ||
           action ===
-            "next-step"
+            "next_step"
         ) {
 
-          getCore()
-            ?.nextStep?.();
+          event.preventDefault();
+          event.stopPropagation();
+
+
+          const core =
+            getCore();
+
+
+          if (
+            core &&
+            typeof core.completeCurrentStep ===
+              "function"
+          ) {
+
+            const validation =
+              core.completeCurrentStep();
+
+
+            if (
+              !validation?.ok
+            ) {
+
+              toast(
+                validation?.reason ||
+                "Conclua a etapa atual."
+              );
+
+
+              return;
+            }
+
+          }
+
+
+          const result =
+            core?.nextStep?.();
+
+
+          if (
+            result ===
+            false
+          ) {
+
+            toast(
+              "Não é possível avançar ainda."
+            );
+
+          }
+
 
           return;
+
         }
 
+
+        /* -------------------------------------------
+           Voltar
+           ------------------------------------------- */
 
         if (
           action ===
             "previous" ||
           action ===
-            "previous-step" ||
+            "previous_step" ||
           action ===
-            "back"
+            "back" ||
+          action ===
+            "go_back"
         ) {
+
+          event.preventDefault();
+          event.stopPropagation();
+
 
           getCore()
             ?.previousStep?.();
 
+
           return;
+
         }
 
 
+        /* -------------------------------------------
+           Aba
+           ------------------------------------------- */
+
         if (
           action ===
-          "go-step"
+          "go_step"
         ) {
+
+          event.preventDefault();
+          event.stopPropagation();
+
+
+          const target =
+            number(
+              element.dataset.step,
+              0
+            );
+
+
+          const state =
+            getState();
+
+
+          const current =
+            number(
+              state?.currentStep,
+              0
+            );
+
+
+          /*
+           * Não deixa saltar para frente.
+           */
+
+          if (
+            target >
+            current
+          ) {
+
+            toast(
+              "Conclua as etapas anteriores primeiro."
+            );
+
+
+            return;
+
+          }
+
 
           getCore()
             ?.goToStep?.(
-              target.dataset.step
+              target
             );
 
+
           return;
+
         }
 
 
-        /* -----------------------------------------
+        /* -------------------------------------------
            Raça
-           ----------------------------------------- */
+           ------------------------------------------- */
 
         if (
           action ===
-          "race-next"
+          "race_next"
         ) {
+
+          event.preventDefault();
+          event.stopPropagation();
+
 
           changeRace(
             +1
           );
 
+
           return;
+
         }
 
 
         if (
           action ===
-          "race-previous"
+          "race_previous"
         ) {
+
+          event.preventDefault();
+          event.stopPropagation();
+
 
           changeRace(
             -1
           );
 
+
           return;
+
         }
 
 
         if (
           action ===
-          "race-goto"
+          "race_goto"
         ) {
 
-          const races =
-            getRaces();
+          event.preventDefault();
+          event.stopPropagation();
 
 
-          const index =
-            clamp(
-              number(
-                target.dataset.raceIndex,
-                0
-              ),
-              0,
-              races.length - 1
-            );
+          goToRaceIndex(
+            element.dataset.raceIndex
+          );
 
-
-          const race =
-            races[index];
-
-
-          getCore()
-            ?.selectRace?.(
-              race.id,
-              index
-            );
 
           return;
+
         }
 
 
         if (
           action ===
-            "select-race" ||
+            "select_race" ||
           action ===
-            "select-race-current"
+            "select_race_current"
         ) {
+
+          event.preventDefault();
+          event.stopPropagation();
+
 
           const raceId =
-            target.dataset.race ||
-            target.dataset.raceId ||
+            element.dataset.race ||
+            element.dataset.raceId ||
             getCurrentRace(
               getState()
             )?.id;
@@ -2144,7 +2727,7 @@
           getCore()
             ?.selectRace?.(
               raceId,
-              getCurrentRaceIndex(
+              getRaceIndex(
                 getState()
               )
             );
@@ -2156,206 +2739,318 @@
 
 
           return;
+
         }
 
 
-        /* -----------------------------------------
-           Classe
-           ----------------------------------------- */
+        /* -------------------------------------------
+           Animalha
+           ------------------------------------------- */
 
         if (
           action ===
-          "select-class"
+            "select_animalha_category"
         ) {
 
-          const classId =
-            target.dataset.class ||
-            target.dataset.classId;
+          event.preventDefault();
+          event.stopPropagation();
 
 
           getCore()
-            ?.selectClass?.(
-              classId
+            ?.selectAnimalhaCategory?.(
+              element.dataset.animalhaCategory ||
+              element.dataset.category ||
+              ""
             );
 
 
           return;
+
         }
 
 
-        /* -----------------------------------------
-           DADOS
-           ----------------------------------------- */
+        if (
+          action ===
+            "select_animalha"
+        ) {
+
+          event.preventDefault();
+          event.stopPropagation();
+
+
+          getCore()
+            ?.selectAnimalha?.(
+              element.dataset.animalha ||
+              element.dataset.animalId ||
+              ""
+            );
+
+
+          return;
+
+        }
+
+
+        /* -------------------------------------------
+           Classe
+           ------------------------------------------- */
 
         if (
           action ===
-            "roll-die" ||
-          action ===
-            "roll-dice"
+          "select_class"
         ) {
 
+          event.preventDefault();
+          event.stopPropagation();
+
+
+          getCore()
+            ?.selectClass?.(
+              element.dataset.class ||
+              element.dataset.classId ||
+              ""
+            );
+
+
+          return;
+
+        }
+
+
+        /* -------------------------------------------
+           Dado
+           ------------------------------------------- */
+
+        if (
+          action ===
+            "assign_die" ||
+          action ===
+            "assign_dice"
+        ) {
+
+          event.preventDefault();
+          event.stopPropagation();
+
+
+          getCore()
+            ?.assignDieToAttribute?.(
+              element.dataset.diceId ||
+              element.dataset.dieId ||
+              "",
+
+              element.dataset.attribute ||
+              element.dataset.attributeId ||
+              ""
+            );
+
+
+          return;
+
+        }
+
+
+        if (
+          action ===
+            "remove_die" ||
+          action ===
+            "remove_dice"
+        ) {
+
+          event.preventDefault();
+          event.stopPropagation();
+
+
+          getCore()
+            ?.removeDieFromAttribute?.(
+              element.dataset.attribute ||
+              element.dataset.attributeId ||
+              ""
+            );
+
+
+          return;
+
+        }
+
+
+        /* -------------------------------------------
+           ROLAR ATRIBUTO
+           ------------------------------------------- */
+
+        if (
+          action ===
+            "roll_attribute"
+        ) {
+
+          event.preventDefault();
+          event.stopPropagation();
+
+
           const attribute =
-            target.dataset.attribute ||
-            target.dataset.attributeId;
+            element.dataset.attribute ||
+            element.dataset.attributeId;
+
+
+          const result =
+            getCore()
+              ?.rollAttribute?.(
+                attribute
+              );
+
+
+          if (
+            result?.ok
+          ) {
+
+            toast(
+              `${attribute}: ${result.result}`
+            );
+
+
+            announce(
+              `Resultado ${result.result}`
+            );
+
+
+          } else {
+
+            toast(
+              result?.error ||
+              "Nenhum dado atribuído."
+            );
+
+          }
+
+
+          return;
+
+        }
+
+
+        /* -------------------------------------------
+           ROLAR DADO
+           ------------------------------------------- */
+
+        if (
+          action ===
+            "roll_die" ||
+          action ===
+            "roll_dice"
+        ) {
+
+          event.preventDefault();
+          event.stopPropagation();
+
+
+          const attribute =
+            element.dataset.attribute ||
+            element.dataset.attributeId;
 
 
           if (
             attribute
           ) {
 
-            const result =
-              getCore()
-                ?.rollAttribute?.(
-                  attribute
-                );
-
-
-            if (
-              result?.ok
-            ) {
-
-              toast(
-                `${result.result}`
+            getCore()
+              ?.rollAttribute?.(
+                attribute
               );
-
-
-              announce(
-                `Resultado: ${result.result}`
-              );
-
-            } else {
-
-              toast(
-                result?.error ||
-                "Nenhum dado atribuído."
-              );
-            }
 
           } else {
 
-            const diceId =
-              target.dataset.diceId ||
-              target.dataset.dieId;
-
-
             getCore()
               ?.rollDie?.(
-                diceId
+                element.dataset.diceId ||
+                element.dataset.dieId ||
+                ""
               );
+
           }
 
 
           return;
+
         }
 
 
-        if (
-          action ===
-            "assign-die" ||
-          action ===
-            "assign-dice"
-        ) {
-
-          getCore()
-            ?.assignDieToAttribute?.(
-              target.dataset.diceId ||
-              target.dataset.dieId,
-
-              target.dataset.attribute ||
-              target.dataset.attributeId
-            );
-
-          return;
-        }
-
+        /* -------------------------------------------
+           Limpar dados
+           ------------------------------------------- */
 
         if (
           action ===
-            "remove-die" ||
-          action ===
-            "remove-dice"
+          "clear_dice"
         ) {
 
-          getCore()
-            ?.removeDieFromAttribute?.(
-              target.dataset.attribute ||
-              target.dataset.attributeId
-            );
+          event.preventDefault();
+          event.stopPropagation();
 
-          return;
-        }
-
-
-        if (
-          action ===
-          "clear-dice"
-        ) {
 
           getCore()
             ?.clearDiceAssignments?.();
 
+
           return;
+
         }
 
-      }
+
+        /* -------------------------------------------
+           Avatar
+           ------------------------------------------- */
+
+        if (
+          action ===
+            "remove_avatar"
+        ) {
+
+          event.preventDefault();
+          event.stopPropagation();
+
+
+          getCore()
+            ?.removeAvatar?.();
+
+
+          return;
+
+        }
+
+      },
+      true
     );
+
   }
 
 
   /* =========================================================
-     INPUTS
+     CAMPOS
      ========================================================= */
 
-  function bindInputs() {
+  function bindFields() {
 
     document.addEventListener(
       "input",
       event => {
 
-        const input =
+        const element =
           event.target;
 
 
         if (
-          !input
+          !element
         ) {
-          return;
-        }
-
-
-        const field =
-          input.dataset.appearanceField;
-
-
-        if (
-          field
-        ) {
-
-          const value =
-            (
-              input.type ===
-                "range" ||
-              input.type ===
-                "number"
-            )
-              ? number(
-                  input.value
-                )
-              : input.value;
-
-
-          getCore()
-            ?.setAppearance?.(
-              field,
-              value
-            );
 
           return;
         }
 
 
+        /*
+         * Altura.
+         */
+
         if (
-          input.id ===
+          element.id ===
           "appearanceHeight"
         ) {
 
@@ -2363,11 +3058,122 @@
             ?.setAppearance?.(
               "height",
               number(
-                input.value
+                element.value
               )
             );
 
+
           return;
+
+        }
+
+
+        /*
+         * Aparência genérica.
+         */
+
+        const appearanceField =
+          element.dataset.appearanceField;
+
+
+        if (
+          appearanceField
+        ) {
+
+          const value =
+            (
+              element.type ===
+                "range" ||
+              element.type ===
+                "number"
+            )
+              ? number(
+                  element.value
+                )
+              : element.value;
+
+
+          getCore()
+            ?.setAppearance?.(
+              appearanceField,
+              value
+            );
+
+
+          return;
+
+        }
+
+
+        /*
+         * Identidade.
+         */
+
+        if (
+          element.id ===
+          "characterName"
+        ) {
+
+          getCore()
+            ?.setIdentity?.({
+              name:
+                element.value
+            });
+
+
+          return;
+
+        }
+
+
+        if (
+          element.id ===
+          "characterAge"
+        ) {
+
+          getCore()
+            ?.setIdentity?.({
+              age:
+                element.value
+            });
+
+
+          return;
+
+        }
+
+
+        if (
+          element.id ===
+          "characterDescription"
+        ) {
+
+          getCore()
+            ?.setIdentity?.({
+              description:
+                element.value
+            });
+
+
+          return;
+
+        }
+
+
+        if (
+          element.id ===
+          "characterOrigin"
+        ) {
+
+          getCore()
+            ?.setIdentity?.({
+              origin:
+                element.value
+            });
+
+
+          return;
+
         }
 
       }
@@ -2378,291 +3184,384 @@
       "change",
       event => {
 
-        const input =
+        const element =
           event.target;
 
 
         if (
-          !input
+          !element
         ) {
+
           return;
         }
 
 
-        const field =
-          input.dataset.appearanceField;
+        /*
+         * Gênero.
+         */
+
+        if (
+          element.name ===
+          "gender"
+        ) {
+
+          getCore()
+            ?.setIdentity?.({
+              gender:
+                element.value
+            });
+
+
+          return;
+
+        }
+
+
+        /*
+         * Aparência.
+         */
+
+        const appearanceField =
+          element.dataset.appearanceField;
 
 
         if (
-          field
+          appearanceField
         ) {
 
           getCore()
             ?.setAppearance?.(
-              field,
-              input.value
+              appearanceField,
+              element.value
             );
+
 
           return;
+
         }
 
-      }
-    );
-  }
+
+        /*
+         * Atributo.
+         */
+
+        const attribute =
+          element.dataset.attribute ||
+          element.dataset.attributeId;
 
 
-  /* =========================================================
-     SINCRONIZAÇÃO
-     ========================================================= */
+        if (
+          attribute
+        ) {
 
-  function onFichaUpdated(
-    event
-  ) {
-    const state =
-      event?.detail?.state ||
-      getState();
-
-
-    lastState =
-      state;
-
-
-    render(
-      state
-    );
-  }
-
-
-  function onRaceSelected(
-    event
-  ) {
-    const state =
-      event?.detail?.state ||
-      getState();
-
-
-    raceIndex =
-      getCurrentRaceIndex(
-        state
-      );
-
-
-    render(
-      state
-    );
-  }
-
-
-  /* =========================================================
-     OBSERVADOR DA IMAGEM
-     ========================================================= */
-
-  function observeRaceImage() {
-    const image =
-      $("#raceImage");
-
-
-    if (
-      !image ||
-      typeof MutationObserver ===
-        "undefined"
-    ) {
-      return;
-    }
-
-
-    if (
-      raceImageObserver
-    ) {
-      raceImageObserver.disconnect();
-    }
-
-
-    raceImageObserver =
-      new MutationObserver(
-        () => {
-
-          const state =
-            getState();
-
-
-          /*
-           * Atualização da imagem não pode apagar
-           * o restante do card.
-           */
-
-          if (
-            image.src
-          ) {
-            setImageLoading(
-              image,
-              false
+          getCore()
+            ?.setAttributeValue?.(
+              attribute,
+              element.value
             );
-          }
+
+
+          return;
 
         }
-      );
 
 
-    raceImageObserver.observe(
-      image,
-      {
-        attributes:
-          true,
+        /*
+         * Perícia.
+         */
 
-        attributeFilter:
-          [
-            "src",
-            "srcset"
-          ]
+        if (
+          element.dataset.skill
+        ) {
+
+          getCore()
+            ?.setSkill?.(
+              element.dataset.skill,
+              element.value
+            );
+
+        }
+
       }
     );
 
-
-    image.addEventListener(
-      "load",
-      () => {
-        setImageLoading(
-          image,
-          false
-        );
-      }
-    );
-
-
-    image.addEventListener(
-      "error",
-      () => {
-        setImageLoading(
-          image,
-          false
-        );
-      }
-    );
   }
 
 
   /* =========================================================
-     API
+     EVENTOS DO ESTADO
      ========================================================= */
 
-  const API = {
+  function bindStateEvents() {
 
-    init() {
+    window.addEventListener(
+      "aerion:ficha:updated",
+      event => {
 
-      observeRaceImage();
+        renderAll(
+          event?.detail?.state ||
+          getState()
+        );
 
-      bindClicks();
-
-      bindInputs();
-
-      render();
-
-      return true;
-    },
-
-
-    render,
+      }
+    );
 
 
-    refresh() {
-      render(
-        getState()
-      );
-    },
+    window.addEventListener(
+      "aerion:race:selected",
+      event => {
+
+        renderAll(
+          event?.detail?.state ||
+          getState()
+        );
+
+      }
+    );
 
 
-    nextRace() {
-      changeRace(
-        +1
-      );
-    },
+    window.addEventListener(
+      "aerion:animalha:selected",
+      event => {
+
+        renderAll(
+          event?.detail?.state ||
+          getState()
+        );
+
+      }
+    );
 
 
-    previousRace() {
-      changeRace(
-        -1
-      );
-    },
+    window.addEventListener(
+      "aerion:animalha:category-selected",
+      event => {
+
+        renderAll(
+          event?.detail?.state ||
+          getState()
+        );
+
+      }
+    );
 
 
-    getCurrentRace() {
-      return getCurrentRace(
-        getState()
-      );
-    },
+    window.addEventListener(
+      "aerion:class:selected",
+      event => {
+
+        renderAll(
+          event?.detail?.state ||
+          getState()
+        );
+
+      }
+    );
 
 
-    getRaces() {
-      return [...getRaces()];
-    }
-  };
+    window.addEventListener(
+      "aerion:dice:assigned",
+      event => {
+
+        renderAll(
+          event?.detail?.state ||
+          getState()
+        );
+
+      }
+    );
+
+
+    window.addEventListener(
+      "aerion:dice:rolled",
+      event => {
+
+        renderAll(
+          event?.detail?.state ||
+          getState()
+        );
+
+      }
+    );
+
+
+    window.addEventListener(
+      "aerion:dice:removed",
+      event => {
+
+        renderAll(
+          event?.detail?.state ||
+          getState()
+        );
+
+      }
+    );
+
+
+    window.addEventListener(
+      "aerion:dice:cleared",
+      event => {
+
+        renderAll(
+          event?.detail?.state ||
+          getState()
+        );
+
+      }
+    );
+
+
+    window.addEventListener(
+      "aerion:appearance:updated",
+      event => {
+
+        renderAll(
+          event?.detail?.state ||
+          getState()
+        );
+
+      }
+    );
+
+
+    window.addEventListener(
+      "aerion:mana:updated",
+      event => {
+
+        renderAll(
+          event?.detail?.state ||
+          getState()
+        );
+
+      }
+    );
+
+
+    window.addEventListener(
+      "aerion:navigation:changed",
+      event => {
+
+        renderAll(
+          event?.detail?.state ||
+          getState()
+        );
+
+      }
+    );
+
+
+    window.addEventListener(
+      "aerion:personagem-assets:ready",
+      () => {
+
+        renderAll(
+          getState()
+        );
+
+      }
+    );
+
+  }
 
 
   /* =========================================================
      EXPORTAÇÃO
      ========================================================= */
 
-  window.AERIONFichaRender =
-    Object.freeze(
-      API
-    );
+  const API = Object.freeze({
+
+    init() {
+
+      currentState =
+        getState();
 
 
-  window.AERION_FICHA_RENDER =
-    window.AERIONFichaRender;
+      bindActions();
+
+      bindFields();
+
+      bindStateEvents();
+
+
+      renderAll(
+        currentState
+      );
+
+
+      return true;
+
+    },
+
+
+    render:
+
+      renderAll,
+
+
+    refresh() {
+
+      renderAll(
+        getState()
+      );
+
+    },
+
+
+    nextStep() {
+
+      return getCore()
+        ?.nextStep?.();
+
+    },
+
+
+    previousStep() {
+
+      return getCore()
+        ?.previousStep?.();
+
+    },
+
+
+    nextRace() {
+
+      changeRace(
+        +1
+      );
+
+    },
+
+
+    previousRace() {
+
+      changeRace(
+        -1
+      );
+
+    },
+
+
+    getCurrentRace() {
+
+      return getCurrentRace(
+        getState()
+      );
+
+    }
+
+  });
 
 
   /* =========================================================
-     EVENTOS
+     GLOBAL
      ========================================================= */
 
-  window.addEventListener(
-    "aerion:ficha:updated",
-    onFichaUpdated
-  );
+  window.AERIONFichaRender =
+    API;
 
 
-  window.addEventListener(
-    "aerion:race:selected",
-    onRaceSelected
-  );
-
-
-  window.addEventListener(
-    "aerion:appearance:updated",
-    onFichaUpdated
-  );
-
-
-  window.addEventListener(
-    "aerion:dice:assigned",
-    onFichaUpdated
-  );
-
-
-  window.addEventListener(
-    "aerion:dice:rolled",
-    onFichaUpdated
-  );
-
-
-  window.addEventListener(
-    "aerion:dice:removed",
-    onFichaUpdated
-  );
-
-
-  window.addEventListener(
-    "aerion:dice:cleared",
-    onFichaUpdated
-  );
-
-
-  window.addEventListener(
-    "aerion:class:selected",
-    onFichaUpdated
-  );
+  window.AERION_FICHA_RENDER =
+    API;
 
 
   /* =========================================================
@@ -2671,7 +3570,15 @@
 
   function boot() {
 
-    API.init();
+    if (
+      !API.init()
+    ) {
+
+      window.requestAnimationFrame(
+        boot
+      );
+
+    }
 
   }
 
@@ -2693,962 +3600,7 @@
   } else {
 
     boot();
-  }/* =========================================================
-   AERION — CONTROLADOR DE NAVEGAÇÃO DAS ETAPAS
-   CORREÇÃO:
-   - Próximo funciona
-   - Voltar funciona
-   - Painel correto aparece
-   - Abas futuras ficam bloqueadas
-   - Não permite pular etapas
-   - Ao avançar, rola para o topo
-   ========================================================= */
-
-(() => {
-  "use strict";
-
-  const TOTAL_STEPS = 11;
-
-  const STEP_PANELS = [
-    "identity",
-    "race",
-    "appearance",
-    "class",
-    "attributes",
-    "power",
-    "mana",
-    "skills",
-    "techniques",
-    "inventory",
-    "review"
-  ];
-
-
-  /* =========================================================
-     CORE
-     ========================================================= */
-
-  function getCore() {
-    return (
-      window.AERIONFicha ||
-      window.AERION_FICHA ||
-      null
-    );
-  }
-
-
-  function getState() {
-    const core =
-      getCore();
-
-    if (
-      core &&
-      typeof core.getState ===
-        "function"
-    ) {
-      try {
-        return core.getState();
-      } catch {
-        return {};
-      }
-    }
-
-    return {};
-  }
-
-
-  /* =========================================================
-     NORMALIZAÇÃO
-     ========================================================= */
-
-  function toNumber(
-    value,
-    fallback = 0
-  ) {
-    const n =
-      Number(value);
-
-    return Number.isFinite(n)
-      ? n
-      : fallback;
-  }
-
-
-  function clamp(
-    value,
-    min,
-    max
-  ) {
-    return Math.max(
-      min,
-      Math.min(
-        max,
-        value
-      )
-    );
-  }
-
-
-  /* =========================================================
-     PAINEL ATUAL
-     ========================================================= */
-
-  function getCurrentStep(
-    state = getState()
-  ) {
-    return clamp(
-      toNumber(
-        state?.currentStep,
-        0
-      ),
-      0,
-      TOTAL_STEPS - 1
-    );
-  }
-
-
-  function getCurrentPanel(
-    step
-  ) {
-    return (
-      STEP_PANELS[
-        step
-      ] ||
-      STEP_PANELS[0]
-    );
-  }
-
-
-  /* =========================================================
-     MOSTRAR PAINEL
-     ========================================================= */
-
-  function showStepPanel(
-    step
-  ) {
-    const panelId =
-      getCurrentPanel(
-        step
-      );
-
-
-    document
-      .querySelectorAll(
-        "[data-panel]"
-      )
-      .forEach(
-        panel => {
-
-          const active =
-            panel.dataset.panel ===
-            panelId;
-
-          panel.classList.toggle(
-            "is-active",
-            active
-          );
-
-          panel.hidden =
-            !active;
-
-          panel.setAttribute(
-            "aria-hidden",
-            active
-              ? "false"
-              : "true"
-          );
-
-        }
-      );
-
-
-    /*
-     * Fallback para layouts que usam
-     * data-step-panel em vez de data-panel.
-     */
-
-    document
-      .querySelectorAll(
-        "[data-step-panel]"
-      )
-      .forEach(
-        panel => {
-
-          const active =
-            panel.dataset.stepPanel ===
-            panelId;
-
-          panel.classList.toggle(
-            "is-active",
-            active
-          );
-
-          panel.hidden =
-            !active;
-
-        }
-      );
-  }
-
-
-  /* =========================================================
-     ABAS SUPERIORES
-     ========================================================= */
-
-  function updateStepTabs(
-    state
-  ) {
-    const current =
-      getCurrentStep(
-        state
-      );
-
-    const completed =
-      Array.isArray(
-        state?.completedSteps
-      )
-        ? state.completedSteps
-        : [];
-
-
-    document
-      .querySelectorAll(
-        ".creation-step[data-step]"
-      )
-      .forEach(
-        button => {
-
-          const index =
-            toNumber(
-              button.dataset.step,
-              0
-            );
-
-
-          const isCurrent =
-            index ===
-            current;
-
-
-          /*
-           * Pode voltar para etapas já concluídas.
-           *
-           * Etapas futuras permanecem bloqueadas.
-           */
-
-          const unlocked =
-            index <=
-            current ||
-            completed[index] ===
-              true;
-
-
-          button.classList.toggle(
-            "active",
-            isCurrent
-          );
-
-
-          button.classList.toggle(
-            "locked",
-            !unlocked
-          );
-
-
-          button.disabled =
-            !unlocked;
-
-
-          button.setAttribute(
-            "aria-current",
-            isCurrent
-              ? "step"
-              : "false"
-          );
-
-
-          if (
-            !unlocked
-          ) {
-            button.setAttribute(
-              "aria-disabled",
-              "true"
-            );
-          } else {
-            button.removeAttribute(
-              "aria-disabled"
-            );
-          }
-
-        }
-      );
-  }
-
-
-  /* =========================================================
-     PROGRESSO
-     ========================================================= */
-
-  function updateProgress(
-    state
-  ) {
-    const current =
-      getCurrentStep(
-        state
-      );
-
-    const percent =
-      Math.round(
-        (
-          current /
-          (
-            TOTAL_STEPS -
-            1
-          )
-        ) *
-        100
-      );
-
-
-    const bar =
-      document.querySelector(
-        "#progressBar"
-      );
-
-
-    const percentElement =
-      document.querySelector(
-        "#progressPercent"
-      );
-
-
-    const track =
-      document.querySelector(
-        ".progress-track"
-      );
-
-
-    if (
-      bar
-    ) {
-      bar.style.width =
-        `${percent}%`;
-    }
-
-
-    if (
-      percentElement
-    ) {
-      percentElement.textContent =
-        `${percent}%`;
-    }
-
-
-    if (
-      track
-    ) {
-      track.setAttribute(
-        "aria-valuenow",
-        String(
-          percent
-        )
-      );
-    }
-
-
-    const titles = [
-      "Identidade",
-      "Raça",
-      "Aparência",
-      "Classe",
-      "Atributos",
-      "Poder",
-      "Mana",
-      "Perícias",
-      "Técnicas",
-      "Inventário",
-      "Revisão"
-    ];
-
-
-    const title =
-      document.querySelector(
-        "#progressTitle"
-      );
-
-
-    if (
-      title
-    ) {
-      title.textContent =
-        titles[
-          current
-        ] ||
-        "Identidade";
-    }
-  }
-
-
-  /* =========================================================
-     NAVEGAÇÃO REAL
-     ========================================================= */
-
-  function goToStep(
-    step,
-    options = {}
-  ) {
-    const core =
-      getCore();
-
-
-    if (
-      !core
-    ) {
-      return false;
-    }
-
-
-    const state =
-      getState();
-
-
-    const current =
-      getCurrentStep(
-        state
-      );
-
-
-    const target =
-      clamp(
-        toNumber(
-          step,
-          current
-        ),
-        0,
-        TOTAL_STEPS - 1
-      );
-
-
-    /*
-     * Nunca permite pular etapa futura.
-     */
-
-    if (
-      target >
-      current
-    ) {
-
-      const previousCompleted =
-        target === 0 ||
-        state?.completedSteps?.[
-          target - 1
-        ] === true;
-
-
-      if (
-        !previousCompleted
-      ) {
-
-        return false;
-      }
-    }
-
-
-    if (
-      typeof core.goToStep ===
-      "function"
-    ) {
-
-      const result =
-        core.goToStep(
-          target
-        );
-
-
-      /*
-       * O ficha.js emite aerion:ficha:updated.
-       * Mesmo assim fazemos a sincronização imediata
-       * para a troca visual não depender disso.
-       */
-
-      if (
-        result !== false
-      ) {
-
-        syncNavigation(
-          getState()
-        );
-
-        if (
-          options.scroll !==
-          false
-        ) {
-          scrollToTop();
-        }
-
-        return true;
-      }
-    }
-
-
-    return false;
-  }
-
-
-  /* =========================================================
-     PRÓXIMO
-     ========================================================= */
-
-  function nextStep() {
-    const current =
-      getCurrentStep();
-
-
-    if (
-      current >=
-      TOTAL_STEPS - 1
-    ) {
-      return false;
-    }
-
-
-    const core =
-      getCore();
-
-
-    if (
-      !core ||
-      typeof core.nextStep !==
-        "function"
-    ) {
-      return false;
-    }
-
-
-    const result =
-      core.nextStep();
-
-
-    if (
-      result === false
-    ) {
-      return false;
-    }
-
-
-    /*
-     * Atualiza a interface imediatamente.
-     */
-
-    window.setTimeout(
-      () => {
-
-        syncNavigation(
-          getState()
-        );
-
-        scrollToTop();
-
-      },
-      0
-    );
-
-
-    return true;
-  }
-
-
-  /* =========================================================
-     VOLTAR
-     ========================================================= */
-
-  function previousStep() {
-    const current =
-      getCurrentStep();
-
-
-    if (
-      current <=
-      0
-    ) {
-      return false;
-    }
-
-
-    const core =
-      getCore();
-
-
-    if (
-      !core ||
-      typeof core.previousStep !==
-        "function"
-    ) {
-      return false;
-    }
-
-
-    const result =
-      core.previousStep();
-
-
-    if (
-      result === false
-    ) {
-      return false;
-    }
-
-
-    window.setTimeout(
-      () => {
-
-        syncNavigation(
-          getState()
-        );
-
-        scrollToTop();
-
-      },
-      0
-    );
-
-
-    return true;
-  }
-
-
-  /* =========================================================
-     SINCRONIZAR TUDO
-     ========================================================= */
-
-  function syncNavigation(
-    state = getState()
-  ) {
-
-    const current =
-      getCurrentStep(
-        state
-      );
-
-
-    showStepPanel(
-      current
-    );
-
-
-    updateStepTabs(
-      state
-    );
-
-
-    updateProgress(
-      state
-    );
-
-
-    /*
-     * Mantém a contagem visual.
-     */
-
-    document
-      .querySelectorAll(
-        "[data-current-step]"
-      )
-      .forEach(
-        element => {
-
-          element.textContent =
-            String(
-              current + 1
-            );
-
-        }
-      );
-
-
-    document
-      .querySelectorAll(
-        "[data-total-steps]"
-      )
-      .forEach(
-        element => {
-
-          element.textContent =
-            String(
-              TOTAL_STEPS
-            );
-
-        }
-      );
-  }
-
-
-  /* =========================================================
-     TOPO DA PÁGINA
-     ========================================================= */
-
-  function scrollToTop() {
-
-    window.scrollTo(
-      {
-        top:
-          0,
-
-        left:
-          0,
-
-        behavior:
-          "smooth"
-      }
-    );
-  }
-
-
-  /* =========================================================
-     CLIQUES
-     ========================================================= */
-
-  /*
-   * capture=true
-   *
-   * Isso garante que esse controlador receba
-   * o clique ANTES de outros listeners antigos.
-   */
-
-  document.addEventListener(
-    "click",
-    event => {
-
-      const element =
-        event.target.closest(
-          "[data-action]"
-        );
-
-
-      if (
-        !element
-      ) {
-        return;
-      }
-
-
-      const action =
-        element.dataset.action;
-
-
-      /* ------------------------------
-         PRÓXIMO
-         ------------------------------ */
-
-      if (
-        action ===
-          "next" ||
-        action ===
-          "next-step"
-      ) {
-
-        event.preventDefault();
-        event.stopPropagation();
-
-        nextStep();
-
-        return;
-      }
-
-
-      /* ------------------------------
-         VOLTAR
-         ------------------------------ */
-
-      if (
-        action ===
-          "previous" ||
-        action ===
-          "previous-step" ||
-        action ===
-          "back" ||
-        action ===
-          "go-back"
-      ) {
-
-        event.preventDefault();
-        event.stopPropagation();
-
-        previousStep();
-
-        return;
-      }
-
-
-      /* ------------------------------
-         ABA
-         ------------------------------ */
-
-      if (
-        action ===
-        "go-step"
-      ) {
-
-        event.preventDefault();
-        event.stopPropagation();
-
-
-        const state =
-          getState();
-
-
-        const current =
-          getCurrentStep(
-            state
-          );
-
-
-        const target =
-          toNumber(
-            element.dataset.step,
-            current
-          );
-
-
-        /*
-         * Não permite clicar em uma
-         * etapa futura ainda bloqueada.
-         */
-
-        if (
-          target >
-          current
-        ) {
-
-          const unlocked =
-            state?.completedSteps?.[
-              target - 1
-            ] === true;
-
-
-          if (
-            !unlocked
-          ) {
-
-            toast(
-              "Conclua a etapa anterior primeiro."
-            );
-
-            return;
-          }
-        }
-
-
-        goToStep(
-          target
-        );
-
-        return;
-      }
-
-    },
-    true
-  );
-
-
-  /* =========================================================
-     MOUSE / TOUCH — GARANTIR QUE BOTÃO
-     DESABILITADO CONTINUE BLOQUEADO
-     ========================================================= */
-
-  document.addEventListener(
-    "pointerdown",
-    event => {
-
-      const button =
-        event.target.closest(
-          ".creation-step[data-step]"
-        );
-
-
-      if (
-        !button
-      ) {
-        return;
-      }
-
-
-      if (
-        button.disabled
-      ) {
-
-        event.preventDefault();
-        event.stopPropagation();
-
-      }
-
-    },
-    true
-  );
-
-
-  /* =========================================================
-     EVENTOS DO ESTADO
-     ========================================================= */
-
-  window.addEventListener(
-    "aerion:ficha:updated",
-    event => {
-
-      syncNavigation(
-        event?.detail?.state ||
-        getState()
-      );
-
-    }
-  );
-
-
-  window.addEventListener(
-    "aerion:navigation:changed",
-    event => {
-
-      syncNavigation(
-        event?.detail?.state ||
-        getState()
-      );
-
-    }
-  );
-
-
-  /* =========================================================
-     INICIALIZAÇÃO
-     ========================================================= */
-
-  function bootNavigation() {
-
-    syncNavigation(
-      getState()
-    );
 
   }
 
-
-  if (
-    document.readyState ===
-    "loading"
-  ) {
-
-    document.addEventListener(
-      "DOMContentLoaded",
-      bootNavigation,
-      {
-        once:
-          true
-      }
-    );
-
-  } else {
-
-    bootNavigation();
-
-  }
-
-})();   
 })();
