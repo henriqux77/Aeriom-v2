@@ -2694,5 +2694,528 @@
 
     boot();
   }
+/* =========================================================
+   AERION — CONTROLADOR DE NAVEGAÇÃO DAS ETAPAS
+   CORREÇÃO:
+   - Próximo funciona
+   - Voltar funciona
+   - Painel correto aparece
+   - Abas futuras ficam bloqueadas
+   - Não permite pular etapas
+   - Ao avançar, rola para o topo
+   ========================================================= */
 
+(() => {
+  "use strict";
+
+  const TOTAL_STEPS = 11;
+
+  const STEP_PANELS = [
+    "identity",
+    "race",
+    "appearance",
+    "class",
+    "attributes",
+    "power",
+    "mana",
+    "skills",
+    "techniques",
+    "inventory",
+    "review"
+  ];
+
+
+  /* =========================================================
+     CORE
+     ========================================================= */
+
+  function getCore() {
+    return (
+      window.AERIONFicha ||
+      window.AERION_FICHA ||
+      null
+    );
+  }
+
+
+  function getState() {
+    const core =
+      getCore();
+
+    if (
+      core &&
+      typeof core.getState ===
+        "function"
+    ) {
+      try {
+        return core.getState();
+      } catch {
+        return {};
+      }
+    }
+
+    return {};
+  }
+
+
+  /* =========================================================
+     NORMALIZAÇÃO
+     ========================================================= */
+
+  function toNumber(
+    value,
+    fallback = 0
+  ) {
+    const n =
+      Number(value);
+
+    return Number.isFinite(n)
+      ? n
+      : fallback;
+  }
+
+
+  function clamp(
+    value,
+    min,
+    max
+  ) {
+    return Math.max(
+      min,
+      Math.min(
+        max,
+        value
+      )
+    );
+  }
+
+
+  /* =========================================================
+     PAINEL ATUAL
+     ========================================================= */
+
+  function getCurrentStep(
+    state = getState()
+  ) {
+    return clamp(
+      toNumber(
+        state?.currentStep,
+        0
+      ),
+      0,
+      TOTAL_STEPS - 1
+    );
+  }
+
+
+  function getCurrentPanel(
+    step
+  ) {
+    return (
+      STEP_PANELS[
+        step
+      ] ||
+      STEP_PANELS[0]
+    );
+  }
+
+
+  /* =========================================================
+     MOSTRAR PAINEL
+     ========================================================= */
+
+  function showStepPanel(
+    step
+  ) {
+    const panelId =
+      getCurrentPanel(
+        step
+      );
+
+
+    document
+      .querySelectorAll(
+        "[data-panel]"
+      )
+      .forEach(
+        panel => {
+
+          const active =
+            panel.dataset.panel ===
+            panelId;
+
+          panel.classList.toggle(
+            "is-active",
+            active
+          );
+
+          panel.hidden =
+            !active;
+
+          panel.setAttribute(
+            "aria-hidden",
+            active
+              ? "false"
+              : "true"
+          );
+
+        }
+      );
+
+
+    /*
+     * Fallback para layouts que usam
+     * data-step-panel em vez de data-panel.
+     */
+
+    document
+      .querySelectorAll(
+        "[data-step-panel]"
+      )
+      .forEach(
+        panel => {
+
+          const active =
+            panel.dataset.stepPanel ===
+            panelId;
+
+          panel.classList.toggle(
+            "is-active",
+            active
+          );
+
+          panel.hidden =
+            !active;
+
+        }
+      );
+  }
+
+
+  /* =========================================================
+     ABAS SUPERIORES
+     ========================================================= */
+
+  function updateStepTabs(
+    state
+  ) {
+    const current =
+      getCurrentStep(
+        state
+      );
+
+    const completed =
+      Array.isArray(
+        state?.completedSteps
+      )
+        ? state.completedSteps
+        : [];
+
+
+    document
+      .querySelectorAll(
+        ".creation-step[data-step]"
+      )
+      .forEach(
+        button => {
+
+          const index =
+            toNumber(
+              button.dataset.step,
+              0
+            );
+
+
+          const isCurrent =
+            index ===
+            current;
+
+
+          /*
+           * Pode voltar para etapas já concluídas.
+           *
+           * Etapas futuras permanecem bloqueadas.
+           */
+
+          const unlocked =
+            index <=
+            current ||
+            completed[index] ===
+              true;
+
+
+          button.classList.toggle(
+            "active",
+            isCurrent
+          );
+
+
+          button.classList.toggle(
+            "locked",
+            !unlocked
+          );
+
+
+          button.disabled =
+            !unlocked;
+
+
+          button.setAttribute(
+            "aria-current",
+            isCurrent
+              ? "step"
+              : "false"
+          );
+
+
+          if (
+            !unlocked
+          ) {
+            button.setAttribute(
+              "aria-disabled",
+              "true"
+            );
+          } else {
+            button.removeAttribute(
+              "aria-disabled"
+            );
+          }
+
+        }
+      );
+  }
+
+
+  /* =========================================================
+     PROGRESSO
+     ========================================================= */
+
+  function updateProgress(
+    state
+  ) {
+    const current =
+      getCurrentStep(
+        state
+      );
+
+    const percent =
+      Math.round(
+        (
+          current /
+          (
+            TOTAL_STEPS -
+            1
+          )
+        ) *
+        100
+      );
+
+
+    const bar =
+      document.querySelector(
+        "#progressBar"
+      );
+
+
+    const percentElement =
+      document.querySelector(
+        "#progressPercent"
+      );
+
+
+    const track =
+      document.querySelector(
+        ".progress-track"
+      );
+
+
+    if (
+      bar
+    ) {
+      bar.style.width =
+        `${percent}%`;
+    }
+
+
+    if (
+      percentElement
+    ) {
+      percentElement.textContent =
+        `${percent}%`;
+    }
+
+
+    if (
+      track
+    ) {
+      track.setAttribute(
+        "aria-valuenow",
+        String(
+          percent
+        )
+      );
+    }
+
+
+    const titles = [
+      "Identidade",
+      "Raça",
+      "Aparência",
+      "Classe",
+      "Atributos",
+      "Poder",
+      "Mana",
+      "Perícias",
+      "Técnicas",
+      "Inventário",
+      "Revisão"
+    ];
+
+
+    const title =
+      document.querySelector(
+        "#progressTitle"
+      );
+
+
+    if (
+      title
+    ) {
+      title.textContent =
+        titles[
+          current
+        ] ||
+        "Identidade";
+    }
+  }
+
+
+  /* =========================================================
+     NAVEGAÇÃO REAL
+     ========================================================= */
+
+  function goToStep(
+    step,
+    options = {}
+  ) {
+    const core =
+      getCore();
+
+
+    if (
+      !core
+    ) {
+      return false;
+    }
+
+
+    const state =
+      getState();
+
+
+    const current =
+      getCurrentStep(
+        state
+      );
+
+
+    const target =
+      clamp(
+        toNumber(
+          step,
+          current
+        ),
+        0,
+        TOTAL_STEPS - 1
+      );
+
+
+    /*
+     * Nunca permite pular etapa futura.
+     */
+
+    if (
+      target >
+      current
+    ) {
+
+      const previousCompleted =
+        target === 0 ||
+        state?.completedSteps?.[
+          target - 1
+        ] === true;
+
+
+      if (
+        !previousCompleted
+      ) {
+
+        return false;
+      }
+    }
+
+
+    if (
+      typeof core.goToStep ===
+      "function"
+    ) {
+
+      const result =
+        core.goToStep(
+          target
+        );
+
+
+      /*
+       * O ficha.js emite aerion:ficha:updated.
+       * Mesmo assim fazemos a sincronização imediata
+       * para a troca visual não depender disso.
+       */
+
+      if (
+        result !== false
+      ) {
+
+        syncNavigation(
+          getState()
+        );
+
+        if (
+          options.scroll !==
+          false
+        ) {
+          scrollToTop();
+        }
+
+        return true;
+      }
+    }
+
+
+    return false;
+  }
+
+
+  /* =========================================================
+     PRÓXIMO
+     ========================================================= */
+
+  function nextStep() {
+    const current =
+      getCurrentStep();
+
+
+    if (
+      current >=
+      TOTAL_STEPS - 1
+    ) {
+      return false;
+    }
+
+
+    const core =
+      getCore();
+
+
+   
 })();
