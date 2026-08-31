@@ -3,35 +3,28 @@
    js/core/ficha-render.js
 
    RESPONSABILIDADE:
-   - Apenas renderização visual da ficha
-   - Atualização de textos
-   - Cards
-   - Raça
+   - Renderização visual da ficha
+   - Raças
    - Animalha
    - Aparência
-   - Classe
-   - ATRIBUTOS
-   - RADAR
+   - Classes
+   - Atributos
    - Poder
    - Mana
    - Perícias
    - Técnicas
    - Inventário
-   - Combate
    - Revisão
    - Navegação
+   - Estados visuais
 
    NÃO RESPONSÁVEL POR:
    - Regras dos dados
-   - Controle dos dados
-   - IDs dos dados
-   - Distribuição dos dados
    - Seleção de dados
-   - Devolução de dados
+   - Distribuição dos dados
+   - Rolagem dos dados
+   - IDs dos dados
    - Validação dos dados
-
-   Toda a lógica dos dados pertence ao:
-   js/core/ficha.js
 
    ========================================================= */
 
@@ -40,7 +33,7 @@
 
 
   /* =========================================================
-     ESTADO LOCAL
+     ESTADO
      ========================================================= */
 
   let lastState = null;
@@ -74,6 +67,16 @@
       .replaceAll("'", "&#39;");
   }
 
+
+  function normalize(value) {
+    return String(value ?? "")
+      .trim()
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "");
+  }
+
+
   function formatHeight(cm) {
     const value = Number(cm);
 
@@ -84,8 +87,10 @@
     return `${(value / 100).toFixed(2)} m`;
   }
 
+
   function formatSigned(value) {
-    const number = Number(value) || 0;
+    const number =
+      Number(value) || 0;
 
     if (number > 0) {
       return `+${number}`;
@@ -94,12 +99,17 @@
     return String(number);
   }
 
+
   function getCore() {
     return window.AERIONFicha || null;
   }
 
+
   function getConstants(name) {
-    return getCore()?.constants?.[name] || [];
+    return (
+      getCore()?.constants?.[name] ||
+      []
+    );
   }
 
 
@@ -111,14 +121,20 @@
     message,
     duration = 2200
   ) {
-    let element = $("#toast");
+    let element =
+      $("#toast");
 
     if (!element) {
       element =
-        document.createElement("div");
+        document.createElement(
+          "div"
+        );
 
-      element.id = "toast";
-      element.className = "toast";
+      element.id =
+        "toast";
+
+      element.className =
+        "toast";
 
       document.body.appendChild(
         element
@@ -128,7 +144,8 @@
     element.textContent =
       String(message);
 
-    element.hidden = false;
+    element.hidden =
+      false;
 
     clearTimeout(
       element.__aerionTimer
@@ -136,49 +153,2184 @@
 
     element.__aerionTimer =
       setTimeout(() => {
-        element.hidden = true;
+        element.hidden =
+          true;
       }, duration);
   }
 
 
   /* =========================================================
-     RENDER PRINCIPAL
+     AVISO ACESSÍVEL
      ========================================================= */
 
-  function render(state) {
-    if (!state) {
+  function announce(message) {
+    let live =
+      $("#aerionLiveRegion");
+
+    if (!live) {
+      live =
+        document.createElement(
+          "div"
+        );
+
+      live.id =
+        "aerionLiveRegion";
+
+      live.className =
+        "visually-hidden";
+
+      live.setAttribute(
+        "aria-live",
+        "polite"
+      );
+
+      live.setAttribute(
+        "aria-atomic",
+        "true"
+      );
+
+      document.body.appendChild(
+        live
+      );
+    }
+
+    live.textContent =
+      String(message);
+  }
+
+
+  /* =========================================================
+     CATÁLOGO DE RAÇAS
+     
+     O ficha.js procura RACES dentro deste módulo.
+     
+     Caso no futuro o projeto tenha um arquivo próprio
+     de dados de raça, ele poderá substituir este catálogo
+     automaticamente através de window.AERION_RACES.
+     ========================================================= */
+
+  const FALLBACK_RACES = [
+
+    {
+      id:
+        "humano",
+
+      name:
+        "Humano",
+
+      description:
+        "Versátil e equilibrado, com ampla capacidade de adaptação.",
+
+      profile:
+        "Equilibrado",
+
+      feature:
+        "Versatilidade",
+
+      size:
+        "medio",
+
+      height:
+        {
+          min:
+            150,
+
+          max:
+            200
+        },
+
+      flight:
+        false,
+
+      modifiers:
+        {}
+    },
+
+
+    {
+      id:
+        "elfo",
+
+      name:
+        "Elfo",
+
+      description:
+        "Povo ágil e perceptivo, ligado à natureza e à magia.",
+
+      profile:
+        "Ágil e perceptivo",
+
+      feature:
+        "Percepção elevada",
+
+      size:
+        "medio",
+
+      height:
+        {
+          min:
+            155,
+
+          max:
+            205
+        },
+
+      flight:
+        false,
+
+      modifiers:
+        {
+          percepcao:
+            1,
+
+          agilidade:
+            1
+        }
+    },
+
+
+    {
+      id:
+        "anao",
+
+      name:
+        "Anão",
+
+      description:
+        "Povo compacto e resistente, conhecido por sua robustez.",
+
+      profile:
+        "Robusto",
+
+      feature:
+        "Resistência",
+
+      size:
+        "pequeno",
+
+      height:
+        {
+          min:
+            125,
+
+          max:
+            155
+        },
+
+      flight:
+        false,
+
+      modifiers:
+        {
+          vigor:
+            1
+        }
+    },
+
+
+    {
+      id:
+        "orc",
+
+      name:
+        "Orc",
+
+      description:
+        "Corpo poderoso e presença marcante.",
+
+      profile:
+        "Forte e robusto",
+
+      feature:
+        "Potência física",
+
+      size:
+        "grande",
+
+      height:
+        {
+          min:
+            175,
+
+          max:
+            225
+        },
+
+      flight:
+        false,
+
+      modifiers:
+        {
+          forca:
+            1,
+
+          vigor:
+            1
+        }
+    },
+
+
+    {
+      id:
+        "fada",
+
+      name:
+        "Fada",
+
+      description:
+        "Ser feérico capaz de manipular forças sobrenaturais.",
+
+      profile:
+        "Leve e ágil",
+
+      feature:
+        "Asas feéricas",
+
+      size:
+        "pequeno",
+
+      height:
+        {
+          min:
+            90,
+
+          max:
+            140
+        },
+
+      flight:
+        true,
+
+      modifiers:
+        {
+          agilidade:
+            1,
+
+          controle:
+            1
+        }
+    },
+
+
+    {
+      id:
+        "animalha",
+
+      name:
+        "Animalha",
+
+      description:
+        "Humanoides com características animais integradas à anatomia.",
+
+      profile:
+        "Definido pela linhagem animal",
+
+      feature:
+        "Características animais",
+
+      size:
+        "medio",
+
+      height:
+        {
+          min:
+            140,
+
+          max:
+            220
+        },
+
+      flight:
+        false,
+
+      modifiers:
+        {}
+    },
+
+
+    {
+      id:
+        "vampiro",
+
+      name:
+        "Vampiro",
+
+      description:
+        "Ser sobrenatural com grande afinidade com forças vitais.",
+
+      profile:
+        "Sobrenatural",
+
+      feature:
+        "Natureza vampírica",
+
+      size:
+        "medio",
+
+      height:
+        {
+          min:
+            150,
+
+          max:
+            200
+        },
+
+      flight:
+        false,
+
+      modifiers:
+        {
+          percepcao:
+            1,
+
+          presenca:
+            1
+        }
+    },
+
+
+    {
+      id:
+        "centauro",
+
+      name:
+        "Centauro",
+
+      description:
+        "Humanoide de anatomia híbrida e grande capacidade física.",
+
+      profile:
+        "Potente e resistente",
+
+      feature:
+        "Anatomia híbrida",
+
+      size:
+        "grande",
+
+      height:
+        {
+          min:
+            180,
+
+          max:
+            230
+        },
+
+      flight:
+        false,
+
+      modifiers:
+        {
+          forca:
+            1,
+
+          vigor:
+            1
+        }
+    },
+
+
+    {
+      id:
+        "duende",
+
+      name:
+        "Duende",
+
+      description:
+        "Pequeno povo conhecido por sua astúcia e adaptação.",
+
+      profile:
+        "Ágil e astuto",
+
+      feature:
+        "Pequeno porte",
+
+      size:
+        "pequeno",
+
+      height:
+        {
+          min:
+            100,
+
+          max:
+            145
+        },
+
+      flight:
+        false,
+
+      modifiers:
+        {
+          agilidade:
+            1
+        }
+    },
+
+
+    {
+      id:
+        "povo_aquatico",
+
+      name:
+        "Povo Aquático",
+
+      description:
+        "Povo adaptado a ambientes aquáticos.",
+
+      profile:
+        "Adaptado à água",
+
+      feature:
+        "Adaptação aquática",
+
+      size:
+        "medio",
+
+      height:
+        {
+          min:
+            145,
+
+          max:
+            205
+        },
+
+      flight:
+        false,
+
+      modifiers:
+        {
+          vigor:
+            1
+        }
+    },
+
+
+    {
+      id:
+        "povo_natureza",
+
+      name:
+        "Povo da Natureza",
+
+      description:
+        "Seres ligados às forças naturais do mundo.",
+
+      profile:
+        "Ligado à natureza",
+
+      feature:
+        "Afinidade natural",
+
+      size:
+        "medio",
+
+      height:
+        {
+          min:
+            140,
+
+          max:
+            205
+        },
+
+      flight:
+        false,
+
+      modifiers:
+        {
+          controle:
+            1
+        }
+    },
+
+
+    {
+      id:
+        "neraliano",
+
+      name:
+        "Neraliano",
+
+      description:
+        "Povo adaptado a ambientes aquáticos e costeiros.",
+
+      profile:
+        "Adaptável",
+
+      feature:
+        "Afinidade aquática",
+
+      size:
+        "medio",
+
+      height:
+        {
+          min:
+            145,
+
+          max:
+            205
+        },
+
+      flight:
+        false,
+
+      modifiers:
+        {
+          vigor:
+            1,
+
+          percepcao:
+            1
+        }
+    },
+
+
+    {
+      id:
+        "aureano",
+
+      name:
+        "Aureano",
+
+      description:
+        "Povo de forte presença e características singulares.",
+
+      profile:
+        "Equilibrado",
+
+      feature:
+        "Afinidade especial",
+
+      size:
+        "medio",
+
+      height:
+        {
+          min:
+            150,
+
+          max:
+            205
+        },
+
+      flight:
+        false,
+
+      modifiers:
+        {
+          presenca:
+            1
+        }
+    },
+
+
+    {
+      id:
+        "povo_nuvens",
+
+      name:
+        "Povo das Nuvens",
+
+      description:
+        "Povo leve associado aos céus e às regiões elevadas.",
+
+      profile:
+        "Leve",
+
+      feature:
+        "Afinidade aérea",
+
+      size:
+        "medio",
+
+      height:
+        {
+          min:
+            145,
+
+          max:
+            200
+        },
+
+      flight:
+        true,
+
+      modifiers:
+        {
+          agilidade:
+            1
+        }
+    },
+
+
+    {
+      id:
+        "colosso",
+
+      name:
+        "Colosso",
+
+      description:
+        "Ser de proporções extraordinárias e grande presença física.",
+
+      profile:
+        "Gigantesco",
+
+      feature:
+        "Grande porte",
+
+      size:
+        "colossal",
+
+      height:
+        {
+          min:
+            250,
+
+          max:
+            400
+        },
+
+      flight:
+        true,
+
+      modifiers:
+        {
+          vigor:
+            2,
+
+          forca:
+            1
+        }
+    },
+
+
+    {
+      id:
+        "troll",
+
+      name:
+        "Troll",
+
+      description:
+        "Criatura de grande resistência e estrutura corporal robusta.",
+
+      profile:
+        "Muito resistente",
+
+      feature:
+        "Resistência natural",
+
+      size:
+        "grande",
+
+      height:
+        {
+          min:
+            190,
+
+          max:
+            270
+        },
+
+      flight:
+        false,
+
+      modifiers:
+        {
+          vigor:
+            2
+        }
+    }
+  ];
+
+
+  /*
+   * Se uma versão futura do projeto disponibilizar
+   * window.AERION_RACES, utilizaremos esse catálogo.
+   */
+
+  function getRaceCatalog() {
+
+    if (
+      Array.isArray(
+        window.AERION_RACES
+      ) &&
+      window.AERION_RACES.length
+    ) {
+      return window.AERION_RACES;
+    }
+
+    return FALLBACK_RACES;
+  }
+
+
+  const RACES =
+    getRaceCatalog();
+
+
+  /* =========================================================
+     ANIMALHA
+     ========================================================= */
+
+  const ANIMALHA_VARIANTS = [
+
+    {
+      id:
+        "pantera",
+
+      name:
+        "Pantera",
+
+      category:
+        "Terrestres",
+
+      profile:
+        "Velocidade, furtividade e percepção.",
+
+      modifiers:
+        {
+          agilidade:
+            1,
+
+          percepcao:
+            1
+        },
+
+      size:
+        "medio",
+
+      height:
+        {
+          min:
+            150,
+
+          max:
+            200
+        }
+    },
+
+
+    {
+      id:
+        "tigre",
+
+      name:
+        "Tigre",
+
+      category:
+        "Terrestres",
+
+      profile:
+        "Força explosiva e mobilidade.",
+
+      modifiers:
+        {
+          forca:
+            1,
+
+          agilidade:
+            1
+        },
+
+      size:
+        "grande",
+
+      height:
+        {
+          min:
+            165,
+
+          max:
+            220
+        }
+    },
+
+
+    {
+      id:
+        "leao",
+
+      name:
+        "Leão",
+
+      category:
+        "Terrestres",
+
+      profile:
+        "Força e presença.",
+
+      modifiers:
+        {
+          forca:
+            1,
+
+          presenca:
+            1
+        },
+
+      size:
+        "grande",
+
+      height:
+        {
+          min:
+            170,
+
+          max:
+            225
+        }
+    },
+
+
+    {
+      id:
+        "gato",
+
+      name:
+        "Gato",
+
+      category:
+        "Terrestres",
+
+      profile:
+        "Agilidade e percepção.",
+
+      modifiers:
+        {
+          agilidade:
+            1,
+
+          percepcao:
+            1
+        },
+
+      size:
+        "pequeno",
+
+      height:
+        {
+          min:
+            135,
+
+          max:
+            180
+        }
+    },
+
+
+    {
+      id:
+        "lobo",
+
+      name:
+        "Lobo",
+
+      category:
+        "Terrestres",
+
+      profile:
+        "Percepção, resistência e rastreamento.",
+
+      modifiers:
+        {
+          percepcao:
+            1,
+
+          vigor:
+            1
+        },
+
+      size:
+        "medio",
+
+      height:
+        {
+          min:
+            150,
+
+          max:
+            205
+        }
+    },
+
+
+    {
+      id:
+        "raposa",
+
+      name:
+        "Raposa",
+
+      category:
+        "Terrestres",
+
+      profile:
+        "Agilidade, astúcia e percepção.",
+
+      modifiers:
+        {
+          agilidade:
+            1,
+
+          intelecto:
+            1
+        },
+
+      size:
+        "pequeno",
+
+      height:
+        {
+          min:
+            125,
+
+          max:
+            175
+        }
+    },
+
+
+    {
+      id:
+        "falcao",
+
+      name:
+        "Falcão",
+
+      category:
+        "Voadores",
+
+      profile:
+        "Percepção e precisão.",
+
+      modifiers:
+        {
+          percepcao:
+            1,
+
+          precisao:
+            1
+        },
+
+      size:
+        "medio",
+
+      height:
+        {
+          min:
+            145,
+
+          max:
+            195
+        },
+
+      flight:
+        true
+    },
+
+
+    {
+      id:
+        "aguia",
+
+      name:
+        "Águia",
+
+      category:
+        "Voadores",
+
+      profile:
+        "Percepção aguçada e precisão.",
+
+      modifiers:
+        {
+          percepcao:
+            1,
+
+          precisao:
+            1
+        },
+
+      size:
+        "medio",
+
+      height:
+        {
+          min:
+            150,
+
+          max:
+            210
+        },
+
+      flight:
+        true
+    },
+
+
+    {
+      id:
+        "coruja",
+
+      name:
+        "Coruja",
+
+      category:
+        "Voadores",
+
+      profile:
+        "Percepção e intelecto.",
+
+      modifiers:
+        {
+          percepcao:
+            1,
+
+          intelecto:
+            1
+        },
+
+      size:
+        "pequeno",
+
+      height:
+        {
+          min:
+            120,
+
+          max:
+            175
+        },
+
+      flight:
+        true
+    },
+
+
+    {
+      id:
+        "cobra",
+
+      name:
+        "Cobra",
+
+      category:
+        "Pequenos",
+
+      profile:
+        "Precisão e percepção.",
+
+      modifiers:
+        {
+          precisao:
+            1,
+
+          percepcao:
+            1
+        },
+
+      size:
+        "pequeno",
+
+      height:
+        {
+          min:
+            120,
+
+          max:
+            170
+        }
+    },
+
+
+    {
+      id:
+        "urso",
+
+      name:
+        "Urso",
+
+      category:
+        "Grandes",
+
+      profile:
+        "Força e vigor.",
+
+      modifiers:
+        {
+          forca:
+            1,
+
+          vigor:
+            1
+        },
+
+      size:
+        "grande",
+
+      height:
+        {
+          min:
+            175,
+
+          max:
+            240
+        }
+    },
+
+
+    {
+      id:
+        "rinoceronte",
+
+      name:
+        "Rinoceronte",
+
+      category:
+        "Grandes",
+
+      profile:
+        "Resistência e potência.",
+
+      modifiers:
+        {
+          vigor:
+            2
+        },
+
+      size:
+        "grande",
+
+      height:
+        {
+          min:
+            185,
+
+          max:
+            250
+        }
+    },
+
+
+    {
+      id:
+        "hipopotamo",
+
+      name:
+        "Hipopótamo",
+
+      category:
+        "Marinhos",
+
+      profile:
+        "Vigor e força.",
+
+      modifiers:
+        {
+          vigor:
+            1,
+
+          forca:
+            1
+        },
+
+      size:
+        "grande",
+
+      height:
+        {
+          min:
+            180,
+
+          max:
+            240
+        }
+    },
+
+
+    {
+      id:
+        "crocodilo",
+
+      name:
+        "Crocodilo",
+
+      category:
+        "Marinhos",
+
+      profile:
+        "Força e resistência.",
+
+      modifiers:
+        {
+          forca:
+            1,
+
+          vigor:
+            1
+        },
+
+      size:
+        "grande",
+
+      height:
+        {
+          min:
+            175,
+
+          max:
+            240
+        }
+    },
+
+
+    {
+      id:
+        "tubarao",
+
+      name:
+        "Tubarão",
+
+      category:
+        "Marinhos",
+
+      profile:
+        "Vigor e percepção.",
+
+      modifiers:
+        {
+          vigor:
+            1,
+
+          percepcao:
+            1
+        },
+
+      size:
+        "grande",
+
+      height:
+        {
+          min:
+            170,
+
+          max:
+            235
+        }
+    },
+
+
+    {
+      id:
+        "foca",
+
+      name:
+        "Foca",
+
+      category:
+        "Marinhos",
+
+      profile:
+        "Vigor e adaptação.",
+
+      modifiers:
+        {
+          vigor:
+            1,
+
+          agilidade:
+            1
+        },
+
+      size:
+        "medio",
+
+      height:
+        {
+          min:
+            145,
+
+          max:
+            195
+        }
+    }
+  ];
+
+
+  /* =========================================================
+     CLASSES
+     ========================================================= */
+
+  const CLASSES = {
+
+    guerreiro: {
+
+      id:
+        "guerreiro",
+
+      name:
+        "Guerreiro",
+
+      role:
+        "Combatente",
+
+      skillBonuses:
+        {
+          atletismo:
+            1,
+
+          tatica:
+            1
+        }
+    },
+
+
+    feiticeiro: {
+
+      id:
+        "feiticeiro",
+
+      name:
+        "Feiticeiro",
+
+      role:
+        "Mágico",
+
+      skillBonuses:
+        {
+          conhecimento:
+            1,
+
+          controle_mana:
+            1
+        }
+    },
+
+
+    curandeiro: {
+
+      id:
+        "curandeiro",
+
+      name:
+        "Curandeiro",
+
+      role:
+        "Suporte",
+
+      skillBonuses:
+        {
+          medicina:
+            1,
+
+          intuicao:
+            1
+        }
+    },
+
+
+    monge: {
+
+      id:
+        "monge",
+
+      name:
+        "Monge",
+
+      role:
+        "Marcial",
+
+      skillBonuses:
+        {
+          atletismo:
+            1,
+
+          controle_mana:
+            1
+        }
+    }
+  };
+
+
+  /* =========================================================
+     ATRIBUTOS
+     ========================================================= */
+
+  const ATTRIBUTES = [
+
+    {
+      id:
+        "forca",
+
+      name:
+        "Força"
+    },
+
+    {
+      id:
+        "vigor",
+
+      name:
+        "Vigor"
+    },
+
+    {
+      id:
+        "agilidade",
+
+      name:
+        "Agilidade"
+    },
+
+    {
+      id:
+        "precisao",
+
+      name:
+        "Precisão"
+    },
+
+    {
+      id:
+        "intelecto",
+
+      name:
+        "Intelecto"
+    },
+
+    {
+      id:
+        "controle",
+
+      name:
+        "Controle"
+    },
+
+    {
+      id:
+        "presenca",
+
+      name:
+        "Presença"
+    },
+
+    {
+      id:
+        "percepcao",
+
+      name:
+        "Percepção"
+    }
+  ];
+
+
+  /* =========================================================
+     PERÍCIAS
+     ========================================================= */
+
+  const SKILLS = {
+
+    acrobacia: {
+      id:
+        "acrobacia",
+
+      name:
+        "Acrobacia",
+
+      description:
+        "Equilíbrio e movimentos rápidos."
+    },
+
+    atletismo: {
+      id:
+        "atletismo",
+
+      name:
+        "Atletismo",
+
+      description:
+        "Esforço físico, corrida e escalada."
+    },
+
+    furtividade: {
+      id:
+        "furtividade",
+
+      name:
+        "Furtividade",
+
+      description:
+        "Mover-se sem chamar atenção."
+    },
+
+    percepcao: {
+      id:
+        "percepcao",
+
+      name:
+        "Percepção",
+
+      description:
+        "Perceber detalhes, ameaças e mudanças."
+    },
+
+    investigacao: {
+      id:
+        "investigacao",
+
+      name:
+        "Investigação",
+
+      description:
+        "Analisar pistas e informações."
+    },
+
+    conhecimento: {
+      id:
+        "conhecimento",
+
+      name:
+        "Conhecimento",
+
+      description:
+        "Conhecimentos gerais e especializados."
+    },
+
+    medicina: {
+      id:
+        "medicina",
+
+      name:
+        "Medicina",
+
+      description:
+        "Tratamento e primeiros socorros."
+    },
+
+    sobrevivencia: {
+      id:
+        "sobrevivencia",
+
+      name:
+        "Sobrevivência",
+
+      description:
+        "Exploração, rastreamento e adaptação."
+    },
+
+    persuasao: {
+      id:
+        "persuasao",
+
+      name:
+        "Persuasão",
+
+      description:
+        "Convencer e negociar."
+    },
+
+    intuicao: {
+      id:
+        "intuicao",
+
+      name:
+        "Intuição",
+
+      description:
+        "Perceber intenções."
+    },
+
+    enganacao: {
+      id:
+        "enganacao",
+
+      name:
+        "Enganação",
+
+      description:
+        "Blefes e disfarces."
+    },
+
+    tatica: {
+      id:
+        "tatica",
+
+      name:
+        "Tática",
+
+      description:
+        "Planejamento e leitura de combate."
+    },
+
+    oficio: {
+      id:
+        "oficio",
+
+      name:
+        "Ofício",
+
+      description:
+        "Construção e reparo."
+    },
+
+    controle_mana: {
+      id:
+        "controle_mana",
+
+      name:
+        "Controle de Mana",
+
+      description:
+        "Precisão na manipulação de Mana."
+    }
+  };
+
+
+  /* =========================================================
+     PODERES
+     ========================================================= */
+
+  const PRIMARY_POWERS = [
+    "Fogo",
+    "Ar",
+    "Terra",
+    "Água"
+  ];
+
+
+  const PARALLEL_POWERS = [
+    "Gelo",
+    "Magnetismo",
+    "Vegetação",
+    "Tecnologia",
+    "Gravidade",
+    "Som"
+  ];
+
+
+  /* =========================================================
+     RESOLUÇÃO DA RAÇA ATUAL
+     ========================================================= */
+
+  function getSelectedRace() {
+
+    if (
+      !lastState
+    ) {
+      return null;
+    }
+
+    const index =
+      Number(
+        lastState.raceIndex
+      ) || 0;
+
+
+    return (
+      RACES[index] ||
+      RACES.find(
+        race =>
+          race.id ===
+          lastState.race
+      ) ||
+      null
+    );
+  }
+
+
+  function getEffectiveRace() {
+
+    const selected =
+      getSelectedRace();
+
+
+    if (
+      !selected
+    ) {
+      return null;
+    }
+
+
+    if (
+      selected.id !==
+      "animalha"
+    ) {
+      return selected;
+    }
+
+
+    const animal =
+      ANIMALHA_VARIANTS.find(
+        variant =>
+          variant.id ===
+          lastState.animalha
+      );
+
+
+    if (
+      !animal
+    ) {
+      return selected;
+    }
+
+
+    return {
+
+      ...selected,
+
+      id:
+        `animalha:${animal.id}`,
+
+      name:
+        `Animalha — ${animal.name}`,
+
+      profile:
+        animal.profile ||
+        selected.profile,
+
+      size:
+        animal.size ||
+        selected.size,
+
+      height:
+        animal.height ||
+        selected.height,
+
+      flight:
+        Boolean(
+          animal.flight ||
+          selected.flight
+        ),
+
+      modifiers: {
+
+        ...(selected.modifiers ||
+          {}),
+
+        ...(animal.modifiers ||
+          {})
+      }
+    };
+  }
+
+
+  /* =========================================================
+     IMAGENS
+     ========================================================= */
+
+  function makeFallbackImage(
+    name
+  ) {
+
+    const safe =
+      escapeHtml(
+        name
+      );
+
+
+    const svg = `
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="720"
+        height="720"
+        viewBox="0 0 720 720"
+      >
+
+        <defs>
+
+          <radialGradient
+            id="g"
+            cx="50%"
+            cy="35%"
+          >
+
+            <stop
+              offset="0%"
+              stop-color="#302b25"
+            />
+
+            <stop
+              offset="100%"
+              stop-color="#0d0c0b"
+            />
+
+          </radialGradient>
+
+        </defs>
+
+
+        <rect
+          width="720"
+          height="720"
+          fill="url(#g)"
+        />
+
+
+        <circle
+          cx="360"
+          cy="245"
+          r="85"
+          fill="#948a7d"
+        />
+
+
+        <path
+          d="
+            M245 350
+            Q360 295 475 350
+            L510 565
+            Q360 620 210 565
+            Z
+          "
+          fill="#49443d"
+        />
+
+
+        <path
+          d="
+            M245 395
+            Q175 450 190 535
+          "
+          fill="none"
+          stroke="#a99c8d"
+          stroke-width="34"
+          stroke-linecap="round"
+        />
+
+
+        <path
+          d="
+            M475 395
+            Q545 450 530 535
+          "
+          fill="none"
+          stroke="#a99c8d"
+          stroke-width="34"
+          stroke-linecap="round"
+        />
+
+
+        <path
+          d="
+            M315 545
+            L300 660
+          "
+          stroke="#38342f"
+          stroke-width="46"
+          stroke-linecap="round"
+        />
+
+
+        <path
+          d="
+            M405 545
+            L420 660
+          "
+          stroke="#38342f"
+          stroke-width="46"
+          stroke-linecap="round"
+        />
+
+
+        <text
+          x="360"
+          y="695"
+          text-anchor="middle"
+          fill="#d8b45a"
+          font-family="Georgia,serif"
+          font-size="24"
+        >
+          ${safe}
+        </text>
+
+      </svg>
+    `;
+
+
+    return (
+      "data:image/svg+xml;charset=UTF-8," +
+      encodeURIComponent(
+        svg
+      )
+    );
+  }
+
+
+  function resolveRaceImage(
+    race
+  ) {
+
+    if (
+      !race
+    ) {
+      return "";
+    }
+
+
+    const gender =
+      lastState?.gender;
+
+
+    if (
+      race.images
+    ) {
+
+      if (
+        gender ===
+          "feminino" &&
+        race.images.female
+      ) {
+        return race.images.female;
+      }
+
+
+      if (
+        gender ===
+          "masculino" &&
+        race.images.male
+      ) {
+        return race.images.male;
+      }
+    }
+
+
+    if (
+      gender ===
+        "feminino" &&
+      race.female
+    ) {
+      return race.female;
+    }
+
+
+    if (
+      gender ===
+        "masculino" &&
+      race.male
+    ) {
+      return race.male;
+    }
+
+
+    if (
+      gender ===
+        "feminino" &&
+      race.imageFemale
+    ) {
+      return race.imageFemale;
+    }
+
+
+    if (
+      gender ===
+        "masculino" &&
+      race.imageMale
+    ) {
+      return race.imageMale;
+    }
+
+
+    if (
+      race.image
+    ) {
+
+      if (
+        typeof race.image ===
+        "string"
+      ) {
+        return race.image;
+      }
+
+
+      if (
+        gender ===
+          "feminino" &&
+        race.image.female
+      ) {
+        return race.image.female;
+      }
+
+
+      if (
+        gender ===
+          "masculino" &&
+        race.image.male
+      ) {
+        return race.image.male;
+      }
+    }
+
+
+    return makeFallbackImage(
+      race.name
+    );
+  }
+
+
+  function updateImageSource(
+    image,
+    source,
+    alt
+  ) {
+
+    if (
+      !image
+    ) {
       return;
     }
 
-    lastState = state;
 
-    renderProgress();
-    renderPanels();
+    const wrapper =
+      image.closest(
+        ".race-image-wrap"
+      );
 
-    renderIdentity();
-    renderAvatar();
 
-    renderRace();
-    renderAnimalha();
+    if (
+      source
+    ) {
 
-    renderAppearance();
-    renderClasses();
+      image.hidden =
+        false;
 
-    renderAttributes();
+      image.alt =
+        alt ||
+        "";
 
-    renderPower();
-    renderMana();
 
-    renderSkills();
-    renderTechniques();
-    renderInventory();
+      if (
+        image.dataset.src ===
+        source &&
+        image.complete
+      ) {
+        return;
+      }
 
-    renderCombat();
-    renderReview();
 
-    renderNavigation();
+      image.dataset.src =
+        source;
 
-    initializeVisualBindings();
+
+      image.classList.remove(
+        "image-error",
+        "image-loaded"
+      );
+
+      image.classList.add(
+        "image-loading"
+      );
+
+
+      if (
+        wrapper
+      ) {
+        wrapper.classList.add(
+          "is-loading"
+        );
+
+        wrapper.classList.remove(
+          "is-error"
+        );
+      }
+
+
+      image.onload =
+        () => {
+
+          image.classList.remove(
+            "image-loading"
+          );
+
+          image.classList.add(
+            "image-loaded"
+          );
+
+
+          if (
+            wrapper
+          ) {
+            wrapper.classList.remove(
+              "is-loading",
+              "is-error"
+            );
+          }
+        };
+
+
+      image.onerror =
+        () => {
+
+          /*
+           * Primeira tentativa falhou.
+           * Usamos uma imagem SVG local em
+           * vez de deixar o ícone quebrado.
+           */
+
+          const fallback =
+            makeFallbackImage(
+              alt
+            );
+
+
+          if (
+            image.dataset.fallbackApplied !==
+            source
+          ) {
+
+            image.dataset.fallbackApplied =
+              source;
+
+
+            image.dataset.src =
+              fallback;
+
+            image.src =
+              fallback;
+
+
+            return;
+          }
+
+
+          image.classList.remove(
+            "image-loading"
+          );
+
+          image.classList.add(
+            "image-error"
+          );
+
+
+          if (
+            wrapper
+          ) {
+            wrapper.classList.remove(
+              "is-loading"
+            );
+
+            wrapper.classList.add(
+              "is-error"
+            );
+          }
+        };
+
+
+      image.src =
+        source;
+
+      return;
+    }
+
+
+    image.hidden =
+      true;
   }
 
 
@@ -186,64 +2338,206 @@
      PROGRESSO
      ========================================================= */
 
+  function isStepComplete(
+    index
+  ) {
+
+    if (
+      !lastState
+    ) {
+      return false;
+    }
+
+
+    switch (
+      index
+    ) {
+
+      case 0:
+
+        return Boolean(
+          String(
+            lastState.name ||
+              ""
+          ).trim()
+        ) &&
+          Boolean(
+            lastState.gender
+          );
+
+
+      case 1:
+
+        return Boolean(
+          lastState.race
+        );
+
+
+      case 2:
+
+        return Boolean(
+          lastState.appearance
+            ?.height
+        );
+
+
+      case 3:
+
+        return Boolean(
+          lastState.class
+        );
+
+
+      case 4:
+
+        return Boolean(
+          lastState.effectiveAttributes
+        ) &&
+          Object.values(
+            lastState.effectiveAttributes
+          ).every(
+            value =>
+              Boolean(
+                value?.dieId ||
+                value?.die
+              )
+          );
+
+
+      case 5:
+
+        return Boolean(
+          lastState.power
+        );
+
+
+      case 6:
+
+        return (
+          lastState.mana ===
+          "azul"
+        );
+
+
+      case 10:
+
+        return (
+          isStepComplete(0) &&
+          isStepComplete(1) &&
+          isStepComplete(2) &&
+          isStepComplete(3) &&
+          isStepComplete(4) &&
+          isStepComplete(5) &&
+          isStepComplete(6)
+        );
+
+
+      default:
+
+        return false;
+    }
+  }
+
+
+  function isStepUnlocked(
+    index
+  ) {
+
+    if (
+      index <=
+      0
+    ) {
+      return true;
+    }
+
+
+    return isStepComplete(
+      index -
+        1
+    );
+  }
+
+
   function renderProgress() {
-    const progress =
-      lastState.progress || {
-        completed: 0,
-        total: 11,
-        percent: 0
-      };
+
+    const current =
+      Number(
+        lastState?.step
+      ) || 0;
+
 
     const percent =
-      Math.max(
-        0,
-        Math.min(
-          100,
-          Number(
-            progress.percent
-          ) || 0
-        )
-      );
+      Number(
+        lastState?.progress
+          ?.percent
+      ) || 0;
+
 
     const bar =
-      $("#progressBar");
+      $(
+        "#progressBar"
+      );
 
-    if (bar) {
+
+    if (
+      bar
+    ) {
+
       bar.style.width =
-        `${percent}%`;
+        `${Math.max(
+          0,
+          Math.min(
+            100,
+            percent
+          )
+        )}%`;
+
 
       bar.setAttribute(
         "aria-valuenow",
-        String(percent)
+        String(
+          percent
+        )
       );
     }
 
-    const percentElement =
-      $("#progressPercent");
 
-    if (percentElement) {
-      percentElement.textContent =
-        `${percent}%`;
+    const percentEl =
+      $(
+        "#progressPercent"
+      );
+
+
+    if (
+      percentEl
+    ) {
+      percentEl.textContent =
+        `${Math.round(
+          percent
+        )}%`;
     }
 
-    const currentStep =
-      Number(
-        lastState.step
-      ) || 0;
 
     const title =
-      lastState.steps?.[
-        currentStep
+      lastState?.steps?.[
+        current
       ]?.name ||
       "Identidade";
 
-    const titleElement =
-      $("#progressTitle");
 
-    if (titleElement) {
-      titleElement.textContent =
+    const titleEl =
+      $(
+        "#progressTitle"
+      );
+
+
+    if (
+      titleEl
+    ) {
+      titleEl.textContent =
         title;
     }
+
 
     $$(".creation-step")
       .forEach(
@@ -251,19 +2545,23 @@
           button,
           index
         ) => {
+
           const active =
             index ===
-            currentStep;
+            current;
+
 
           const complete =
-            isStepCompleteVisual(
+            isStepComplete(
               index
             );
 
+
           const unlocked =
-            isStepUnlockedVisual(
+            isStepUnlocked(
               index
             );
+
 
           button.classList.toggle(
             "active",
@@ -290,10 +2588,14 @@
             !unlocked
           );
 
+
           button.disabled =
             !unlocked;
 
-          if (active) {
+
+          if (
+            active
+          ) {
             button.setAttribute(
               "aria-current",
               "step"
@@ -308,141 +2610,48 @@
   }
 
 
-  function isStepCompleteVisual(
-    index
-  ) {
-    const currentStep =
-      Number(
-        lastState.step
-      ) || 0;
-
-    if (
-      index <
-      currentStep
-    ) {
-      return true;
-    }
-
-    switch (index) {
-      case 0:
-        return (
-          Boolean(
-            String(
-              lastState.name ||
-                ""
-            ).trim()
-          ) &&
-          Boolean(
-            lastState.gender
-          )
-        );
-
-      case 1:
-        return Boolean(
-          lastState.race
-        );
-
-      case 2:
-        return Boolean(
-          lastState.appearance
-            ?.height
-        );
-
-      case 3:
-        return Boolean(
-          lastState.class
-        );
-
-      case 4:
-        return (
-          lastState.effectiveAttributes &&
-          Object.values(
-            lastState.effectiveAttributes
-          ).every(
-            attribute =>
-              Boolean(
-                attribute?.die ||
-                attribute?.dieId
-              )
-          )
-        );
-
-      case 5:
-        return Boolean(
-          lastState.power
-        );
-
-      case 6:
-        return (
-          lastState.mana ===
-          "azul"
-        );
-
-      case 10:
-        return (
-          isStepCompleteVisual(0) &&
-          isStepCompleteVisual(1) &&
-          isStepCompleteVisual(2) &&
-          isStepCompleteVisual(3) &&
-          isStepCompleteVisual(4) &&
-          isStepCompleteVisual(5) &&
-          isStepCompleteVisual(6)
-        );
-
-      default:
-        return false;
-    }
-  }
-
-
-  function isStepUnlockedVisual(
-    index
-  ) {
-    if (
-      index <= 0
-    ) {
-      return true;
-    }
-
-    return isStepCompleteVisual(
-      index - 1
-    );
-  }
-
-
   /* =========================================================
      PAINÉIS
      ========================================================= */
 
   function renderPanels() {
+
     const current =
       Number(
-        lastState.step
+        lastState?.step
       ) || 0;
 
+
     (
-      lastState.steps ||
+      lastState?.steps ||
       []
     ).forEach(
       (
         step,
         index
       ) => {
+
         const panel =
           $(
             `.creation-panel[data-panel="${step.id}"]`
           );
 
-        if (!panel) {
+
+        if (
+          !panel
+        ) {
           return;
         }
+
 
         const active =
           index ===
           current;
 
+
         panel.hidden =
           !active;
+
 
         panel.classList.toggle(
           "is-active",
@@ -458,75 +2667,71 @@
      ========================================================= */
 
   function renderIdentity() {
-    setInputValue(
+
+    setInput(
       "#characterName",
-      lastState.name
+      lastState?.name
     );
 
-    setInputValue(
+
+    setInput(
       "#characterAge",
-      lastState.age
+      lastState?.age
     );
 
-    setInputValue(
+
+    setInput(
       "#characterDescription",
-      lastState.description
+      lastState?.description
     );
 
-    setInputValue(
+
+    setInput(
       "#characterOrigin",
-      lastState.origin
+      lastState?.origin
     );
 
-    $$(
+
+    $$( 
       'input[name="gender"]'
     ).forEach(
       radio => {
+
         radio.checked =
           radio.value ===
-          lastState.gender;
+          lastState?.gender;
       }
     );
-
-    $$(".gender-option")
-      .forEach(
-        option => {
-          const selected =
-            option.dataset
-              .gender ===
-            lastState.gender;
-
-          option.classList.toggle(
-            "selected",
-            selected
-          );
-
-          option.classList.toggle(
-            "active",
-            selected
-          );
-        }
-      );
   }
 
 
-  function setInputValue(
+  function setInput(
     selector,
     value
   ) {
+
     const element =
       $(selector);
 
+
     if (
-      !element ||
-      document.activeElement ===
-        element
+      !element
     ) {
       return;
     }
 
+
+    if (
+      document.activeElement ===
+      element
+    ) {
+      return;
+    }
+
+
     element.value =
-      value ?? "";
+      value ??
+      "";
   }
 
 
@@ -535,27 +2740,40 @@
      ========================================================= */
 
   function renderAvatar() {
+
     const avatar =
-      lastState.avatar ||
+      lastState?.avatar ||
       "";
+
 
     const image =
       $("#avatarImage");
 
+
     const placeholder =
       $("#avatarPlaceholder");
 
-    const removeButton =
+
+    const remove =
       $("#removeAvatarButton");
 
-    if (image) {
-      if (avatar) {
+
+    if (
+      image
+    ) {
+
+      if (
+        avatar
+      ) {
+
         image.src =
           avatar;
 
         image.hidden =
           false;
+
       } else {
+
         image.removeAttribute(
           "src"
         );
@@ -565,50 +2783,26 @@
       }
     }
 
-    if (placeholder) {
+
+    if (
+      placeholder
+    ) {
+
       placeholder.hidden =
         Boolean(
           avatar
         );
     }
 
-    if (removeButton) {
-      removeButton.disabled =
+
+    if (
+      remove
+    ) {
+
+      remove.disabled =
         !Boolean(
           avatar
         );
-    }
-
-    const reviewImage =
-      $("#reviewAvatar");
-
-    const reviewFallback =
-      $("#reviewAvatarFallback");
-
-    if (
-      reviewImage &&
-      reviewFallback
-    ) {
-      if (avatar) {
-        reviewImage.src =
-          avatar;
-
-        reviewImage.hidden =
-          false;
-
-        reviewFallback.hidden =
-          true;
-      } else {
-        reviewImage.removeAttribute(
-          "src"
-        );
-
-        reviewImage.hidden =
-          true;
-
-        reviewFallback.hidden =
-          false;
-      }
     }
   }
 
@@ -618,87 +2812,276 @@
      ========================================================= */
 
   function renderRace() {
-    const race =
-      lastState.previewRace;
 
-    if (!race) {
+    const race =
+      getSelectedRace();
+
+
+    if (
+      !race
+    ) {
       return;
     }
 
-    const imageElement =
-      $("#raceImage");
-
-    const gender =
-      lastState.gender;
 
     const image =
-      gender ===
-      "feminino"
-        ? race.female
-        : race.male;
+      $("#raceImage");
 
-    if (imageElement) {
-      updateImageSource(
-        imageElement,
-        image,
-        `${race.name}${
-          gender
-            ? ` — ${gender}`
-            : ""
-        }`
+
+    const source =
+      resolveRaceImage(
+        race
       );
-    }
 
-    const nameElement =
+
+    updateImageSource(
+      image,
+      source,
+      race.name
+    );
+
+
+    const name =
       $("#raceName");
 
-    if (nameElement) {
-      nameElement.textContent =
+
+    if (
+      name
+    ) {
+      name.textContent =
         race.name;
     }
 
-    const shortDescription =
+
+    const description =
       $("#raceShortDescription");
 
-    if (shortDescription) {
-      shortDescription.textContent =
+
+    if (
+      description
+    ) {
+      description.textContent =
         race.description ||
         "";
     }
 
-    const genderLabel =
-      $("#raceGenderLabel");
 
-    if (genderLabel) {
-      const genderText =
-        gender ===
-        "feminino"
-          ? "Feminino"
-          : gender ===
-              "masculino"
-            ? "Masculino"
-            : "";
+    const profile =
+      $(
+        "[data-race-profile]"
+      );
 
-      genderLabel.textContent =
-        genderText
-          ? `${race.name} · ${genderText}`
-          : race.name;
+
+    if (
+      profile
+    ) {
+      profile.textContent =
+        race.profile ||
+        "—";
     }
 
-    const descriptionTitle =
+
+    const feature =
+      $(
+        "[data-race-feature]"
+      );
+
+
+    if (
+      feature
+    ) {
+      feature.textContent =
+        race.feature ||
+        "—";
+    }
+
+
+    const selected =
+      $(
+        "#raceSelectedText"
+      );
+
+
+    if (
+      selected
+    ) {
+
+      selected.textContent =
+        lastState?.race ===
+        race.id
+          ? "✓ Selecionada"
+          : "Selecionar";
+    }
+
+
+    const selectedButton =
+      $(
+        '[data-action="select-race-current"]'
+      );
+
+
+    if (
+      selectedButton
+    ) {
+
+      const isSelected =
+        lastState?.race ===
+        race.id;
+
+
+      selectedButton.classList.toggle(
+        "selected",
+        isSelected
+      );
+
+
+      selectedButton.classList.toggle(
+        "active",
+        isSelected
+      );
+
+
+      selectedButton.setAttribute(
+        "aria-pressed",
+        String(
+          isSelected
+        )
+      );
+    }
+
+
+    renderRaceDots();
+
+
+    renderRaceDescription(
+      race
+    );
+  }
+
+
+  function renderRaceDots() {
+
+    const root =
+      $("#raceDots");
+
+
+    if (
+      !root
+    ) {
+      return;
+    }
+
+
+    root.innerHTML =
+      "";
+
+
+    const current =
+      Number(
+        lastState?.raceIndex
+      ) || 0;
+
+
+    RACES.forEach(
+      (
+        race,
+        index
+      ) => {
+
+        const button =
+          document.createElement(
+            "button"
+          );
+
+
+        button.type =
+          "button";
+
+
+        button.dataset.action =
+          "go-race-index";
+
+
+        button.dataset.raceIndex =
+          String(
+            index
+          );
+
+
+        button.className =
+          "race-dot";
+
+
+        button.classList.toggle(
+          "is-active",
+          index ===
+          current
+        );
+
+
+        button.classList.toggle(
+          "active",
+          index ===
+          current
+        );
+
+
+        button.setAttribute(
+          "aria-label",
+          race.name
+        );
+
+
+        button.title =
+          race.name;
+
+
+        root.appendChild(
+          button
+        );
+      }
+    );
+  }
+
+
+  function renderRaceDescription(
+    race
+  ) {
+
+    const container =
+      $("#raceDescription");
+
+
+    if (
+      !container
+    ) {
+      return;
+    }
+
+
+    const title =
       $("#raceDescriptionTitle");
 
-    if (descriptionTitle) {
-      descriptionTitle.textContent =
+
+    const text =
+      $("#raceDescriptionText");
+
+
+    if (
+      title
+    ) {
+      title.textContent =
         race.name;
     }
 
-    const descriptionText =
-      $("#raceDescriptionText");
 
-    if (descriptionText) {
+    if (
+      text
+    ) {
+
       const parts =
         [];
+
 
       if (
         race.description
@@ -708,6 +3091,7 @@
         );
       }
 
+
       if (
         race.profile
       ) {
@@ -715,6 +3099,7 @@
           `Perfil natural: ${race.profile}`
         );
       }
+
 
       if (
         race.feature
@@ -724,205 +3109,25 @@
         );
       }
 
-      descriptionText.textContent =
+
+      if (
+        race.height
+      ) {
+
+        parts.push(
+          `Altura: ${formatHeight(
+            race.height.min
+          )} — ${formatHeight(
+            race.height.max
+          )}`
+        );
+      }
+
+
+      text.textContent =
         parts.join(
           " "
         );
-    }
-
-    const selectedText =
-      $("#raceSelectedText");
-
-    if (selectedText) {
-      selectedText.textContent =
-        lastState.race ===
-        race.id
-          ? "✓ Selecionada"
-          : "Selecionar";
-    }
-
-    renderRaceDots();
-  }
-
-
-  function renderRaceDots() {
-    const container =
-      $("#raceDots");
-
-    if (!container) {
-      return;
-    }
-
-    const races =
-      getConstants(
-        "RACES"
-      );
-
-    const current =
-      Number(
-        lastState.raceIndex
-      ) || 0;
-
-    container.innerHTML =
-      "";
-
-    races.forEach(
-      (
-        race,
-        index
-      ) => {
-        const button =
-          document.createElement(
-            "button"
-          );
-
-        button.type =
-          "button";
-
-        button.className =
-          index ===
-          current
-            ? "is-active"
-            : "";
-
-        button.dataset.action =
-          "go-race-index";
-
-        button.dataset.raceIndex =
-          String(index);
-
-        button.setAttribute(
-          "aria-label",
-          race.name
-        );
-
-        button.title =
-          race.name;
-
-        container.appendChild(
-          button
-        );
-      }
-    );
-  }
-
-
-  /* =========================================================
-     CARREGAMENTO DE IMAGENS
-     ========================================================= */
-
-  function updateImageSource(
-    imageElement,
-    source,
-    alt = ""
-  ) {
-    if (!imageElement) {
-      return;
-    }
-
-    imageElement.alt =
-      alt;
-
-    if (!source) {
-      imageElement.removeAttribute(
-        "src"
-      );
-
-      imageElement.hidden =
-        true;
-
-      imageElement.classList.remove(
-        "image-loading",
-        "image-loaded",
-        "image-error"
-      );
-
-      imageElement.removeAttribute(
-        "data-image-loading"
-      );
-
-      return;
-    }
-
-    /*
-     * Evita reiniciar o carregamento
-     * se a mesma imagem já está na tela.
-     */
-    if (
-      imageElement.dataset
-        .loadedSrc ===
-      source
-    ) {
-      return;
-    }
-
-    imageElement.classList.remove(
-      "image-error"
-    );
-
-    imageElement.classList.add(
-      "image-loading"
-    );
-
-    imageElement.dataset
-      .imageLoading =
-      "true";
-
-    imageElement.hidden =
-      false;
-
-    imageElement.src =
-      source;
-
-    imageElement.dataset
-      .loadedSrc =
-      source;
-
-    if (
-      imageElement.dataset
-        .aerionImageBound !==
-      "true"
-    ) {
-      imageElement.dataset
-        .aerionImageBound =
-        "true";
-
-      imageElement.addEventListener(
-        "load",
-        () => {
-          imageElement.classList.remove(
-            "image-loading"
-          );
-
-          imageElement.classList.add(
-            "image-loaded"
-          );
-
-          imageElement.dataset
-            .imageLoading =
-            "false";
-        }
-      );
-
-      imageElement.addEventListener(
-        "error",
-        () => {
-          imageElement.classList.remove(
-            "image-loading"
-          );
-
-          imageElement.classList.add(
-            "image-error"
-          );
-
-          imageElement.dataset
-            .imageLoading =
-            "false";
-
-          imageElement.hidden =
-            false;
-        }
-      );
     }
   }
 
@@ -932,148 +3137,305 @@
      ========================================================= */
 
   function renderAnimalha() {
+
     const container =
       $(
         "[data-animalha-variants]"
       );
 
-    if (!container) {
+
+    if (
+      !container
+    ) {
       return;
     }
 
+
     if (
-      lastState.race !==
+      lastState?.race !==
       "animalha"
     ) {
+
       container.hidden =
         true;
 
-      container.innerHTML =
-        "";
-
       return;
     }
 
-    const variants =
-      getConstants(
-        "ANIMALHA_VARIANTS"
-      );
-
-    const selected =
-      lastState.animalha ||
-      "";
 
     container.hidden =
       false;
 
-    container.innerHTML = `
-      <div
-        class="section-heading compact"
-      >
 
-        <span class="eyebrow">
-          ANIMALHA
-        </span>
+    renderAnimalhaCategories();
 
-        <h3>
-          Escolha sua linhagem
-        </h3>
 
-        <p>
-          A linhagem altera o perfil natural,
-          porte, limites físicos e características.
-        </p>
+    renderAnimalhaAnimals();
+  }
 
-      </div>
 
-      <div class="animalha-grid">
+  function groupAnimalhaByCategory() {
 
-        ${variants.map(
-          variant => `
-            <button
-              type="button"
-              class="animalha-variant-card ${
-                selected ===
-                variant.id
-                  ? "selected"
-                  : ""
-              }"
-              data-action="select-animalha"
-              data-animalha="${escapeHtml(
-                variant.id
-              )}"
+    const groups =
+      {};
+
+
+    ANIMALHA_VARIANTS.forEach(
+      variant => {
+
+        const key =
+          normalize(
+            variant.category
+          );
+
+
+        if (
+          !groups[key]
+        ) {
+          groups[key] =
+            {
+              id:
+                key,
+
+              name:
+                variant.category,
+
+              items:
+                []
+            };
+        }
+
+
+        groups[key].items.push(
+          variant
+        );
+      }
+    );
+
+
+    return Object.values(
+      groups
+    );
+  }
+
+
+  function renderAnimalhaCategories() {
+
+    const root =
+      $(
+        "[data-animalha-categories]"
+      );
+
+
+    if (
+      !root
+    ) {
+      return;
+    }
+
+
+    root.innerHTML =
+      "";
+
+
+    groupAnimalhaByCategory()
+      .forEach(
+        category => {
+
+          const button =
+            document.createElement(
+              "button"
+            );
+
+
+          button.type =
+            "button";
+
+
+          button.className =
+            "animalha-category-card";
+
+
+          button.dataset.action =
+            "select-animalha-category";
+
+
+          button.dataset.animalhaCategory =
+            category.id;
+
+
+          button.innerHTML = `
+            <span
+              class="animalha-category-icon"
+              aria-hidden="true"
             >
+              ${getAnimalIcon(
+                category.name
+              )}
+            </span>
 
-              <span
-                class="animalha-variant-icon"
-                aria-hidden="true"
-              >
-                ${getAnimalIcon(
-                  variant.category
-                )}
-              </span>
+            <strong>
+              ${escapeHtml(
+                category.name
+              )}
+            </strong>
 
-              <strong>
-                ${escapeHtml(
-                  variant.name
-                )}
-              </strong>
+            <small>
+              ${category.items.length}
+              linhagem${category.items.length === 1 ? "" : "s"}
+            </small>
+          `;
 
-              <small>
-                ${escapeHtml(
-                  variant.category
-                )}
-              </small>
 
-              <span>
-                ${escapeHtml(
-                  variant.profile
-                )}
-              </span>
-
-            </button>
-          `
-        ).join("")}
-
-      </div>
-    `;
+          root.appendChild(
+            button
+          );
+        }
+      );
   }
 
 
   function getAnimalIcon(
     category
   ) {
+
     const value =
-      String(
-        category ||
-          ""
-      ).toLowerCase();
+      normalize(
+        category
+      );
+
 
     if (
       value.includes(
-        "ave"
+        "voador"
       )
     ) {
       return "◇";
     }
 
+
     if (
       value.includes(
-        "aqu"
+        "marinho"
       )
     ) {
       return "≈";
     }
 
+
     if (
       value.includes(
-        "répt"
+        "pequeno"
       )
     ) {
-      return "⌁";
+      return "•";
     }
 
+
+    if (
+      value.includes(
+        "grande"
+      )
+    ) {
+      return "◆";
+    }
+
+
     return "✦";
+  }
+
+
+  function renderAnimalhaAnimals() {
+
+    const root =
+      $(
+        "[data-animalha-grid]"
+      );
+
+
+    if (
+      !root
+    ) {
+      return;
+    }
+
+
+    const selected =
+      lastState?.animalha ||
+      "";
+
+
+    root.innerHTML =
+      "";
+
+
+    ANIMALHA_VARIANTS.forEach(
+      variant => {
+
+        const button =
+          document.createElement(
+            "button"
+          );
+
+
+        button.type =
+          "button";
+
+
+        button.className =
+          "animalha-variant-card";
+
+
+        button.classList.toggle(
+          "selected",
+          selected ===
+          variant.id
+        );
+
+
+        button.dataset.action =
+          "select-animalha";
+
+
+        button.dataset.animalha =
+          variant.id;
+
+
+        button.innerHTML = `
+          <span
+            class="animalha-variant-icon"
+            aria-hidden="true"
+          >
+            ${getAnimalIcon(
+              variant.category
+            )}
+          </span>
+
+          <strong>
+            ${escapeHtml(
+              variant.name
+            )}
+          </strong>
+
+          <small>
+            ${escapeHtml(
+              variant.category
+            )}
+          </small>
+
+          <span>
+            ${escapeHtml(
+              variant.profile
+            )}
+          </span>
+        `;
+
+
+        root.appendChild(
+          button
+        );
+      }
+    );
   }
 
 
@@ -1082,384 +3444,246 @@
      ========================================================= */
 
   function renderAppearance() {
+
     const appearance =
-      lastState.appearance ||
+      lastState?.appearance ||
       {};
+
 
     const race =
-      lastState.raceData;
+      getEffectiveRace();
 
-    const min =
-      Number(
-        race?.height?.min
-      ) || 0;
-
-    const max =
-      Number(
-        race?.height?.max
-      ) || 0;
-
-    const currentHeight =
-      Number(
-        appearance.height
-      ) ||
-      (
-        min &&
-        max
-          ? Math.round(
-              (
-                min +
-                max
-              ) /
-                2
-            )
-          : 0
-      );
-
-    const range =
-      $("#heightRange");
-
-    if (range) {
-      range.min =
-        String(
-          min ||
-          100
-        );
-
-      range.max =
-        String(
-          max ||
-          400
-        );
-
-      range.value =
-        String(
-          currentHeight
-        );
-    }
-
-    const heightValue =
-      $("#appearanceHeightValue");
-
-    if (heightValue) {
-      heightValue.textContent =
-        formatHeight(
-          currentHeight
-        );
-    }
-
-    const limits =
-      $("#appearanceHeightLimits");
-
-    if (limits) {
-      limits.textContent =
-        min &&
-        max
-          ? `${formatHeight(
-              min
-            )} — ${formatHeight(
-              max
-            )}`
-          : "Selecione uma raça.";
-    }
-
-    const minLabel =
-      $("#appearanceMinLabel");
-
-    if (minLabel) {
-      minLabel.textContent =
-        min
-          ? `${min} cm`
-          : "—";
-    }
-
-    const maxLabel =
-      $("#appearanceMaxLabel");
-
-    if (maxLabel) {
-      maxLabel.textContent =
-        max
-          ? `${max} cm`
-          : "—";
-    }
-
-    renderCharacterModel();
-    renderAppearanceFields();
-    renderAnimalhaEditor();
-
-    const flightStatus =
-      $(
-        "[data-flight-status]"
-      );
-
-    if (flightStatus) {
-      const canFly =
-        Boolean(
-          race?.flight
-        );
-
-      flightStatus.textContent =
-        canFly
-          ? "Voo disponível"
-          : "Voo indisponível";
-
-      flightStatus.classList.toggle(
-        "available",
-        canFly
-      );
-    }
-  }
-
-
-  function renderAppearanceFields() {
-    const appearance =
-      lastState.appearance ||
-      {};
-
-    [
-      "hair",
-      "eyes",
-      "skin",
-      "clothing",
-      "scars",
-      "tattoos",
-      "physicalNotes"
-    ].forEach(
-      field => {
-        setInputValue(
-          `#${field}`,
-          appearance[field]
-        );
-      }
-    );
-  }
-
-
-  function renderAnimalhaEditor() {
-    const section =
-      $(
-        "[data-animalha-editor]"
-      );
-
-    const select =
-      $("#animalhaVariant");
-
-    const active =
-      lastState.race ===
-      "animalha";
-
-    if (section) {
-      section.hidden =
-        !active;
-    }
-
-    if (
-      !active ||
-      !select
-    ) {
-      return;
-    }
-
-    const variants =
-      getConstants(
-        "ANIMALHA_VARIANTS"
-      );
-
-    select.innerHTML = `
-      <option value="">
-        Escolha a linhagem
-      </option>
-
-      ${variants.map(
-        variant => `
-          <option
-            value="${escapeHtml(
-              variant.id
-            )}"
-            ${
-              lastState.animalha ===
-              variant.id
-                ? "selected"
-                : ""
-            }
-          >
-            ${escapeHtml(
-              variant.name
-            )}
-          </option>
-        `
-      ).join("")}
-    `;
-  }
-
-
-  /* =========================================================
-     MODELO 2D TEMPORÁRIO
-     ========================================================= */
-
-  function renderCharacterModel() {
-    const container =
-      $("#appearanceFigure");
-
-    if (!container) {
-      return;
-    }
-
-    const race =
-      lastState.raceData;
-
-    const appearance =
-      lastState.appearance ||
-      {};
 
     const min =
       Number(
         race?.height?.min
       ) || 140;
 
+
     const max =
       Number(
         race?.height?.max
       ) || 200;
 
-    const height =
+
+    let current =
       Number(
         appearance.height
-      ) ||
-      Math.round(
-        (
-          min +
-          max
-        ) /
-          2
       );
 
-    const normalized =
-      Math.max(
-        0,
-        Math.min(
-          1,
 
-          (
-            height -
-            min
-          ) /
-            Math.max(
-              1,
-              max -
-                min
-            )
-        )
-      );
-
-    const visualScale =
-      0.88 +
-      normalized *
-        0.24;
-
-    const visualHeight =
-      220 +
-      normalized *
-        120;
-
-    container.style.setProperty(
-      "--character-scale",
-      String(
-        visualScale
+    if (
+      !Number.isFinite(
+        current
       )
-    );
-
-    container.style.setProperty(
-      "--character-height",
-      `${visualHeight}px`
-    );
-
-    container.dataset.race =
-      lastState.race ||
-      "";
-
-    container.dataset.animalha =
-      lastState.animalha ||
-      "";
-
-    container.dataset.gender =
-      lastState.gender ||
-      "";
-
-    container.dataset.size =
-      race?.size ||
-      "medio";
-
-    container.classList.toggle(
-      "appearance-figure--female",
-      lastState.gender ===
-        "feminino"
-    );
-
-    container.classList.toggle(
-      "appearance-figure--male",
-      lastState.gender !==
-        "feminino"
-    );
-
-    const wings =
-      container.querySelector(
-        '[data-character-feature="wings"]'
-      );
-
-    if (wings) {
-      wings.hidden =
-        !Boolean(
-          race?.flight
+    ) {
+      current =
+        Math.round(
+          (
+            min +
+            max
+          ) /
+          2
         );
     }
 
-    const tail =
-      container.querySelector(
-        '[data-character-feature="tail"]'
+
+    current =
+      Math.max(
+        min,
+        Math.min(
+          max,
+          current
+        )
       );
 
-    if (tail) {
-      tail.hidden =
-        lastState.race !==
-        "animalha";
+
+    const range =
+      $("#heightRange");
+
+
+    if (
+      range
+    ) {
+
+      range.min =
+        String(
+          min
+        );
+
+      range.max =
+        String(
+          max
+        );
+
+      range.value =
+        String(
+          current
+        );
     }
+
+
+    const value =
+      $("#appearanceHeightValue");
+
+
+    if (
+      value
+    ) {
+      value.textContent =
+        formatHeight(
+          current
+        );
+    }
+
+
+    const limits =
+      $("#appearanceHeightLimits");
+
+
+    if (
+      limits
+    ) {
+
+      limits.textContent =
+        `${formatHeight(
+          min
+        )} — ${formatHeight(
+          max
+        )}`;
+    }
+
+
+    const minLabel =
+      $("#appearanceMinLabel");
+
+
+    if (
+      minLabel
+    ) {
+      minLabel.textContent =
+        `${min} cm`;
+    }
+
+
+    const maxLabel =
+      $("#appearanceMaxLabel");
+
+
+    if (
+      maxLabel
+    ) {
+      maxLabel.textContent =
+        `${max} cm`;
+    }
+
+
+    const flight =
+      $(
+        "[data-flight-status]"
+      );
+
+
+    if (
+      flight
+    ) {
+
+      const canFly =
+        Boolean(
+          race?.flight
+        );
+
+
+      flight.textContent =
+        canFly
+          ? "Voo disponível"
+          : "Voo indisponível";
+
+
+      flight.classList.toggle(
+        "available",
+        canFly
+      );
+    }
+
+
+    setInput(
+      "#hair",
+      appearance.hair
+    );
+
+
+    setInput(
+      "#eyes",
+      appearance.eyes
+    );
+
+
+    setInput(
+      "#skin",
+      appearance.skin
+    );
+
+
+    setInput(
+      "#clothing",
+      appearance.clothing
+    );
+
+
+    setInput(
+      "#scars",
+      appearance.scars
+    );
+
+
+    setInput(
+      "#tattoos",
+      appearance.tattoos
+    );
+
+
+    setInput(
+      "#physicalNotes",
+      appearance.physicalNotes
+    );
   }
 
 
   /* =========================================================
-     CLASSES
+     CLASSE
      ========================================================= */
 
   function renderClasses() {
-    const classes =
-      getConstants(
-        "CLASSES"
-      );
 
     $$(".class-card")
       .forEach(
         card => {
+
           const id =
-            card.dataset
-              .class;
+            card.dataset.class;
+
 
           const data =
-            classes[id];
+            CLASSES[id];
+
 
           const selected =
             id ===
-            lastState.class;
+            lastState?.class;
+
 
           card.classList.toggle(
             "selected",
             selected
           );
 
+
           card.classList.toggle(
             "active",
             selected
           );
+
 
           card.setAttribute(
             "aria-pressed",
@@ -1468,81 +3692,67 @@
             )
           );
 
-          if (!data) {
+
+          if (
+            !data
+          ) {
             return;
           }
+
 
           const bonus =
             card.querySelector(
               "[data-class-bonus]"
             );
 
-          if (bonus) {
-            bonus.textContent =
+
+          if (
+            bonus
+          ) {
+
+            const values =
               Object.entries(
                 data.skillBonuses ||
-                  {}
+                {}
               )
                 .map(
                   ([
                     skillId,
                     amount
                   ]) => {
+
                     const skill =
-                      getConstants(
-                        "SKILLS"
-                      )[
+                      SKILLS[
                         skillId
                       ];
 
-                    return skill?.name
+
+                    return skill
                       ? `${skill.name} +${amount}`
                       : "";
                   }
                 )
                 .filter(
                   Boolean
-                )
-                .join(
-                  " • "
                 );
+
+
+            bonus.textContent =
+              values.join(
+                " • "
+              );
           }
         }
       );
-
-    const className =
-      $(
-        "[data-class-name]"
-      );
-
-    if (className) {
-      className.textContent =
-        classes[
-          lastState.class
-        ]?.name ||
-        "—";
-    }
-
-    const role =
-      $(
-        "[data-class-role]"
-      );
-
-    if (role) {
-      role.textContent =
-        classes[
-          lastState.class
-        ]?.role ||
-        "—";
-    }
   }
 
 
   /* =========================================================
-     ATRIBUTOS
+     DADOS
      ========================================================= */
 
   function renderAttributes() {
+
     renderDice();
 
     renderAttributeCards();
@@ -1551,105 +3761,89 @@
   }
 
 
-  /* =========================================================
-     DADOS
-     
-     ATENÇÃO:
-     Este código NÃO decide disponibilidade.
-     O ficha.js já entrega exatamente quais dados
-     existem e onde estão.
-
-     Aqui apenas mostramos.
-     ========================================================= */
-
   function renderDice() {
+
     const root =
       $(
         "[data-dice-pool]"
       );
 
-    if (!root) {
+
+    if (
+      !root
+    ) {
       return;
     }
 
+
     const dice =
       Array.isArray(
-        lastState.dice
+        lastState?.dice
       )
         ? lastState.dice
         : [];
 
+
     root.innerHTML =
       "";
 
-    /*
-     * O estado recebido pelo ficha.js
-     * já contém:
-     *
-     * id
-     * type
-     * sides
-     * available
-     * assigned
-     * assignedTo
-     *
-     * Portanto não recalculamos nada aqui.
-     */
+
     dice.forEach(
       die => {
-        /*
-         * Mostramos somente o que está
-         * disponível para seleção.
-         */
+
         if (
           die.assigned
         ) {
           return;
         }
 
+
         const button =
           document.createElement(
             "button"
           );
 
+
         button.type =
           "button";
+
 
         button.className =
           "dice-card";
 
-        if (
-          lastState.selectedDie ===
-          die.id
-        ) {
-          button.classList.add(
-            "dice-selected"
-          );
-        }
 
         button.dataset.die =
           die.id;
+
 
         button.dataset.dieType =
           die.type ||
           "";
 
+
         button.dataset.dieSides =
           String(
             die.sides ||
-              ""
+            ""
           );
+
 
         button.draggable =
           true;
+
+
+        button.classList.toggle(
+          "dice-selected",
+          lastState?.selectedDie ===
+          die.id
+        );
+
 
         button.setAttribute(
           "aria-label",
           `D${die.sides}`
         );
 
-        button.title =
-          `D${die.sides}`;
 
         button.innerHTML = `
           <span
@@ -1686,26 +3880,31 @@
           </span>
         `;
 
+
         root.appendChild(
           button
         );
       }
     );
 
+
     if (
-      root.children.length ===
-      0
+      !root.children.length
     ) {
+
       const empty =
         document.createElement(
           "div"
         );
 
+
       empty.className =
         "dice-pool-empty";
 
+
       empty.textContent =
         "Todos os dados estão atribuídos.";
+
 
       root.appendChild(
         empty
@@ -1714,38 +3913,43 @@
   }
 
 
-  /* =========================================================
-     CARDS DE ATRIBUTOS
-     ========================================================= */
-
   function renderAttributeCards() {
+
     const attributes =
-      lastState.effectiveAttributes ||
+      lastState?.effectiveAttributes ||
       {};
+
 
     $$(".attribute-card")
       .forEach(
         card => {
+
           const id =
-            card.dataset
-              .attribute;
+            card.dataset.attribute;
+
 
           const data =
             attributes[id];
 
-          if (!data) {
+
+          if (
+            !data
+          ) {
             return;
           }
+
 
           const dieId =
             data.dieId ||
             data.die ||
             null;
 
+
           const sides =
             Number(
               data.sides
             ) || 0;
+
 
           card.classList.toggle(
             "has-die",
@@ -1754,6 +3958,7 @@
             )
           );
 
+
           card.classList.toggle(
             "has-result",
             Boolean(
@@ -1761,33 +3966,31 @@
             )
           );
 
-          card.dataset.dieId =
-            dieId ||
-            "";
 
-          /*
-           * Mantém a área de dado existente
-           * como alvo visual.
-           */
-          const dieElement =
+          const dieSlot =
             card.querySelector(
               "[data-attribute-die]"
             );
 
-          if (dieElement) {
 
-            dieElement.dataset.attribute =
-              id;
+          if (
+            dieSlot
+          ) {
 
-            dieElement.dataset.die =
+            dieSlot.dataset.die =
               dieId ||
               "";
 
+
+            dieSlot.dataset.attribute =
+              id;
+
+
             if (
-              dieId &&
-              sides
+              dieId
             ) {
-              dieElement.innerHTML = `
+
+              dieSlot.innerHTML = `
                 <button
                   type="button"
                   class="attribute-die-button"
@@ -1795,11 +3998,8 @@
                   data-attribute="${escapeHtml(
                     id
                   )}"
-                  aria-label="Devolver D${sides} de ${escapeHtml(
-                    data.name ||
-                    id
-                  )}"
                   title="Devolver D${sides}"
+                  aria-label="Devolver D${sides}"
                 >
 
                   <span
@@ -1837,63 +4037,82 @@
 
                 </button>
               `;
+
             } else {
-              dieElement.innerHTML = `
+
+              dieSlot.innerHTML = `
                 <span
                   class="attribute-empty-die"
                 >
-                  Solte um dado aqui
+                  Colocar dado
                 </span>
               `;
             }
           }
+
 
           const value =
             card.querySelector(
               "[data-attribute-value]"
             );
 
-          if (value) {
+
+          if (
+            value
+          ) {
             value.textContent =
               data.total ??
               "—";
           }
+
 
           const modifier =
             card.querySelector(
               "[data-attribute-modifier]"
             );
 
-          if (modifier) {
-            const racialModifier =
+
+          if (
+            modifier
+          ) {
+
+            const amount =
               Number(
                 data.racialModifier
               ) || 0;
 
+
             modifier.textContent =
               formatSigned(
-                racialModifier
+                amount
               );
+
 
             modifier.classList.toggle(
               "positive",
-              racialModifier >
-                0
+              amount >
+              0
             );
+
 
             modifier.classList.toggle(
               "negative",
-              racialModifier <
-                0
+              amount <
+              0
             );
           }
+
 
           const result =
             card.querySelector(
               "[data-attribute-result]"
             );
 
-          if (result) {
+
+          if (
+            result
+          ) {
+
             result.textContent =
               data.rolled
                 ? `${data.roll} ${formatSigned(
@@ -1902,70 +4121,49 @@
                 : "";
           }
 
+
           const rollButton =
             card.querySelector(
               '[data-action="roll-attribute"]'
             );
 
-          if (rollButton) {
+
+          if (
+            rollButton
+          ) {
             rollButton.disabled =
               !dieId;
-          }
-
-          const dieLabel =
-            card.querySelector(
-              "[data-attribute-die-label]"
-            );
-
-          if (dieLabel) {
-            dieLabel.textContent =
-              sides
-                ? `D${sides}`
-                : "";
           }
         }
       );
   }
 
 
-  /* =========================================================
-     RADAR
-     ========================================================= */
-
   function renderRadar() {
+
     const root =
       $(
         "[data-attribute-radar]"
       );
 
-    if (!root) {
-      return;
-    }
-
-    const definitions =
-      getConstants(
-        "ATTRIBUTES"
-      );
-
-    const attributes =
-      lastState.effectiveAttributes ||
-      {};
 
     if (
-      !definitions.length
+      !root
     ) {
-      root.innerHTML =
-        "";
-
       return;
     }
 
+
+    const attributes =
+      lastState?.effectiveAttributes ||
+      {};
+
+
     const values =
-      definitions.map(
+      ATTRIBUTES.map(
         attribute =>
           Math.max(
             0,
-
             Number(
               attributes[
                 attribute.id
@@ -1974,83 +4172,95 @@
           )
       );
 
+
     const maximum =
       Math.max(
         1,
         ...values
       );
 
+
     const center =
       210;
+
 
     const radius =
       150;
 
+
     const count =
-      definitions.length;
+      ATTRIBUTES.length;
+
 
     function point(
       index,
       distance
     ) {
+
       const angle =
         (
           360 /
           count
         ) *
-          index -
+        index -
         90;
+
 
       const radians =
         angle *
         Math.PI /
         180;
 
+
       return [
+
         center +
           Math.cos(
             radians
           ) *
-            distance,
+          distance,
 
         center +
           Math.sin(
             radians
           ) *
-            distance
+          distance
       ];
     }
 
+
     let grid =
       "";
+
 
     for (
       let level = 1;
       level <= 4;
       level++
     ) {
-      const points =
-        definitions
+
+      const polygon =
+        ATTRIBUTES
           .map(
             (
-              _attribute,
+              _,
               index
             ) =>
               point(
                 index,
-
                 radius *
-                  (
-                    level /
-                    4
-                  )
+                (
+                  level /
+                  4
+                )
               ).join(",")
           )
           .join(" ");
 
+
       grid += `
         <polygon
-          points="${points}"
+          points="${polygon}"
           fill="none"
           stroke="currentColor"
           stroke-width="1"
@@ -2059,11 +4269,13 @@
       `;
     }
 
-    definitions.forEach(
+
+    ATTRIBUTES.forEach(
       (
-        _attribute,
+        _,
         index
       ) => {
+
         const [
           x,
           y
@@ -2072,6 +4284,7 @@
             index,
             radius
           );
+
 
         grid += `
           <line
@@ -2087,6 +4300,7 @@
       }
     );
 
+
     const polygon =
       values
         .map(
@@ -2096,23 +4310,24 @@
           ) =>
             point(
               index,
-
               radius *
-                (
-                  value /
-                  maximum
-                )
+              (
+                value /
+                maximum
+              )
             ).join(",")
         )
         .join(" ");
 
+
     const labels =
-      definitions
+      ATTRIBUTES
         .map(
           (
             attribute,
             index
           ) => {
+
             const [
               x,
               y
@@ -2120,8 +4335,9 @@
               point(
                 index,
                 radius +
-                  30
+                30
               );
+
 
             return `
               <text
@@ -2139,6 +4355,7 @@
           }
         )
         .join("");
+
 
     root.innerHTML = `
       <svg
@@ -2167,68 +4384,90 @@
      ========================================================= */
 
   function renderPower() {
+
     const current =
       $(
         "[data-power-current]"
       );
 
-    if (current) {
+
+    if (
+      current
+    ) {
       current.textContent =
-        lastState.power ||
+        lastState?.power ||
         "Nenhum poder escolhido";
     }
+
 
     const result =
       $(
         "[data-power-result]"
       );
 
-    if (result) {
+
+    if (
+      result
+    ) {
       result.textContent =
-        lastState.powerRoll ??
+        lastState?.powerRoll ??
         "—";
     }
+
 
     const note =
       $(
         "[data-power-result-note]"
       );
 
-    if (note) {
+
+    if (
+      note
+    ) {
+
       if (
-        lastState.powerRoll
+        lastState?.powerRoll
       ) {
+
         note.textContent =
           `D100 ${lastState.powerRoll} → ${lastState.power}`;
+
       } else if (
-        lastState.power
+        lastState?.power
       ) {
+
         note.textContent =
           "Poder selecionado.";
+
       } else {
+
         note.textContent =
           "O D100 define um dos quatro poderes principais.";
       }
     }
 
-    $$(
+
+    $$( 
       '[data-action="select-parallel-power"]'
     ).forEach(
       button => {
+
         const selected =
-          button.dataset
-            .power ===
-          lastState.power;
+          button.dataset.power ===
+          lastState?.power;
+
 
         button.classList.toggle(
           "selected",
           selected
         );
 
+
         button.classList.toggle(
           "active",
           selected
         );
+
 
         button.setAttribute(
           "aria-pressed",
@@ -2244,23 +4483,31 @@
   function setPowerMode(
     mode
   ) {
+
     const roll =
       $(
         '[data-power-section="roll"]'
       );
+
 
     const manual =
       $(
         '[data-power-section="manual"]'
       );
 
-    if (roll) {
+
+    if (
+      roll
+    ) {
       roll.hidden =
         mode !==
         "roll";
     }
 
-    if (manual) {
+
+    if (
+      manual
+    ) {
       manual.hidden =
         mode !==
         "manual";
@@ -2273,53 +4520,48 @@
      ========================================================= */
 
   function renderMana() {
+
     $$(".mana-card")
       .forEach(
         card => {
+
           const mana =
-            String(
-              card.dataset
-                .mana ||
-                ""
-            ).toLowerCase();
+            normalize(
+              card.dataset.mana
+            );
+
+
+          const selected =
+            lastState?.mana ===
+            mana;
+
 
           const available =
             mana ===
             "azul";
 
-          const selected =
-            lastState.mana ===
-            mana;
 
           card.classList.toggle(
             "selected",
             selected
           );
 
+
           card.classList.toggle(
             "is-selected",
             selected
           );
+
 
           card.classList.toggle(
             "locked",
             !available
           );
 
-          card.classList.toggle(
-            "is-locked",
-            !available
-          );
 
           card.disabled =
             !available;
 
-          card.setAttribute(
-            "aria-disabled",
-            String(
-              !available
-            )
-          );
         }
       );
   }
@@ -2330,34 +4572,37 @@
      ========================================================= */
 
   function renderSkills() {
+
     const root =
       $("#skillsList");
 
-    if (!root) {
+
+    if (
+      !root
+    ) {
       return;
     }
 
-    const skills =
-      getConstants(
-        "SKILLS"
-      );
 
-    const effective =
-      lastState.effectiveSkills ||
+    const values =
+      lastState?.effectiveSkills ||
       {};
+
 
     root.innerHTML =
       "";
 
+
     Object.entries(
-      skills
+      SKILLS
     ).forEach(
       ([
         id,
         skill
       ]) => {
+
         const data =
-          effective[id] ||
+          values[id] ||
           {
             trained:
               false,
@@ -2369,41 +4614,20 @@
               0
           };
 
-        const trained =
-          Boolean(
-            data.trained
-          );
-
-        const total =
-          Number(
-            data.effectiveBonus
-          ) || 0;
-
-        const classBonus =
-          Number(
-            getCore()
-              ?.constants
-              ?.CLASSES?.[
-              lastState.class
-            ]?.skillBonuses?.[
-              id
-            ]
-          ) || 0;
 
         const article =
           document.createElement(
             "article"
           );
 
+
         article.className =
-          `skill-card ${
-            trained
-              ? "trained"
-              : ""
-          }`;
+          "skill-card";
+
 
         article.dataset.skill =
           id;
+
 
         article.innerHTML = `
           <div
@@ -2430,6 +4654,7 @@
 
             </div>
 
+
             <div
               class="skill-bonus-box"
             >
@@ -2438,25 +4663,16 @@
                 Bônus
               </span>
 
-              <strong
-                data-skill-value
-              >
+              <strong>
                 ${formatSigned(
-                  total
+                  data.effectiveBonus
                 )}
               </strong>
-
-              <small>
-                ${
-                  classBonus
-                    ? `Classe +${classBonus}`
-                    : ""
-                }
-              </small>
 
             </div>
 
           </div>
+
 
           <div
             class="skill-actions"
@@ -2471,11 +4687,12 @@
               )}"
             >
               ${
-                trained
+                data.trained
                   ? "✓ Treinado"
                   : "Treinar"
               }
             </button>
+
 
             <input
               class="skill-bonus-input"
@@ -2496,6 +4713,7 @@
           </div>
         `;
 
+
         root.appendChild(
           article
         );
@@ -2509,63 +4727,70 @@
      ========================================================= */
 
   function renderTechniques() {
+
     const root =
       $(
         "[data-techniques-list]"
       );
 
-    if (!root) {
+
+    if (
+      !root
+    ) {
       return;
     }
 
+
     const techniques =
       Array.isArray(
-        lastState.techniques
+        lastState?.techniques
       )
         ? lastState.techniques
         : [];
 
+
     root.innerHTML =
       "";
 
+
     if (
-      techniques.length ===
-      0
+      !techniques.length
     ) {
+
       root.innerHTML = `
         <div
           class="empty-state"
         >
-
           <span>
             Nenhuma técnica adicionada.
           </span>
 
           <small>
-            Crie uma técnica personalizada.
+            Adicione uma técnica para começar.
           </small>
-
         </div>
       `;
+
 
       return;
     }
 
+
     techniques.forEach(
       technique => {
+
         const article =
           document.createElement(
             "article"
           );
 
+
         article.className =
           "technique-card";
 
-        article.dataset
-          .techniqueId =
-          technique.id;
 
         article.innerHTML = `
+
           <div
             class="technique-card-header"
           >
@@ -2582,6 +4807,7 @@
               data-technique-field="name"
             />
 
+
             <button
               type="button"
               class="icon-button"
@@ -2596,8 +4822,9 @@
 
           </div>
 
+
           <textarea
-            placeholder="Descrição da técnica"
+            placeholder="Descrição"
             data-technique-id="${escapeHtml(
               technique.id
             )}"
@@ -2605,6 +4832,7 @@
           >${escapeHtml(
             technique.description
           )}</textarea>
+
 
           <div
             class="technique-fields"
@@ -2622,6 +4850,7 @@
               data-technique-field="range"
             />
 
+
             <input
               type="text"
               value="${escapeHtml(
@@ -2635,6 +4864,7 @@
             />
 
           </div>
+
 
           <div
             class="technique-extra-fields"
@@ -2652,6 +4882,7 @@
               data-technique-field="cost"
             />
 
+
             <input
               type="text"
               value="${escapeHtml(
@@ -2663,6 +4894,7 @@
               )}"
               data-technique-field="test"
             />
+
 
             <textarea
               rows="2"
@@ -2678,6 +4910,7 @@
           </div>
         `;
 
+
         root.appendChild(
           article
         );
@@ -2691,63 +4924,70 @@
      ========================================================= */
 
   function renderInventory() {
+
     const root =
       $(
         "[data-inventory-list]"
       );
 
-    if (!root) {
+
+    if (
+      !root
+    ) {
       return;
     }
 
+
     const inventory =
       Array.isArray(
-        lastState.inventory
+        lastState?.inventory
       )
         ? lastState.inventory
         : [];
 
+
     root.innerHTML =
       "";
 
+
     if (
-      inventory.length ===
-      0
+      !inventory.length
     ) {
+
       root.innerHTML = `
         <div
           class="empty-state"
         >
-
           <span>
             Inventário vazio.
           </span>
 
           <small>
-            Adicione equipamentos ou objetos iniciais.
+            Adicione equipamentos ou objetos.
           </small>
-
         </div>
       `;
+
 
       return;
     }
 
+
     inventory.forEach(
       item => {
+
         const article =
           document.createElement(
             "article"
           );
 
+
         article.className =
           "inventory-item";
 
-        article.dataset
-          .inventoryId =
-          item.id;
 
         article.innerHTML = `
+
           <input
             type="text"
             value="${escapeHtml(
@@ -2759,6 +4999,7 @@
             )}"
             data-inventory-field="name"
           />
+
 
           <input
             type="number"
@@ -2773,6 +5014,7 @@
             aria-label="Quantidade"
           />
 
+
           <input
             type="text"
             value="${escapeHtml(
@@ -2784,6 +5026,7 @@
             )}"
             data-inventory-field="description"
           />
+
 
           <button
             type="button"
@@ -2798,6 +5041,7 @@
           </button>
         `;
 
+
         root.appendChild(
           article
         );
@@ -2811,66 +5055,91 @@
      ========================================================= */
 
   function renderCombat() {
+
     const combat =
-      lastState.combat ||
+      lastState?.combat ||
       {};
+
 
     const hp =
       $(
         "[data-combat-hp]"
       );
 
-    if (hp) {
+
+    if (
+      hp
+    ) {
       hp.textContent =
         combat.hp ??
         "—";
     }
+
 
     const movement =
       $(
         "[data-combat-movement]"
       );
 
-    if (movement) {
+
+    if (
+      movement
+    ) {
+
       movement.textContent =
         combat.movement ==
-          null
+        null
           ? "—"
           : `${combat.movement} m`;
     }
+
 
     const air =
       $(
         "[data-combat-air]"
       );
 
-    if (air) {
+
+    if (
+      air
+    ) {
+
       air.textContent =
         combat.air ==
-          null
+        null
           ? "—"
           : `${combat.air} m`;
     }
+
 
     const aquatic =
       $(
         "[data-combat-aquatic]"
       );
 
-    if (aquatic) {
+
+    if (
+      aquatic
+    ) {
+
       aquatic.textContent =
         combat.aquatic ==
-          null
+        null
           ? "—"
           : `${combat.aquatic} m`;
     }
+
 
     const flight =
       $(
         "[data-combat-flight]"
       );
 
-    if (flight) {
+
+    if (
+      flight
+    ) {
+
       flight.textContent =
         combat.canFly
           ? "Sim"
@@ -2884,29 +5153,28 @@
      ========================================================= */
 
   function renderReview() {
-    const race =
-      lastState.raceData;
 
-    const classes =
-      getConstants(
-        "CLASSES"
-      );
+    const race =
+      getEffectiveRace();
+
 
     const classData =
-      classes[
-        lastState.class
+      CLASSES[
+        lastState?.class
       ];
 
+
     const values = {
+
       name:
-        lastState.name ||
+        lastState?.name ||
         "Sem nome",
 
       gender:
-        lastState.gender ===
+        lastState?.gender ===
         "masculino"
           ? "Masculino"
-          : lastState.gender ===
+          : lastState?.gender ===
               "feminino"
             ? "Feminino"
             : "—",
@@ -2921,18 +5189,18 @@
 
       height:
         formatHeight(
-          lastState
-            .appearance
+          lastState?.appearance
             ?.height
         ),
 
       power:
-        lastState.power ||
+        lastState?.power ||
         "—",
 
       mana:
         "Mana Azul"
     };
+
 
     Object.entries(
       values
@@ -2941,10 +5209,12 @@
         key,
         value
       ]) => {
-        $$(
+
+        $$( 
           `[data-review="${key}"]`
         ).forEach(
           element => {
+
             element.textContent =
               value;
           }
@@ -2952,82 +5222,122 @@
       }
     );
 
-    $$(
+
+    $$( 
       '[data-review="description"]'
     ).forEach(
       element => {
+
         element.textContent =
-          lastState.description ||
+          lastState?.description ||
           "Nenhuma descrição.";
       }
     );
 
-    $$(
+
+    $$( 
       '[data-review="appearance"]'
     ).forEach(
       element => {
+
         const appearance =
-          lastState.appearance ||
+          lastState?.appearance ||
           {};
+
 
         const lines =
           [];
 
+
         if (
+          appearance.hairStyle ||
           appearance.hair
         ) {
+
           lines.push(
-            `Cabelo: ${appearance.hair}`
+            `Cabelo: ${
+              appearance.hairStyle ||
+              appearance.hair
+            }`
           );
         }
 
+
         if (
+          appearance.eyeShape ||
           appearance.eyes
         ) {
+
           lines.push(
-            `Olhos: ${appearance.eyes}`
+            `Olhos: ${
+              appearance.eyeShape ||
+              appearance.eyes
+            }`
           );
         }
 
+
         if (
+          appearance.skinVariant ||
           appearance.skin
         ) {
+
           lines.push(
-            `Pele: ${appearance.skin}`
+            `Pele: ${
+              appearance.skinVariant ||
+              appearance.skin
+            }`
           );
         }
 
+
         if (
+          appearance.clothingStyle ||
           appearance.clothing
         ) {
+
           lines.push(
-            `Vestimenta: ${appearance.clothing}`
+            `Vestimenta: ${
+              appearance.clothingStyle ||
+              appearance.clothing
+            }`
           );
         }
+
 
         if (
           appearance.scars
         ) {
+
           lines.push(
-            `Cicatrizes: ${appearance.scars}`
+            `Cicatrizes: ${
+              appearance.scars
+            }`
           );
         }
+
 
         if (
           appearance.tattoos
         ) {
+
           lines.push(
-            `Tatuagens: ${appearance.tattoos}`
+            `Tatuagens: ${
+              appearance.tattoos
+            }`
           );
         }
+
 
         if (
           appearance.physicalNotes
         ) {
+
           lines.push(
             appearance.physicalNotes
           );
         }
+
 
         element.textContent =
           lines.length
@@ -3038,86 +5348,72 @@
       }
     );
 
-    const attributesRoot =
+
+    const attributeRoot =
       $(
         "[data-review-attributes]"
       );
 
+
     if (
-      attributesRoot
+      !attributeRoot
     ) {
-      const definitions =
-        getConstants(
-          "ATTRIBUTES"
-        );
-
-      const attributes =
-        lastState.effectiveAttributes ||
-        {};
-
-      const dice =
-        Array.isArray(
-          lastState.dice
-        )
-          ? lastState.dice
-          : [];
-
-      attributesRoot.innerHTML =
-        definitions
-          .map(
-            attribute => {
-              const data =
-                attributes[
-                  attribute.id
-                ];
-
-              const dieId =
-                data?.dieId ||
-                data?.die ||
-                null;
-
-              const die =
-                dice.find(
-                  item =>
-                    item.id ===
-                    dieId
-                );
-
-              return `
-                <div
-                  class="review-attribute"
-                >
-
-                  <span>
-                    ${escapeHtml(
-                      attribute.name
-                    )}
-                  </span>
-
-                  <strong>
-                    ${
-                      die
-                        ? `D${die.sides}`
-                        : "—"
-                    }
-                  </strong>
-
-                  <small>
-                    ${
-                      data
-                        ? formatSigned(
-                            data.racialModifier
-                          )
-                        : ""
-                    }
-                  </small>
-
-                </div>
-              `;
-            }
-          )
-          .join("");
+      return;
     }
+
+
+    const attributes =
+      lastState?.effectiveAttributes ||
+      {};
+
+
+    attributeRoot.innerHTML =
+      ATTRIBUTES
+        .map(
+          attribute => {
+
+            const data =
+              attributes[
+                attribute.id
+              ];
+
+
+            return `
+              <div
+                class="review-attribute"
+              >
+
+                <span>
+                  ${escapeHtml(
+                    attribute.name
+                  )}
+                </span>
+
+
+                <strong>
+                  ${
+                    data?.sides
+                      ? `D${data.sides}`
+                      : "—"
+                  }
+                </strong>
+
+
+                <small>
+                  ${
+                    data
+                      ? formatSigned(
+                          data.racialModifier
+                        )
+                      : ""
+                  }
+                </small>
+
+              </div>
+            `;
+          }
+        )
+        .join("");
   }
 
 
@@ -3126,35 +5422,46 @@
      ========================================================= */
 
   function renderNavigation() {
+
     const current =
       Number(
-        lastState.step
+        lastState?.step
       ) || 0;
 
-    const currentStep =
+
+    const currentElement =
       $("#stepCurrent");
 
-    if (currentStep) {
-      currentStep.textContent =
+
+    if (
+      currentElement
+    ) {
+
+      currentElement.textContent =
         String(
-          current + 1
+          current +
+          1
         );
     }
 
-    $$(
+
+    $$( 
       '[data-action="previous"]'
     ).forEach(
       button => {
+
         button.disabled =
           current <=
           0;
       }
     );
 
-    $$(
+
+    $$( 
       '[data-action="next"]'
     ).forEach(
       button => {
+
         button.textContent =
           current >=
           10
@@ -3166,115 +5473,62 @@
 
 
   /* =========================================================
-     LIGAÇÕES VISUAIS
-     ========================================================= */
-
-  function initializeVisualBindings() {
-    initializeRaceDescription();
-    initializeImageLoading();
-  }
-
-
-  /* =========================================================
-     DESCRIÇÃO DA RAÇA
-     ========================================================= */
-
-  function initializeRaceDescription() {
-    const raceCard =
-      $("#raceCard");
-
-    if (
-      !raceCard ||
-      raceCard.dataset
-        .descriptionBound ===
-      "true"
-    ) {
-      return;
-    }
-
-    raceCard.dataset
-      .descriptionBound =
-      "true";
-
-    raceCard.addEventListener(
-      "click",
-      event => {
-        /*
-         * Botões internos pertencem ao
-         * sistema de eventos principal.
-         */
-        if (
-          event.target.closest(
-            "button"
-          )
-        ) {
-          return;
-        }
-
-        const description =
-          $(
-            "#raceDescription"
-          );
-
-        if (!description) {
-          return;
-        }
-
-        const open =
-          description.hidden;
-
-        description.hidden =
-          !open;
-
-        description.dataset.open =
-          open
-            ? "true"
-            : "false";
-      }
-    );
-  }
-
-
-  /* =========================================================
-     IMAGENS
+     ESTADO VISUAL DAS IMAGENS
      ========================================================= */
 
   function initializeImageLoading() {
-    const images =
-      $$(
-        "img"
-      );
 
-    images.forEach(
+    $$( 
+      "img"
+    ).forEach(
       image => {
+
         if (
           image.dataset
-            .imageLoadingBound ===
+            .aerionImageBound ===
           "true"
         ) {
           return;
         }
 
+
         image.dataset
-          .imageLoadingBound =
+          .aerionImageBound =
           "true";
+
 
         image.addEventListener(
           "load",
           () => {
+
             image.classList.remove(
-              "image-loading"
+              "image-loading",
+              "image-error"
             );
 
             image.classList.add(
               "image-loaded"
             );
+
+
+            const wrapper =
+              image.closest(
+                ".race-image-wrap"
+              );
+
+
+            wrapper?.classList.remove(
+              "is-loading",
+              "is-error"
+            );
           }
         );
+
 
         image.addEventListener(
           "error",
           () => {
+
             image.classList.remove(
               "image-loading"
             );
@@ -3290,44 +5544,69 @@
 
 
   /* =========================================================
-     ACESSIBILIDADE
+     LIGAÇÕES
      ========================================================= */
 
-  function announce(
-    message
+  function initializeVisualBindings() {
+
+    initializeImageLoading();
+  }
+
+
+  /* =========================================================
+     RENDER PRINCIPAL
+     ========================================================= */
+
+  function render(
+    state
   ) {
-    let live =
-      $("#aerionLiveRegion");
 
-    if (!live) {
-      live =
-        document.createElement(
-          "div"
-        );
-
-      live.id =
-        "aerionLiveRegion";
-
-      live.className =
-        "visually-hidden";
-
-      live.setAttribute(
-        "aria-live",
-        "polite"
-      );
-
-      live.setAttribute(
-        "aria-atomic",
-        "true"
-      );
-
-      document.body.appendChild(
-        live
-      );
+    if (
+      !state
+    ) {
+      return;
     }
 
-    live.textContent =
-      String(message);
+
+    lastState =
+      state;
+
+
+    renderProgress();
+
+    renderPanels();
+
+    renderIdentity();
+
+    renderAvatar();
+
+    renderRace();
+
+    renderAnimalha();
+
+    renderAppearance();
+
+    renderClasses();
+
+    renderAttributes();
+
+    renderPower();
+
+    renderMana();
+
+    renderSkills();
+
+    renderTechniques();
+
+    renderInventory();
+
+    renderCombat();
+
+    renderReview();
+
+    renderNavigation();
+
+    initializeVisualBindings();
   }
 
 
@@ -3338,6 +5617,29 @@
   window.AERIONFichaRender =
     Object.freeze({
 
+      /*
+       * Catálogos utilizados pelo ficha.js.
+       */
+
+      RACES,
+
+      ANIMALHA_VARIANTS,
+
+      CLASSES,
+
+      SKILLS,
+
+      ATTRIBUTES,
+
+      PRIMARY_POWERS,
+
+      PARALLEL_POWERS,
+
+
+      /*
+       * Renderização.
+       */
+
       render,
 
       toast,
@@ -3347,34 +5649,41 @@
       setPowerMode,
 
       renderProgress,
+
       renderPanels,
 
       renderIdentity,
+
       renderAvatar,
 
       renderRace,
+
       renderAnimalha,
 
       renderAppearance,
-      renderAppearanceFields,
-      renderAnimalhaEditor,
-      renderCharacterModel,
 
       renderClasses,
 
       renderAttributes,
+
       renderDice,
+
       renderAttributeCards,
+
       renderRadar,
 
       renderPower,
+
       renderMana,
 
       renderSkills,
+
       renderTechniques,
+
       renderInventory,
 
       renderCombat,
+
       renderReview,
 
       renderNavigation,
@@ -3384,28 +5693,49 @@
 
 
   /* =========================================================
-     INICIALIZAÇÃO
+     INIT
      ========================================================= */
+
+  function init() {
+
+    initializeVisualBindings();
+
+
+    /*
+     * O evento permite que outros módulos saibam
+     * que o renderizador está disponível.
+     */
+
+    window.dispatchEvent(
+      new CustomEvent(
+        "aerion:ficha-render:ready"
+      )
+    );
+
+
+    console.info(
+      "[AERION] ficha-render.js inicializado."
+    );
+  }
+
 
   if (
     document.readyState ===
     "loading"
   ) {
+
     document.addEventListener(
       "DOMContentLoaded",
-      initializeVisualBindings,
+      init,
       {
         once:
           true
       }
     );
+
   } else {
-    initializeVisualBindings();
+
+    init();
   }
-
-
-  console.info(
-    "[AERION] ficha-render.js carregado."
-  );
 
 })();
