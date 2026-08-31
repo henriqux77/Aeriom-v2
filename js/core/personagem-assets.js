@@ -2,52 +2,45 @@
    AERION — PERSONAGEM ASSETS
    js/core/personagem-assets.js
 
-   CATÁLOGO COMPLETO DO EDITOR DE PERSONAGEM 2D
+   CATÁLOGO DO GERADOR DE APARÊNCIA 2D
 
    Este arquivo NÃO:
    - controla a ficha;
-   - salva personagem;
+   - salva dados;
    - calcula atributos;
    - controla dados;
-   - renderiza DOM.
+   - manipula o DOM.
 
-   Este arquivo apenas DEFINE:
-   - categorias;
+   Este arquivo DEFINE:
    - peças;
+   - categorias;
    - paletas;
-   - materiais;
-   - estilos;
-   - restrições raciais;
-   - anatomias;
-   - presets;
    - camadas;
-   - opções de personalização.
+   - anatomias;
+   - restrições raciais;
+   - opções do personagem;
+   - presets;
+   - configurações do renderizador.
 
-   O personagem-render.js será responsável por
-   interpretar este catálogo.
+   O personagem-render.js interpreta este catálogo.
 
    ========================================================= */
 
 (() => {
   "use strict";
 
-
   /* =========================================================
      VERSÃO
      ========================================================= */
 
-  const VERSION = 1;
+  const VERSION = 2;
 
 
   /* =========================================================
      AUXILIARES
      ========================================================= */
 
-  function option(
-    id,
-    name,
-    extra = {}
-  ) {
+  function option(id, name, extra = {}) {
     return {
       id,
       name,
@@ -56,52 +49,40 @@
     };
   }
 
-  function palette(
-    id,
-    name,
-    colors,
-    extra = {}
-  ) {
+  function palette(id, name, colors, extra = {}) {
     return {
       id,
       name,
-      colors,
+      colors: [...colors],
       ...extra
     };
   }
 
+  function immutable(value) {
+    return Object.freeze(value);
+  }
+
 
   /* =========================================================
-     TIPOS DE CAMADA
-     =========================================================
-
-     Quanto maior o zIndex, mais à frente a peça aparece.
+     CAMADAS
      ========================================================= */
 
-  const LAYERS = Object.freeze({
-
+  const LAYERS = immutable({
     BACKGROUND: 0,
-
     SHADOW: 10,
 
-    BACK_HAIR: 20,
-
+    WINGS_BACK: 20,
     TAIL_BACK: 25,
-
-    WINGS_BACK: 30,
+    BACK_HAIR: 30,
 
     BODY: 40,
-
     BODY_MARKINGS: 45,
 
     LEGS: 50,
-
     FEET: 55,
 
     CLOTHING_UNDER: 60,
-
     CLOTHING_MAIN: 70,
-
     CLOTHING_UPPER: 80,
 
     ARMOR: 90,
@@ -109,33 +90,25 @@
     WINGS_FRONT: 95,
 
     NECK: 100,
-
     FACE: 110,
-
     EARS: 115,
-
     HORNS: 120,
 
     HAIR: 130,
-
     FACIAL_FEATURES: 140,
 
     FACE_MARKINGS: 145,
 
     HEADWEAR: 150,
-
     MASK: 155,
 
     JEWELRY: 160,
 
     ACCESSORY_BACK: 165,
-
     ACCESSORY: 170,
-
     HAND_ACCESSORY: 175,
 
     WEAPON_BACK: 180,
-
     WEAPON: 190,
 
     EFFECT: 200
@@ -146,181 +119,242 @@
      PARTES DO PERSONAGEM
      ========================================================= */
 
-  const PARTS = Object.freeze({
-
+  const PARTS = immutable({
     BODY: "body",
-
     BODY_SHAPE: "body_shape",
-
     HEAD_SHAPE: "head_shape",
 
     FACE: "face",
-
     EYES: "eyes",
-
     EYEBROWS: "eyebrows",
-
     NOSE: "nose",
-
     MOUTH: "mouth",
 
     EARS: "ears",
-
     HAIR: "hair",
-
     FACIAL_HAIR: "facial_hair",
 
     HORNS: "horns",
-
     WINGS: "wings",
-
     TAIL: "tail",
 
     SKIN: "skin",
 
     MARKINGS: "markings",
-
     BIRTHMARK: "birthmark",
-
     SCARS: "scars",
-
     TATTOOS: "tattoos",
-
     PIERCINGS: "piercings",
 
     CLOTHING_BASE: "clothing_base",
-
     SHIRT: "shirt",
-
     PANTS: "pants",
-
     SKIRT: "skirt",
-
     DRESS: "dress",
-
     COAT: "coat",
-
     CAPE: "cape",
-
     ROBE: "robe",
-
     TUNIC: "tunic",
-
     BELT: "belt",
-
     GLOVES: "gloves",
-
     BOOTS: "boots",
-
     SOCKS: "socks",
 
     ARMOR: "armor",
-
     SHOULDER_ARMOR: "shoulder_armor",
-
     CHEST_ARMOR: "chest_armor",
-
     ARM_ARMOR: "arm_armor",
-
     LEG_ARMOR: "leg_armor",
-
     HELMET: "helmet",
 
     HAT: "hat",
-
     HEADBAND: "headband",
-
     HOOD: "hood",
-
     MASK: "mask",
-
     GLASSES: "glasses",
 
     NECKLACE: "necklace",
-
     EARRINGS: "earrings",
-
     BRACELET: "bracelet",
-
     RING: "ring",
-
     WATCH: "watch",
 
     BAG: "bag",
-
     POUCH: "pouch",
-
     BACKPACK: "backpack",
-
     QUIVER: "quiver",
-
     HOLSTER: "holster",
-
     SCABBARD: "scabbard",
 
     WEAPON: "weapon",
-
     OFF_HAND: "off_hand",
-
     TRINKET: "trinket",
-
     PROP: "prop"
   });
+
+
+  /* =========================================================
+     CATEGORIAS VISUAIS
+     ========================================================= */
+
+  const CATEGORIES = immutable([
+    {
+      id: "body",
+      name: "Corpo",
+      description: "Forma e proporções corporais.",
+      order: 10
+    },
+
+    {
+      id: "skin",
+      name: "Pele",
+      description: "Tom e variações raciais.",
+      order: 20
+    },
+
+    {
+      id: "face",
+      name: "Rosto",
+      description: "Formato do rosto e características faciais.",
+      order: 30
+    },
+
+    {
+      id: "eyes",
+      name: "Olhos",
+      description: "Formato, cor e detalhes dos olhos.",
+      order: 40
+    },
+
+    {
+      id: "hair",
+      name: "Cabelo",
+      description: "Estilo, comprimento e cor.",
+      order: 50
+    },
+
+    {
+      id: "facial_hair",
+      name: "Pelos",
+      description: "Barba, bigode e pelos faciais.",
+      order: 60
+    },
+
+    {
+      id: "anatomy",
+      name: "Anatomia racial",
+      description: "Orelhas, chifres, asas, caudas e outras partes.",
+      order: 70
+    },
+
+    {
+      id: "markings",
+      name: "Marcas",
+      description: "Manchas, marcas de nascença e padrões.",
+      order: 80
+    },
+
+    {
+      id: "scars",
+      name: "Cicatrizes",
+      description: "Cicatrizes e marcas adquiridas.",
+      order: 90
+    },
+
+    {
+      id: "tattoos",
+      name: "Tatuagens",
+      description: "Desenhos e símbolos corporais.",
+      order: 100
+    },
+
+    {
+      id: "piercings",
+      name: "Piercings",
+      description: "Piercings e joias corporais.",
+      order: 110
+    },
+
+    {
+      id: "clothing",
+      name: "Roupas",
+      description: "Vestimenta principal.",
+      order: 120
+    },
+
+    {
+      id: "armor",
+      name: "Armadura",
+      description: "Proteções visuais e equipamentos.",
+      order: 130
+    },
+
+    {
+      id: "headwear",
+      name: "Cabeça",
+      description: "Chapéus, capuzes, máscaras e óculos.",
+      order: 140
+    },
+
+    {
+      id: "jewelry",
+      name: "Acessórios",
+      description: "Joias e acessórios.",
+      order: 150
+    },
+
+    {
+      id: "equipment",
+      name: "Equipamentos",
+      description: "Bolsas, mochilas, armas e objetos.",
+      order: 160
+    }
+  ]);
 
 
   /* =========================================================
      MORFOLOGIA
      ========================================================= */
 
-  const BODY_TYPES = Object.freeze([
-    option(
-      "slim",
-      "Delgado",
-      {
-        description:
-          "Estrutura corporal mais estreita."
-      }
-    ),
+  const BODY_TYPES = immutable([
+    option("slim", "Delgado", {
+      description:
+        "Estrutura mais estreita.",
+      width:
+        0.88
+    }),
 
-    option(
-      "lean",
-      "Atlético",
-      {
-        description:
-          "Corpo definido e equilibrado."
-      }
-    ),
+    option("lean", "Atlético", {
+      description:
+        "Estrutura definida e equilibrada.",
+      width:
+        0.95
+    }),
 
-    option(
-      "average",
-      "Médio",
-      {
-        description:
-          "Proporção corporal equilibrada."
-      }
-    ),
+    option("average", "Médio", {
+      description:
+        "Proporção equilibrada.",
+      width:
+        1
+    }),
 
-    option(
-      "broad",
-      "Robusto",
-      {
-        description:
-          "Estrutura corporal mais larga."
-      }
-    ),
+    option("broad", "Robusto", {
+      description:
+        "Ombros e tronco mais largos.",
+      width:
+        1.12
+    }),
 
-    option(
-      "heavy",
-      "Pesado",
-      {
-        description:
-          "Estrutura corporal volumosa."
-      }
-    )
+    option("heavy", "Pesado", {
+      description:
+        "Estrutura corporal volumosa.",
+      width:
+        1.20
+    })
   ]);
 
 
-  const BODY_PROPORTIONS = Object.freeze({
+  const BODY_PROPORTIONS = immutable({
     height: {
       min: 0.75,
       max: 1.25
@@ -359,10 +393,10 @@
 
 
   /* =========================================================
-     TOM DE PELE — PALETAS RACIAIS
+     PALETAS RACIAIS DE PELE
      ========================================================= */
 
-  const SKIN_PALETTES = Object.freeze({
+  const SKIN_PALETTES = immutable({
 
     humana: palette(
       "humana",
@@ -411,8 +445,7 @@
         "#879f67",
         "#708851",
         "#5c733f",
-        "#4b6036",
-        "#7d8c67"
+        "#4b6036"
       ]
     ),
 
@@ -431,7 +464,7 @@
 
     animalia: palette(
       "animalia",
-      "Animalia",
+      "Animalha",
       [
         "#f0d2b6",
         "#cda17c",
@@ -475,173 +508,48 @@
      CABELOS
      ========================================================= */
 
-  const HAIR_STYLES = Object.freeze([
+  const HAIR_STYLES = immutable([
 
-    option(
-      "bald",
-      "Careca",
-      {
-        layer:
-          LAYERS.HAIR
-      }
-    ),
+    option("bald", "Careca"),
 
-    option(
-      "short",
-      "Curto",
-      {
-        layer:
-          LAYERS.HAIR
-      }
-    ),
+    option("short", "Curto"),
 
-    option(
-      "short_textured",
-      "Curto texturizado",
-      {
-        layer:
-          LAYERS.HAIR
-      }
-    ),
+    option("short_textured", "Curto texturizado"),
 
-    option(
-      "medium",
-      "Médio",
-      {
-        layer:
-          LAYERS.HAIR
-      }
-    ),
+    option("medium", "Médio"),
 
-    option(
-      "long",
-      "Longo",
-      {
-        layer:
-          LAYERS.HAIR
-      }
-    ),
+    option("long", "Longo"),
 
-    option(
-      "very_long",
-      "Muito longo",
-      {
-        layer:
-          LAYERS.HAIR
-      }
-    ),
+    option("very_long", "Muito longo"),
 
-    option(
-      "ponytail",
-      "Rabo de cavalo",
-      {
-        layer:
-          LAYERS.HAIR
-      }
-    ),
+    option("ponytail", "Rabo de cavalo"),
 
-    option(
-      "high_ponytail",
-      "Rabo de cavalo alto",
-      {
-        layer:
-          LAYERS.HAIR
-      }
-    ),
+    option("high_ponytail", "Rabo de cavalo alto"),
 
-    option(
-      "braid",
-      "Trança",
-      {
-        layer:
-          LAYERS.HAIR
-      }
-    ),
+    option("braid", "Trança"),
 
-    option(
-      "multiple_braids",
-      "Tranças múltiplas",
-      {
-        layer:
-          LAYERS.HAIR
-      }
-    ),
+    option("multiple_braids", "Tranças múltiplas"),
 
-    option(
-      "bun",
-      "Coque",
-      {
-        layer:
-          LAYERS.HAIR
-      }
-    ),
+    option("bun", "Coque"),
 
-    option(
-      "half_up",
-      "Preso parcialmente",
-      {
-        layer:
-          LAYERS.HAIR
-      }
-    ),
+    option("half_up", "Preso parcialmente"),
 
-    option(
-      "messy",
-      "Desgrenhado",
-      {
-        layer:
-          LAYERS.HAIR
-      }
-    ),
+    option("messy", "Desgrenhado"),
 
-    option(
-      "mohawk",
-      "Moicano",
-      {
-        layer:
-          LAYERS.HAIR
-      }
-    ),
+    option("mohawk", "Moicano"),
 
-    option(
-      "undercut",
-      "Undercut",
-      {
-        layer:
-          LAYERS.HAIR
-      }
-    ),
+    option("undercut", "Undercut"),
 
-    option(
-      "dreadlocks",
-      "Dreadlocks",
-      {
-        layer:
-          LAYERS.HAIR
-      }
-    ),
+    option("dreadlocks", "Dreadlocks"),
 
-    option(
-      "curly",
-      "Cacheado",
-      {
-        layer:
-          LAYERS.HAIR
-      }
-    ),
+    option("curly", "Cacheado"),
 
-    option(
-      "wavy",
-      "Ondulado",
-      {
-        layer:
-          LAYERS.HAIR
-      }
-    )
+    option("wavy", "Ondulado")
   ]);
 
 
-  const HAIR_COLORS = Object.freeze([
+  const HAIR_COLORS = immutable([
+
     palette(
       "black",
       "Preto",
@@ -723,62 +631,19 @@
 
 
   /* =========================================================
-     PELOS FACIAIS
-     ========================================================= */
-
-  const FACIAL_HAIR = Object.freeze([
-
-    option(
-      "none",
-      "Nenhum"
-    ),
-
-    option(
-      "stubble",
-      "Barba por fazer"
-    ),
-
-    option(
-      "short_beard",
-      "Barba curta"
-    ),
-
-    option(
-      "full_beard",
-      "Barba cheia"
-    ),
-
-    option(
-      "long_beard",
-      "Barba longa"
-    ),
-
-    option(
-      "goatee",
-      "Cavanhaque"
-    ),
-
-    option(
-      "mustache",
-      "Bigode"
-    ),
-
-    option(
-      "braided_beard",
-      "Barba trançada"
-    )
-  ]);
-
-
-  /* =========================================================
      OLHOS
      ========================================================= */
 
-  const EYE_SHAPES = Object.freeze([
+  const EYE_SHAPES = immutable([
 
     option(
       "normal",
       "Normal"
+    ),
+
+    option(
+      "large",
+      "Arregalado"
     ),
 
     option(
@@ -787,1584 +652,8 @@
     ),
 
     option(
-      "large",
-      "Grande"
-    ),
-
-    option(
-      "round",
-      "Arredondado"
-    ),
-
-    option(
-      "sharp",
-      "Afiado"
-    ),
-
-    option(
-      "hooded",
-      "Encapuzado"
-    ),
-
-    option(
       "almond",
       "Amendoado"
-    )
-  ]);
-
-
-  const EYE_COLORS = Object.freeze([
-    palette(
-      "brown",
-      "Castanho",
-      ["#4b3024"]
-    ),
-
-    palette(
-      "dark_brown",
-      "Castanho escuro",
-      ["#251913"]
-    ),
-
-    palette(
-      "black",
-      "Preto",
-      ["#101010"]
-    ),
-
-    palette(
-      "blue",
-      "Azul",
-      ["#6e99bd"]
-    ),
-
-    palette(
-      "light_blue",
-      "Azul claro",
-      ["#a9d3e5"]
-    ),
-
-    palette(
-      "green",
-      "Verde",
-      ["#6d9669"]
-    ),
-
-    palette(
-      "gray",
-      "Cinza",
-      ["#929895"]
-    ),
-
-    palette(
-      "amber",
-      "Âmbar",
-      ["#bd8b3f"]
-    ),
-
-    palette(
-      "red",
-      "Vermelho",
-      ["#a84f49"]
-    ),
-
-    palette(
-      "violet",
-      "Violeta",
-      ["#8664a7"]
-    )
-  ]);
-
-
-  /* =========================================================
-     SOBRANCELHAS
-     ========================================================= */
-
-  const EYEBROWS = Object.freeze([
-
-    option(
-      "natural",
-      "Natural"
-    ),
-
-    option(
-      "straight",
-      "Reta"
-    ),
-
-    option(
-      "arched",
-      "Arqueada"
-    ),
-
-    option(
-      "thick",
-      "Grossa"
-    ),
-
-    option(
-      "thin",
-      "Fina"
-    ),
-
-    option(
-      "scarred",
-      "Marcada"
-    )
-  ]);
-
-
-  /* =========================================================
-     NARIZES
-     ========================================================= */
-
-  const NOSES = Object.freeze([
-
-    option(
-      "small",
-      "Pequeno"
-    ),
-
-    option(
-      "medium",
-      "Médio"
-    ),
-
-    option(
-      "broad",
-      "Largo"
-    ),
-
-    option(
-      "long",
-      "Longo"
-    ),
-
-    option(
-      "sharp",
-      "Afiado"
-    ),
-
-    option(
-      "rounded",
-      "Arredondado"
-    ),
-
-    option(
-      "strong",
-      "Marcante"
-    )
-  ]);
-
-
-  /* =========================================================
-     BOCAS
-     ========================================================= */
-
-  const MOUTHS = Object.freeze([
-
-    option(
-      "natural",
-      "Natural"
-    ),
-
-    option(
-      "small",
-      "Pequena"
-    ),
-
-    option(
-      "wide",
-      "Larga"
-    ),
-
-    option(
-      "thin",
-      "Lábios finos"
-    ),
-
-    option(
-      "full",
-      "Lábios marcados"
-    ),
-
-    option(
-      "smile",
-      "Sorriso"
-    ),
-
-    option(
-      "serious",
-      "Séria"
-    )
-  ]);
-
-
-  /* =========================================================
-     ORELHAS HUMANAS
-     ========================================================= */
-
-  const HUMAN_EARS = Object.freeze([
-
-    option(
-      "normal",
-      "Normal"
-    ),
-
-    option(
-      "small",
-      "Pequena"
-    ),
-
-    option(
-      "large",
-      "Grande"
-    )
-  ]);
-
-
-  /* =========================================================
-     ORELHAS ÉLFICAS
-     ========================================================= */
-
-  const ELF_EARS = Object.freeze([
-
-    option(
-      "short",
-      "Élfica curta"
-    ),
-
-    option(
-      "medium",
-      "Élfica média"
-    ),
-
-    option(
-      "long",
-      "Élfica longa"
-    ),
-
-    option(
-      "very_long",
-      "Élfica longa"
-    )
-  ]);
-
-
-  /* =========================================================
-     CHIFRES
-     ========================================================= */
-
-  const HORN_STYLES = Object.freeze([
-
-    option(
-      "none",
-      "Nenhum"
-    ),
-
-    option(
-      "small",
-      "Pequenos"
-    ),
-
-    option(
-      "curved",
-      "Curvos"
-    ),
-
-    option(
-      "straight",
-      "Retos"
-    ),
-
-    option(
-      "backward",
-      "Voltados para trás"
-    ),
-
-    option(
-      "ram",
-      "Carneiro"
-    ),
-
-    option(
-      "antler",
-      "Galhada"
-    ),
-
-    option(
-      "large",
-      "Grandes"
-    )
-  ]);
-
-
-  /* =========================================================
-     ASAS
-     ========================================================= */
-
-  const WING_TYPES = Object.freeze([
-
-    option(
-      "none",
-      "Nenhuma"
-    ),
-
-    option(
-      "feather_small",
-      "Asas de penas pequenas"
-    ),
-
-    option(
-      "feather_medium",
-      "Asas de penas médias"
-    ),
-
-    option(
-      "feather_large",
-      "Asas de penas grandes"
-    ),
-
-    option(
-      "fairy",
-      "Asas feéricas"
-    ),
-
-    option(
-      "bat",
-      "Asas membranosas"
-    ),
-
-    option(
-      "insect",
-      "Asas de inseto"
-    ),
-
-    option(
-      "bird",
-      "Asas aviárias"
-    )
-  ]);
-
-
-  /* =========================================================
-     CAUDAS
-     ========================================================= */
-
-  const TAIL_TYPES = Object.freeze([
-
-    option(
-      "none",
-      "Nenhuma"
-    ),
-
-    option(
-      "feline",
-      "Felina"
-    ),
-
-    option(
-      "canine",
-      "Canídea"
-    ),
-
-    option(
-      "fox",
-      "Raposa"
-    ),
-
-    option(
-      "wolf",
-      "Lobo"
-    ),
-
-    option(
-      "bird",
-      "Aviária"
-    ),
-
-    option(
-      "reptile",
-      "Réptil"
-    ),
-
-    option(
-      "dragon",
-      "Dracônica"
-    ),
-
-    option(
-      "long",
-      "Longa"
-    ),
-
-    option(
-      "thin",
-      "Fina"
-    ),
-
-    option(
-      "thick",
-      "Grossa"
-    )
-  ]);
-
-
-  /* =========================================================
-     PELAGEM
-     ========================================================= */
-
-  const FUR_COLORS = Object.freeze([
-
-    palette(
-      "black",
-      "Preto",
-      ["#171614"]
-    ),
-
-    palette(
-      "white",
-      "Branco",
-      ["#e1ded5"]
-    ),
-
-    palette(
-      "gray",
-      "Cinza",
-      ["#888985"]
-    ),
-
-    palette(
-      "silver",
-      "Prateado",
-      ["#a8aaa6"]
-    ),
-
-    palette(
-      "brown",
-      "Marrom",
-      ["#76513b"]
-    ),
-
-    palette(
-      "dark_brown",
-      "Marrom escuro",
-      ["#4b3328"]
-    ),
-
-    palette(
-      "red",
-      "Avermelhado",
-      ["#8f513d"]
-    ),
-
-    palette(
-      "gold",
-      "Dourado",
-      ["#b8914b"]
-    ),
-
-    palette(
-      "cream",
-      "Creme",
-      ["#d8c5a6"]
-    )
-  ]);
-
-
-  /* =========================================================
-     PADRÕES ANIMAIS
-     ========================================================= */
-
-  const ANIMAL_MARKINGS = Object.freeze([
-
-    option(
-      "none",
-      "Sem padrão"
-    ),
-
-    option(
-      "spots",
-      "Manchas"
-    ),
-
-    option(
-      "large_spots",
-      "Manchas grandes"
-    ),
-
-    option(
-      "stripes",
-      "Listras"
-    ),
-
-    option(
-      "thin_stripes",
-      "Listras finas"
-    ),
-
-    option(
-      "tiger",
-      "Tigrado"
-    ),
-
-    option(
-      "leopard",
-      "Leopardo"
-    ),
-
-    option(
-      "rosette",
-      "Rosetas"
-    ),
-
-    option(
-      "gradient",
-      "Gradiente"
-    ),
-
-    option(
-      "countershade",
-      "Barriga contrastante"
-    ),
-
-    option(
-      "mask",
-      "Máscara facial"
-    ),
-
-    option(
-      "chest",
-      "Peito contrastante"
-    )
-  ]);
-
-
-  /* =========================================================
-     MANCHAS CORPORAIS
-     ========================================================= */
-
-  const BODY_MARKING_TYPES = Object.freeze([
-
-    option(
-      "none",
-      "Nenhuma"
-    ),
-
-    option(
-      "freckles",
-      "Sardas"
-    ),
-
-    option(
-      "face_spots",
-      "Manchas faciais"
-    ),
-
-    option(
-      "body_spots",
-      "Manchas corporais"
-    ),
-
-    option(
-      "shoulder_marks",
-      "Marcas nos ombros"
-    ),
-
-    option(
-      "back_marks",
-      "Marcas nas costas"
-    ),
-
-    option(
-      "arms_marks",
-      "Marcas nos braços"
-    ),
-
-    option(
-      "legs_marks",
-      "Marcas nas pernas"
-    ),
-
-    option(
-      "birthmark",
-      "Marca corporal"
-    )
-  ]);
-
-
-  /* =========================================================
-     MARCAS DE NASCENÇA
-     ========================================================= */
-
-  const BIRTHMARKS = Object.freeze([
-
-    option(
-      "none",
-      "Nenhuma"
-    ),
-
-    option(
-      "small_face",
-      "Pequena — rosto"
-    ),
-
-    option(
-      "large_face",
-      "Grande — rosto"
-    ),
-
-    option(
-      "neck",
-      "Pescoço"
-    ),
-
-    option(
-      "shoulder",
-      "Ombro"
-    ),
-
-    option(
-      "chest",
-      "Peito"
-    ),
-
-    option(
-      "back",
-      "Costas"
-    ),
-
-    option(
-      "arm",
-      "Braço"
-    ),
-
-    option(
-      "hand",
-      "Mão"
-    ),
-
-    option(
-      "leg",
-      "Perna"
-    )
-  ]);
-
-
-  /* =========================================================
-     CICATRIZES
-     ========================================================= */
-
-  const SCAR_TYPES = Object.freeze([
-
-    option(
-      "none",
-      "Nenhuma"
-    ),
-
-    option(
-      "face",
-      "Rosto"
-    ),
-
-    option(
-      "eye",
-      "Olho"
-    ),
-
-    option(
-      "cheek",
-      "Bochecha"
-    ),
-
-    option(
-      "mouth",
-      "Próximo à boca"
-    ),
-
-    option(
-      "neck",
-      "Pescoço"
-    ),
-
-    option(
-      "chest",
-      "Peito"
-    ),
-
-    option(
-      "back",
-      "Costas"
-    ),
-
-    option(
-      "arm",
-      "Braço"
-    ),
-
-    option(
-      "hand",
-      "Mão"
-    ),
-
-    option(
-      "leg",
-      "Perna"
-    ),
-
-    option(
-      "multiple",
-      "Múltiplas"
-    )
-  ]);
-
-
-  /* =========================================================
-     TATUAGENS
-     ========================================================= */
-
-  const TATTOO_TYPES = Object.freeze([
-
-    option(
-      "none",
-      "Nenhuma"
-    ),
-
-    option(
-      "symbol",
-      "Símbolo"
-    ),
-
-    option(
-      "tribal",
-      "Tribal"
-    ),
-
-    option(
-      "geometric",
-      "Geométrica"
-    ),
-
-    option(
-      "runic",
-      "Rúnica"
-    ),
-
-    option(
-      "religious",
-      "Religiosa"
-    ),
-
-    option(
-      "nature",
-      "Natural"
-    ),
-
-    option(
-      "animal",
-      "Animal"
-    ),
-
-    option(
-      "floral",
-      "Floral"
-    ),
-
-    option(
-      "full_arm",
-      "Fechamento de braço"
-    ),
-
-    option(
-      "full_back",
-      "Costas"
-    )
-  ]);
-
-
-  const TATTOO_LOCATIONS = Object.freeze([
-
-    option(
-      "face",
-      "Rosto"
-    ),
-
-    option(
-      "neck",
-      "Pescoço"
-    ),
-
-    option(
-      "shoulder",
-      "Ombro"
-    ),
-
-    option(
-      "chest",
-      "Peito"
-    ),
-
-    option(
-      "back",
-      "Costas"
-    ),
-
-    option(
-      "arm",
-      "Braço"
-    ),
-
-    option(
-      "forearm",
-      "Antebraço"
-    ),
-
-    option(
-      "hand",
-      "Mão"
-    ),
-
-    option(
-      "leg",
-      "Perna"
-    ),
-
-    option(
-      "calf",
-      "Panturrilha"
-    )
-  ]);
-
-
-  /* =========================================================
-     PIERCINGS
-     ========================================================= */
-
-  const PIERCINGS = Object.freeze([
-
-    option(
-      "none",
-      "Nenhum"
-    ),
-
-    option(
-      "ear",
-      "Orelha"
-    ),
-
-    option(
-      "multiple_ear",
-      "Múltiplos na orelha"
-    ),
-
-    option(
-      "nose",
-      "Nariz"
-    ),
-
-    option(
-      "lip",
-      "Lábio"
-    ),
-
-    option(
-      "brow",
-      "Sobrancelha"
-    ),
-
-    option(
-      "septum",
-      "Septo"
-    ),
-
-    option(
-      "face",
-      "Facial"
-    )
-  ]);
-
-
-  /* =========================================================
-     ROUPAS BASE
-     ========================================================= */
-
-  const CLOTHING_STYLES = Object.freeze([
-
-    option(
-      "none",
-      "Nenhuma"
-    ),
-
-    option(
-      "casual",
-      "Casual"
-    ),
-
-    option(
-      "adventurer",
-      "Aventureiro"
-    ),
-
-    option(
-      "traveler",
-      "Viajante"
-    ),
-
-    option(
-      "merchant",
-      "Mercador"
-    ),
-
-    option(
-      "noble",
-      "Nobre"
-    ),
-
-    option(
-      "scholar",
-      "Estudioso"
-    ),
-
-    option(
-      "priest",
-      "Sacerdotal"
-    ),
-
-    option(
-      "military",
-      "Militar"
-    ),
-
-    option(
-      "warrior",
-      "Guerreiro"
-    ),
-
-    option(
-      "mage",
-      "Mago"
-    ),
-
-    option(
-      "healer",
-      "Curandeiro"
-    ),
-
-    option(
-      "monk",
-      "Monge"
-    ),
-
-    option(
-      "thief",
-      "Ladino"
-    )
-  ]);
-
-
-  /* =========================================================
-     CAMISAS / PARTE SUPERIOR
-     ========================================================= */
-
-  const SHIRTS = Object.freeze([
-
-    option(
-      "plain",
-      "Camisa simples"
-    ),
-
-    option(
-      "linen",
-      "Linho"
-    ),
-
-    option(
-      "shirt_open",
-      "Camisa aberta"
-    ),
-
-    option(
-      "tunic",
-      "Túnica"
-    ),
-
-    option(
-      "undershirt",
-      "Camiseta"
-    ),
-
-    option(
-      "vest",
-      "Colete"
-    ),
-
-    option(
-      "formal",
-      "Formal"
-    ),
-
-    option(
-      "battle",
-      "Combate"
-    ),
-
-    option(
-      "long_sleeve",
-      "Manga longa"
-    ),
-
-    option(
-      "short_sleeve",
-      "Manga curta"
-    )
-  ]);
-
-
-  /* =========================================================
-     CALÇAS
-     ========================================================= */
-
-  const PANTS = Object.freeze([
-
-    option(
-      "simple",
-      "Simples"
-    ),
-
-    option(
-      "traveler",
-      "Viajante"
-    ),
-
-    option(
-      "combat",
-      "Combate"
-    ),
-
-    option(
-      "loose",
-      "Larga"
-    ),
-
-    option(
-      "tight",
-      "Justa"
-    ),
-
-    option(
-      "formal",
-      "Formal"
-    ),
-
-    option(
-      "shorts",
-      "Curta"
-    )
-  ]);
-
-
-  /* =========================================================
-     VESTIDOS / SAIAS
-     ========================================================= */
-
-  const DRESSES = Object.freeze([
-
-    option(
-      "simple",
-      "Simples"
-    ),
-
-    option(
-      "formal",
-      "Formal"
-    ),
-
-    option(
-      "adventurer",
-      "Aventureira"
-    ),
-
-    option(
-      "ceremonial",
-      "Cerimonial"
-    ),
-
-    option(
-      "traveler",
-      "Viajante"
-    )
-  ]);
-
-
-  /* =========================================================
-     CASACOS / MANTOS
-     ========================================================= */
-
-  const COATS = Object.freeze([
-
-    option(
-      "none",
-      "Nenhum"
-    ),
-
-    option(
-      "short",
-      "Curto"
-    ),
-
-    option(
-      "long",
-      "Longo"
-    ),
-
-    option(
-      "leather",
-      "Couro"
-    ),
-
-    option(
-      "fur",
-      "Peles"
-    ),
-
-    option(
-      "formal",
-      "Formal"
-    ),
-
-    option(
-      "traveler",
-      "Viajante"
-    )
-  ]);
-
-
-  const CAPES = Object.freeze([
-
-    option(
-      "none",
-      "Nenhuma"
-    ),
-
-    option(
-      "short",
-      "Curta"
-    ),
-
-    option(
-      "long",
-      "Longa"
-    ),
-
-    option(
-      "hooded",
-      "Com capuz"
-    ),
-
-    option(
-      "ceremonial",
-      "Cerimonial"
-    )
-  ]);
-
-
-  const ROBES = Object.freeze([
-
-    option(
-      "simple",
-      "Simples"
-    ),
-
-    option(
-      "mage",
-      "Mago"
-    ),
-
-    option(
-      "priest",
-      "Sacerdotal"
-    ),
-
-    option(
-      "scholar",
-      "Estudioso"
-    ),
-
-    option(
-      "ceremonial",
-      "Cerimonial"
-    )
-  ]);
-
-
-  /* =========================================================
-     CINTOS
-     ========================================================= */
-
-  const BELTS = Object.freeze([
-
-    option(
-      "none",
-      "Nenhum"
-    ),
-
-    option(
-      "simple",
-      "Simples"
-    ),
-
-    option(
-      "leather",
-      "Couro"
-    ),
-
-    option(
-      "heavy",
-      "Pesado"
-    ),
-
-    option(
-      "utility",
-      "Utilitário"
-    ),
-
-    option(
-      "ornate",
-      "Ornamentado"
-    )
-  ]);
-
-
-  /* =========================================================
-     LUVAS
-     ========================================================= */
-
-  const GLOVES = Object.freeze([
-
-    option(
-      "none",
-      "Nenhuma"
-    ),
-
-    option(
-      "cloth",
-      "Tecido"
-    ),
-
-    option(
-      "leather",
-      "Couro"
-    ),
-
-    option(
-      "combat",
-      "Combate"
-    ),
-
-    option(
-      "fingerless",
-      "Sem dedos"
-    ),
-
-    option(
-      "armored",
-      "Blindadas"
-    )
-  ]);
-
-
-  /* =========================================================
-     BOTAS
-     ========================================================= */
-
-  const BOOTS = Object.freeze([
-
-    option(
-      "barefoot",
-      "Descalço"
-    ),
-
-    option(
-      "simple",
-      "Simples"
-    ),
-
-    option(
-      "leather",
-      "Couro"
-    ),
-
-    option(
-      "traveler",
-      "Viajante"
-    ),
-
-    option(
-      "combat",
-      "Combate"
-    ),
-
-    option(
-      "heavy",
-      "Pesadas"
-    ),
-
-    option(
-      "armored",
-      "Blindadas"
-    )
-  ]);
-
-
-  /* =========================================================
-     ARMADURAS
-     ========================================================= */
-
-  const ARMOR_STYLES = Object.freeze([
-
-    option(
-      "none",
-      "Nenhuma"
-    ),
-
-    option(
-      "light",
-      "Leve"
-    ),
-
-    option(
-      "medium",
-      "Média"
-    ),
-
-    option(
-      "heavy",
-      "Pesada"
-    ),
-
-    option(
-      "leather",
-      "Couro"
-    ),
-
-    option(
-      "chainmail",
-      "Cota de malha"
-    ),
-
-    option(
-      "plate",
-      "Placas"
-    ),
-
-    option(
-      "ornate",
-      "Ornamentada"
-    ),
-
-    option(
-      "tribal",
-      "Tribal"
-    ),
-
-    option(
-      "magical",
-      "Mística"
-    )
-  ]);
-
-
-  /* =========================================================
-     CAPACETES
-     ========================================================= */
-
-  const HELMETS = Object.freeze([
-
-    option(
-      "none",
-      "Nenhum"
-    ),
-
-    option(
-      "simple",
-      "Capacete simples"
-    ),
-
-    option(
-      "open",
-      "Capacete aberto"
-    ),
-
-    option(
-      "closed",
-      "Capacete fechado"
-    ),
-
-    option(
-      "knight",
-      "Cavaleiro"
-    ),
-
-    option(
-      "horned",
-      "Chifrado"
-    ),
-
-    option(
-      "greathelm",
-      "Elmo fechado"
-    )
-  ]);
-
-
-  /* =========================================================
-     CHAPÉUS
-     ========================================================= */
-
-  const HATS = Object.freeze([
-
-    option(
-      "none",
-      "Nenhum"
-    ),
-
-    option(
-      "wide_brim",
-      "Aba larga"
-    ),
-
-    option(
-      "traveler",
-      "Viajante"
-    ),
-
-    option(
-      "witch",
-      "Bruxa"
-    ),
-
-    option(
-      "mage",
-      "Mago"
-    ),
-
-    option(
-      "straw",
-      "Palha"
-    ),
-
-    option(
-      "fedora",
-      "Chapéu clássico"
-    ),
-
-    option(
-      "formal",
-      "Formal"
-    ),
-
-    option(
-      "military",
-      "Militar"
-    )
-  ]);
-
-
-  /* =========================================================
-     CAPUZES
-     ========================================================= */
-
-  const HOODS = Object.freeze([
-
-    option(
-      "none",
-      "Nenhum"
-    ),
-
-    option(
-      "simple",
-      "Simples"
-    ),
-
-    option(
-      "cloak",
-      "Capuz de manto"
-    ),
-
-    option(
-      "deep",
-      "Capuz profundo"
-    ),
-
-    option(
-      "traveler",
-      "Viajante"
-    )
-  ]);
-
-
-  /* =========================================================
-     MÁSCARAS
-     ========================================================= */
-
-  const MASKS = Object.freeze([
-
-    option(
-      "none",
-      "Nenhuma"
-    ),
-
-    option(
-      "cloth",
-      "Tecido"
-    ),
-
-    option(
-      "half",
-      "Meia máscara"
-    ),
-
-    option(
-      "full",
-      "Máscara completa"
-    ),
-
-    option(
-      "ceremonial",
-      "Cerimonial"
-    ),
-
-    option(
-      "war",
-      "Máscara de guerra"
-    ),
-
-    option(
-      "metal",
-      "Metálica"
-    ),
-
-    option(
-      "ornate",
-      "Ornamentada"
-    ),
-
-    option(
-      "animal",
-      "Máscara animal"
-    )
-  ]);
-
-
-  /* =========================================================
-     ÓCULOS
-     ========================================================= */
-
-  const GLASSES = Object.freeze([
-
-    option(
-      "none",
-      "Nenhum"
     ),
 
     option(
@@ -2373,265 +662,658 @@
     ),
 
     option(
-      "square",
-      "Quadrado"
+      "sharp",
+      "Afiado"
     ),
 
     option(
-      "thin",
-      "Fino"
+      "sleepy",
+      "Cansado"
     ),
 
     option(
-      "goggles",
-      "Óculos de proteção"
+      "deep_set",
+      "Profundo"
+    )
+  ]);
+
+
+  const EYE_COLORS = immutable([
+
+    palette(
+      "brown",
+      "Castanho",
+      ["#5c4030"]
     ),
 
-    option(
-      "monocle",
-      "Monóculo"
+    palette(
+      "dark_brown",
+      "Castanho escuro",
+      ["#2f211b"]
+    ),
+
+    palette(
+      "black",
+      "Preto",
+      ["#11100f"]
+    ),
+
+    palette(
+      "blue",
+      "Azul",
+      ["#4d79a5"]
+    ),
+
+    palette(
+      "green",
+      "Verde",
+      ["#648c57"]
+    ),
+
+    palette(
+      "amber",
+      "Âmbar",
+      ["#b1843a"]
+    ),
+
+    palette(
+      "gray",
+      "Cinza",
+      ["#8b918e"]
+    ),
+
+    palette(
+      "violet",
+      "Violeta",
+      ["#765b8c"]
+    ),
+
+    palette(
+      "red",
+      "Vermelho",
+      ["#9d5149"]
+    ),
+
+    palette(
+      "gold",
+      "Dourado",
+      ["#d4b04f"]
     )
   ]);
 
 
   /* =========================================================
-     COLARES
+     ROSTO
      ========================================================= */
 
-  const NECKLACES = Object.freeze([
+  const FACE_SHAPES = immutable([
 
-    option(
-      "none",
-      "Nenhum"
-    ),
+    option("round", "Redondo"),
 
-    option(
-      "simple",
-      "Simples"
-    ),
+    option("oval", "Oval"),
 
-    option(
-      "pendant",
-      "Pingente"
-    ),
+    option("square", "Quadrado"),
 
-    option(
-      "amulet",
-      "Amuleto"
-    ),
+    option("long", "Alongado"),
 
-    option(
-      "chain",
-      "Corrente"
-    ),
+    option("heart", "Coração"),
 
-    option(
-      "beads",
-      "Contas"
-    ),
+    option("diamond", "Diamante"),
 
-    option(
-      "ornate",
-      "Ornamentado"
-    )
+    option("angular", "Angular")
+  ]);
+
+
+  const NOSE_SHAPES = immutable([
+
+    option("small", "Pequeno"),
+
+    option("straight", "Reto"),
+
+    option("wide", "Largo"),
+
+    option("sharp", "Afiado"),
+
+    option("long", "Longo"),
+
+    option("upturned", "Empinado")
+  ]);
+
+
+  const MOUTH_SHAPES = immutable([
+
+    option("small", "Pequena"),
+
+    option("normal", "Normal"),
+
+    option("full", "Cheia"),
+
+    option("wide", "Larga"),
+
+    option("thin", "Fina")
+  ]);
+
+
+  const EYEBROWS = immutable([
+
+    option("straight", "Reta"),
+
+    option("soft", "Suave"),
+
+    option("thick", "Grossa"),
+
+    option("thin", "Fina"),
+
+    option("arched", "Arqueada"),
+
+    option("sharp", "Afiada")
   ]);
 
 
   /* =========================================================
-     BRINCOS
+     PELOS FACIAIS
      ========================================================= */
 
-  const EARRINGS = Object.freeze([
+  const FACIAL_HAIR = immutable([
 
-    option(
-      "none",
-      "Nenhum"
-    ),
+    option("none", "Nenhum"),
 
-    option(
-      "stud",
-      "Ponto"
-    ),
+    option("stubble", "Barba por fazer"),
 
-    option(
-      "small_ring",
-      "Argola pequena"
-    ),
+    option("short_beard", "Barba curta"),
 
-    option(
-      "large_ring",
-      "Argola grande"
-    ),
+    option("full_beard", "Barba cheia"),
 
-    option(
-      "ornate",
-      "Ornamentado"
-    )
+    option("long_beard", "Barba longa"),
+
+    option("goatee", "Cavanhaque"),
+
+    option("mustache", "Bigode"),
+
+    option("braided_beard", "Barba trançada"),
+
+    option("sideburns", "Costeletas")
   ]);
 
 
   /* =========================================================
-     BRACELETES
+     ORELHAS
      ========================================================= */
 
-  const BRACELETS = Object.freeze([
+  const EAR_TYPES = immutable([
 
-    option(
-      "none",
-      "Nenhum"
-    ),
+    option("human", "Humana"),
 
-    option(
-      "leather",
-      "Couro"
-    ),
+    option("round", "Arredondada"),
 
-    option(
-      "metal",
-      "Metal"
-    ),
+    option("pointed_short", "Pontuda curta"),
 
-    option(
-      "beads",
-      "Contas"
-    ),
+    option("pointed_long", "Pontuda longa"),
 
-    option(
-      "ornate",
-      "Ornamentado"
-    )
+    option("animal", "Animal"),
+
+    option("feline", "Felina"),
+
+    option("canine", "Canina"),
+
+    option("rabbit", "Coelho"),
+
+    option("fox", "Raposa")
   ]);
 
 
   /* =========================================================
-     ANÉIS
+     CHIFRES
      ========================================================= */
 
-  const RINGS = Object.freeze([
+  const HORN_TYPES = immutable([
 
-    option(
-      "none",
-      "Nenhum"
-    ),
+    option("none", "Nenhum"),
 
-    option(
-      "simple",
-      "Simples"
-    ),
+    option("small", "Pequenos"),
 
-    option(
-      "gem",
-      "Com gema"
-    ),
+    option("medium", "Médios"),
 
-    option(
-      "ornate",
-      "Ornamentado"
-    ),
+    option("large", "Grandes"),
 
-    option(
-      "signet",
-      "Sinete"
-    ),
+    option("curved", "Curvos"),
 
-    option(
-      "magical",
-      "Místico"
-    )
+    option("straight", "Retos"),
+
+    option("ram", "Carneiro"),
+
+    option("demon", "Demoníacos")
   ]);
 
 
   /* =========================================================
-     BOLSAS
+     ASAS
      ========================================================= */
 
-  const BAGS = Object.freeze([
+  const WING_TYPES = immutable([
 
-    option(
-      "none",
-      "Nenhuma"
-    ),
+    option("none", "Nenhuma"),
 
-    option(
-      "small",
-      "Pequena"
-    ),
+    option("feather_small", "Asas emplumadas pequenas"),
 
-    option(
-      "medium",
-      "Média"
-    ),
+    option("feather_large", "Asas emplumadas grandes"),
 
-    option(
-      "large",
-      "Grande"
-    ),
+    option("fairy", "Asas feéricas"),
 
-    option(
-      "utility",
-      "Utilitária"
-    )
+    option("bat", "Asas membranosas"),
+
+    option("bird", "Asas de ave"),
+
+    option("insect", "Asas de inseto"),
+
+    option("magical", "Asas mágicas")
   ]);
 
 
   /* =========================================================
-     MOCHILAS
+     CAUDAS
      ========================================================= */
 
-  const BACKPACKS = Object.freeze([
+  const TAIL_TYPES = immutable([
 
-    option(
-      "none",
-      "Nenhuma"
-    ),
+    option("none", "Nenhuma"),
 
-    option(
-      "traveler",
-      "Viajante"
-    ),
+    option("feline", "Felina"),
 
-    option(
-      "adventurer",
-      "Aventureiro"
-    ),
+    option("canine", "Canina"),
 
-    option(
-      "large",
-      "Grande"
-    ),
+    option("fox", "Raposa"),
 
-    option(
-      "framed",
-      "Estruturada"
-    )
+    option("monkey", "Macaco"),
+
+    option("reptile", "Réptil"),
+
+    option("dragon", "Dragão"),
+
+    option("spiked", "Espinhosa"),
+
+    option("demon", "Demoníaca"),
+
+    option("fish", "Peixe")
   ]);
 
 
   /* =========================================================
-     ALJAVAS
+     MARCAS
      ========================================================= */
 
-  const QUIVERS = Object.freeze([
+  const MARKINGS = immutable([
 
-    option(
-      "none",
-      "Nenhuma"
-    ),
+    option("none", "Nenhuma"),
 
-    option(
-      "back",
-      "Costas"
-    ),
+    option("freckles", "Sardas"),
 
-    option(
-      "hip",
-      "Quadril"
-    ),
+    option("dots", "Pintas"),
 
-    option(
-      "large",
-      "Grande"
-    )
+    option("stripes", "Listras"),
+
+    option("face_marks", "Marcas faciais"),
+
+    option("tribal", "Padrão tribal"),
+
+    option("symmetrical", "Padrão simétrico"),
+
+    option("asymmetrical", "Padrão assimétrico"),
+
+    option("animal_pattern", "Padrão animal")
+  ]);
+
+
+  /* =========================================================
+     MARCAS DE NASCENÇA
+     ========================================================= */
+
+  const BIRTHMARKS = immutable([
+
+    option("none", "Nenhuma"),
+
+    option("spot", "Mancha"),
+
+    option("crescent", "Crescente"),
+
+    option("star", "Estrela"),
+
+    option("leaf", "Folha"),
+
+    option("line", "Marca linear"),
+
+    option("symbol", "Símbolo"),
+
+    option("irregular", "Irregular")
+  ]);
+
+
+  /* =========================================================
+     CICATRIZES
+     ========================================================= */
+
+  const SCARS = immutable([
+
+    option("none", "Nenhuma"),
+
+    option("eye", "No olho"),
+
+    option("face", "No rosto"),
+
+    option("cheek", "Na bochecha"),
+
+    option("mouth", "Próxima à boca"),
+
+    option("forehead", "Na testa"),
+
+    option("neck", "No pescoço"),
+
+    option("chest", "No peito"),
+
+    option("arm", "No braço"),
+
+    option("hand", "Na mão"),
+
+    option("leg", "Na perna"),
+
+    option("back", "Nas costas"),
+
+    option("multiple", "Múltiplas")
+  ]);
+
+
+  /* =========================================================
+     TATUAGENS
+     ========================================================= */
+
+  const TATTOOS = immutable([
+
+    option("none", "Nenhuma"),
+
+    option("tribal", "Tribal"),
+
+    option("runes", "Runas"),
+
+    option("magic", "Arcana"),
+
+    option("floral", "Floral"),
+
+    option("animal", "Animal"),
+
+    option("geometric", "Geométrica"),
+
+    option("symbol", "Símbolo"),
+
+    option("religious", "Religiosa"),
+
+    option("custom", "Personalizada")
+  ]);
+
+
+  /* =========================================================
+     PIERCINGS
+     ========================================================= */
+
+  const PIERCINGS = immutable([
+
+    option("none", "Nenhum"),
+
+    option("ear", "Orelha"),
+
+    option("nose", "Nariz"),
+
+    option("lip", "Lábio"),
+
+    option("eyebrow", "Sobrancelha"),
+
+    option("septum", "Septo"),
+
+    option("multiple", "Múltiplos")
+  ]);
+
+
+  /* =========================================================
+     ROUPAS
+     ========================================================= */
+
+  const CLOTHING = immutable([
+
+    option("none", "Nenhuma"),
+
+    option("simple", "Roupa simples"),
+
+    option("adventurer", "Aventureiro"),
+
+    option("traveler", "Viajante"),
+
+    option("noble", "Nobre"),
+
+    option("scholar", "Estudioso"),
+
+    option("merchant", "Mercador"),
+
+    option("mage", "Mago"),
+
+    option("cleric", "Sacerdote"),
+
+    option("hunter", "Caçador"),
+
+    option("rogue", "Ladino"),
+
+    option("monk", "Monge"),
+
+    option("military", "Militar"),
+
+    option("tribal", "Tribal"),
+
+    option("royal", "Real")
+  ]);
+
+
+  /* =========================================================
+     CASACOS / CAPAS / MANTOS
+     ========================================================= */
+
+  const OUTERWEAR = immutable([
+
+    option("none", "Nenhum"),
+
+    option("coat", "Casaco"),
+
+    option("cloak", "Capa"),
+
+    option("hooded_cloak", "Capa com capuz"),
+
+    option("cape_short", "Manto curto"),
+
+    option("cape_long", "Manto longo"),
+
+    option("robe", "Manto de tecido"),
+
+    option("poncho", "Poncho")
+  ]);
+
+
+  /* =========================================================
+     ARMADURAS
+     ========================================================= */
+
+  const ARMOR = immutable([
+
+    option("none", "Nenhuma"),
+
+    option("leather", "Couro"),
+
+    option("light", "Leve"),
+
+    option("medium", "Média"),
+
+    option("heavy", "Pesada"),
+
+    option("plate", "Placas"),
+
+    option("chain", "Malha"),
+
+    option("fantasy", "Fantasia"),
+
+    option("ceremonial", "Cerimonial"),
+
+    option("tribal", "Tribal")
+  ]);
+
+
+  /* =========================================================
+     CHAPÉUS
+     ========================================================= */
+
+  const HATS = immutable([
+
+    option("none", "Nenhum"),
+
+    option("wide_brim", "Chapéu de aba larga"),
+
+    option("traveler", "Chapéu de viajante"),
+
+    option("mage", "Chapéu de mago"),
+
+    option("witch", "Chapéu pontudo"),
+
+    option("beret", "Boina"),
+
+    option("cap", "Boné"),
+
+    option("helmet", "Elmo"),
+
+    option("crown", "Coroa"),
+
+    option("circlet", "Diadema")
+  ]);
+
+
+  /* =========================================================
+     MÁSCARAS
+     ========================================================= */
+
+  const MASKS = immutable([
+
+    option("none", "Nenhuma"),
+
+    option("simple", "Máscara simples"),
+
+    option("half", "Meia máscara"),
+
+    option("full", "Máscara completa"),
+
+    option("cloth", "Máscara de tecido"),
+
+    option("ornate", "Máscara ornamentada"),
+
+    option("animal", "Máscara animal")
+  ]);
+
+
+  /* =========================================================
+     ÓCULOS
+     ========================================================= */
+
+  const GLASSES = immutable([
+
+    option("none", "Nenhum"),
+
+    option("round", "Redondo"),
+
+    option("square", "Quadrado"),
+
+    option("thin", "Fino"),
+
+    option("goggles", "Óculos de proteção"),
+
+    option("monocle", "Monóculo"),
+
+    option("magical", "Óculos mágicos")
+  ]);
+
+
+  /* =========================================================
+     JOIAS
+     ========================================================= */
+
+  const JEWELRY = immutable({
+
+    necklaces: immutable([
+      option("none", "Nenhum"),
+      option("simple", "Simples"),
+      option("pendant", "Pingente"),
+      option("gem", "Gema"),
+      option("amulet", "Amuleto"),
+      option("medallion", "Medalhão"),
+      option("chain", "Corrente")
+    ]),
+
+    earrings: immutable([
+      option("none", "Nenhum"),
+      option("stud", "Argola pequena"),
+      option("hoop", "Argola"),
+      option("pendant", "Pingente"),
+      option("multiple", "Múltiplos")
+    ]),
+
+    bracelets: immutable([
+      option("none", "Nenhum"),
+      option("simple", "Simples"),
+      option("metal", "Metal"),
+      option("leather", "Couro"),
+      option("magical", "Mágico")
+    ]),
+
+    rings: immutable([
+      option("none", "Nenhum"),
+      option("simple", "Simples"),
+      option("gem", "Com gema"),
+      option("magic", "Mágico"),
+      option("multiple", "Múltiplos")
+    ]),
+
+    watches: immutable([
+      option("none", "Nenhum"),
+      option("pocket", "Relógio de bolso"),
+      option("wrist", "Relógio de pulso"),
+      option("fantasy", "Relógio fantástico")
+    ])
+  });
+
+
+  /* =========================================================
+     BOLSAS E EQUIPAMENTOS
+     ========================================================= */
+
+  const BAGS = immutable([
+
+    option("none", "Nenhuma"),
+
+    option("small", "Bolsa pequena"),
+
+    option("pouch", "Bolsa lateral"),
+
+    option("backpack", "Mochila"),
+
+    option("large_backpack", "Mochila grande"),
+
+    option("satchel", "Sacola"),
+
+    option("merchant", "Bolsa de mercador")
+  ]);
+
+
+  const QUIVERS = immutable([
+
+    option("none", "Nenhuma"),
+
+    option("simple", "Aljava simples"),
+
+    option("hunter", "Aljava de caçador"),
+
+    option("ornate", "Aljava ornamentada")
   ]);
 
 
@@ -2639,3015 +1321,1513 @@
      ARMAS
      ========================================================= */
 
-  const WEAPONS = Object.freeze([
+  const WEAPONS = immutable([
 
-    option(
-      "none",
-      "Nenhuma"
-    ),
+    option("none", "Nenhuma"),
 
-    option(
-      "sword",
-      "Espada"
-    ),
+    option("sword", "Espada"),
 
-    option(
-      "short_sword",
-      "Espada curta"
-    ),
+    option("short_sword", "Espada curta"),
 
-    option(
-      "great_sword",
-      "Espada grande"
-    ),
+    option("long_sword", "Espada longa"),
 
-    option(
-      "dagger",
-      "Adaga"
-    ),
+    option("greatsword", "Espadão"),
 
-    option(
-      "spear",
-      "Lança"
-    ),
+    option("dagger", "Adaga"),
 
-    option(
-      "halberd",
-      "Alabarda"
-    ),
+    option("axe", "Machado"),
 
-    option(
-      "axe",
-      "Machado"
-    ),
+    option("great_axe", "Machado grande"),
 
-    option(
-      "great_axe",
-      "Machado grande"
-    ),
+    option("spear", "Lança"),
 
-    option(
-      "mace",
-      "Maça"
-    ),
+    option("staff", "Cajado"),
 
-    option(
-      "hammer",
-      "Martelo"
-    ),
+    option("wand", "Varinha"),
 
-    option(
-      "staff",
-      "Cajado"
-    ),
+    option("bow", "Arco"),
 
-    option(
-      "wand",
-      "Varinha"
-    ),
+    option("crossbow", "Besta"),
 
-    option(
-      "bow",
-      "Arco"
-    ),
+    option("hammer", "Martelo"),
 
-    option(
-      "crossbow",
-      "Besta"
-    ),
+    option("mace", "Maça"),
 
-    option(
-      "shield",
-      "Escudo"
-    )
+    option("shield", "Escudo"),
+
+    option("book", "Livro"),
+
+    option("orb", "Orbe")
   ]);
 
 
   /* =========================================================
-     OBJETOS DE MÃO
+     PROPS
      ========================================================= */
 
-  const HAND_ITEMS = Object.freeze([
+  const PROPS = immutable([
 
-    option(
-      "none",
-      "Nenhum"
-    ),
+    option("none", "Nenhum"),
 
-    option(
-      "book",
-      "Livro"
-    ),
+    option("lantern", "Lanterna"),
 
-    option(
-      "lantern",
-      "Lanterna"
-    ),
+    option("book", "Livro"),
 
-    option(
-      "bottle",
-      "Frasco"
-    ),
+    option("scroll", "Pergaminho"),
 
-    option(
-      "cup",
-      "Copo"
-    ),
+    option("bottle", "Frasco"),
 
-    option(
-      "tool",
-      "Ferramenta"
-    ),
+    option("map", "Mapa"),
 
-    option(
-      "scroll",
-      "Pergaminho"
-    ),
+    option("instrument", "Instrumento"),
 
-    option(
-      "small_pouch",
-      "Pequena bolsa"
-    )
+    option("compass", "Bússola"),
+
+    option("flower", "Flor"),
+
+    option("food", "Comida")
   ]);
 
 
   /* =========================================================
-     ARQUÉTIPOS RACIAIS
-     =========================================================
-
-     Aqui estão as REGRAS VISUAIS.
-
-     "allowed" define opções possíveis.
-     "hidden" remove categorias.
-     "required" obriga determinada característica.
+     PALETAS DE MATERIAIS
      ========================================================= */
 
-  const RACE_RULES = Object.freeze({
+  const MATERIALS = immutable({
 
-    humano: {
+    cloth: immutable([
+      "#211d1a",
+      "#4d4136",
+      "#6d5c4a",
+      "#8d775f",
+      "#b09a7a",
+      "#d1bb96"
+    ]),
 
-      bodyTypes:
-        [
-          "slim",
-          "lean",
-          "average",
-          "broad",
-          "heavy"
-        ],
+    leather: immutable([
+      "#291e18",
+      "#432e22",
+      "#5b3d2b",
+      "#765238",
+      "#926a49"
+    ]),
 
-      skinPalette:
-        "humana",
+    metal: immutable([
+      "#252729",
+      "#4a4d50",
+      "#6b6f72",
+      "#8d9296",
+      "#b0b6ba",
+      "#d1d4d5"
+    ]),
 
-      hair:
-        "normal",
+    gold: immutable([
+      "#7e5c1f",
+      "#a37a2a",
+      "#c49b3a",
+      "#dfbd5d",
+      "#f1d887"
+    ]),
 
-      facialHair:
-        true,
+    silver: immutable([
+      "#74787b",
+      "#9da1a3",
+      "#c2c6c7",
+      "#dde0df"
+    ]),
 
-      ears:
-        "human",
+    wood: immutable([
+      "#33251b",
+      "#4b3425",
+      "#624631",
+      "#805d40",
+      "#a07952"
+    ])
+  });
 
-      horns:
-        false,
 
-      wings:
-        false,
+  /* =========================================================
+     ANIMALHA
+     ========================================================= */
 
-      tail:
-        false,
+  const ANIMALHA_CATEGORIES = immutable([
 
-      animalFeatures:
-        false,
-
-      markings:
-        true,
-
-      birthmarks:
-        true,
-
-      scars:
-        true,
-
-      tattoos:
-        true,
-
-      piercings:
-        true
+    {
+      id: "voadores",
+      name: "Voadores",
+      description:
+        "Linhagens com características aéreas.",
+      icon:
+        "wing"
     },
 
-
-    elfo: {
-
-      bodyTypes:
-        [
-          "slim",
-          "lean",
-          "average"
-        ],
-
-      skinPalette:
-        "elfica",
-
-      hair:
-        "normal",
-
-      facialHair:
-        "limited",
-
-      ears:
-        "elf",
-
-      horns:
-        false,
-
-      wings:
-        false,
-
-      tail:
-        false,
-
-      animalFeatures:
-        false,
-
-      markings:
-        true,
-
-      birthmarks:
-        true,
-
-      scars:
-        true,
-
-      tattoos:
-        true,
-
-      piercings:
-        true
+    {
+      id: "terrestres",
+      name: "Terrestres",
+      description:
+        "Linhagens terrestres.",
+      icon:
+        "paw"
     },
 
-
-    anao: {
-
-      bodyTypes:
-        [
-          "average",
-          "broad",
-          "heavy"
-        ],
-
-      skinPalette:
-        "ana",
-
-      hair:
-        "normal",
-
-      facialHair:
-        true,
-
-      ears:
-        "human",
-
-      horns:
-        false,
-
-      wings:
-        false,
-
-      tail:
-        false,
-
-      animalFeatures:
-        false,
-
-      markings:
-        true,
-
-      birthmarks:
-        true,
-
-      scars:
-        true,
-
-      tattoos:
-        true,
-
-      piercings:
-        true
+    {
+      id: "marinhos",
+      name: "Marinhos",
+      description:
+        "Linhagens adaptadas à água.",
+      icon:
+        "wave"
     },
 
-
-    orc: {
-
-      bodyTypes:
-        [
-          "broad",
-          "heavy",
-          "average"
-        ],
-
-      skinPalette:
-        "orc",
-
-      hair:
-        "normal",
-
-      facialHair:
-        true,
-
-      ears:
-        "orc",
-
-      horns:
-        false,
-
-      wings:
-        false,
-
-      tail:
-        false,
-
-      animalFeatures:
-        false,
-
-      markings:
-        true,
-
-      birthmarks:
-        true,
-
-      scars:
-        true,
-
-      tattoos:
-        true,
-
-      piercings:
-        true
+    {
+      id: "reptilianos",
+      name: "Reptilianos",
+      description:
+        "Linhagens de répteis.",
+      icon:
+        "scale"
     },
 
-
-    fada: {
-
-      bodyTypes:
-        [
-          "slim",
-          "lean"
-        ],
-
-      skinPalette:
-        "fada",
-
-      hair:
-        "normal",
-
-      facialHair:
-        false,
-
-      ears:
-        "normal",
-
-      horns:
-        false,
-
-      wings:
-        "required",
-
-      tail:
-        false,
-
-      animalFeatures:
-        false,
-
-      markings:
-        true,
-
-      birthmarks:
-        true,
-
-      scars:
-        true,
-
-      tattoos:
-        true,
-
-      piercings:
-        true
+    {
+      id: "pequenos",
+      name: "Pequenos",
+      description:
+        "Linhagens de pequeno porte.",
+      icon:
+        "small"
     },
 
-
-    animalha: {
-
-      bodyTypes:
-        [
-          "slim",
-          "lean",
-          "average",
-          "broad",
-          "heavy"
-        ],
-
-      skinPalette:
-        "animalia",
-
-      hair:
-        "normal",
-
-      facialHair:
-        true,
-
-      ears:
-        "animal",
-
-      horns:
-        "animal-dependent",
-
-      wings:
-        "animal-dependent",
-
-      tail:
-        "animal-dependent",
-
-      animalFeatures:
-        true,
-
-      markings:
-        true,
-
-      birthmarks:
-        true,
-
-      scars:
-        true,
-
-      tattoos:
-        true,
-
-      piercings:
-        true,
-
-      fur:
-        true
-    },
-
-
-    vampiro: {
-
-      bodyTypes:
-        [
-          "slim",
-          "lean",
-          "average"
-        ],
-
-      skinPalette:
-        "undead",
-
-      hair:
-        "normal",
-
-      facialHair:
-        true,
-
-      ears:
-        "human",
-
-      horns:
-        false,
-
-      wings:
-        false,
-
-      tail:
-        false,
-
-      animalFeatures:
-        false,
-
-      markings:
-        true,
-
-      birthmarks:
-        true,
-
-      scars:
-        true,
-
-      tattoos:
-        true,
-
-      piercings:
-        true
-    },
-
-
-    centauro: {
-
-      bodyTypes:
-        [
-          "broad",
-          "heavy",
-          "average"
-        ],
-
-      skinPalette:
-        "humana",
-
-      hair:
-        "normal",
-
-      facialHair:
-        true,
-
-      ears:
-        "human",
-
-      horns:
-        false,
-
-      wings:
-        false,
-
-      tail:
-        "required",
-
-      animalFeatures:
-        true,
-
-      markings:
-        true,
-
-      birthmarks:
-        true,
-
-      scars:
-        true,
-
-      tattoos:
-        true,
-
-      piercings:
-        true
-    },
-
-
-    duende: {
-
-      bodyTypes:
-        [
-          "slim",
-          "lean"
-        ],
-
-      skinPalette:
-        "humana",
-
-      hair:
-        "normal",
-
-      facialHair:
-        true,
-
-      ears:
-        "human",
-
-      horns:
-        false,
-
-      wings:
-        false,
-
-      tail:
-        false,
-
-      animalFeatures:
-        false,
-
-      markings:
-        true,
-
-      birthmarks:
-        true,
-
-      scars:
-        true,
-
-      tattoos:
-        true,
-
-      piercings:
-        true
-    },
-
-
-    "povo_aquatico": {
-
-      bodyTypes:
-        [
-          "slim",
-          "lean",
-          "average"
-        ],
-
-      skinPalette:
-        "nature",
-
-      hair:
-        "normal",
-
-      facialHair:
-        true,
-
-      ears:
-        "aquatic",
-
-      horns:
-        false,
-
-      wings:
-        false,
-
-      tail:
-        "optional",
-
-      animalFeatures:
-        true,
-
-      markings:
-        true,
-
-      birthmarks:
-        true,
-
-      scars:
-        true,
-
-      tattoos:
-        true,
-
-      piercings:
-        true
-    },
-
-
-    "povo_natureza": {
-
-      bodyTypes:
-        [
-          "slim",
-          "lean",
-          "average"
-        ],
-
-      skinPalette:
-        "nature",
-
-      hair:
-        "normal",
-
-      facialHair:
-        true,
-
-      ears:
-        "normal",
-
-      horns:
-        "optional",
-
-      wings:
-        "optional",
-
-      tail:
-        "optional",
-
-      animalFeatures:
-        true,
-
-      markings:
-        true,
-
-      birthmarks:
-        true,
-
-      scars:
-        true,
-
-      tattoos:
-        true,
-
-      piercings:
-        true
-    },
-
-
-    neraliano: {
-
-      bodyTypes:
-        [
-          "slim",
-          "lean",
-          "average"
-        ],
-
-      skinPalette:
-        "nature",
-
-      hair:
-        "normal",
-
-      facialHair:
-        true,
-
-      ears:
-        "aquatic",
-
-      horns:
-        false,
-
-      wings:
-        false,
-
-      tail:
-        "optional",
-
-      animalFeatures:
-        true,
-
-      markings:
-        true,
-
-      birthmarks:
-        true,
-
-      scars:
-        true,
-
-      tattoos:
-        true,
-
-      piercings:
-        true
-    },
-
-
-    aureano: {
-
-      bodyTypes:
-        [
-          "slim",
-          "lean",
-          "average"
-        ],
-
-      skinPalette:
-        "humana",
-
-      hair:
-        "normal",
-
-      facialHair:
-        true,
-
-      ears:
-        "normal",
-
-      horns:
-        false,
-
-      wings:
-        "optional",
-
-      tail:
-        false,
-
-      animalFeatures:
-        false,
-
-      markings:
-        true,
-
-      birthmarks:
-        true,
-
-      scars:
-        true,
-
-      tattoos:
-        true,
-
-      piercings:
-        true
-    },
-
-
-    "povo_nuvens": {
-
-      bodyTypes:
-        [
-          "slim",
-          "lean"
-        ],
-
-      skinPalette:
-        "fada",
-
-      hair:
-        "normal",
-
-      facialHair:
-        false,
-
-      ears:
-        "normal",
-
-      horns:
-        false,
-
-      wings:
-        "optional",
-
-      tail:
-        false,
-
-      animalFeatures:
-        false,
-
-      markings:
-        true,
-
-      birthmarks:
-        true,
-
-      scars:
-        true,
-
-      tattoos:
-        true,
-
-      piercings:
-        true
-    },
-
-
-    colosso: {
-
-      bodyTypes:
-        [
-          "broad",
-          "heavy"
-        ],
-
-      skinPalette:
-        "humana",
-
-      hair:
-        "normal",
-
-      facialHair:
-        true,
-
-      ears:
-        "normal",
-
-      horns:
-        "optional",
-
-      wings:
-        "required",
-
-      tail:
-        "optional",
-
-      animalFeatures:
-        false,
-
-      markings:
-        true,
-
-      birthmarks:
-        true,
-
-      scars:
-        true,
-
-      tattoos:
-        true,
-
-      piercings:
-        true
-    },
-
-
-    troll: {
-
-      bodyTypes:
-        [
-          "broad",
-          "heavy"
-        ],
-
-      skinPalette:
-        "nature",
-
-      hair:
-        "limited",
-
-      facialHair:
-        true,
-
-      ears:
-        "orc",
-
-      horns:
-        "optional",
-
-      wings:
-        false,
-
-      tail:
-        false,
-
-      animalFeatures:
-        false,
-
-      markings:
-        true,
-
-      birthmarks:
-        true,
-
-      scars:
-        true,
-
-      tattoos:
-        true,
-
-      piercings:
-        true
+    {
+      id: "grandes",
+      name: "Grandes",
+      description:
+        "Linhagens de grande porte.",
+      icon:
+        "large"
     }
-  });
+  ]);
 
 
-  /* =========================================================
-     RESTRIÇÕES DE COR DE PELE
-     ========================================================= */
-
-  const SKIN_RESTRICTIONS = Object.freeze({
-
-    humano: [
-      "humana"
-    ],
-
-    elfo: [
-      "elfica"
-    ],
-
-    anao: [
-      "ana"
-    ],
-
-    orc: [
-      "orc"
-    ],
-
-    fada: [
-      "fada"
-    ],
-
-    animalha: [
-      "animalia"
-    ],
-
-    vampiro: [
-      "undead"
-    ],
-
-    centauro: [
-      "humana"
-    ],
-
-    duende: [
-      "humana"
-    ],
-
-    "povo_aquatico": [
-      "nature"
-    ],
-
-    "povo_natureza": [
-      "nature",
-      "humana"
-    ],
-
-    neraliano: [
-      "nature"
-    ],
-
-    aureano: [
-      "humana"
-    ],
-
-    "povo_nuvens": [
-      "fada"
-    ],
-
-    colosso: [
-      "humana"
-    ],
-
-    troll: [
-      "nature"
-    ]
-  });
-
-
-  /* =========================================================
-     ANIMALHA — CATEGORIAS
-     ========================================================= */
-
-  const ANIMALHA_CATEGORIES = Object.freeze({
-
-    voadores: {
-
-      id:
-        "voadores",
-
-      name:
-        "Voadores",
-
-      description:
-        "Animalias adaptados à movimentação aérea.",
-
-      bodyTypes:
-        [
-          "slim",
-          "lean",
-          "average"
-        ],
-
-      movement:
-        "air",
-
-      animals:
-        [
-          "falcao",
-          "aguia",
-          "coruja"
-        ]
-    },
-
-
-    terrestres: {
-
-      id:
-        "terrestres",
-
-      name:
-        "Terrestres",
-
-      description:
-        "Animalias predominantemente terrestres.",
-
-      bodyTypes:
-        [
-          "slim",
-          "lean",
-          "average",
-          "broad",
-          "heavy"
-        ],
-
-      movement:
-        "ground",
-
-      animals:
-        [
-          "pantera",
-          "tigre",
-          "leao",
-          "gato",
-          "lobo",
-          "raposa",
-          "urso",
-          "rinoceronte",
-          "rato"
-        ]
-    },
-
-
-    marinhos: {
-
-      id:
-        "marinhos",
-
-      name:
-        "Marinhos",
-
-      description:
-        "Animalias adaptados a ambientes aquáticos.",
-
-      bodyTypes:
-        [
-          "lean",
-          "average",
-          "broad",
-          "heavy"
-        ],
-
-      movement:
-        "aquatic",
-
-      animals:
-        [
-          "tubarao",
-          "foca",
-          "crocodilo",
-          "hipopotamo"
-        ]
-    },
-
-
-    pequenos: {
-
-      id:
-        "pequenos",
-
-      name:
-        "Pequeno porte",
-
-      description:
-        "Animalias de menor estrutura corporal.",
-
-      bodyTypes:
-        [
-          "slim",
-          "lean"
-        ],
-
-      movement:
-        "special",
-
-      animals:
-        [
-          "gato",
-          "raposa",
-          "rato",
-          "coruja",
-          "cobra"
-        ]
-    },
-
-
-    grandes: {
-
-      id:
-        "grandes",
-
-      name:
-        "Grande porte",
-
-      description:
-        "Animalias de grande estrutura corporal.",
-
-      bodyTypes:
-        [
-          "broad",
-          "heavy"
-        ],
-
-      movement:
-        "ground",
-
-      animals:
-        [
-          "tigre",
-          "leao",
-          "urso",
-          "rinoceronte",
-          "hipopotamo"
-        ]
-    }
-  });
-
-
-  /* =========================================================
-     ANIMALHA — ANIMAIS
-     ========================================================= */
-
-  const ANIMALHA_ANIMALS = Object.freeze({
+  const ANIMALHA_ANIMALS = immutable({
 
     pantera: {
+      id: "pantera",
+      name: "Pantera",
+      category: "terrestres",
 
-      id:
-        "pantera",
+      body: "lean",
 
-      name:
-        "Pantera",
+      fur: [
+        "#171513",
+        "#27211c",
+        "#3b3028"
+      ],
 
-      category:
-        "terrestres",
+      markings: [
+        "spots",
+        "none"
+      ],
 
-      body:
-        "lean",
+      ears: [
+        "feline"
+      ],
 
-      fur:
-        [
-          "#171614",
-          "#24211e",
-          "#322b26"
-        ],
-
-      markings:
-        [
-          "none",
-          "spots"
-        ],
-
-      ears:
-        "feline",
-
-      tail:
-        "feline",
-
-      eyes:
-        [
-          "amber",
-          "green"
-        ],
-
-      modifiers:
-        {
-          agilidade: 1,
-          percepcao: 1
-        }
+      tail: [
+        "feline"
+      ]
     },
-
 
     tigre: {
+      id: "tigre",
+      name: "Tigre",
+      category: "terrestres",
 
-      id:
-        "tigre",
+      body: "broad",
 
-      name:
-        "Tigre",
+      fur: [
+        "#c7863b",
+        "#d6a15d"
+      ],
 
-      category:
-        "terrestres",
+      markings: [
+        "stripes"
+      ],
 
-      body:
-        "broad",
+      ears: [
+        "feline"
+      ],
 
-      fur:
-        [
-          "#c89455",
-          "#d5a96d"
-        ],
-
-      markings:
-        [
-          "stripes",
-          "tiger"
-        ],
-
-      ears:
-        "feline",
-
-      tail:
-        "feline",
-
-      eyes:
-        [
-          "amber"
-        ],
-
-      modifiers:
-        {
-          forca: 1,
-          agilidade: 1
-        }
+      tail: [
+        "feline"
+      ]
     },
-
 
     leao: {
+      id: "leao",
+      name: "Leão",
+      category: "terrestres",
 
-      id:
-        "leao",
+      body: "broad",
 
-      name:
-        "Leão",
+      fur: [
+        "#c99552",
+        "#dca968"
+      ],
 
-      category:
-        "terrestres",
+      markings: [
+        "none"
+      ],
 
-      body:
-        "heavy",
+      ears: [
+        "feline"
+      ],
 
-      fur:
-        [
-          "#b98c57",
-          "#cba66d"
-        ],
-
-      markings:
-        [
-          "none"
-        ],
-
-      ears:
-        "feline",
-
-      tail:
-        "feline",
-
-      mane:
-        true,
-
-      eyes:
-        [
-          "amber"
-        ],
-
-      modifiers:
-        {
-          forca: 1,
-          presenca: 1
-        }
+      tail: [
+        "feline"
+      ]
     },
-
 
     gato: {
+      id: "gato",
+      name: "Gato",
+      category: "terrestres",
 
-      id:
-        "gato",
+      body: "slim",
 
-      name:
-        "Gato",
+      fur: [
+        "#7f7a72",
+        "#b3aea3",
+        "#403d39"
+      ],
 
-      category:
-        "terrestres",
+      markings: [
+        "spots",
+        "stripes"
+      ],
 
-      body:
-        "slim",
+      ears: [
+        "feline"
+      ],
 
-      fur:
-        [
-          "#8e8174",
-          "#b3a89c",
-          "#5d5853",
-          "#d1c4af"
-        ],
-
-      markings:
-        [
-          "spots",
-          "stripes",
-          "none"
-        ],
-
-      ears:
-        "feline",
-
-      tail:
-        "feline",
-
-      eyes:
-        [
-          "green",
-          "blue",
-          "amber"
-        ],
-
-      modifiers:
-        {
-          agilidade: 1,
-          percepcao: 1
-        }
+      tail: [
+        "feline"
+      ]
     },
-
 
     lobo: {
+      id: "lobo",
+      name: "Lobo",
+      category: "terrestres",
 
-      id:
-        "lobo",
+      body: "lean",
 
-      name:
-        "Lobo",
+      fur: [
+        "#6e706d",
+        "#8f918b",
+        "#454742",
+        "#b7b6ae"
+      ],
 
-      category:
-        "terrestres",
+      markings: [
+        "none",
+        "stripes"
+      ],
 
-      body:
-        "average",
+      ears: [
+        "canine"
+      ],
 
-      fur:
-        [
-          "#6f706e",
-          "#555754",
-          "#8f918b",
-          "#ddd9d0"
-        ],
-
-      markings:
-        [
-          "countershade"
-        ],
-
-      ears:
-        "canine",
-
-      tail:
-        "wolf",
-
-      eyes:
-        [
-          "amber",
-          "brown"
-        ],
-
-      modifiers:
-        {
-          percepcao: 1,
-          vigor: 1
-        }
+      tail: [
+        "canine"
+      ]
     },
-
 
     raposa: {
+      id: "raposa",
+      name: "Raposa",
+      category: "terrestres",
 
-      id:
-        "raposa",
+      body: "slim",
 
-      name:
-        "Raposa",
+      fur: [
+        "#ad5f32",
+        "#d88843",
+        "#6f3923"
+      ],
 
-      category:
-        "terrestres",
+      markings: [
+        "none",
+        "face_marks"
+      ],
 
-      body:
-        "slim",
+      ears: [
+        "fox"
+      ],
 
-      fur:
-        [
-          "#b6653e",
-          "#d07b4e"
-        ],
-
-      markings:
-        [
-          "countershade"
-        ],
-
-      ears:
-        "canine",
-
-      tail:
-        "fox",
-
-      eyes:
-        [
-          "amber"
-        ],
-
-      modifiers:
-        {
-          agilidade: 1,
-          intelecto: 1
-        }
+      tail: [
+        "fox"
+      ]
     },
-
 
     falcao: {
+      id: "falcao",
+      name: "Falcão",
+      category: "voadores",
 
-      id:
-        "falcao",
+      body: "lean",
 
-      name:
-        "Falcão",
+      feathers: [
+        "#8f8f88",
+        "#575a5c",
+        "#c7c8c2"
+      ],
 
-      category:
-        "voadores",
+      wings: [
+        "bird"
+      ],
 
-      body:
-        "slim",
-
-      feathers:
-        [
-          "#736e65",
-          "#90897e",
-          "#b6b0a4"
-        ],
-
-      markings:
-        [
-          "countershade"
-        ],
-
-      ears:
-        "bird",
-
-      wings:
-        "bird",
-
-      tail:
-        "bird",
-
-      eyes:
-        [
-          "amber"
-        ],
-
-      modifiers:
-        {
-          percepcao: 1,
-          precisao: 1
-        }
+      ears: [
+        "animal"
+      ]
     },
-
 
     aguia: {
+      id: "aguia",
+      name: "Águia",
+      category: "voadores",
 
-      id:
-        "aguia",
+      body: "broad",
 
-      name:
-        "Águia",
+      feathers: [
+        "#8a6947",
+        "#b2936c",
+        "#554334"
+      ],
 
-      category:
-        "voadores",
+      wings: [
+        "bird"
+      ],
 
-      body:
-        "average",
-
-      feathers:
-        [
-          "#6b6257",
-          "#9d978d",
-          "#d6d0c3"
-        ],
-
-      markings:
-        [
-          "countershade"
-        ],
-
-      ears:
-        "bird",
-
-      wings:
-        "bird",
-
-      tail:
-        "bird",
-
-      eyes:
-        [
-          "amber"
-        ],
-
-      modifiers:
-        {
-          percepcao: 1,
-          precisao: 1
-        }
+      ears: [
+        "animal"
+      ]
     },
-
 
     coruja: {
+      id: "coruja",
+      name: "Coruja",
+      category: "voadores",
 
-      id:
-        "coruja",
+      body: "slim",
 
-      name:
-        "Coruja",
+      feathers: [
+        "#817667",
+        "#a99b88",
+        "#575148"
+      ],
 
-      category:
-        "voadores",
+      wings: [
+        "bird"
+      ],
 
-      body:
-        "slim",
-
-      feathers:
-        [
-          "#6e665d",
-          "#857d71",
-          "#c2b9aa"
-        ],
-
-      markings:
-        [
-          "spots"
-        ],
-
-      ears:
-        "bird",
-
-      wings:
-        "bird",
-
-      tail:
-        "bird",
-
-      eyes:
-        [
-          "amber"
-        ],
-
-      modifiers:
-        {
-          percepcao: 1,
-          intelecto: 1
-        }
+      ears: [
+        "animal"
+      ]
     },
-
 
     cobra: {
+      id: "cobra",
+      name: "Cobra",
+      category: "pequenos",
 
-      id:
-        "cobra",
+      body: "slim",
 
-      name:
-        "Cobra",
+      scales: [
+        "#687a47",
+        "#84965c",
+        "#4f5e38"
+      ],
 
-      category:
-        "pequenos",
+      markings: [
+        "stripes"
+      ],
 
-      body:
-        "slim",
-
-      scales:
-        [
-          "#5f704f",
-          "#8a9a63",
-          "#9b7650"
-        ],
-
-      markings:
-        [
-          "stripes",
-          "spots"
-        ],
-
-      tail:
-        "reptile",
-
-      eyes:
-        [
-          "amber"
-        ],
-
-      modifiers:
-        {
-          precisao: 1,
-          percepcao: 1
-        }
+      tail: [
+        "reptile"
+      ]
     },
-
 
     crocodilo: {
+      id: "crocodilo",
+      name: "Crocodilo",
+      category: "marinhos",
 
-      id:
-        "crocodilo",
+      body: "broad",
 
-      name:
-        "Crocodilo",
+      scales: [
+        "#536b4a",
+        "#70895c",
+        "#3b4e38"
+      ],
 
-      category:
-        "marinhos",
-
-      body:
-        "heavy",
-
-      scales:
-        [
-          "#536342",
-          "#65754d",
-          "#3f4e37"
-        ],
-
-      markings:
-        [
-          "spots"
-        ],
-
-      tail:
-        "reptile",
-
-      eyes:
-        [
-          "amber"
-        ],
-
-      modifiers:
-        {
-          forca: 1,
-          vigor: 1
-        }
+      tail: [
+        "reptile"
+      ]
     },
-
-
-    urso: {
-
-      id:
-        "urso",
-
-      name:
-        "Urso",
-
-      category:
-        "grandes",
-
-      body:
-        "heavy",
-
-      fur:
-        [
-          "#4d3528",
-          "#76503a",
-          "#96705a"
-        ],
-
-      markings:
-        [
-          "none"
-        ],
-
-      ears:
-        "animal",
-
-      tail:
-        "small",
-
-      eyes:
-        [
-          "brown"
-        ],
-
-      modifiers:
-        {
-          forca: 1,
-          vigor: 1
-        }
-    },
-
-
-    rinoceronte: {
-
-      id:
-        "rinoceronte",
-
-      name:
-        "Rinoceronte",
-
-      category:
-        "grandes",
-
-      body:
-        "heavy",
-
-      skin:
-        [
-          "#686760",
-          "#7c7b72",
-          "#565650"
-        ],
-
-      markings:
-        [
-          "none"
-        ],
-
-      ears:
-        "animal",
-
-      horns:
-        "large",
-
-      eyes:
-        [
-          "dark_brown"
-        ],
-
-      modifiers:
-        {
-          vigor: 2
-        }
-    },
-
-
-    hipopotamo: {
-
-      id:
-        "hipopotamo",
-
-      name:
-        "Hipopótamo",
-
-      category:
-        "marinhos",
-
-      body:
-        "heavy",
-
-      skin:
-        [
-          "#756f6d",
-          "#8d8582",
-          "#5d5754"
-        ],
-
-      markings:
-        [
-          "none"
-        ],
-
-      ears:
-        "animal",
-
-      tail:
-        "small",
-
-      eyes:
-        [
-          "dark_brown"
-        ],
-
-      modifiers:
-        {
-          vigor: 1,
-          forca: 1
-        }
-    },
-
-
-    rato: {
-
-      id:
-        "rato",
-
-      name:
-        "Rato",
-
-      category:
-        "pequenos",
-
-      body:
-        "slim",
-
-      fur:
-        [
-          "#82776e",
-          "#a49386",
-          "#615b56"
-        ],
-
-      markings:
-        [
-          "none"
-        ],
-
-      ears:
-        "large",
-
-      tail:
-        "long",
-
-      eyes:
-        [
-          "dark_brown"
-        ],
-
-      modifiers:
-        {
-          agilidade: 1,
-          percepcao: 1
-        }
-    },
-
 
     tubarao: {
+      id: "tubarao",
+      name: "Tubarão",
+      category: "marinhos",
 
-      id:
-        "tubarao",
+      body: "broad",
 
-      name:
-        "Tubarão",
-
-      category:
-        "marinhos",
-
-      body:
-        "broad",
-
-      skin:
-        [
-          "#66727a",
-          "#879299",
-          "#515d64"
-        ],
-
-      markings:
-        [
-          "countershade"
-        ],
-
-      tail:
-        "reptile",
-
-      eyes:
-        [
-          "gray"
-        ],
-
-      modifiers:
-        {
-          vigor: 1,
-          percepcao: 1
-        }
+      skin: [
+        "#6f7d84",
+        "#85939a",
+        "#48535a"
+      ]
     },
 
+    urso: {
+      id: "urso",
+      name: "Urso",
+      category: "grandes",
+
+      body: "heavy",
+
+      fur: [
+        "#4d392d",
+        "#6c4f3c",
+        "#8a6b52"
+      ],
+
+      ears: [
+        "round"
+      ]
+    },
+
+    rinoceronte: {
+      id: "rinoceronte",
+      name: "Rinoceronte",
+      category: "grandes",
+
+      body: "heavy",
+
+      skin: [
+        "#77726b",
+        "#928c83",
+        "#5d5953"
+      ]
+    },
+
+    hipopotamo: {
+      id: "hipopotamo",
+      name: "Hipopótamo",
+      category: "marinhos",
+
+      body: "heavy",
+
+      skin: [
+        "#807276",
+        "#a18f93",
+        "#665b61"
+      ]
+    },
 
     foca: {
+      id: "foca",
+      name: "Foca",
+      category: "marinhos",
 
-      id:
-        "foca",
+      body: "average",
 
-      name:
-        "Foca",
+      skin: [
+        "#7f8583",
+        "#a7aaa4",
+        "#5f6563"
+      ]
+    }
+  });
 
-      category:
-        "marinhos",
 
-      body:
+  /* =========================================================
+     REGRAS RACIAIS
+     ========================================================= */
+
+  const RACE_RULES = immutable({
+
+    humano: {
+      skinPalette: "humana",
+
+      bodyTypes: [
+        "slim",
+        "lean",
         "average",
+        "broad",
+        "heavy"
+      ],
 
-      fur:
-        [
-          "#777d7f",
-          "#9a9fa0",
-          "#565c5f"
-        ],
+      ears: [
+        "human"
+      ],
 
-      markings:
-        [
-          "spots"
-        ],
+      horns: [
+        "none"
+      ],
 
-      ears:
+      wings: [
+        "none"
+      ],
+
+      tail: [
+        "none"
+      ],
+
+      defaultBodyType:
+        "average"
+    },
+
+    elfo: {
+      skinPalette: "elfica",
+
+      bodyTypes: [
+        "slim",
+        "lean",
+        "average"
+      ],
+
+      ears: [
+        "pointed_short",
+        "pointed_long"
+      ],
+
+      horns: [
+        "none"
+      ],
+
+      wings: [
+        "none"
+      ],
+
+      tail: [
+        "none"
+      ],
+
+      defaultBodyType:
+        "slim"
+    },
+
+    anao: {
+      skinPalette: "ana",
+
+      bodyTypes: [
+        "average",
+        "broad",
+        "heavy"
+      ],
+
+      ears: [
+        "human",
+        "round"
+      ],
+
+      horns: [
+        "none"
+      ],
+
+      wings: [
+        "none"
+      ],
+
+      tail: [
+        "none"
+      ],
+
+      defaultBodyType:
+        "broad"
+    },
+
+    orc: {
+      skinPalette: "orc",
+
+      bodyTypes: [
+        "average",
+        "broad",
+        "heavy"
+      ],
+
+      ears: [
+        "human",
+        "round"
+      ],
+
+      horns: [
+        "none",
+        "small"
+      ],
+
+      wings: [
+        "none"
+      ],
+
+      tail: [
+        "none"
+      ],
+
+      defaultBodyType:
+        "broad"
+    },
+
+    fada: {
+      skinPalette: "fada",
+
+      bodyTypes: [
+        "slim",
+        "lean"
+      ],
+
+      ears: [
+        "human",
+        "pointed_short"
+      ],
+
+      horns: [
+        "none"
+      ],
+
+      wings: [
+        "fairy",
+        "insect",
+        "magical"
+      ],
+
+      tail: [
+        "none"
+      ],
+
+      defaultBodyType:
+        "slim"
+    },
+
+    animalha: {
+      skinPalette: "animalia",
+
+      bodyTypes: [
+        "slim",
+        "lean",
+        "average",
+        "broad",
+        "heavy"
+      ],
+
+      ears: [
+        "animal",
+        "feline",
+        "canine",
+        "rabbit",
+        "fox"
+      ],
+
+      horns: [
+        "none",
         "small",
+        "medium"
+      ],
 
-      eyes:
-        [
-          "dark_brown"
-        ],
+      wings: [
+        "none",
+        "bird"
+      ],
 
-      modifiers:
-        {
-          vigor: 1,
-          agilidade: 1
-        }
+      tail: [
+        "feline",
+        "canine",
+        "fox",
+        "monkey",
+        "reptile",
+        "fish"
+      ],
+
+      defaultBodyType:
+        "average"
+    },
+
+    vampiro: {
+      skinPalette: "undead",
+
+      bodyTypes: [
+        "slim",
+        "lean",
+        "average"
+      ],
+
+      ears: [
+        "human"
+      ],
+
+      horns: [
+        "none"
+      ],
+
+      wings: [
+        "none",
+        "bat"
+      ],
+
+      tail: [
+        "none"
+      ],
+
+      defaultBodyType:
+        "slim"
+    },
+
+    povo_natureza: {
+      skinPalette: "nature",
+
+      bodyTypes: [
+        "slim",
+        "lean",
+        "average"
+      ],
+
+      ears: [
+        "human",
+        "pointed_short"
+      ],
+
+      horns: [
+        "none",
+        "small"
+      ],
+
+      wings: [
+        "none",
+        "magical"
+      ],
+
+      tail: [
+        "none"
+      ],
+
+      defaultBodyType:
+        "lean"
     }
   });
 
 
   /* =========================================================
-     SISTEMA DE COR / TINTA
+     PRESETS
      ========================================================= */
 
-  const COLOR_CHANNELS = Object.freeze({
+  const PRESETS = immutable({
 
-    skin:
-      "skin",
+    aventureiro: {
+      bodyType: "average",
 
-    hair:
-      "hair",
+      hairStyle: "short",
+      hairColor: "brown",
 
-    eyes:
-      "eyes",
+      eyeShape: "normal",
+      eyeColor: "brown",
 
-    fur:
-      "fur",
+      clothingStyle: "adventurer",
 
-    feathers:
-      "feathers",
+      outerwear:
+        "hooded_cloak",
 
-    scales:
-      "scales",
+      armor:
+        "light",
 
-    clothes:
-      "clothes",
+      hat:
+        "none",
 
-    armor:
-      "armor",
+      mask:
+        "none",
 
-    accessory:
-      "accessory",
+      necklace:
+        "simple",
 
-    markings:
-      "markings",
-
-    tattoo:
-      "tattoo"
-  });
-
-
-  /* =========================================================
-     MATERIAIS
-     ========================================================= */
-
-  const MATERIALS = Object.freeze([
-
-    option(
-      "cloth",
-      "Tecido"
-    ),
-
-    option(
-      "leather",
-      "Couro"
-    ),
-
-    option(
-      "metal",
-      "Metal"
-    ),
-
-    option(
-      "iron",
-      "Ferro"
-    ),
-
-    option(
-      "steel",
-      "Aço"
-    ),
-
-    option(
-      "silver",
-      "Prata"
-    ),
-
-    option(
-      "gold",
-      "Ouro"
-    ),
-
-    option(
-      "wood",
-      "Madeira"
-    ),
-
-    option(
-      "stone",
-      "Pedra"
-    ),
-
-    option(
-      "crystal",
-      "Cristal"
-    ),
-
-    option(
-      "bone",
-      "Osso"
-    ),
-
-    option(
-      "fur",
-      "Pele / Pelagem"
-    )
-  ]);
-
-
-  /* =========================================================
-     PRESETS DE PERSONALIDADE VISUAL
-     ========================================================= */
-
-  const VISUAL_PRESETS = Object.freeze({
-
-    adventurer: {
-
-      name:
-        "Aventureiro",
-
-      values: {
-
-        bodyType:
-          "average",
-
-        hairStyle:
-          "medium",
-
-        clothing:
-          "adventurer",
-
-        shirt:
-          "plain",
-
-        pants:
-          "traveler",
-
-        belt:
-          "leather",
-
-        gloves:
-          "leather",
-
-        boots:
-          "traveler"
-      }
-    },
-
-
-    warrior: {
-
-      name:
-        "Guerreiro",
-
-      values: {
-
-        bodyType:
-          "broad",
-
-        hairStyle:
-          "short",
-
-        clothing:
-          "warrior",
-
-        armor:
-          "light",
-
-        belt:
-          "heavy",
-
-        gloves:
-          "combat",
-
-        boots:
-          "combat"
-      }
-    },
-
-
-    mage: {
-
-      name:
-        "Mago",
-
-      values: {
-
-        bodyType:
-          "slim",
-
-        hairStyle:
-          "medium",
-
-        clothing:
-          "mage",
-
-        robe:
-          "mage",
-
-        cloak:
-          "hooded",
-
-        staff:
-          "staff"
-      }
-    },
-
-
-    healer: {
-
-      name:
-        "Curandeiro",
-
-      values: {
-
-        bodyType:
-          "average",
-
-        hairStyle:
-          "long",
-
-        clothing:
-          "healer",
-
-        robe:
-          "priest",
-
-        necklace:
-          "amulet"
-      }
-    },
-
-
-    monk: {
-
-      name:
-        "Monge",
-
-      values: {
-
-        bodyType:
-          "lean",
-
-        hairStyle:
-          "short",
-
-        clothing:
-          "monk",
-
-        shirt:
-          "tunic",
-
-        gloves:
-          "cloth",
-
-        boots:
-          "simple"
-      }
-    },
-
-
-    traveler: {
-
-      name:
-        "Viajante",
-
-      values: {
-
-        bodyType:
-          "lean",
-
-        hairStyle:
-          "messy",
-
-        clothing:
-          "traveler",
-
-        coat:
-          "traveler",
-
-        cape:
-          "short",
-
-        backpack:
-          "traveler"
-      }
-    }
-  });
-
-
-  /* =========================================================
-     ESTRUTURA COMPLETA DE PERSONALIZAÇÃO
-     ========================================================= */
-
-  const CUSTOMIZATION = Object.freeze({
-
-    identity: {
-
-      enabled:
-        true,
-
-      fields: [
-
-        "gender",
-
-        "name"
-      ]
-    },
-
-
-    body: {
-
-      enabled:
-        true,
-
-      fields: [
-
-        "bodyType",
-
-        "height",
-
-        "width",
-
-        "shoulders",
-
-        "torso",
-
-        "arms",
-
-        "legs",
-
-        "head"
-      ]
-    },
-
-
-    face: {
-
-      enabled:
-        true,
-
-      fields: [
-
-        "headShape",
-
-        "eyes",
-
-        "eyeColor",
-
-        "eyebrows",
-
-        "nose",
-
-        "mouth"
-      ]
-    },
-
-
-    skin: {
-
-      enabled:
-        true,
-
-      fields: [
-
-        "palette",
-
-        "variant"
-      ]
-    },
-
-
-    hair: {
-
-      enabled:
-        true,
-
-      fields: [
-
-        "style",
-
-        "color"
-      ]
-    },
-
-
-    facialHair: {
-
-      enabled:
-        true,
-
-      fields: [
-
-        "style",
-
-        "color"
-      ]
-    },
-
-
-    racialFeatures: {
-
-      enabled:
-        true,
-
-      fields: [
-
-        "ears",
-
-        "horns",
-
-        "wings",
-
-        "tail",
-
-        "fur",
-
-        "feathers",
-
-        "scales"
-      ]
-    },
-
-
-    markings: {
-
-      enabled:
-        true,
-
-      fields: [
-
-        "type",
-
-        "color",
-
-        "opacity",
-
-        "scale",
-
-        "location"
-      ]
-    },
-
-
-    birthmark: {
-
-      enabled:
-        true,
-
-      fields: [
-
-        "type",
-
-        "location",
-
-        "color",
-
-        "opacity",
-
-        "scale"
-      ]
-    },
-
-
-    scars: {
-
-      enabled:
-        true,
-
-      fields: [
-
-        "type",
-
-        "location",
-
-        "count",
-
-        "size"
-      ]
-    },
-
-
-    tattoos: {
-
-      enabled:
-        true,
-
-      fields: [
-
-        "type",
-
-        "location",
-
-        "color",
-
-        "opacity",
-
-        "scale"
-      ]
-    },
-
-
-    piercings: {
-
-      enabled:
-        true,
-
-      fields: [
-
-        "type",
-
-        "location",
-
-        "material"
-      ]
-    },
-
-
-    clothing: {
-
-      enabled:
-        true,
-
-      fields: [
-
-        "style",
-
-        "shirt",
-
-        "pants",
-
-        "dress",
-
-        "coat",
-
-        "cape",
-
-        "robe",
-
-        "belt",
-
-        "gloves",
-
-        "boots"
-      ]
-    },
-
-
-    armor: {
-
-      enabled:
-        true,
-
-      fields: [
-
-        "style",
-
-        "helmet",
-
-        "shoulders",
-
-        "chest",
-
-        "arms",
-
-        "legs"
-      ]
-    },
-
-
-    headwear: {
-
-      enabled:
-        true,
-
-      fields: [
-
-        "hat",
-
-        "headband",
-
-        "hood",
-
-        "helmet",
-
-        "mask",
-
-        "glasses"
-      ]
-    },
-
-
-    jewelry: {
-
-      enabled:
-        true,
-
-      fields: [
-
-        "necklace",
-
-        "earrings",
-
-        "bracelets",
-
-        "rings",
-
-        "watch"
-      ]
-    },
-
-
-    equipment: {
-
-      enabled:
-        true,
-
-      fields: [
-
-        "bag",
-
-        "pouch",
-
+      bags:
         "backpack",
 
-        "quiver",
-
-        "holster",
-
-        "scabbard"
-      ]
+      weapon:
+        "sword"
     },
 
+    mago: {
+      bodyType: "slim",
 
-    weapons: {
+      hairStyle: "medium",
+      hairColor: "black",
 
-      enabled:
-        true,
+      eyeShape: "large",
+      eyeColor: "violet",
 
-      fields: [
+      clothingStyle: "mage",
 
-        "mainHand",
+      outerwear:
+        "robe",
 
-        "offHand",
+      armor:
+        "none",
 
-        "backWeapon",
+      hat:
+        "mage",
 
-        "secondaryWeapon"
-      ]
+      mask:
+        "none",
+
+      necklace:
+        "amulet",
+
+      bags:
+        "satchel",
+
+      weapon:
+        "staff"
     },
 
+    guerreiro: {
+      bodyType: "broad",
 
-    props: {
+      hairStyle: "short",
+      hairColor: "black",
 
-      enabled:
-        true,
+      eyeShape: "sharp",
+      eyeColor: "brown",
 
-      fields: [
+      clothingStyle: "military",
 
-        "book",
+      outerwear:
+        "coat",
 
-        "lantern",
+      armor:
+        "heavy",
 
-        "bottle",
+      hat:
+        "none",
 
-        "scroll",
+      mask:
+        "none",
 
-        "tool",
+      necklace:
+        "none",
 
-        "trinket"
-      ]
+      bags:
+        "pouch",
+
+      weapon:
+        "long_sword"
+    },
+
+    ladino: {
+      bodyType: "lean",
+
+      hairStyle: "medium",
+      hairColor: "dark_brown",
+
+      eyeShape: "narrow",
+      eyeColor: "green",
+
+      clothingStyle: "rogue",
+
+      outerwear:
+        "hooded_cloak",
+
+      armor:
+        "leather",
+
+      hat:
+        "none",
+
+      mask:
+        "half",
+
+      necklace:
+        "none",
+
+      bags:
+        "pouch",
+
+      weapon:
+        "dagger"
     }
   });
 
 
   /* =========================================================
-     ASSETS REAIS
-     =========================================================
-
-     No momento deixamos o catálogo preparado.
-
-     Quando começarmos a colocar as ilustrações definitivas,
-     cada item poderá receber algo como:
-
-       src:
-       thumbnail:
-       mask:
-       tintable:
-       palette:
-       anchor:
-       zIndex:
-
+     DEFAULTS
      ========================================================= */
 
-  const ASSET_MANIFEST = Object.freeze({
+  const DEFAULT_APPEARANCE = immutable({
 
-    bodies: {},
+    height:
+      null,
 
-    heads: {},
+    bodyType:
+      "average",
 
-    faces: {},
+    width:
+      1,
 
-    eyes: {},
+    shoulders:
+      1,
 
-    hair: {},
+    torso:
+      1,
 
-    facialHair: {},
+    arms:
+      1,
 
-    ears: {},
+    legs:
+      1,
 
-    horns: {},
+    head:
+      1,
 
-    wings: {},
+    skin:
+      "",
 
-    tails: {},
+    skinVariant:
+      "",
 
-    skins: {},
+    hair:
+      "",
 
-    markings: {},
+    hairStyle:
+      "short",
 
-    birthmarks: {},
+    hairColor:
+      "black",
 
-    scars: {},
+    eyeShape:
+      "normal",
 
-    tattoos: {},
+    eyes:
+      "",
 
-    piercings: {},
+    eyeColor:
+      "brown",
 
-    shirts: {},
+    eyebrows:
+      "normal",
 
-    pants: {},
+    nose:
+      "straight",
 
-    dresses: {},
+    mouth:
+      "normal",
 
-    coats: {},
+    facialHair:
+      "none",
 
-    capes: {},
+    facialHairColor:
+      "",
 
-    robes: {},
+    ears:
+      "",
 
-    belts: {},
+    horns:
+      "none",
 
-    gloves: {},
+    wings:
+      "none",
 
-    boots: {},
+    tail:
+      "none",
 
-    armor: {},
+    furColor:
+      "",
 
-    helmets: {},
+    furPattern:
+      "",
 
-    hats: {},
+    markings:
+      "none",
 
-    headbands: {},
+    markingsColor:
+      "",
 
-    hoods: {},
+    markingOpacity:
+      1,
 
-    masks: {},
+    markingScale:
+      1,
 
-    glasses: {},
+    markingLocation:
+      "",
 
-    necklaces: {},
+    birthmark:
+      "none",
 
-    earrings: {},
+    birthmarkColor:
+      "",
 
-    bracelets: {},
+    birthmarkOpacity:
+      1,
 
-    rings: {},
+    birthmarkScale:
+      1,
 
-    watches: {},
+    birthmarkLocation:
+      "",
 
-    bags: {},
+    scars:
+      "none",
 
-    pouches: {},
+    scarCount:
+      1,
 
-    backpacks: {},
+    scarSize:
+      1,
 
-    quivers: {},
+    scarLocation:
+      "",
 
-    holsters: {},
+    tattoos:
+      "none",
 
-    scabbards: {},
+    tattooColor:
+      "",
 
-    weapons: {},
+    tattooOpacity:
+      1,
 
-    props: {}
+    tattooScale:
+      1,
+
+    tattooLocation:
+      "",
+
+    piercings:
+      "none",
+
+    piercingLocation:
+      "",
+
+    piercingMaterial:
+      "",
+
+    clothing:
+      "",
+
+    clothingStyle:
+      "",
+
+    shirt:
+      "",
+
+    pants:
+      "",
+
+    skirt:
+      "",
+
+    dress:
+      "",
+
+    coat:
+      "",
+
+    cape:
+      "",
+
+    robe:
+      "",
+
+    tunic:
+      "",
+
+    belt:
+      "",
+
+    gloves:
+      "",
+
+    boots:
+      "",
+
+    socks:
+      "",
+
+    armor:
+      "",
+
+    armorStyle:
+      "",
+
+    shoulderArmor:
+      "",
+
+    chestArmor:
+      "",
+
+    armArmor:
+      "",
+
+    legArmor:
+      "",
+
+    helmet:
+      "",
+
+    hat:
+      "none",
+
+    headband:
+      "none",
+
+    hood:
+      "none",
+
+    mask:
+      "none",
+
+    glasses:
+      "none",
+
+    necklace:
+      "none",
+
+    earrings:
+      "none",
+
+    bracelet:
+      "none",
+
+    rings:
+      "none",
+
+    watch:
+      "none",
+
+    bag:
+      "none",
+
+    pouch:
+      "none",
+
+    backpack:
+      "none",
+
+    quiver:
+      "none",
+
+    holster:
+      "none",
+
+    scabbard:
+      "none",
+
+    weapon:
+      "none",
+
+    mainHand:
+      "none",
+
+    offHand:
+      "none",
+
+    secondaryWeapon:
+      "none",
+
+    backWeapon:
+      "none",
+
+    handItem:
+      "none",
+
+    book:
+      "none",
+
+    lantern:
+      "none",
+
+    bottle:
+      "none",
+
+    scroll:
+      "none",
+
+    tool:
+      "none",
+
+    trinket:
+      "none",
+
+    physicalNotes:
+      ""
   });
 
 
   /* =========================================================
-     ESTRUTURA DE CAMADAS
+     ALIASES
      ========================================================= */
 
-  const DEFAULT_LAYER_ORDER = Object.freeze([
+  const RACE_ALIASES = immutable({
+    humano:
+      "humano",
 
-    {
-      id:
-        "background",
+    humanoid:
+      "humano",
 
-      zIndex:
-        LAYERS.BACKGROUND
-    },
+    humanoa:
+      "humano",
 
-    {
-      id:
-        "shadow",
+    elfo:
+      "elfo",
 
-      zIndex:
-        LAYERS.SHADOW
-    },
+    elfa:
+      "elfo",
 
-    {
-      id:
-        "back_hair",
+    anao:
+      "anao",
 
-      zIndex:
-        LAYERS.BACK_HAIR
-    },
+    anao_feminino:
+      "anao",
 
-    {
-      id:
-        "tail_back",
+    anao_feminino:
+      "anao",
 
-      zIndex:
-        LAYERS.TAIL_BACK
-    },
+    orc:
+      "orc",
 
-    {
-      id:
-        "wings_back",
+    orc_feminino:
+      "orc",
 
-      zIndex:
-        LAYERS.WINGS_BACK
-    },
+    fada:
+      "fada",
 
-    {
-      id:
-        "body",
+    fada_feminino:
+      "fada",
 
-      zIndex:
-        LAYERS.BODY
-    },
+    animalha:
+      "animalha",
 
-    {
-      id:
-        "body_markings",
+    animalhas:
+      "animalha",
 
-      zIndex:
-        LAYERS.BODY_MARKINGS
-    },
+    vampiro:
+      "vampiro",
 
-    {
-      id:
-        "clothing_under",
+    povo_natureza:
+      "povo_natureza"
+  });
 
-      zIndex:
-        LAYERS.CLOTHING_UNDER
-    },
 
-    {
-      id:
-        "clothing_main",
+  /* =========================================================
+     UTILITÁRIOS PÚBLICOS
+     ========================================================= */
 
-      zIndex:
-        LAYERS.CLOTHING_MAIN
-    },
+  function normalizeRaceId(
+    raceId
+  ) {
+    const value =
+      String(
+        raceId ?? ""
+      )
+        .trim()
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(
+          /[\u0300-\u036f]/g,
+          ""
+        )
+        .replace(
+          /\s+/g,
+          "_"
+        );
 
-    {
-      id:
-        "clothing_upper",
+    return (
+      RACE_ALIASES[value] ||
+      value
+    );
+  }
 
-      zIndex:
-        LAYERS.CLOTHING_UPPER
-    },
 
-    {
-      id:
-        "armor",
+  function getRaceRules(
+    raceId
+  ) {
+    const id =
+      normalizeRaceId(
+        raceId
+      );
 
-      zIndex:
-        LAYERS.ARMOR
-    },
+    return (
+      RACE_RULES[id] ||
+      null
+    );
+  }
 
-    {
-      id:
-        "wings_front",
 
-      zIndex:
-        LAYERS.WINGS_FRONT
-    },
+  function getSkinPaletteForRace(
+    raceId
+  ) {
+    const rules =
+      getRaceRules(
+        raceId
+      );
 
-    {
-      id:
-        "face",
-
-      zIndex:
-        LAYERS.FACE
-    },
-
-    {
-      id:
-        "ears",
-
-      zIndex:
-        LAYERS.EARS
-    },
-
-    {
-      id:
-        "horns",
-
-      zIndex:
-        LAYERS.HORNS
-    },
-
-    {
-      id:
-        "hair",
-
-      zIndex:
-        LAYERS.HAIR
-    },
-
-    {
-      id:
-        "facial_features",
-
-      zIndex:
-        LAYERS.FACIAL_FEATURES
-    },
-
-    {
-      id:
-        "face_markings",
-
-      zIndex:
-        LAYERS.FACE_MARKINGS
-    },
-
-    {
-      id:
-        "headwear",
-
-      zIndex:
-        LAYERS.HEADWEAR
-    },
-
-    {
-      id:
-        "mask",
-
-      zIndex:
-        LAYERS.MASK
-    },
-
-    {
-      id:
-        "jewelry",
-
-      zIndex:
-        LAYERS.JEWELRY
-    },
-
-    {
-      id:
-        "accessories",
-
-      zIndex:
-        LAYERS.ACCESSORY
-    },
-
-    {
-      id:
-        "weapons",
-
-      zIndex:
-        LAYERS.WEAPON
-    },
-
-    {
-      id:
-        "effects",
-
-      zIndex:
-        LAYERS.EFFECT
+    if (
+      !rules
+    ) {
+      return (
+        SKIN_PALETTES.humana
+      );
     }
-  ]);
+
+    return (
+      SKIN_PALETTES[
+        rules.skinPalette
+      ] ||
+      SKIN_PALETTES.humana
+    );
+  }
+
+
+  function getAnimalhaAnimalsByCategory(
+    categoryId
+  ) {
+    const id =
+      String(
+        categoryId ?? ""
+      )
+        .trim()
+        .toLowerCase();
+
+    return Object.values(
+      ANIMALHA_ANIMALS
+    ).filter(
+      animal =>
+        animal.category ===
+        id
+    );
+  }
+
+
+  function getDefaultAppearanceForRace(
+    raceId
+  ) {
+    const rules =
+      getRaceRules(
+        raceId
+      );
+
+    const appearance = {
+      ...DEFAULT_APPEARANCE
+    };
+
+    if (
+      rules
+    ) {
+      appearance.bodyType =
+        rules.defaultBodyType;
+
+      appearance.ears =
+        rules.ears?.[0] ??
+        "";
+
+      appearance.horns =
+        rules.horns?.[0] ??
+        "none";
+
+      appearance.wings =
+        rules.wings?.[0] ??
+        "none";
+
+      appearance.tail =
+        rules.tail?.[0] ??
+        "none";
+    }
+
+    return appearance;
+  }
+
+
+  function isOptionAllowed(
+    raceId,
+    field,
+    value
+  ) {
+    const rules =
+      getRaceRules(
+        raceId
+      );
+
+    if (
+      !rules
+    ) {
+      return true;
+    }
+
+    if (
+      field ===
+      "bodyType"
+    ) {
+      return rules.bodyTypes?.includes(
+        value
+      ) ?? true;
+    }
+
+    if (
+      field ===
+      "ears"
+    ) {
+      return rules.ears?.includes(
+        value
+      ) ?? true;
+    }
+
+    if (
+      field ===
+      "horns"
+    ) {
+      return rules.horns?.includes(
+        value
+      ) ?? true;
+    }
+
+    if (
+      field ===
+      "wings"
+    ) {
+      return rules.wings?.includes(
+        value
+      ) ?? true;
+    }
+
+    if (
+      field ===
+      "tail"
+    ) {
+      return rules.tail?.includes(
+        value
+      ) ?? true;
+    }
+
+    return true;
+  }
 
 
   /* =========================================================
-     CONFIGURAÇÃO DO EDITOR
+     CATÁLOGO COMPLETO
      ========================================================= */
 
-  const EDITOR = Object.freeze({
+  const ASSETS = immutable({
 
     version:
       VERSION,
-
-    allowLivePreview:
-      true,
-
-    allowCustomColors:
-      false,
-
-    allowLayerReorder:
-      false,
-
-    useRaceRestrictions:
-      true,
-
-    useAnimalhaRestrictions:
-      true,
-
-    preserveEquipment:
-      true,
-
-    preserveAccessories:
-      true,
-
-    defaultPreset:
-      "adventurer"
-  });
-
-
-  /* =========================================================
-     API
-     ========================================================= */
-
-  const API = {
-
-    version:
-      VERSION,
-
-    editor:
-      EDITOR,
 
     layers:
       LAYERS,
 
     parts:
       PARTS,
+
+    categories:
+      CATEGORIES,
 
     bodyTypes:
       BODY_TYPES,
@@ -5658,17 +2838,11 @@
     skinPalettes:
       SKIN_PALETTES,
 
-    skinRestrictions:
-      SKIN_RESTRICTIONS,
-
     hairStyles:
       HAIR_STYLES,
 
     hairColors:
       HAIR_COLORS,
-
-    facialHair:
-      FACIAL_HAIR,
 
     eyeShapes:
       EYE_SHAPES,
@@ -5676,23 +2850,26 @@
     eyeColors:
       EYE_COLORS,
 
+    faceShapes:
+      FACE_SHAPES,
+
+    noseShapes:
+      NOSE_SHAPES,
+
+    mouthShapes:
+      MOUTH_SHAPES,
+
     eyebrows:
       EYEBROWS,
 
-    noses:
-      NOSES,
+    facialHair:
+      FACIAL_HAIR,
 
-    mouths:
-      MOUTHS,
+    earTypes:
+      EAR_TYPES,
 
-    humanEars:
-      HUMAN_EARS,
-
-    elfEars:
-      ELF_EARS,
-
-    hornStyles:
-      HORN_STYLES,
+    hornTypes:
+      HORN_TYPES,
 
     wingTypes:
       WING_TYPES,
@@ -5700,71 +2877,32 @@
     tailTypes:
       TAIL_TYPES,
 
-    furColors:
-      FUR_COLORS,
-
-    animalMarkings:
-      ANIMAL_MARKINGS,
-
-    bodyMarkings:
-      BODY_MARKING_TYPES,
+    markings:
+      MARKINGS,
 
     birthmarks:
       BIRTHMARKS,
 
     scars:
-      SCAR_TYPES,
+      SCARS,
 
     tattoos:
-      TATTOO_TYPES,
-
-    tattooLocations:
-      TATTOO_LOCATIONS,
+      TATTOOS,
 
     piercings:
       PIERCINGS,
 
-    clothingStyles:
-      CLOTHING_STYLES,
+    clothing:
+      CLOTHING,
 
-    shirts:
-      SHIRTS,
+    outerwear:
+      OUTERWEAR,
 
-    pants:
-      PANTS,
-
-    dresses:
-      DRESSES,
-
-    coats:
-      COATS,
-
-    capes:
-      CAPES,
-
-    robes:
-      ROBES,
-
-    belts:
-      BELTS,
-
-    gloves:
-      GLOVES,
-
-    boots:
-      BOOTS,
-
-    armorStyles:
-      ARMOR_STYLES,
-
-    helmets:
-      HELMETS,
+    armor:
+      ARMOR,
 
     hats:
       HATS,
-
-    hoods:
-      HOODS,
 
     masks:
       MASKS,
@@ -5772,23 +2910,11 @@
     glasses:
       GLASSES,
 
-    necklaces:
-      NECKLACES,
-
-    earrings:
-      EARRINGS,
-
-    bracelets:
-      BRACELETS,
-
-    rings:
-      RINGS,
+    jewelry:
+      JEWELRY,
 
     bags:
       BAGS,
-
-    backpacks:
-      BACKPACKS,
 
     quivers:
       QUIVERS,
@@ -5796,17 +2922,11 @@
     weapons:
       WEAPONS,
 
-    handItems:
-      HAND_ITEMS,
+    props:
+      PROPS,
 
     materials:
       MATERIALS,
-
-    colorChannels:
-      COLOR_CHANNELS,
-
-    raceRules:
-      RACE_RULES,
 
     animalhaCategories:
       ANIMALHA_CATEGORIES,
@@ -5814,62 +2934,155 @@
     animalhaAnimals:
       ANIMALHA_ANIMALS,
 
-    customization:
-      CUSTOMIZATION,
+    raceRules:
+      RACE_RULES,
 
     presets:
-      VISUAL_PRESETS,
+      PRESETS,
 
-    assets:
-      ASSET_MANIFEST,
-
-    layerOrder:
-      DEFAULT_LAYER_ORDER
-  };
+    defaultAppearance:
+      DEFAULT_APPEARANCE
+  });
 
 
   /* =========================================================
-     EXPOSIÇÃO GLOBAL
+     API
      ========================================================= */
 
   window.AERIONPersonagemAssets =
-    Object.freeze(
-      API
-    );
+    Object.freeze({
+
+      VERSION,
+
+      LAYERS,
+
+      PARTS,
+
+      CATEGORIES,
+
+      BODY_TYPES,
+
+      BODY_PROPORTIONS,
+
+      SKIN_PALETTES,
+
+      HAIR_STYLES,
+
+      HAIR_COLORS,
+
+      EYE_SHAPES,
+
+      EYE_COLORS,
+
+      FACE_SHAPES,
+
+      NOSE_SHAPES,
+
+      MOUTH_SHAPES,
+
+      EYEBROWS,
+
+      FACIAL_HAIR,
+
+      EAR_TYPES,
+
+      HORN_TYPES,
+
+      WING_TYPES,
+
+      TAIL_TYPES,
+
+      MARKINGS,
+
+      BIRTHMARKS,
+
+      SCARS,
+
+      TATTOOS,
+
+      PIERCINGS,
+
+      CLOTHING,
+
+      OUTERWEAR,
+
+      ARMOR,
+
+      HATS,
+
+      MASKS,
+
+      GLASSES,
+
+      JEWELRY,
+
+      BAGS,
+
+      QUIVERS,
+
+      WEAPONS,
+
+      PROPS,
+
+      MATERIALS,
+
+      ANIMALHA_CATEGORIES,
+
+      ANIMALHA_ANIMALS,
+
+      RACE_RULES,
+
+      PRESETS,
+
+      DEFAULT_APPEARANCE,
+
+      ASSETS,
+
+      normalizeRaceId,
+
+      getRaceRules,
+
+      getSkinPaletteForRace,
+
+      getAnimalhaAnimalsByCategory,
+
+      getDefaultAppearanceForRace,
+
+      isOptionAllowed
+    });
+
+
+  /* =========================================================
+     COMPATIBILIDADE
+     ========================================================= */
+
+  window.AERION_CHARACTER_ASSETS =
+    window.AERIONPersonagemAssets;
 
 
   /* =========================================================
      READY
      ========================================================= */
 
-  function announceReady() {
-    window.dispatchEvent(
-      new CustomEvent(
-        "aerion:personagem-assets:ready"
-      )
-    );
-  }
-
-
-  if (
-    document.readyState ===
-    "loading"
-  ) {
-    document.addEventListener(
-      "DOMContentLoaded",
-      announceReady,
+  window.dispatchEvent(
+    new CustomEvent(
+      "aerion:personagem-assets:ready",
       {
-        once:
-          true
+        detail: {
+          version:
+            VERSION
+        }
       }
-    );
-  } else {
-    announceReady();
-  }
+    )
+  );
 
 
   console.info(
-    "[AERION] personagem-assets.js carregado — catálogo de personalização disponível."
+    "[AERION] personagem-assets.js inicializado.",
+    {
+      version:
+        VERSION
+    }
   );
 
 })();
