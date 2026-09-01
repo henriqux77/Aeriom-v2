@@ -55,35 +55,34 @@
 
   <!-- ======================================================
        AERION
-       ORDEM IMPORTANTE
+       ORDEM DE EXECUÇÃO
 
-       1. ficha-render
-       2. personagem-assets
-       3. personagem-render
-       4. ficha
-
+       1. Assets
+       2. Núcleo da ficha
+       3. Renderizador do personagem
+       4. Renderizador da ficha
        ====================================================== -->
-<!-- ORDEM CORRETA -->
 
-<script
-  src="./js/core/personagem-assets.js"
-  defer
-></script>
+  <script
+    src="./js/core/personagem-assets.js"
+    defer
+  ></script>
 
-<script
-  src="./js/core/ficha.js"
-  defer
-></script>
+  <script
+    src="./js/core/ficha.js"
+    defer
+  ></script>
 
-<script
-  src="./js/core/personagem-render.js"
-  defer
-></script>
+  <script
+    src="./js/core/personagem-render.js"
+    defer
+  ></script>
 
-<script
-  src="./js/core/ficha-render.js"
-  defer
-></script>
+  <script
+    src="./js/core/ficha-render.js"
+    defer
+  ></script>
+
 </head>
 
 
@@ -150,7 +149,7 @@
 
     <section
       class="progress-area"
-      aria-label="Progresso"
+      aria-label="Progresso da criação"
     >
 
       <div class="progress-topline">
@@ -198,7 +197,7 @@
       <nav
         id="creationSteps"
         class="creation-steps"
-        aria-label="Etapas"
+        aria-label="Etapas da criação"
       >
 
         <button
@@ -345,7 +344,7 @@
 
 
       <!-- ==================================================
-           IDENTIDADE
+           01 — IDENTIDADE
            ================================================== -->
 
       <section
@@ -373,7 +372,7 @@
         <div class="identity-layout">
 
 
-          <!-- AVATAR -->
+          <!-- IMAGEM -->
 
           <article class="character-image-card">
 
@@ -449,7 +448,6 @@
           <!-- FORM -->
 
           <div class="form-stack">
-
 
             <label class="field">
 
@@ -589,7 +587,7 @@
 
 
       <!-- ==================================================
-           RAÇA
+           02 — RAÇA
            ================================================== -->
 
       <section
@@ -609,8 +607,7 @@
           </h2>
 
           <p>
-            A raça define características, perfil natural,
-            atributos e restrições físicas.
+            Veja a aparência da raça antes de confirmar sua escolha.
           </p>
 
         </div>
@@ -664,7 +661,7 @@
 
 
               <h3 id="raceName">
-                Humano
+                —
               </h3>
 
 
@@ -678,7 +675,7 @@
                 <span>
 
                   <b>
-                    Perfil natural
+                    Perfil
                   </b>
 
                   <strong data-race-profile>
@@ -702,6 +699,40 @@
 
               </div>
 
+
+              <div class="race-height-meta">
+
+                <span>
+
+                  <b>
+                    Altura mínima
+                  </b>
+
+                  <strong
+                    id="raceHeightMin"
+                  >
+                    —
+                  </strong>
+
+                </span>
+
+
+                <span>
+
+                  <b>
+                    Altura máxima
+                  </b>
+
+                  <strong
+                    id="raceHeightMax"
+                  >
+                    —
+                  </strong>
+
+                </span>
+
+              </div>
+
             </div>
 
 
@@ -710,9 +741,11 @@
               class="race-select-indicator"
               data-action="select-race-current"
             >
+
               <span id="raceSelectedText">
                 Selecionar
               </span>
+
             </button>
 
           </article>
@@ -733,30 +766,11 @@
         <div
           id="raceDots"
           class="carousel-dots"
-          aria-label="Indicador de raça"
+          aria-label="Raças disponíveis"
         ></div>
 
 
-        <div
-          id="raceDescription"
-          class="race-description"
-          hidden
-        >
-
-          <span class="eyebrow">
-            SOBRE A RAÇA
-          </span>
-
-          <h3 id="raceDescriptionTitle"></h3>
-
-          <p id="raceDescriptionText"></p>
-
-        </div>
-
-
-        <!-- ==================================================
-             ANIMALHA
-             ================================================== -->
+        <!-- ANIMALHA -->
 
         <div
           class="animalha-selection"
@@ -771,12 +785,12 @@
             </span>
 
             <h3>
-              Escolha a categoria
+              Escolha sua linhagem
             </h3>
 
             <p>
-              Primeiro escolha o tipo. Depois escolha
-              o animal específico.
+              Primeiro escolha uma categoria. Depois escolha
+              a variação animal.
             </p>
 
           </div>
@@ -793,7 +807,6 @@
               data-action="select-animalha-category"
               data-animalha-category="voadores"
             >
-
               <span
                 class="animalha-category-icon"
                 aria-hidden="true"
@@ -806,9 +819,8 @@
               </strong>
 
               <small>
-                Mobilidade aérea
+                Linhagens aéreas
               </small>
-
             </button>
 
 
@@ -818,7 +830,6 @@
               data-action="select-animalha-category"
               data-animalha-category="terrestres"
             >
-
               <span
                 class="animalha-category-icon"
                 aria-hidden="true"
@@ -831,9 +842,8 @@
               </strong>
 
               <small>
-                Mobilidade terrestre
+                Linhagens terrestres
               </small>
-
             </button>
 
 
@@ -843,7 +853,6 @@
               data-action="select-animalha-category"
               data-animalha-category="marinhos"
             >
-
               <span
                 class="animalha-category-icon"
                 aria-hidden="true"
@@ -856,9 +865,31 @@
               </strong>
 
               <small>
-                Adaptação aquática
+                Linhagens aquáticas
               </small>
+            </button>
 
+
+            <button
+              type="button"
+              class="animalha-category-card"
+              data-action="select-animalha-category"
+              data-animalha-category="reptilianos"
+            >
+              <span
+                class="animalha-category-icon"
+                aria-hidden="true"
+              >
+                ◇
+              </span>
+
+              <strong>
+                Reptilianos
+              </strong>
+
+              <small>
+                Linhagens reptilianas
+              </small>
             </button>
 
 
@@ -868,7 +899,6 @@
               data-action="select-animalha-category"
               data-animalha-category="pequenos"
             >
-
               <span
                 class="animalha-category-icon"
                 aria-hidden="true"
@@ -877,13 +907,12 @@
               </span>
 
               <strong>
-                Pequeno porte
+                Pequenos
               </strong>
 
               <small>
-                Agilidade e adaptação
+                Pequeno porte
               </small>
-
             </button>
 
 
@@ -893,7 +922,6 @@
               data-action="select-animalha-category"
               data-animalha-category="grandes"
             >
-
               <span
                 class="animalha-category-icon"
                 aria-hidden="true"
@@ -902,54 +930,210 @@
               </span>
 
               <strong>
-                Grande porte
+                Grandes
               </strong>
 
               <small>
-                Força e resistência
+                Grande porte
               </small>
-
             </button>
 
           </div>
 
 
+          <!-- VARIAÇÕES -->
+
           <div
-            class="animalha-animals"
-            data-animalha-animals
-            hidden
+            class="animalha-variants"
+            data-animalha-options
           >
 
-            <div class="animalha-subheading">
+            <div class="section-heading compact">
+
+              <span class="eyebrow">
+                VARIAÇÃO
+              </span>
+
+              <h3>
+                Escolha o animal
+              </h3>
+
+            </div>
+
+
+            <div
+              class="animalha-option-grid"
+              data-animalha-options-grid
+            >
 
               <button
                 type="button"
-                class="button button-ghost"
-                data-action="back-animalha-category"
+                class="animalha-option-card"
+                data-action="select-animalha"
+                data-animalha="gato"
               >
-                ← Categorias
+                <strong>
+                  Gato
+                </strong>
               </button>
 
 
-              <div>
+              <button
+                type="button"
+                class="animalha-option-card"
+                data-action="select-animalha"
+                data-animalha="pantera"
+              >
+                <strong>
+                  Pantera
+                </strong>
+              </button>
 
-                <span class="eyebrow">
-                  ANIMALHA
-                </span>
 
-                <h4 data-animalha-category-title>
-                  Animal
-                </h4>
+              <button
+                type="button"
+                class="animalha-option-card"
+                data-action="select-animalha"
+                data-animalha="tigre"
+              >
+                <strong>
+                  Tigre
+                </strong>
+              </button>
 
-              </div>
+
+              <button
+                type="button"
+                class="animalha-option-card"
+                data-action="select-animalha"
+                data-animalha="leao"
+              >
+                <strong>
+                  Leão
+                </strong>
+              </button>
+
+
+              <button
+                type="button"
+                class="animalha-option-card"
+                data-action="select-animalha"
+                data-animalha="lobo"
+              >
+                <strong>
+                  Lobo
+                </strong>
+              </button>
+
+
+              <button
+                type="button"
+                class="animalha-option-card"
+                data-action="select-animalha"
+                data-animalha="raposa"
+              >
+                <strong>
+                  Raposa
+                </strong>
+              </button>
+
+
+              <button
+                type="button"
+                class="animalha-option-card"
+                data-action="select-animalha"
+                data-animalha="urso"
+              >
+                <strong>
+                  Urso
+                </strong>
+              </button>
+
+
+              <button
+                type="button"
+                class="animalha-option-card"
+                data-action="select-animalha"
+                data-animalha="falcao"
+              >
+                <strong>
+                  Falcão
+                </strong>
+              </button>
+
+
+              <button
+                type="button"
+                class="animalha-option-card"
+                data-action="select-animalha"
+                data-animalha="aguia"
+              >
+                <strong>
+                  Águia
+                </strong>
+              </button>
+
+
+              <button
+                type="button"
+                class="animalha-option-card"
+                data-action="select-animalha"
+                data-animalha="coruja"
+              >
+                <strong>
+                  Coruja
+                </strong>
+              </button>
+
+
+              <button
+                type="button"
+                class="animalha-option-card"
+                data-action="select-animalha"
+                data-animalha="cobra"
+              >
+                <strong>
+                  Cobra
+                </strong>
+              </button>
+
+
+              <button
+                type="button"
+                class="animalha-option-card"
+                data-action="select-animalha"
+                data-animalha="crocodilo"
+              >
+                <strong>
+                  Crocodilo
+                </strong>
+              </button>
+
+
+              <button
+                type="button"
+                class="animalha-option-card"
+                data-action="select-animalha"
+                data-animalha="tubarao"
+              >
+                <strong>
+                  Tubarão
+                </strong>
+              </button>
+
+
+              <button
+                type="button"
+                class="animalha-option-card"
+                data-action="select-animalha"
+                data-animalha="foca"
+              >
+                <strong>
+                  Foca
+                </strong>
+              </button>
 
             </div>
-
-
-            <div
-              class="animalha-grid"
-              data-animalha-grid
-            ></div>
 
           </div>
 
@@ -960,337 +1144,110 @@
 
 
       <!-- ==================================================
-           APARÊNCIA
+           03 — APARÊNCIA
            ================================================== -->
 
       <section
-  class="creation-panel"
-  data-panel="appearance"
-  hidden
->
-  <div class="section-heading">
+        class="creation-panel"
+        data-panel="appearance"
+        hidden
+      >
 
-    <span class="eyebrow">
-      TERCEIRA ETAPA
-    </span>
+        <div class="section-heading">
 
-    <h2>
-      Aparência
-    </h2>
+          <span class="eyebrow">
+            TERCEIRA ETAPA
+          </span>
 
-    <p>
-      Ajuste a apresentação visual do personagem.
-    </p>
+          <h2>
+            Aparência
+          </h2>
 
-  </div>
+          <p>
+            A mesma imagem da raça selecionada será usada
+            como visualização do personagem.
+          </p>
 
-
-  <div class="appearance-layout">
-
-    <div
-      id="appearanceFigure"
-      class="appearance-render"
-      aria-label="Visualizador do personagem"
-    >
-      <!--
-        O personagem-render.js coloca aqui
-        a imagem real da raça selecionada.
-      -->
-    </div>
-
-
-    <div class="appearance-controls">
-
-      <article class="appearance-control-card">
-
-        <div class="appearance-control-title">
-          <span>Altura</span>
-
-          <strong
-            id="appearanceHeightValue"
-          >
-            —
-          </strong>
         </div>
 
 
-        <label
-          class="appearance-control-label"
-          for="appearanceHeight"
-        >
-          Altura do personagem
-        </label>
+        <div class="appearance-layout">
 
 
-        <input
-          id="appearanceHeight"
-          class="appearance-range"
-          type="range"
-          min="1"
-          max="2"
-          step="0.01"
-          value="1"
-          data-appearance-field="height"
-        />
+          <!-- VISUALIZADOR -->
 
-
-        <div class="range-value">
-
-          <span
-            id="appearanceHeightMin"
+          <div
+            id="appearanceFigure"
+            class="appearance-render"
+            aria-label="Visualizador do personagem"
           >
-            —
-          </span>
-
-          <span
-            id="appearanceHeightMax"
-          >
-            —
-          </span>
-
-        </div>
-
-      </article>
-
-    </div>
-
-  </div>
-
-</section>
-
-          <!-- =================================================
-               RENDER
-               ================================================= -->
-
-          <div class="appearance-stage">
+          </div>
 
 
-            <div class="appearance-ruler">
+          <!-- CONTROLES -->
 
-              <span class="ruler-label">
-                MAX
-              </span>
-
-              <div class="ruler-line"></div>
-
-              <span class="ruler-label">
-                MIN
-              </span>
-
-            </div>
+          <div class="appearance-controls">
 
 
-            <div class="appearance-figure-area">
+            <article class="appearance-control-card">
+
+              <div class="appearance-control-title">
+
+                <span>
+                  Altura
+                </span>
+
+                <strong
+                  id="appearanceHeightValue"
+                >
+                  —
+                </strong>
+
+              </div>
 
 
-              <!--
-                O personagem 2D é criado pelo
-                personagem-render.js.
-              -->
-
-              <div
-                id="appearanceFigure"
-                class="appearance-figure"
-                aria-label="Pré-visualização do personagem"
-              ></div>
-
-
-            </div>
-
-
-            <div class="appearance-height-readout">
-
-              <span class="eyebrow">
-                ALTURA
-              </span>
-
-
-              <strong
-                id="appearanceHeightValue"
-                data-height-value
+              <label
+                class="appearance-control-label"
+                for="appearanceHeight"
               >
-                —
-              </strong>
-
-
-              <small
-                id="appearanceHeightLimits"
-              >
-                Selecione uma raça.
-              </small>
+                Altura do personagem
+              </label>
 
 
               <input
-                id="heightRange"
+                id="appearanceHeight"
+                class="appearance-range"
                 type="range"
-                min="100"
-                max="400"
-                value="170"
+                min="150"
+                max="200"
                 step="1"
-                aria-label="Altura"
+                value="175"
+                data-appearance-field="height"
               >
 
 
-              <div class="height-limits">
+              <div class="range-value">
 
                 <span
-                  id="appearanceMinLabel"
+                  id="appearanceHeightMin"
                 >
                   —
                 </span>
 
+                <span>
+                  Altura
+                </span>
+
                 <span
-                  id="appearanceMaxLabel"
+                  id="appearanceHeightMax"
                 >
                   —
                 </span>
 
               </div>
 
-            </div>
+            </article>
 
-          </div>
-
-
-          <!-- =================================================
-               EDITOR DE PERSONAGEM
-               O personagem-render.js cria aqui
-               as abas e controles detalhados.
-               ================================================= -->
-
-          <div
-            id="characterCustomizerHost"
-            class="character-customizer-host"
-          ></div>
-
-
-          <!-- =================================================
-               COMPATIBILIDADE COM CAMPOS ANTIGOS
-               ================================================= -->
-
-          <div
-            class="appearance-controls"
-            data-legacy-appearance-controls
-          >
-
-            <div class="field">
-
-              <span class="field-label">
-                Cabelo
-              </span>
-
-              <input
-                id="hair"
-                type="text"
-                maxlength="120"
-                placeholder="Cor, corte e estilo..."
-              >
-
-            </div>
-
-
-            <div class="field">
-
-              <span class="field-label">
-                Olhos
-              </span>
-
-              <input
-                id="eyes"
-                type="text"
-                maxlength="120"
-                placeholder="Cor e formato..."
-              >
-
-            </div>
-
-
-            <div class="field">
-
-              <span class="field-label">
-                Pele
-              </span>
-
-              <input
-                id="skin"
-                type="text"
-                maxlength="120"
-                placeholder="Descrição..."
-              >
-
-            </div>
-
-
-            <div class="field">
-
-              <span class="field-label">
-                Vestimenta
-              </span>
-
-              <textarea
-                id="clothing"
-                rows="3"
-                maxlength="300"
-                placeholder="Roupas, armadura e estilo..."
-              ></textarea>
-
-            </div>
-
-
-            <div class="field">
-
-              <span class="field-label">
-                Cicatrizes
-              </span>
-
-              <textarea
-                id="scars"
-                rows="3"
-                maxlength="300"
-                placeholder="Cicatrizes..."
-              ></textarea>
-
-            </div>
-
-
-            <div class="field">
-
-              <span class="field-label">
-                Tatuagens
-              </span>
-
-              <textarea
-                id="tattoos"
-                rows="3"
-                maxlength="300"
-                placeholder="Tatuagens..."
-              ></textarea>
-
-            </div>
-
-
-            <div class="field">
-
-              <span class="field-label">
-                Outros detalhes
-              </span>
-
-              <textarea
-                id="physicalNotes"
-                rows="3"
-                maxlength="500"
-                placeholder="Outros detalhes..."
-              ></textarea>
-
-            </div>
-
-
-            <div
-              class="appearance-flight-status"
-              data-flight-status
-            >
-              —
-            </div>
 
           </div>
 
@@ -1301,7 +1258,7 @@
 
 
       <!-- ==================================================
-           CLASSE
+           04 — CLASSE
            ================================================== -->
 
       <section
@@ -1321,38 +1278,27 @@
           </h2>
 
           <p>
-            A classe modifica principalmente suas perícias.
+            Defina a especialização principal do personagem.
           </p>
 
         </div>
 
 
-        <div
-          id="classGrid"
-          class="class-grid"
-        >
+        <div class="class-grid">
 
 
           <button
             type="button"
             class="class-card"
             data-action="select-class"
-            data-class="guerreiro"
+            data-class-id="guerreiro"
           >
 
-            <div class="class-visual">
+            <span class="class-icon">
+              ⚔
+            </span>
 
-              <span aria-hidden="true">
-                ⚔
-              </span>
-
-            </div>
-
-            <div class="class-card-content">
-
-              <span class="eyebrow">
-                MARCIAL
-              </span>
+            <div>
 
               <h3>
                 Guerreiro
@@ -1362,11 +1308,6 @@
                 Especialista em combate direto.
               </p>
 
-              <div
-                class="class-bonus-list"
-                data-class-bonus
-              ></div>
-
             </div>
 
           </button>
@@ -1376,35 +1317,22 @@
             type="button"
             class="class-card"
             data-action="select-class"
-            data-class="feiticeiro"
+            data-class-id="feiticeiro"
           >
 
-            <div class="class-visual">
+            <span class="class-icon">
+              ✦
+            </span>
 
-              <span aria-hidden="true">
-                ✦
-              </span>
-
-            </div>
-
-            <div class="class-card-content">
-
-              <span class="eyebrow">
-                MÁGICO
-              </span>
+            <div>
 
               <h3>
                 Feiticeiro
               </h3>
 
               <p>
-                Especialista em Mana e conhecimento.
+                Especialista em manipulação de Mana.
               </p>
-
-              <div
-                class="class-bonus-list"
-                data-class-bonus
-              ></div>
 
             </div>
 
@@ -1415,35 +1343,22 @@
             type="button"
             class="class-card"
             data-action="select-class"
-            data-class="curandeiro"
+            data-class-id="curandeiro"
           >
 
-            <div class="class-visual">
+            <span class="class-icon">
+              ✚
+            </span>
 
-              <span aria-hidden="true">
-                ✚
-              </span>
-
-            </div>
-
-            <div class="class-card-content">
-
-              <span class="eyebrow">
-                SUPORTE
-              </span>
+            <div>
 
               <h3>
                 Curandeiro
               </h3>
 
               <p>
-                Especialista em medicina e recuperação.
+                Especialista em suporte e recuperação.
               </p>
-
-              <div
-                class="class-bonus-list"
-                data-class-bonus
-              ></div>
 
             </div>
 
@@ -1454,39 +1369,27 @@
             type="button"
             class="class-card"
             data-action="select-class"
-            data-class="monge"
+            data-class-id="monge"
           >
 
-            <div class="class-visual">
+            <span class="class-icon">
+              ◈
+            </span>
 
-              <span aria-hidden="true">
-                ◉
-              </span>
-
-            </div>
-
-            <div class="class-card-content">
-
-              <span class="eyebrow">
-                MARCIAL
-              </span>
+            <div>
 
               <h3>
                 Monge
               </h3>
 
               <p>
-                Disciplina, combate e controle.
+                Especialista em combate corporal.
               </p>
-
-              <div
-                class="class-bonus-list"
-                data-class-bonus
-              ></div>
 
             </div>
 
           </button>
+
 
         </div>
 
@@ -1495,7 +1398,7 @@
 
 
       <!-- ==================================================
-           ATRIBUTOS
+           05 — ATRIBUTOS
            ================================================== -->
 
       <section
@@ -1515,94 +1418,53 @@
           </h2>
 
           <p>
-            Selecione um dado e clique no atributo onde deseja colocá-lo.
+            Distribua os dados e role cada atributo.
           </p>
 
         </div>
 
 
-        <div class="attribute-pool-panel">
-
-          <div class="attribute-pool-header">
-
-            <div>
-
-              <span class="eyebrow">
-                PISCINA
-              </span>
-
-              <h3>
-                Dados disponíveis
-              </h3>
-
-            </div>
+        <div class="attributes-layout">
 
 
-            <button
-              type="button"
-              class="button button-ghost"
-              data-action="clear-die-selection"
-            >
-              Cancelar
-            </button>
+          <div class="attributes-list">
 
-          </div>
-
-
-          <div
-            id="dicePool"
-            class="dice-pool"
-            data-dice-pool
-          ></div>
-
-        </div>
-
-
-        <div class="attribute-layout">
-
-
-          <div class="attribute-grid">
-
-
-            <!-- FORÇA -->
 
             <article
               class="attribute-card"
-              data-attribute="forca"
-              data-attribute-drop="forca"
+              data-attribute-card="forca"
             >
 
-              <div>
+              <div class="attribute-card-top">
 
-                <span class="eyebrow">
-                  ATRIBUTO
-                </span>
+                <div>
 
-                <h3>
-                  Força
-                </h3>
+                  <span class="eyebrow">
+                    FOR
+                  </span>
 
-                <strong data-attribute-value>
+                  <h3>
+                    Força
+                  </h3>
+
+                </div>
+
+                <strong
+                  data-attribute-value="forca"
+                >
                   —
                 </strong>
-
-                <span data-attribute-result></span>
-
-                <span data-attribute-modifier>
-                  0
-                </span>
 
               </div>
 
 
               <div
                 class="attribute-die-slot"
-                data-attribute-die
-                data-attribute="forca"
+                data-attribute-die="forca"
               >
 
-                <span class="attribute-empty-die">
-                  Colocar dado
+                <span data-die-label>
+                  Adicionar dado
                 </span>
 
               </div>
@@ -1613,7 +1475,6 @@
                 class="attribute-roll-button"
                 data-action="roll-attribute"
                 data-attribute="forca"
-                disabled
               >
                 Rolar
               </button>
@@ -1621,45 +1482,42 @@
             </article>
 
 
-            <!-- VIGOR -->
 
             <article
               class="attribute-card"
-              data-attribute="vigor"
-              data-attribute-drop="vigor"
+              data-attribute-card="vigor"
             >
 
-              <div>
+              <div class="attribute-card-top">
 
-                <span class="eyebrow">
-                  ATRIBUTO
-                </span>
+                <div>
 
-                <h3>
-                  Vigor
-                </h3>
+                  <span class="eyebrow">
+                    VIG
+                  </span>
 
-                <strong data-attribute-value>
+                  <h3>
+                    Vigor
+                  </h3>
+
+                </div>
+
+                <strong
+                  data-attribute-value="vigor"
+                >
                   —
                 </strong>
-
-                <span data-attribute-result></span>
-
-                <span data-attribute-modifier>
-                  0
-                </span>
 
               </div>
 
 
               <div
                 class="attribute-die-slot"
-                data-attribute-die
-                data-attribute="vigor"
+                data-attribute-die="vigor"
               >
 
-                <span class="attribute-empty-die">
-                  Colocar dado
+                <span data-die-label>
+                  Adicionar dado
                 </span>
 
               </div>
@@ -1670,7 +1528,6 @@
                 class="attribute-roll-button"
                 data-action="roll-attribute"
                 data-attribute="vigor"
-                disabled
               >
                 Rolar
               </button>
@@ -1678,45 +1535,42 @@
             </article>
 
 
-            <!-- AGILIDADE -->
 
             <article
               class="attribute-card"
-              data-attribute="agilidade"
-              data-attribute-drop="agilidade"
+              data-attribute-card="agilidade"
             >
 
-              <div>
+              <div class="attribute-card-top">
 
-                <span class="eyebrow">
-                  ATRIBUTO
-                </span>
+                <div>
 
-                <h3>
-                  Agilidade
-                </h3>
+                  <span class="eyebrow">
+                    AGI
+                  </span>
 
-                <strong data-attribute-value>
+                  <h3>
+                    Agilidade
+                  </h3>
+
+                </div>
+
+                <strong
+                  data-attribute-value="agilidade"
+                >
                   —
                 </strong>
-
-                <span data-attribute-result></span>
-
-                <span data-attribute-modifier>
-                  0
-                </span>
 
               </div>
 
 
               <div
                 class="attribute-die-slot"
-                data-attribute-die
-                data-attribute="agilidade"
+                data-attribute-die="agilidade"
               >
 
-                <span class="attribute-empty-die">
-                  Colocar dado
+                <span data-die-label>
+                  Adicionar dado
                 </span>
 
               </div>
@@ -1727,7 +1581,6 @@
                 class="attribute-roll-button"
                 data-action="roll-attribute"
                 data-attribute="agilidade"
-                disabled
               >
                 Rolar
               </button>
@@ -1735,45 +1588,42 @@
             </article>
 
 
-            <!-- PRECISÃO -->
 
             <article
               class="attribute-card"
-              data-attribute="precisao"
-              data-attribute-drop="precisao"
+              data-attribute-card="precisao"
             >
 
-              <div>
+              <div class="attribute-card-top">
 
-                <span class="eyebrow">
-                  ATRIBUTO
-                </span>
+                <div>
 
-                <h3>
-                  Precisão
-                </h3>
+                  <span class="eyebrow">
+                    PRE
+                  </span>
 
-                <strong data-attribute-value>
+                  <h3>
+                    Precisão
+                  </h3>
+
+                </div>
+
+                <strong
+                  data-attribute-value="precisao"
+                >
                   —
                 </strong>
-
-                <span data-attribute-result></span>
-
-                <span data-attribute-modifier>
-                  0
-                </span>
 
               </div>
 
 
               <div
                 class="attribute-die-slot"
-                data-attribute-die
-                data-attribute="precisao"
+                data-attribute-die="precisao"
               >
 
-                <span class="attribute-empty-die">
-                  Colocar dado
+                <span data-die-label>
+                  Adicionar dado
                 </span>
 
               </div>
@@ -1784,7 +1634,6 @@
                 class="attribute-roll-button"
                 data-action="roll-attribute"
                 data-attribute="precisao"
-                disabled
               >
                 Rolar
               </button>
@@ -1792,45 +1641,42 @@
             </article>
 
 
-            <!-- INTELECTO -->
 
             <article
               class="attribute-card"
-              data-attribute="intelecto"
-              data-attribute-drop="intelecto"
+              data-attribute-card="intelecto"
             >
 
-              <div>
+              <div class="attribute-card-top">
 
-                <span class="eyebrow">
-                  ATRIBUTO
-                </span>
+                <div>
 
-                <h3>
-                  Intelecto
-                </h3>
+                  <span class="eyebrow">
+                    INT
+                  </span>
 
-                <strong data-attribute-value>
+                  <h3>
+                    Intelecto
+                  </h3>
+
+                </div>
+
+                <strong
+                  data-attribute-value="intelecto"
+                >
                   —
                 </strong>
-
-                <span data-attribute-result></span>
-
-                <span data-attribute-modifier>
-                  0
-                </span>
 
               </div>
 
 
               <div
                 class="attribute-die-slot"
-                data-attribute-die
-                data-attribute="intelecto"
+                data-attribute-die="intelecto"
               >
 
-                <span class="attribute-empty-die">
-                  Colocar dado
+                <span data-die-label>
+                  Adicionar dado
                 </span>
 
               </div>
@@ -1841,7 +1687,6 @@
                 class="attribute-roll-button"
                 data-action="roll-attribute"
                 data-attribute="intelecto"
-                disabled
               >
                 Rolar
               </button>
@@ -1849,45 +1694,42 @@
             </article>
 
 
-            <!-- CONTROLE -->
 
             <article
               class="attribute-card"
-              data-attribute="controle"
-              data-attribute-drop="controle"
+              data-attribute-card="controle"
             >
 
-              <div>
+              <div class="attribute-card-top">
 
-                <span class="eyebrow">
-                  ATRIBUTO
-                </span>
+                <div>
 
-                <h3>
-                  Controle
-                </h3>
+                  <span class="eyebrow">
+                    CON
+                  </span>
 
-                <strong data-attribute-value>
+                  <h3>
+                    Controle
+                  </h3>
+
+                </div>
+
+                <strong
+                  data-attribute-value="controle"
+                >
                   —
                 </strong>
-
-                <span data-attribute-result></span>
-
-                <span data-attribute-modifier>
-                  0
-                </span>
 
               </div>
 
 
               <div
                 class="attribute-die-slot"
-                data-attribute-die
-                data-attribute="controle"
+                data-attribute-die="controle"
               >
 
-                <span class="attribute-empty-die">
-                  Colocar dado
+                <span data-die-label>
+                  Adicionar dado
                 </span>
 
               </div>
@@ -1898,7 +1740,6 @@
                 class="attribute-roll-button"
                 data-action="roll-attribute"
                 data-attribute="controle"
-                disabled
               >
                 Rolar
               </button>
@@ -1906,45 +1747,42 @@
             </article>
 
 
-            <!-- PRESENÇA -->
 
             <article
               class="attribute-card"
-              data-attribute="presenca"
-              data-attribute-drop="presenca"
+              data-attribute-card="presenca"
             >
 
-              <div>
+              <div class="attribute-card-top">
 
-                <span class="eyebrow">
-                  ATRIBUTO
-                </span>
+                <div>
 
-                <h3>
-                  Presença
-                </h3>
+                  <span class="eyebrow">
+                    PRE
+                  </span>
 
-                <strong data-attribute-value>
+                  <h3>
+                    Presença
+                  </h3>
+
+                </div>
+
+                <strong
+                  data-attribute-value="presenca"
+                >
                   —
                 </strong>
-
-                <span data-attribute-result></span>
-
-                <span data-attribute-modifier>
-                  0
-                </span>
 
               </div>
 
 
               <div
                 class="attribute-die-slot"
-                data-attribute-die
-                data-attribute="presenca"
+                data-attribute-die="presenca"
               >
 
-                <span class="attribute-empty-die">
-                  Colocar dado
+                <span data-die-label>
+                  Adicionar dado
                 </span>
 
               </div>
@@ -1955,7 +1793,6 @@
                 class="attribute-roll-button"
                 data-action="roll-attribute"
                 data-attribute="presenca"
-                disabled
               >
                 Rolar
               </button>
@@ -1963,45 +1800,42 @@
             </article>
 
 
-            <!-- PERCEPÇÃO -->
 
             <article
               class="attribute-card"
-              data-attribute="percepcao"
-              data-attribute-drop="percepcao"
+              data-attribute-card="percepcao"
             >
 
-              <div>
+              <div class="attribute-card-top">
 
-                <span class="eyebrow">
-                  ATRIBUTO
-                </span>
+                <div>
 
-                <h3>
-                  Percepção
-                </h3>
+                  <span class="eyebrow">
+                    PER
+                  </span>
 
-                <strong data-attribute-value>
+                  <h3>
+                    Percepção
+                  </h3>
+
+                </div>
+
+                <strong
+                  data-attribute-value="percepcao"
+                >
                   —
                 </strong>
-
-                <span data-attribute-result></span>
-
-                <span data-attribute-modifier>
-                  0
-                </span>
 
               </div>
 
 
               <div
                 class="attribute-die-slot"
-                data-attribute-die
-                data-attribute="percepcao"
+                data-attribute-die="percepcao"
               >
 
-                <span class="attribute-empty-die">
-                  Colocar dado
+                <span data-die-label>
+                  Adicionar dado
                 </span>
 
               </div>
@@ -2012,38 +1846,44 @@
                 class="attribute-roll-button"
                 data-action="roll-attribute"
                 data-attribute="percepcao"
-                disabled
               >
                 Rolar
               </button>
 
             </article>
-
 
           </div>
 
 
-          <div class="attribute-radar-panel">
+          <!-- GRÁFICO -->
 
-            <div class="attribute-radar-heading">
+          <aside
+            class="attributes-graph-card"
+            data-attribute-graph
+          >
 
-              <span class="eyebrow">
-                PERFIL
-              </span>
+            <span class="eyebrow">
+              DISTRIBUIÇÃO
+            </span>
 
-              <h3>
-                Distribuição
-              </h3>
+            <h3>
+              Perfil de atributos
+            </h3>
+
+
+            <div class="attribute-graph">
+
+              <div class="graph-placeholder">
+
+                <span>
+                  Gráfico
+                </span>
+
+              </div>
 
             </div>
 
-
-            <div
-              id="attributeRadar"
-              data-attribute-radar
-            ></div>
-
-          </div>
+          </aside>
 
         </div>
 
@@ -2052,7 +1892,7 @@
 
 
       <!-- ==================================================
-           PODER
+           06 — PODER
            ================================================== -->
 
       <section
@@ -2068,143 +1908,50 @@
           </span>
 
           <h2>
-            Seu Poder
+            Poder
           </h2>
 
           <p>
-            O D100 define um dos poderes principais.
+            Defina os poderes principais do personagem.
           </p>
 
         </div>
 
 
-        <div class="power-layout">
+        <div class="form-stack">
 
-          <div class="power-main-card">
+          <label class="field">
 
-            <span class="eyebrow">
-              PODER
+            <span class="field-label">
+              Poder principal
             </span>
 
-            <div
-              class="power-current"
-              data-power-current
+            <input
+              id="primaryPower"
+              type="text"
+              maxlength="120"
+              data-power-field="primary"
+              placeholder="Poder principal"
             >
-              Nenhum
-            </div>
 
-            <div
-              class="power-result"
-              data-power-result
+          </label>
+
+
+          <label class="field">
+
+            <span class="field-label">
+              Poder paralelo
+            </span>
+
+            <input
+              id="parallelPower"
+              type="text"
+              maxlength="120"
+              data-power-field="parallel"
+              placeholder="Poder paralelo"
             >
-              —
-            </div>
 
-            <p data-power-result-note>
-              Gire o D100 para definir seu poder.
-            </p>
-
-            <div class="power-actions">
-
-              <button
-                type="button"
-                class="button button-primary"
-                data-action="roll-power"
-              >
-                Girar D100
-              </button>
-
-            </div>
-
-          </div>
-
-
-          <div class="parallel-powers-panel">
-
-            <div class="section-heading compact">
-
-              <span class="eyebrow">
-                PARALELOS
-              </span>
-
-              <h3>
-                Escolha específica
-              </h3>
-
-            </div>
-
-
-            <div class="parallel-power-grid">
-
-
-              <button
-                type="button"
-                class="parallel-power-card"
-                data-action="select-parallel-power"
-                data-power="Gelo"
-              >
-                <strong>Gelo</strong>
-                <span>Manipulação térmica.</span>
-              </button>
-
-
-              <button
-                type="button"
-                class="parallel-power-card"
-                data-action="select-parallel-power"
-                data-power="Magnetismo"
-              >
-                <strong>Magnetismo</strong>
-                <span>Campos magnéticos.</span>
-              </button>
-
-
-              <button
-                type="button"
-                class="parallel-power-card"
-                data-action="select-parallel-power"
-                data-power="Vegetação"
-              >
-                <strong>Vegetação</strong>
-                <span>Influência sobre plantas.</span>
-              </button>
-
-
-              <button
-                type="button"
-                class="parallel-power-card"
-                data-action="select-parallel-power"
-                data-power="Tecnologia"
-              >
-                <strong>Tecnologia</strong>
-                <span>Interação tecnológica.</span>
-              </button>
-
-
-              <button
-                type="button"
-                class="parallel-power-card"
-                data-action="select-parallel-power"
-                data-power="Gravidade"
-              >
-                <strong>Gravidade</strong>
-                <span>Manipulação gravitacional.</span>
-              </button>
-
-
-              <button
-                type="button"
-                class="parallel-power-card"
-                data-action="select-parallel-power"
-                data-power="Som"
-              >
-                <strong>Som</strong>
-                <span>Ondas sonoras.</span>
-              </button>
-
-            </div>
-
-          </div>
+          </label>
 
         </div>
 
@@ -2213,7 +1960,7 @@
 
 
       <!-- ==================================================
-           MANA
+           07 — MANA
            ================================================== -->
 
       <section
@@ -2233,8 +1980,7 @@
           </h2>
 
           <p>
-            Mana Azul começa liberada. As demais são
-            desbloqueadas pelo Mestre.
+            Defina a afinidade e os valores de Mana.
           </p>
 
         </div>
@@ -2246,23 +1992,19 @@
           <button
             type="button"
             class="mana-card"
-            data-action="select-mana"
             data-mana="azul"
+            data-mana-type="azul"
           >
 
-            <div
-              class="mana-card-symbol"
+            <span
+              class="mana-icon"
               aria-hidden="true"
             >
-              ◇
-            </div>
+              ◆
+            </span>
 
-            <strong>
+            <span class="mana-name">
               Mana Azul
-            </strong>
-
-            <span>
-              Disponível
             </span>
 
           </button>
@@ -2270,23 +2012,20 @@
 
           <button
             type="button"
-            class="mana-card locked"
-            disabled
+            class="mana-card"
+            data-mana="dourada"
+            data-mana-type="dourada"
           >
 
-            <div
-              class="mana-card-symbol"
+            <span
+              class="mana-icon"
               aria-hidden="true"
             >
-              ◇
-            </div>
+              ◆
+            </span>
 
-            <strong>
+            <span class="mana-name">
               Mana Dourada
-            </strong>
-
-            <span>
-              Bloqueada
             </span>
 
           </button>
@@ -2294,23 +2033,20 @@
 
           <button
             type="button"
-            class="mana-card locked"
-            disabled
+            class="mana-card"
+            data-mana="branca"
+            data-mana-type="branca"
           >
 
-            <div
-              class="mana-card-symbol"
+            <span
+              class="mana-icon"
               aria-hidden="true"
             >
-              ◇
-            </div>
+              ◆
+            </span>
 
-            <strong>
+            <span class="mana-name">
               Mana Branca
-            </strong>
-
-            <span>
-              Bloqueada
             </span>
 
           </button>
@@ -2318,26 +2054,82 @@
 
           <button
             type="button"
-            class="mana-card locked"
-            disabled
+            class="mana-card"
+            data-mana="vermelha"
+            data-mana-type="vermelha"
           >
 
-            <div
-              class="mana-card-symbol"
+            <span
+              class="mana-icon"
               aria-hidden="true"
             >
-              ◇
-            </div>
+              ◆
+            </span>
 
-            <strong>
+            <span class="mana-name">
               Mana Vermelha
-            </strong>
-
-            <span>
-              Bloqueada
             </span>
 
           </button>
+
+
+          <button
+            type="button"
+            class="mana-card"
+            data-mana="negra"
+            data-mana-type="negra"
+          >
+
+            <span
+              class="mana-icon"
+              aria-hidden="true"
+            >
+              ◆
+            </span>
+
+            <span class="mana-name">
+              Mana Negra
+            </span>
+
+          </button>
+
+        </div>
+
+
+        <div class="mana-values">
+
+          <label class="field">
+
+            <span class="field-label">
+              Mana atual
+            </span>
+
+            <input
+              id="manaCurrent"
+              type="number"
+              min="0"
+              inputmode="numeric"
+              data-mana-current
+            >
+
+          </label>
+
+
+          <label class="field">
+
+            <span class="field-label">
+              Mana máxima
+            </span>
+
+            <input
+              id="manaMax"
+              type="number"
+              min="0"
+              inputmode="numeric"
+              data-mana-max
+            >
+
+          </label>
 
         </div>
 
@@ -2346,7 +2138,7 @@
 
 
       <!-- ==================================================
-           PERÍCIAS
+           08 — PERÍCIAS
            ================================================== -->
 
       <section
@@ -2366,20 +2158,175 @@
           </h2>
 
           <p>
-            Sua classe influencia seus bônus.
+            Defina os conhecimentos e capacidades do personagem.
           </p>
 
         </div>
 
 
-        <div id="skillsList"></div>
+        <div class="skills-grid">
+
+          <label class="skill-card">
+            <span>Acrobacia</span>
+            <input
+              type="number"
+              min="0"
+              value="0"
+              data-skill="acrobacia"
+            >
+          </label>
+
+
+          <label class="skill-card">
+            <span>Atletismo</span>
+            <input
+              type="number"
+              min="0"
+              value="0"
+              data-skill="atletismo"
+            >
+          </label>
+
+
+          <label class="skill-card">
+            <span>Furtividade</span>
+            <input
+              type="number"
+              min="0"
+              value="0"
+              data-skill="furtividade"
+            >
+          </label>
+
+
+          <label class="skill-card">
+            <span>Percepção</span>
+            <input
+              type="number"
+              min="0"
+              value="0"
+              data-skill="percepcao"
+            >
+          </label>
+
+
+          <label class="skill-card">
+            <span>Investigação</span>
+            <input
+              type="number"
+              min="0"
+              value="0"
+              data-skill="investigacao"
+            >
+          </label>
+
+
+          <label class="skill-card">
+            <span>Conhecimento</span>
+            <input
+              type="number"
+              min="0"
+              value="0"
+              data-skill="conhecimento"
+            >
+          </label>
+
+
+          <label class="skill-card">
+            <span>Medicina</span>
+            <input
+              type="number"
+              min="0"
+              value="0"
+              data-skill="medicina"
+            >
+          </label>
+
+
+          <label class="skill-card">
+            <span>Sobrevivência</span>
+            <input
+              type="number"
+              min="0"
+              value="0"
+              data-skill="sobrevivencia"
+            >
+          </label>
+
+
+          <label class="skill-card">
+            <span>Persuasão</span>
+            <input
+              type="number"
+              min="0"
+              value="0"
+              data-skill="persuasao"
+            >
+          </label>
+
+
+          <label class="skill-card">
+            <span>Intuição</span>
+            <input
+              type="number"
+              min="0"
+              value="0"
+              data-skill="intuicao"
+            >
+          </label>
+
+
+          <label class="skill-card">
+            <span>Enganação</span>
+            <input
+              type="number"
+              min="0"
+              value="0"
+              data-skill="enganacao"
+            >
+          </label>
+
+
+          <label class="skill-card">
+            <span>Tática</span>
+            <input
+              type="number"
+              min="0"
+              value="0"
+              data-skill="tatica"
+            >
+          </label>
+
+
+          <label class="skill-card">
+            <span>Ofício / Crafting</span>
+            <input
+              type="number"
+              min="0"
+              value="0"
+              data-skill="oficio"
+            >
+          </label>
+
+
+          <label class="skill-card">
+            <span>Controle de Mana</span>
+            <input
+              type="number"
+              min="0"
+              value="0"
+              data-skill="controle_mana"
+            >
+          </label>
+
+        </div>
 
       </section>
 
 
 
       <!-- ==================================================
-           TÉCNICAS
+           09 — TÉCNICAS
            ================================================== -->
 
       <section
@@ -2398,24 +2345,62 @@
             Técnicas
           </h2>
 
+          <p>
+            Registre as técnicas conhecidas pelo personagem.
+          </p>
+
         </div>
 
 
-        <div class="techniques-toolbar">
+        <div class="technique-form">
+
+          <label class="field">
+
+            <span class="field-label">
+              Nome da técnica
+            </span>
+
+            <input
+              id="techniqueName"
+              type="text"
+              maxlength="100"
+              placeholder="Ex.: Golpe Crescente"
+            >
+
+          </label>
+
+
+          <label class="field">
+
+            <span class="field-label">
+              Descrição
+            </span>
+
+            <textarea
+              id="techniqueDescription"
+              maxlength="500"
+              rows="4"
+              placeholder="Como a técnica funciona..."
+            ></textarea>
+
+          </label>
+
 
           <button
             type="button"
             class="button button-primary"
+            id="addTechniqueButton"
             data-action="add-technique"
           >
-            + Adicionar técnica
+            Adicionar técnica
           </button>
 
         </div>
 
 
         <div
-          data-techniques-list
+          id="techniquesList"
+          class="techniques-list"
         ></div>
 
       </section>
@@ -2423,7 +2408,7 @@
 
 
       <!-- ==================================================
-           INVENTÁRIO
+           10 — INVENTÁRIO
            ================================================== -->
 
       <section
@@ -2442,24 +2427,62 @@
             Inventário
           </h2>
 
+          <p>
+            Organize equipamentos, objetos e recursos.
+          </p>
+
         </div>
 
 
-        <div class="inventory-toolbar">
+        <div class="inventory-form">
+
+          <label class="field">
+
+            <span class="field-label">
+              Item
+            </span>
+
+            <input
+              id="inventoryItem"
+              type="text"
+              maxlength="120"
+              placeholder="Nome do item"
+            >
+
+          </label>
+
+
+          <label class="field">
+
+            <span class="field-label">
+              Quantidade
+            </span>
+
+            <input
+              id="inventoryQuantity"
+              type="number"
+              min="1"
+              value="1"
+            >
+
+          </label>
+
 
           <button
             type="button"
             class="button button-primary"
+            id="addInventoryButton"
             data-action="add-inventory"
           >
-            + Adicionar item
+            Adicionar item
           </button>
 
         </div>
 
 
         <div
-          data-inventory-list
+          id="inventoryList"
+          class="inventory-list"
         ></div>
 
       </section>
@@ -2467,7 +2490,7 @@
 
 
       <!-- ==================================================
-           REVISÃO
+           11 — REVISÃO
            ================================================== -->
 
       <section
@@ -2479,22 +2502,24 @@
         <div class="section-heading">
 
           <span class="eyebrow">
-            ÚLTIMA ETAPA
+            DÉCIMA PRIMEIRA ETAPA
           </span>
 
           <h2>
-            Revisão final
+            Revisão
           </h2>
 
           <p>
-            Confira tudo antes de finalizar.
+            Confira a ficha antes de finalizar.
           </p>
 
         </div>
 
 
-        <div class="review-grid">
-
+        <div
+          id="characterReview"
+          class="character-review"
+        >
 
           <article class="review-card">
 
@@ -2502,36 +2527,16 @@
               IDENTIDADE
             </span>
 
-            <h3 data-review="name">
-              Sem nome
+            <h3
+              data-review-name
+            >
+              —
             </h3>
 
-            <p>
-              Gênero:
-              <strong data-review="gender">
-                —
-              </strong>
-            </p>
-
-            <p>
-              Raça:
-              <strong data-review="race">
-                —
-              </strong>
-            </p>
-
-            <p>
-              Classe:
-              <strong data-review="class">
-                —
-              </strong>
-            </p>
-
-            <p>
-              Altura:
-              <strong data-review="height">
-                —
-              </strong>
+            <p
+              data-review-description
+            >
+              —
             </p>
 
           </article>
@@ -2540,37 +2545,40 @@
           <article class="review-card">
 
             <span class="eyebrow">
-              PODER
+              RAÇA
             </span>
 
-            <h3 data-review="power">
+            <h3
+              data-review-race
+            >
               —
             </h3>
 
-            <p>
-              Mana:
-              <strong data-review="mana">
-                Mana Azul
-              </strong>
+            <p
+              data-review-animalha
+            >
+              —
             </p>
 
           </article>
 
 
-          <article class="review-card review-card-wide">
+          <article class="review-card">
 
             <span class="eyebrow">
-              DESCRIÇÃO
+              CLASSE
             </span>
 
-            <p data-review="description">
-              Nenhuma descrição.
-            </p>
+            <h3
+              data-review-class
+            >
+              —
+            </h3>
 
           </article>
 
 
-          <article class="review-card review-card-wide">
+          <article class="review-card">
 
             <span class="eyebrow">
               ATRIBUTOS
@@ -2578,26 +2586,63 @@
 
             <div
               class="review-attributes"
-              data-review-attributes
-            ></div>
+            >
+
+              <span>
+                Força:
+                <strong data-review-forca>—</strong>
+              </span>
+
+              <span>
+                Vigor:
+                <strong data-review-vigor>—</strong>
+              </span>
+
+              <span>
+                Agilidade:
+                <strong data-review-agilidade>—</strong>
+              </span>
+
+              <span>
+                Precisão:
+                <strong data-review-precisao>—</strong>
+              </span>
+
+              <span>
+                Intelecto:
+                <strong data-review-intelecto>—</strong>
+              </span>
+
+              <span>
+                Controle:
+                <strong data-review-controle>—</strong>
+              </span>
+
+              <span>
+                Presença:
+                <strong data-review-presenca>—</strong>
+              </span>
+
+              <span>
+                Percepção:
+                <strong data-review-percepcao>—</strong>
+              </span>
+
+            </div>
 
           </article>
 
-
         </div>
 
 
-        <div class="review-final-actions">
-
-          <button
-            type="button"
-            class="button button-primary"
-            data-action="finish"
-          >
-            Finalizar ficha
-          </button>
-
-        </div>
+        <button
+          type="button"
+          class="button button-primary final-button"
+          id="finishCharacterButton"
+          data-action="finish-character"
+        >
+          Finalizar ficha
+        </button>
 
       </section>
 
@@ -2609,10 +2654,7 @@
          NAVEGAÇÃO INFERIOR
          ==================================================== -->
 
-    <footer
-      class="ficha-navigation"
-      aria-label="Navegação"
-    >
+    <footer class="ficha-footer">
 
       <button
         type="button"
@@ -2623,19 +2665,21 @@
       </button>
 
 
-      <span
-        id="stepCounter"
-        class="step-counter"
-      >
+      <div class="ficha-step-counter">
 
-        <span id="stepCurrent">
+        <strong data-current-step>
           1
+        </strong>
+
+        <span>
+          /
         </span>
 
-        /
-        11
+        <strong data-total-steps>
+          11
+        </strong>
 
-      </span>
+      </div>
 
 
       <button
@@ -2648,8 +2692,8 @@
 
     </footer>
 
-  </div>
 
+  </div>
 
 
   <!-- ======================================================
@@ -2663,16 +2707,6 @@
     aria-atomic="true"
   ></div>
 
-
-  <!-- ======================================================
-       TOAST
-       ====================================================== -->
-
-  <div
-    id="toast"
-    class="toast"
-    hidden
-  ></div>
 
 </body>
 
