@@ -2,25 +2,28 @@
    AERION — PERSONAGEM ASSETS
    js/core/personagem-assets.js
 
-   VERSÃO SIMPLIFICADA
+   CATÁLOGO DO EDITOR DE PERSONAGEM
 
-   RESPONSABILIDADE:
-   - catálogo das raças;
-   - imagens masculinas/femininas;
+   RESPONSÁVEL POR:
+   - raças;
+   - imagens das raças;
    - limites de altura;
    - categorias de Animalha;
-   - linhagens de Animalha.
+   - variações de Animalha.
 
    NÃO RESPONSÁVEL POR:
-   - criar personagem por SVG;
+   - estado da ficha;
+   - navegação;
    - atributos;
    - dados;
    - rolagens;
-   - navegação;
-   - persistência.
+   - persistência;
+   - DOM;
+   - SVG;
+   - montagem de personagem por camadas.
 
-   O personagem-render.js usa a imagem da raça
-   selecionada como base visual.
+   O personagem-render.js usa este catálogo
+   para exibir a imagem da raça selecionada.
 
    ========================================================= */
 
@@ -29,11 +32,20 @@
 
 
   /* =========================================================
-     AUXILIAR
+     VERSÃO
+     ========================================================= */
+
+  const VERSION = 4;
+
+
+  /* =========================================================
+     UTILITÁRIO
      ========================================================= */
 
   function normalizeId(value) {
-    return String(value ?? "")
+    return String(
+      value ?? ""
+    )
       .trim()
       .toLowerCase()
       .normalize("NFD")
@@ -48,16 +60,18 @@
   }
 
 
+  function clone(value) {
+    return JSON.parse(
+      JSON.stringify(value)
+    );
+  }
+
+
   /* =========================================================
      RAÇAS
      ========================================================= */
 
   const RACES = [
-
-    /* =====================================================
-       HUMANO
-       ===================================================== */
-
     {
       id: "humano",
 
@@ -86,10 +100,6 @@
       }
     },
 
-
-    /* =====================================================
-       ELFO
-       ===================================================== */
 
     {
       id: "elfo",
@@ -120,10 +130,6 @@
     },
 
 
-    /* =====================================================
-       ANÃO
-       ===================================================== */
-
     {
       id: "anao",
 
@@ -152,10 +158,6 @@
       }
     },
 
-
-    /* =====================================================
-       ORC
-       ===================================================== */
 
     {
       id: "orc",
@@ -186,10 +188,6 @@
     },
 
 
-    /* =====================================================
-       CENTAURO
-       ===================================================== */
-
     {
       id: "centauro",
 
@@ -218,10 +216,6 @@
       }
     },
 
-
-    /* =====================================================
-       VAMPIRO
-       ===================================================== */
 
     {
       id: "vampiro",
@@ -252,10 +246,6 @@
     },
 
 
-    /* =====================================================
-       DUENDE
-       ===================================================== */
-
     {
       id: "duende",
 
@@ -284,10 +274,6 @@
       }
     },
 
-
-    /* =====================================================
-       FADA
-       ===================================================== */
 
     {
       id: "fada",
@@ -318,10 +304,6 @@
     },
 
 
-    /* =====================================================
-       POVO AQUÁTICO
-       ===================================================== */
-
     {
       id: "povo_aquatico",
 
@@ -351,16 +333,6 @@
     },
 
 
-    /* =====================================================
-       POVO DAS NUVENS / AUREANO
-
-       Mantido como catálogo temporário.
-       As imagens foram marcadas anteriormente como
-       possivelmente versões antigas.
-
-       Não alteramos o design definitivo do lore.
-       ===================================================== */
-
     {
       id: "povo_nuvens",
 
@@ -388,14 +360,9 @@
           "https://i.ibb.co/7d0b1Z65/file-000000001b7c820e8a317d79973c8733.png"
       },
 
-      legacy:
-        true
+      legacy: true
     },
 
-
-    /* =====================================================
-       ANIMALHA — FELINO
-       ===================================================== */
 
     {
       id: "animalha",
@@ -403,7 +370,7 @@
       name: "Animalha",
 
       description:
-        "Humanoide de linhagem animal com características físicas próprias.",
+        "Humanoide de linhagem animal com características próprias.",
 
       profile:
         "Definido pela linhagem animal",
@@ -417,7 +384,6 @@
       },
 
       images: {
-
         masculino:
           "https://i.ibb.co/fVfFL5ds/file-00000000b344820e9e39f31e92678a13.png",
 
@@ -426,13 +392,9 @@
       },
 
       lineage:
-        "felino"
+        "animalha"
     },
 
-
-    /* =====================================================
-       POVO DA NATUREZA
-       ===================================================== */
 
     {
       id: "povo_natureza",
@@ -463,10 +425,6 @@
     },
 
 
-    /* =====================================================
-       NERALIANO
-       ===================================================== */
-
     {
       id: "neraliano",
 
@@ -496,13 +454,6 @@
     },
 
 
-    /* =====================================================
-       AUREANO
-
-       Ainda separado do Povo das Nuvens no catálogo,
-       mas sem imagens definitivas fornecidas.
-       ===================================================== */
-
     {
       id: "aureano",
 
@@ -527,8 +478,79 @@
         feminino: ""
       },
 
-      imagesPending:
-        true
+      imagesPending: true
+    },
+
+
+    /* =====================================================
+       COLOSSO
+       =====================================================
+
+       A entrada foi restaurada para não perder
+       a raça do catálogo.
+
+       Os arquivos de imagem originais não estão
+       mais presentes no catálogo atual do GitHub,
+       portanto NÃO foi inventada uma URL.
+       ===================================================== */
+
+    {
+      id: "colosso",
+
+      name: "Colosso",
+
+      description:
+        "Raça de porte colossal e presença física dominante.",
+
+      profile:
+        "Colossal",
+
+      feature:
+        "Grande porte",
+
+      height: {
+        min: 220,
+        max: 320
+      },
+
+      images: {
+        masculino: "",
+        feminino: ""
+      },
+
+      imagesPending: true
+    },
+
+
+    /* =====================================================
+       TROLL
+       ===================================================== */
+
+    {
+      id: "troll",
+
+      name: "Troll",
+
+      description:
+        "Raça robusta de grande porte e extraordinária resistência.",
+
+      profile:
+        "Resistente",
+
+      feature:
+        "Regeneração e robustez",
+
+      height: {
+        min: 200,
+        max: 280
+      },
+
+      images: {
+        masculino: "",
+        feminino: ""
+      },
+
+      imagesPending: true
     }
 
   ];
@@ -539,296 +561,177 @@
      ========================================================= */
 
   const ANIMALHA_CATEGORIES = [
-
     {
-      id:
-        "voadores",
+      id: "voadores",
 
-      name:
-        "Voadores",
+      name: "Voadores",
 
       description:
-        "Linhagens com características aéreas."
+        "Linhagens com características aéreas.",
+
+      icon: "◇"
     },
 
-
     {
-      id:
-        "terrestres",
+      id: "terrestres",
 
-      name:
-        "Terrestres",
+      name: "Terrestres",
 
       description:
-        "Linhagens adaptadas ao ambiente terrestre."
+        "Linhagens adaptadas ao ambiente terrestre.",
+
+      icon: "◇"
     },
 
-
     {
-      id:
-        "marinhos",
+      id: "marinhos",
 
-      name:
-        "Marinhos",
+      name: "Marinhos",
 
       description:
-        "Linhagens adaptadas ao ambiente aquático."
+        "Linhagens adaptadas ao ambiente aquático.",
+
+      icon: "◇"
     },
 
-
     {
-      id:
-        "reptilianos",
+      id: "reptilianos",
 
-      name:
-        "Reptilianos",
+      name: "Reptilianos",
 
       description:
-        "Linhagens de origem reptiliana."
+        "Linhagens de origem reptiliana.",
+
+      icon: "◇"
     },
 
-
     {
-      id:
-        "pequenos",
+      id: "pequenos",
 
-      name:
-        "Pequenos",
+      name: "Pequenos",
 
       description:
-        "Linhagens de pequeno porte."
+        "Linhagens de pequeno porte.",
+
+      icon: "◇"
     },
 
-
     {
-      id:
-        "grandes",
+      id: "grandes",
 
-      name:
-        "Grandes",
+      name: "Grandes",
 
       description:
-        "Linhagens de grande porte."
+        "Linhagens de grande porte.",
+
+      icon: "◇"
     }
-
   ];
 
 
   /* =========================================================
-     ANIMALHAS
+     VARIAÇÕES DE ANIMALHA
      ========================================================= */
 
   const ANIMALHA_ANIMALS = {
 
     gato: {
-      id:
-        "gato",
-
-      name:
-        "Gato",
-
-      category:
-        "terrestres",
-
-      lineage:
-        "felino"
+      id: "gato",
+      name: "Gato",
+      category: "terrestres",
+      lineage: "felino"
     },
-
 
     pantera: {
-      id:
-        "pantera",
-
-      name:
-        "Pantera",
-
-      category:
-        "terrestres",
-
-      lineage:
-        "felino"
+      id: "pantera",
+      name: "Pantera",
+      category: "terrestres",
+      lineage: "felino"
     },
-
 
     tigre: {
-      id:
-        "tigre",
-
-      name:
-        "Tigre",
-
-      category:
-        "terrestres",
-
-      lineage:
-        "felino"
+      id: "tigre",
+      name: "Tigre",
+      category: "terrestres",
+      lineage: "felino"
     },
-
 
     leao: {
-      id:
-        "leao",
-
-      name:
-        "Leão",
-
-      category:
-        "terrestres",
-
-      lineage:
-        "felino"
+      id: "leao",
+      name: "Leão",
+      category: "terrestres",
+      lineage: "felino"
     },
-
 
     lobo: {
-      id:
-        "lobo",
-
-      name:
-        "Lobo",
-
-      category:
-        "terrestres",
-
-      lineage:
-        "canino"
+      id: "lobo",
+      name: "Lobo",
+      category: "terrestres",
+      lineage: "canino"
     },
-
 
     raposa: {
-      id:
-        "raposa",
-
-      name:
-        "Raposa",
-
-      category:
-        "terrestres",
-
-      lineage:
-        "canino"
+      id: "raposa",
+      name: "Raposa",
+      category: "terrestres",
+      lineage: "canino"
     },
-
 
     urso: {
-      id:
-        "urso",
-
-      name:
-        "Urso",
-
-      category:
-        "grandes",
-
-      lineage:
-        "ursino"
+      id: "urso",
+      name: "Urso",
+      category: "grandes",
+      lineage: "ursino"
     },
-
 
     falcao: {
-      id:
-        "falcao",
-
-      name:
-        "Falcão",
-
-      category:
-        "voadores",
-
-      lineage:
-        "ave"
+      id: "falcao",
+      name: "Falcão",
+      category: "voadores",
+      lineage: "ave"
     },
-
 
     aguia: {
-      id:
-        "aguia",
-
-      name:
-        "Águia",
-
-      category:
-        "voadores",
-
-      lineage:
-        "ave"
+      id: "aguia",
+      name: "Águia",
+      category: "voadores",
+      lineage: "ave"
     },
-
 
     coruja: {
-      id:
-        "coruja",
-
-      name:
-        "Coruja",
-
-      category:
-        "voadores",
-
-      lineage:
-        "ave"
+      id: "coruja",
+      name: "Coruja",
+      category: "voadores",
+      lineage: "ave"
     },
-
 
     cobra: {
-      id:
-        "cobra",
-
-      name:
-        "Cobra",
-
-      category:
-        "reptilianos",
-
-      lineage:
-        "reptil"
+      id: "cobra",
+      name: "Cobra",
+      category: "reptilianos",
+      lineage: "reptil"
     },
-
 
     crocodilo: {
-      id:
-        "crocodilo",
-
-      name:
-        "Crocodilo",
-
-      category:
-        "marinhos",
-
-      lineage:
-        "reptil"
+      id: "crocodilo",
+      name: "Crocodilo",
+      category: "marinhos",
+      lineage: "reptil"
     },
-
 
     tubarao: {
-      id:
-        "tubarao",
-
-      name:
-        "Tubarão",
-
-      category:
-        "marinhos",
-
-      lineage:
-        "aquatico"
+      id: "tubarao",
+      name: "Tubarão",
+      category: "marinhos",
+      lineage: "aquatico"
     },
 
-
     foca: {
-      id:
-        "foca",
-
-      name:
-        "Foca",
-
-      category:
-        "marinhos",
-
-      lineage:
-        "aquatico"
+      id: "foca",
+      name: "Foca",
+      category: "marinhos",
+      lineage: "aquatico"
     }
-
   };
 
 
@@ -849,8 +752,7 @@
         race =>
           normalizeId(
             race.id
-          ) ===
-          id
+          ) === id
       ) ||
       null
     );
@@ -870,56 +772,52 @@
         raceId
       );
 
-    if (
-      !race
-    ) {
+    if (!race) {
       return "";
     }
+
 
     const normalizedGender =
       normalizeId(
         gender
       );
 
-
-    const requested =
-      normalizedGender ===
-        "feminino" ||
-      normalizedGender ===
-        "feminina" ||
-      normalizedGender ===
-        "f"
+    const genderKey =
+      (
+        normalizedGender ===
+          "feminino" ||
+        normalizedGender ===
+          "feminina" ||
+        normalizedGender ===
+          "female" ||
+        normalizedGender ===
+          "f"
+      )
         ? "feminino"
         : "masculino";
 
 
     /*
-     * Primeiro tenta o gênero escolhido.
+     * Primeiro gênero solicitado.
      */
-
     const selected =
       race.images?.[
-        requested
+        genderKey
       ];
 
-
-    if (
-      selected
-    ) {
+    if (selected) {
       return selected;
     }
 
 
     /*
-     * Se não existir, tenta o outro gênero.
+     * Depois tenta o outro gênero.
      */
-
     const fallback =
-      requested ===
+      genderKey ===
         "feminino"
         ? race.images?.masculino
         : race.images?.feminino;
-
 
     return (
       fallback ||
@@ -929,7 +827,7 @@
 
 
   /* =========================================================
-     BUSCAR ALTURA
+     ALTURA DA RAÇA
      ========================================================= */
 
   function getRaceHeight(
@@ -940,18 +838,12 @@
         raceId
       );
 
-    if (
-      !race
-    ) {
+    if (!race) {
       return {
-        min:
-          150,
-
-        max:
-          200
+        min: 150,
+        max: 200
       };
     }
-
 
     return {
       min:
@@ -968,7 +860,7 @@
 
 
   /* =========================================================
-     BUSCAR CATEGORIA ANIMALHA
+     CATEGORIA ANIMALHA
      ========================================================= */
 
   function getAnimalhaCategory(
@@ -984,8 +876,7 @@
         category =>
           normalizeId(
             category.id
-          ) ===
-          id
+          ) === id
       ) ||
       null
     );
@@ -993,25 +884,37 @@
 
 
   /* =========================================================
-     ANIMALHAS DA CATEGORIA
+     ANIMALHAS DE UMA CATEGORIA
      ========================================================= */
 
   function getAnimalhaAnimals(
-    categoryId
+    categoryId = ""
   ) {
     const id =
       normalizeId(
         categoryId
       );
 
-    return Object.values(
-      ANIMALHA_ANIMALS
-    ).filter(
-      animal =>
-        normalizeId(
-          animal.category
-        ) ===
-        id
+    const all =
+      Object.values(
+        ANIMALHA_ANIMALS
+      );
+
+
+    if (!id) {
+      return clone(
+        all
+      );
+    }
+
+
+    return clone(
+      all.filter(
+        animal =>
+          normalizeId(
+            animal.category
+          ) === id
+      )
     );
   }
 
@@ -1029,10 +932,38 @@
       );
 
     return (
-      ANIMALHA_ANIMALS[
-        id
-      ] ||
+      ANIMALHA_ANIMALS[id] ||
       null
+    );
+  }
+
+
+  /* =========================================================
+     VERIFICAR RAÇA
+     ========================================================= */
+
+  function hasRace(
+    raceId
+  ) {
+    return Boolean(
+      getRace(
+        raceId
+      )
+    );
+  }
+
+
+  /* =========================================================
+     VERIFICAR ANIMALHA
+     ========================================================= */
+
+  function hasAnimalha(
+    animalId
+  ) {
+    return Boolean(
+      getAnimalha(
+        animalId
+      )
     );
   }
 
@@ -1044,7 +975,7 @@
   const API = Object.freeze({
 
     version:
-      3,
+      VERSION,
 
     races:
       RACES,
@@ -1065,21 +996,29 @@
 
     getAnimalhaAnimals,
 
-    getAnimalha
+    getAnimalha,
 
+    hasRace,
+
+    hasAnimalha
   });
 
 
   /* =========================================================
-     EXPORTAÇÃO GLOBAL
+     EXPORTAÇÃO
      ========================================================= */
 
   window.AERIONPersonagemAssets =
     API;
 
-
   window.AERION_CHARACTER_ASSETS =
     API;
+
+  /*
+   * Compatibilidade.
+   */
+  window.AERION_RACES =
+    RACES;
 
 
   /* =========================================================
@@ -1092,7 +1031,18 @@
       {
         detail: {
           version:
-            API.version
+            API.version,
+
+          raceCount:
+            RACES.length,
+
+          animalhaCategoryCount:
+            ANIMALHA_CATEGORIES.length,
+
+          animalhaCount:
+            Object.keys(
+              ANIMALHA_ANIMALS
+            ).length
         }
       }
     )
@@ -1104,7 +1054,7 @@
      ========================================================= */
 
   console.info(
-    "[AERION] personagem-assets.js carregado.",
+    "[AERION][ASSETS] Catálogo carregado.",
     {
       version:
         API.version,
