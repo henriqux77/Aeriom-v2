@@ -2,80 +2,116 @@
    AERION — PERSONAGEM RENDER
    js/core/personagem-render.js
 
-   VERSÃO SIMPLIFICADA
-
    RESPONSABILIDADE:
-   - mostrar a imagem da raça escolhida;
-   - escolher imagem masculina/feminina;
-   - controlar tamanho visual;
-   - ajustar o personagem conforme a altura;
-   - mostrar carregamento da imagem;
-   - tratar erro de carregamento.
+   - mostrar a imagem da raça;
+   - mostrar a imagem específica do Animalha;
+   - respeitar masculino/feminino;
+   - ajustar o tamanho visual pela altura;
+   - atualizar quando a ficha mudar;
+   - tratar carregamento e erro.
 
    NÃO RESPONSÁVEL POR:
-   - desenhar personagem;
-   - criar corpo por SVG;
-   - atributos;
-   - dados;
-   - rolagens;
+   - ações da interface;
    - regras;
-   - persistência.
+   - dados;
+   - atributos;
+   - rolagens;
+   - persistência;
+   - criação de SVG.
 
    ========================================================= */
 
 (() => {
   "use strict";
 
+
   /* =========================================================
      CONFIGURAÇÃO
      ========================================================= */
 
   const CONFIG = Object.freeze({
-    rootSelector: "#appearanceFigure",
 
-    minScale: 0.78,
-    maxScale: 1.24,
+    rootSelector:
+      "#appearanceFigure",
 
-    defaultMinHeight: 150,
-    defaultMaxHeight: 200
+    minScale:
+      0.78,
+
+    maxScale:
+      1.24,
+
+    defaultMinHeight:
+      150,
+
+    defaultMaxHeight:
+      200
+
   });
+
 
   /* =========================================================
      ESTADO INTERNO
      ========================================================= */
 
   let root = null;
+
   let currentImage = null;
+
   let currentSrc = "";
+
   let initialized = false;
+
 
   /* =========================================================
      UTILITÁRIOS
      ========================================================= */
 
-  function normalize(value) {
-    return String(value ?? "")
-      .trim()
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .replace(/\s+/g, "_");
+  function text(value) {
+    return String(
+      value ?? ""
+    ).trim();
   }
 
-  function toNumber(value, fallback = 0) {
-    const parsed = Number(value);
 
-    return Number.isFinite(parsed)
-      ? parsed
+  function normalize(value) {
+    return text(value)
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(
+        /[\u0300-\u036f]/g,
+        ""
+      )
+      .replace(
+        /\s+/g,
+        "_"
+      );
+  }
+
+
+  function number(
+    value,
+    fallback = 0
+  ) {
+    const result =
+      Number(value);
+
+    return Number.isFinite(result)
+      ? result
       : fallback;
   }
 
-  function clamp(value, min, max) {
+
+  function clamp(
+    value,
+    min,
+    max
+  ) {
     return Math.max(
       min,
       Math.min(max, value)
     );
   }
+
 
   function getFicha() {
     return (
@@ -85,6 +121,7 @@
     );
   }
 
+
   function getAssets() {
     return (
       window.AERIONPersonagemAssets ||
@@ -93,15 +130,25 @@
     );
   }
 
+
   function getState() {
-    const ficha = getFicha();
+
+    const ficha =
+      getFicha();
 
     if (
       ficha &&
-      typeof ficha.getState === "function"
+      typeof ficha.getState ===
+        "function"
     ) {
+
       try {
-        return ficha.getState() || {};
+
+        return (
+          ficha.getState() ||
+          {}
+        );
+
       } catch {
         return {};
       }
@@ -110,48 +157,121 @@
     return {};
   }
 
+
   /* =========================================================
-     RAÇA
+     RAÇAS
      ========================================================= */
 
-  function getRace(state) {
-    const assets = getAssets();
+  function getRaces() {
+
+    const assets =
+      getAssets();
 
     if (!assets) {
+      return [];
+    }
+
+
+    if (
+      Array.isArray(
+        assets.races
+      )
+    ) {
+      return assets.races;
+    }
+
+
+    if (
+      Array.isArray(
+        assets.RACES
+      )
+    ) {
+      return assets.RACES;
+    }
+
+
+    if (
+      Array.isArray(
+        window.AERION_RACES
+      )
+    ) {
+      return window.AERION_RACES;
+    }
+
+
+    return [];
+  }
+
+
+  function getRace(
+    state
+  ) {
+
+    const assets =
+      getAssets();
+
+    const wanted =
+      normalize(
+        state?.race
+      );
+
+
+    if (!wanted) {
       return null;
     }
 
+
     if (
-      typeof assets.getRace === "function"
+      assets &&
+      typeof assets.getRace ===
+        "function"
     ) {
-      return assets.getRace(
-        state?.race
-      );
+
+      const race =
+        assets.getRace(
+          state.race
+        );
+
+      if (race) {
+        return race;
+      }
     }
 
-    const races =
-      Array.isArray(assets.races)
-        ? assets.races
-        : [];
-
-    const wanted =
-      normalize(state?.race);
 
     return (
-      races.find(
-        race =>
-          normalize(race?.id) === wanted
-      ) || null
+      getRaces().find(
+        race => {
+
+          const id =
+            race?.id ??
+            race?.key ??
+            race?.slug ??
+            race?.name;
+
+          return (
+            normalize(id) ===
+            wanted
+          );
+        }
+      ) ||
+      null
     );
   }
+
 
   /* =========================================================
      GÊNERO
      ========================================================= */
 
-  function getGender(state) {
+  function getGender(
+    state
+  ) {
+
     const gender =
-      normalize(state?.gender);
+      normalize(
+        state?.gender
+      );
+
 
     if (
       gender === "feminino" ||
@@ -159,93 +279,464 @@
       gender === "female" ||
       gender === "f"
     ) {
+
       return "feminino";
     }
+
 
     return "masculino";
   }
 
+
   /* =========================================================
-     IMAGEM DA RAÇA
+     IMAGEM DE RAÇA
      ========================================================= */
 
-  function getRaceImage(state) {
-    const assets = getAssets();
-    const race = getRace(state);
+  function getRaceImage(
+    race,
+    gender
+  ) {
 
     if (!race) {
       return "";
     }
 
-    const gender =
-      getGender(state);
+
+    const assets =
+      getAssets();
+
 
     /*
-     * API oficial do catálogo.
-     */
+      Primeiro tenta a API do catálogo.
+    */
 
     if (
       assets &&
       typeof assets.getRaceImage ===
         "function"
     ) {
-      const image =
+
+      const result =
         assets.getRaceImage(
           race.id,
           gender
         );
 
-      if (image) {
-        return image;
+      if (result) {
+        return text(result);
       }
     }
 
+
     /*
-     * Fallback direto no objeto da raça.
-     */
+      Depois procura no objeto da raça.
+    */
 
     const images =
-      race.images || {};
+      race.images ||
+      race.image ||
+      {};
 
-    const selected =
-      images[gender];
 
-    if (selected) {
-      return selected;
+    if (
+      typeof images ===
+      "string"
+    ) {
+      return text(images);
     }
 
-    /*
-     * Fallback para o outro gênero.
-     */
 
-    const otherGender =
-      gender === "feminino"
-        ? "masculino"
-        : "feminino";
+    if (
+      gender ===
+      "feminino"
+    ) {
 
-    return (
-      images[otherGender] ||
+      return text(
+        images.feminino ||
+        images.F ||
+        race.feminino ||
+        race.imageFemale ||
+        ""
+      );
+    }
+
+
+    return text(
+      images.masculino ||
+      images.M ||
+      race.masculino ||
+      race.imageMale ||
       ""
     );
   }
 
+
   /* =========================================================
-     ALTURA DA RAÇA
+     ANIMALHA
      ========================================================= */
 
-  function getHeightRange(state) {
-    const assets = getAssets();
-    const race = getRace(state);
+  function getAnimalhaId(
+    state
+  ) {
+
+    return text(
+      state?.animalha?.animal ||
+      state?.animalha?.variation ||
+      state?.animalha ||
+      ""
+    );
+  }
+
+
+  function isAnimalha(
+    state,
+    race
+  ) {
+
+    const raceId =
+      normalize(
+        race?.id ||
+        state?.race
+      );
+
+
+    return (
+      raceId ===
+      "animalha"
+    );
+  }
+
+
+  /*
+    Procura a configuração:
+
+    ANIMALHA_IMAGES = {
+      masculino: {
+        voadores: {
+          falcao: "URL"
+        },
+        ...
+      },
+
+      feminino: {
+        ...
+      }
+    }
+
+    A parte masculina fica explícita
+    para facilitar a edição.
+  */
+
+  function getAnimalhaImageFromConfig(
+    animalId,
+    category,
+    gender
+  ) {
+
+    const assets =
+      getAssets();
+
+
+    if (!assets) {
+      return "";
+    }
+
+
+    const config =
+      assets.ANIMALHA_IMAGES ||
+      window.ANIMALHA_IMAGES ||
+      null;
+
+
+    if (
+      !config ||
+      typeof config !==
+        "object"
+    ) {
+      return "";
+    }
+
+
+    const genderMap =
+      config[
+        gender
+      ];
+
+
+    if (
+      !genderMap ||
+      typeof genderMap !==
+        "object"
+    ) {
+      return "";
+    }
+
+
+    const normalizedAnimal =
+      normalize(
+        animalId
+      );
+
+
+    const normalizedCategory =
+      normalize(
+        category
+      );
+
+
+    /*
+      Primeiro tenta pela categoria.
+    */
+
+    const categoryMap =
+      genderMap[
+        normalizedCategory
+      ];
+
+
+    if (
+      categoryMap &&
+      typeof categoryMap ===
+        "object"
+    ) {
+
+      const result =
+        categoryMap[
+          normalizedAnimal
+        ];
+
+      if (result) {
+        return text(result);
+      }
+    }
+
+
+    /*
+      Depois procura diretamente
+      pelo ID do animal.
+    */
+
+    for (
+      const key of Object.keys(
+        genderMap
+      )
+    ) {
+
+      const group =
+        genderMap[key];
+
+      if (
+        !group ||
+        typeof group !==
+          "object"
+      ) {
+        continue;
+      }
+
+
+      if (
+        group[
+          normalizedAnimal
+        ]
+      ) {
+
+        return text(
+          group[
+            normalizedAnimal
+          ]
+        );
+      }
+    }
+
+
+    return "";
+  }
+
+
+  function getAnimalhaCategory(
+    state
+  ) {
+
+    return text(
+      state?.animalhaCategory ||
+      state?.animalha?.category ||
+      ""
+    );
+  }
+
+
+  function getAnimalhaImage(
+    state,
+    gender
+  ) {
+
+    const animalId =
+      getAnimalhaId(
+        state
+      );
+
+
+    if (!animalId) {
+      return "";
+    }
+
+
+    const category =
+      getAnimalhaCategory(
+        state
+      );
+
+
+    const assets =
+      getAssets();
+
+
+    /*
+      API oficial, caso exista.
+    */
+
+    if (
+      assets &&
+      typeof assets.getAnimalhaImage ===
+        "function"
+    ) {
+
+      const result =
+        assets.getAnimalhaImage(
+          animalId,
+          gender,
+          category
+        );
+
+      if (result) {
+        return text(result);
+      }
+    }
+
+
+    /*
+      Configuração masculina/feminina.
+    */
+
+    return getAnimalhaImageFromConfig(
+      animalId,
+      category,
+      gender
+    );
+  }
+
+
+  /* =========================================================
+     IMAGEM FINAL
+     ========================================================= */
+
+  function getCharacterImage(
+    state
+  ) {
+
+    const race =
+      getRace(state);
+
+    if (!race) {
+      return {
+        src: "",
+        race: null,
+        gender:
+          getGender(state),
+        animalha: false
+      };
+    }
+
+
+    const gender =
+      getGender(state);
+
+
+    /*
+      Animalha tem prioridade:
+      variação escolhida > imagem geral da raça.
+    */
+
+    if (
+      isAnimalha(
+        state,
+        race
+      )
+    ) {
+
+      const animalImage =
+        getAnimalhaImage(
+          state,
+          gender
+        );
+
+
+      if (animalImage) {
+
+        return {
+          src:
+            animalImage,
+          race,
+          gender,
+          animalha:
+            true
+        };
+      }
+    }
+
+
+    /*
+      Fallback para a imagem geral
+      da raça.
+    */
+
+    return {
+      src:
+        getRaceImage(
+          race,
+          gender
+        ),
+
+      race,
+
+      gender,
+
+      animalha:
+        false
+    };
+  }
+
+
+  /* =========================================================
+     ALTURA
+     ========================================================= */
+
+  function getHeightRange(
+    state
+  ) {
+
+    const race =
+      getRace(state);
+
+    const assets =
+      getAssets();
+
+
+    /*
+      API do catálogo.
+    */
 
     if (
       assets &&
       typeof assets.getRaceHeight ===
         "function"
     ) {
+
       const range =
         assets.getRaceHeight(
           race?.id
         );
+
 
       if (
         range &&
@@ -256,50 +747,69 @@
           Number(range.max)
         )
       ) {
+
         return {
-          min: Number(range.min),
-          max: Number(range.max)
+          min:
+            Number(range.min),
+
+          max:
+            Number(range.max)
         };
       }
     }
 
-    const raceMin =
-      toNumber(
-        race?.height?.min,
+
+    const min =
+      number(
+        race?.height?.min ??
+        race?.heightMin ??
+        race?.minHeight,
         CONFIG.defaultMinHeight
       );
 
-    const raceMax =
-      toNumber(
-        race?.height?.max,
+
+    const max =
+      number(
+        race?.height?.max ??
+        race?.heightMax ??
+        race?.maxHeight,
         CONFIG.defaultMaxHeight
       );
 
+
     return {
-      min: raceMin,
-      max: raceMax
+      min,
+      max:
+        max >= min
+          ? max
+          : min + 1
     };
   }
 
-  /* =========================================================
-     ALTURA ATUAL
-     ========================================================= */
 
-  function getCurrentHeight(state) {
+  function getCurrentHeight(
+    state
+  ) {
+
     const range =
-      getHeightRange(state);
+      getHeightRange(
+        state
+      );
 
-    const defaultHeight =
+
+    const middle =
       (
         range.min +
         range.max
       ) / 2;
 
+
     const height =
-      toNumber(
+      number(
         state?.appearance?.height,
-        defaultHeight
+        middle
       );
+
 
     return clamp(
       height,
@@ -308,29 +818,42 @@
     );
   }
 
+
   /* =========================================================
      ESCALA
      ========================================================= */
 
-  function calculateScale(state) {
+  function calculateScale(
+    state
+  ) {
+
     const range =
-      getHeightRange(state);
+      getHeightRange(
+        state
+      );
+
 
     const height =
-      getCurrentHeight(state);
+      getCurrentHeight(
+        state
+      );
 
-    const difference =
+
+    const span =
       Math.max(
         1,
-        range.max - range.min
+        range.max -
+          range.min
       );
+
 
     const progress =
       (
         height -
         range.min
       ) /
-      difference;
+      span;
+
 
     return (
       CONFIG.minScale +
@@ -342,32 +865,41 @@
     );
   }
 
+
   /* =========================================================
-     ESTRUTURA
+     ESTRUTURA DO VISUALIZADOR
      ========================================================= */
 
   function ensureStructure() {
+
     if (!root) {
       return false;
     }
 
+
     root.classList.add(
       "aerion-character-render"
     );
+
 
     let stage =
       root.querySelector(
         "[data-character-stage]"
       );
 
+
     if (stage) {
       return true;
     }
 
+
     root.innerHTML = "";
 
+
     stage =
-      document.createElement("div");
+      document.createElement(
+        "div"
+      );
 
     stage.className =
       "aerion-character-stage";
@@ -375,8 +907,11 @@
     stage.dataset.characterStage =
       "true";
 
+
     const glow =
-      document.createElement("div");
+      document.createElement(
+        "div"
+      );
 
     glow.className =
       "aerion-character-glow";
@@ -386,8 +921,11 @@
       "true"
     );
 
+
     const imageLayer =
-      document.createElement("div");
+      document.createElement(
+        "div"
+      );
 
     imageLayer.className =
       "aerion-character-image-layer";
@@ -395,8 +933,11 @@
     imageLayer.dataset.characterImageLayer =
       "true";
 
+
     const loading =
-      document.createElement("div");
+      document.createElement(
+        "div"
+      );
 
     loading.className =
       "aerion-character-loading";
@@ -404,7 +945,9 @@
     loading.dataset.characterLoading =
       "true";
 
-    loading.hidden = true;
+    loading.hidden =
+      true;
+
 
     loading.innerHTML = `
       <div
@@ -417,8 +960,11 @@
       </span>
     `;
 
+
     const error =
-      document.createElement("div");
+      document.createElement(
+        "div"
+      );
 
     error.className =
       "aerion-character-error";
@@ -426,66 +972,92 @@
     error.dataset.characterError =
       "true";
 
-    error.hidden = true;
+    error.hidden =
+      true;
+
 
     error.innerHTML = `
       <span>
         Não foi possível carregar
-        a imagem da raça.
+        a imagem do personagem.
       </span>
     `;
 
-    stage.appendChild(glow);
-    stage.appendChild(imageLayer);
-    stage.appendChild(loading);
-    stage.appendChild(error);
 
-    root.appendChild(stage);
+    stage.appendChild(
+      glow
+    );
+
+    stage.appendChild(
+      imageLayer
+    );
+
+    stage.appendChild(
+      loading
+    );
+
+    stage.appendChild(
+      error
+    );
+
+
+    root.appendChild(
+      stage
+    );
+
 
     return true;
   }
 
+
   /* =========================================================
-     ELEMENTOS INTERNOS
+     ELEMENTOS
      ========================================================= */
 
   function getImageLayer() {
+
     return root?.querySelector(
       "[data-character-image-layer]"
     );
   }
 
-  function getLoadingElement() {
+
+  function getLoading() {
+
     return root?.querySelector(
       "[data-character-loading]"
     );
   }
 
-  function getErrorElement() {
+
+  function getError() {
+
     return root?.querySelector(
       "[data-character-error]"
     );
   }
 
+
   /* =========================================================
-     LOADING
+     ESTADOS VISUAIS
      ========================================================= */
 
-  function setLoading(value) {
-    if (!root) {
-      return;
-    }
+  function setLoading(
+    value
+  ) {
 
     const enabled =
       Boolean(value);
 
-    root.classList.toggle(
+
+    root?.classList.toggle(
       "is-loading",
       enabled
     );
 
+
     const element =
-      getLoadingElement();
+      getLoading();
 
     if (element) {
       element.hidden =
@@ -493,25 +1065,23 @@
     }
   }
 
-  /* =========================================================
-     ERRO
-     ========================================================= */
 
-  function setError(value) {
-    if (!root) {
-      return;
-    }
+  function setError(
+    value
+  ) {
 
     const enabled =
       Boolean(value);
 
-    root.classList.toggle(
+
+    root?.classList.toggle(
       "has-error",
       enabled
     );
 
+
     const element =
-      getErrorElement();
+      getError();
 
     if (element) {
       element.hidden =
@@ -519,36 +1089,50 @@
     }
   }
 
+
   /* =========================================================
-     ESCALA DA IMAGEM
+     ESCALA
      ========================================================= */
 
-  function applyScale(state) {
+  function applyScale(
+    state
+  ) {
+
     if (!currentImage) {
       return;
     }
 
+
     const scale =
-      calculateScale(state);
+      calculateScale(
+        state
+      );
+
 
     currentImage.style.transform =
       `translateX(-50%) scale(${scale})`;
+
 
     currentImage.dataset.scale =
       String(scale);
   }
 
+
   /* =========================================================
      PLACEHOLDER
      ========================================================= */
 
-  function renderEmpty(message) {
+  function renderEmpty(
+    message
+  ) {
+
     const layer =
       getImageLayer();
 
     if (!layer) {
       return;
     }
+
 
     layer.innerHTML = `
       <div class="aerion-character-empty">
@@ -558,21 +1142,31 @@
       </div>
     `;
 
-    currentImage = null;
-    currentSrc = "";
+
+    currentImage =
+      null;
+
+    currentSrc =
+      "";
+
 
     setLoading(false);
     setError(false);
   }
 
+
   /* =========================================================
-     IMAGEM
+     RENDER DA IMAGEM
      ========================================================= */
 
-  function renderImage(state) {
+  function renderImage(
+    state
+  ) {
+
     if (!ensureStructure()) {
       return;
     }
+
 
     const layer =
       getImageLayer();
@@ -581,14 +1175,23 @@
       return;
     }
 
+
+    const character =
+      getCharacterImage(
+        state
+      );
+
+
     const race =
-      getRace(state);
+      character.race;
+
 
     /*
-     * Nenhuma raça selecionada.
-     */
+      Sem raça.
+    */
 
     if (!race) {
+
       renderEmpty(
         "Selecione uma raça para visualizar o personagem."
       );
@@ -596,296 +1199,446 @@
       return;
     }
 
-    const src =
-      getRaceImage(state);
 
     /*
-     * A raça existe, mas não possui
-     * imagem cadastrada.
-     */
+      Sem imagem.
+    */
 
-    if (!src) {
+    if (!character.src) {
+
+      const message =
+        character.animalha
+          ? "Escolha uma variação Animalha com imagem cadastrada."
+          : `Imagem de ${
+              race.name ||
+              "raça selecionada"
+            } indisponível.`;
+
       renderEmpty(
-        `Imagem de ${race.name || "raça selecionada"} indisponível.`
+        message
       );
 
       return;
     }
 
+
     /*
-     * A mesma imagem já está carregada.
-     * Só atualiza a escala.
-     */
+      Mesma imagem:
+      apenas atualiza escala.
+    */
 
     if (
       currentImage &&
-      currentSrc === src
+      currentSrc ===
+        character.src
     ) {
-      applyScale(state);
+
+      applyScale(
+        state
+      );
+
       return;
     }
 
-    const gender =
-      getGender(state);
 
     setLoading(true);
     setError(false);
 
-    layer.innerHTML = "";
+
+    layer.innerHTML =
+      "";
+
 
     const image =
-      document.createElement("img");
+      document.createElement(
+        "img"
+      );
+
 
     image.className =
       "aerion-character-base-image";
 
+
     image.alt =
-      `${race.name || "Personagem"} — ${gender}`;
+      `${
+        race.name ||
+        "Personagem"
+      } — ${
+        character.gender
+      }`;
+
 
     image.decoding =
       "async";
 
+
     image.loading =
       "eager";
 
+
     image.draggable =
       false;
+
 
     image.setAttribute(
       "aria-hidden",
       "true"
     );
 
+
     image.style.opacity =
       "0";
+
 
     image.style.transform =
       "translateX(-50%) scale(1)";
 
-    image.onload = () => {
-      setLoading(false);
-      setError(false);
 
-      image.style.opacity =
-        "1";
+    image.onload =
+      () => {
 
-      currentImage =
-        image;
+        setLoading(false);
+        setError(false);
 
-      currentSrc =
-        src;
 
-      applyScale(
-        getState()
-      );
+        image.style.opacity =
+          "1";
 
-      window.dispatchEvent(
-        new CustomEvent(
-          "aerion:personagem:image-loaded",
-          {
-            detail: {
-              race: race.id,
-              gender,
-              src
+
+        currentImage =
+          image;
+
+
+        currentSrc =
+          character.src;
+
+
+        applyScale(
+          getState()
+        );
+
+
+        window.dispatchEvent(
+          new CustomEvent(
+            "aerion:personagem:image-loaded",
+            {
+              detail: {
+                race:
+                  race.id ||
+                  race.name,
+
+                gender:
+                  character.gender,
+
+                animalha:
+                  character.animalha,
+
+                src:
+                  character.src
+              }
             }
-          }
-        )
-      );
-    };
+          )
+        );
+      };
 
-    image.onerror = () => {
-      setLoading(false);
-      setError(true);
 
-      image.style.opacity =
-        "0";
+    image.onerror =
+      () => {
 
-      currentImage = null;
-      currentSrc = "";
+        setLoading(false);
+        setError(true);
 
-      window.dispatchEvent(
-        new CustomEvent(
-          "aerion:personagem:image-error",
-          {
-            detail: {
-              race: race.id,
-              gender,
-              src
+
+        image.style.opacity =
+          "0";
+
+
+        currentImage =
+          null;
+
+        currentSrc =
+          "";
+
+
+        window.dispatchEvent(
+          new CustomEvent(
+            "aerion:personagem:image-error",
+            {
+              detail: {
+                race:
+                  race.id ||
+                  race.name,
+
+                gender:
+                  character.gender,
+
+                animalha:
+                  character.animalha,
+
+                src:
+                  character.src
+              }
             }
-          }
-        )
-      );
-    };
+          )
+        );
+      };
 
-    layer.appendChild(image);
+
+    layer.appendChild(
+      image
+    );
+
 
     currentImage =
       image;
 
     currentSrc =
-      src;
+      character.src;
+
 
     image.src =
-      src;
+      character.src;
+
 
     /*
-     * Caso o navegador tenha a imagem
-     * em cache e o load tenha ocorrido
-     * imediatamente.
-     */
+      Cache do navegador.
+    */
 
     if (image.complete) {
-      if (image.naturalWidth > 0) {
+
+      if (
+        image.naturalWidth >
+        0
+      ) {
+
         image.onload();
+
       } else {
+
         image.onerror();
       }
     }
   }
 
+
   /* =========================================================
-     RENDER
+     RENDER COMPLETO
      ========================================================= */
 
   function render() {
+
     if (!root) {
+
       root =
         document.querySelector(
           CONFIG.rootSelector
         );
     }
 
+
     if (!root) {
       return false;
     }
 
+
     const state =
       getState();
 
+
     ensureStructure();
 
-    renderImage(state);
+
+    renderImage(
+      state
+    );
+
 
     const race =
-      getRace(state);
+      getRace(
+        state
+      );
+
 
     root.dataset.race =
-      race?.id || "";
+      race?.id ||
+      "";
 
     root.dataset.gender =
-      getGender(state);
+      getGender(
+        state
+      );
+
+
+    const animalId =
+      getAnimalhaId(
+        state
+      );
+
+
+    root.dataset.animalha =
+      animalId;
+
+
+    root.dataset.height =
+      String(
+        getCurrentHeight(
+          state
+        )
+      );
+
+
+    root.classList.toggle(
+      "is-animalha",
+      isAnimalha(
+        state,
+        race
+      )
+    );
+
 
     if (currentImage) {
-      applyScale(state);
+      applyScale(
+        state
+      );
     }
+
 
     return true;
   }
 
-  /* =========================================================
-     EVENTOS
-     ========================================================= */
 
-  function handleFichaUpdate() {
-    render();
-  }
+  /* =========================================================
+     EVENTOS DA FICHA
+     ========================================================= */
 
   function initEvents() {
 
-    window.addEventListener(
-      "aerion:ficha:updated",
-      handleFichaUpdate
-    );
+    /*
+      Atualização geral.
+    */
 
     window.addEventListener(
-      "aerion:appearance:updated",
-      handleFichaUpdate
+      "aerion:ficha:update",
+      render
     );
 
-    window.addEventListener(
-      "aerion:race:selected",
-      handleFichaUpdate
-    );
+
+    /*
+      Raça.
+    */
 
     window.addEventListener(
       "aerion:race:preview",
-      handleFichaUpdate
+      render
     );
 
-    window.addEventListener(
-      "aerion:personagem:render",
-      handleFichaUpdate
-    );
 
     window.addEventListener(
-      "aerion:personagem-assets:ready",
-      handleFichaUpdate
+      "aerion:race:selected",
+      render
+    );
+
+
+    /*
+      Animalha.
+    */
+
+    window.addEventListener(
+      "aerion:animalha:category",
+      render
+    );
+
+
+    window.addEventListener(
+      "aerion:animalha:selected",
+      render
+    );
+
+
+    /*
+      Aparência / altura.
+    */
+
+    window.addEventListener(
+      "aerion:appearance:update",
+      render
+    );
+
+
+    /*
+      Mudança de identidade/gênero.
+    */
+
+    window.addEventListener(
+      "aerion:ficha:update",
+      render
     );
   }
 
+
   /* =========================================================
-     INICIALIZAÇÃO
+     INIT
      ========================================================= */
 
   function init() {
+
     if (initialized) {
       return;
     }
 
-    initialized = true;
+
+    initialized =
+      true;
+
 
     root =
       document.querySelector(
         CONFIG.rootSelector
       );
 
+
     if (!root) {
       return;
     }
 
-    ensureStructure();
 
     initEvents();
 
+
     render();
-
-    window.AERIONPersonagemRender = {
-      render,
-
-      refresh:
-        render,
-
-      getScale() {
-        return calculateScale(
-          getState()
-        );
-      },
-
-      getCurrentHeight() {
-        return getCurrentHeight(
-          getState()
-        );
-      },
-
-      getHeightRange() {
-        return getHeightRange(
-          getState()
-        );
-      }
-    };
-
-    window.AERION_PERSONAGEM_RENDER =
-      window.AERIONPersonagemRender;
   }
 
+
   /* =========================================================
-     DOM READY
+     API PÚBLICA
+     ========================================================= */
+
+  window.AERIONPersonagemRender = {
+
+    render,
+
+    getCharacterImage,
+
+    getRaceImage,
+
+    getAnimalhaImage,
+
+    getCurrentHeight,
+
+    calculateScale
+
+  };
+
+
+  /* =========================================================
+     START
      ========================================================= */
 
   if (
     document.readyState ===
     "loading"
   ) {
+
     document.addEventListener(
       "DOMContentLoaded",
       init,
@@ -893,8 +1646,11 @@
         once: true
       }
     );
+
   } else {
+
     init();
+
   }
 
 })();
