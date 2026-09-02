@@ -4,10 +4,9 @@
 
    NÚCLEO DA FICHA
 
-   RESPONSÁVEL POR:
-   - estado do personagem;
+   Responsável por:
+   - estado;
    - identidade;
-   - gênero;
    - raça;
    - Animalha;
    - aparência;
@@ -22,250 +21,206 @@
    - inventário;
    - navegação;
    - salvamento local;
-   - ações da interface.
-
-   NÃO RESPONSÁVEL POR:
-   - renderização visual;
-   - CSS;
-   - desenho do personagem.
-
-   IMPORTANTE:
-   Este arquivo é o ÚNICO dono das ações [data-action].
+   - ações [data-action].
 
    ========================================================= */
 
 (() => {
   "use strict";
 
-
-  /* =========================================================
-     CONFIGURAÇÃO
-     ========================================================= */
+  /* =======================================================
+     CONFIG
+     ======================================================= */
 
   const CONFIG = Object.freeze({
-
-    storageKey:
-      "aerion:ficha:draft:v17",
-
-    autosaveDelay:
-      350,
-
-    maxImageSize:
-      6 * 1024 * 1024,
-
-    totalSteps:
-      11
-
+    storageKey: "aerion:ficha:draft:v18",
+    autosaveDelay: 300,
+    maxImageSize: 6 * 1024 * 1024,
+    totalSteps: 11
   });
 
 
-  /* =========================================================
+  /* =======================================================
      ETAPAS
-     ========================================================= */
+     ======================================================= */
 
   const STEPS = Object.freeze([
-
     {
       index: 0,
       id: "identity",
       name: "Identidade"
     },
-
     {
       index: 1,
       id: "race",
       name: "Raça"
     },
-
     {
       index: 2,
       id: "appearance",
       name: "Aparência"
     },
-
     {
       index: 3,
       id: "class",
       name: "Classe"
     },
-
     {
       index: 4,
       id: "attributes",
       name: "Atributos"
     },
-
     {
       index: 5,
       id: "power",
       name: "Poder"
     },
-
     {
       index: 6,
       id: "mana",
       name: "Mana"
     },
-
     {
       index: 7,
       id: "skills",
       name: "Perícias"
     },
-
     {
       index: 8,
       id: "techniques",
       name: "Técnicas"
     },
-
     {
       index: 9,
       id: "inventory",
       name: "Inventário"
     },
-
     {
       index: 10,
       id: "review",
       name: "Revisão"
     }
-
   ]);
 
 
-  /* =========================================================
+  /* =======================================================
      ATRIBUTOS
-     ========================================================= */
+     ======================================================= */
 
   const ATTRIBUTES = Object.freeze([
-
     {
       id: "presenca",
-      name: "Presença"
+      name: "Presença",
+      short: "PRS"
     },
-
     {
       id: "precisao",
-      name: "Precisão"
+      name: "Precisão",
+      short: "PRE"
     },
-
     {
       id: "intelecto",
-      name: "Intelecto"
+      name: "Intelecto",
+      short: "INT"
     },
-
     {
       id: "controle",
-      name: "Controle"
+      name: "Controle",
+      short: "CON"
     },
-
     {
       id: "percepcao",
-      name: "Percepção"
+      name: "Percepção",
+      short: "PER"
     },
-
     {
       id: "vigor",
-      name: "Vigor"
+      name: "Vigor",
+      short: "VIG"
     },
-
     {
       id: "agilidade",
-      name: "Agilidade"
+      name: "Agilidade",
+      short: "AGI"
     },
-
     {
       id: "forca",
-      name: "Força"
+      name: "Força",
+      short: "FOR"
     }
-
   ]);
 
-  const ATTRIBUTE_IDS =
-    new Set(
-      ATTRIBUTES.map(
-        attribute =>
-          attribute.id
-      )
-    );
+  const ATTRIBUTE_IDS = new Set(
+    ATTRIBUTES.map(
+      attribute => attribute.id
+    )
+  );
 
 
-  /* =========================================================
+  /* =======================================================
      DADOS
-     ========================================================= */
+     ======================================================= */
 
   const DICE = Object.freeze([
-
     {
       id: "d4-1",
       type: "d4",
       sides: 4
     },
-
     {
       id: "d6-1",
       type: "d6",
       sides: 6
     },
-
     {
       id: "d6-2",
       type: "d6",
       sides: 6
     },
-
     {
       id: "d8-1",
       type: "d8",
       sides: 8
     },
-
     {
       id: "d10-1",
       type: "d10",
       sides: 10
     },
-
     {
       id: "d12-1",
       type: "d12",
       sides: 12
     },
-
     {
       id: "d20-1",
       type: "d20",
       sides: 20
     },
-
     {
       id: "d20-2",
       type: "d20",
       sides: 20
     }
-
   ]);
 
-  const DICE_BY_ID =
-    Object.freeze(
-      Object.fromEntries(
-        DICE.map(
-          die => [
-            die.id,
-            die
-          ]
-        )
+  const DICE_BY_ID = Object.freeze(
+    Object.fromEntries(
+      DICE.map(
+        die => [
+          die.id,
+          die
+        ]
       )
-    );
+    )
+  );
 
 
-  /* =========================================================
+  /* =======================================================
      CLASSES
-     ========================================================= */
+     ======================================================= */
 
   const CLASSES = Object.freeze({
-
     guerreiro: {
       id: "guerreiro",
       name: "Guerreiro",
@@ -297,88 +252,47 @@
       icon: "◈",
       manaBonus: 7
     }
-
   });
 
 
-  /* =========================================================
+  /* =======================================================
      PERÍCIAS
-     ========================================================= */
+     ======================================================= */
 
   const SKILLS = Object.freeze({
-
-    acrobacia:
-      "Acrobacia",
-
-    atletismo:
-      "Atletismo",
-
-    furtividade:
-      "Furtividade",
-
-    percepcao:
-      "Percepção",
-
-    investigacao:
-      "Investigação",
-
-    conhecimento:
-      "Conhecimento",
-
-    medicina:
-      "Medicina",
-
-    sobrevivencia:
-      "Sobrevivência",
-
-    persuasao:
-      "Persuasão",
-
-    intuicao:
-      "Intuição",
-
-    enganacao:
-      "Enganação",
-
-    tatica:
-      "Tática",
-
-    oficio:
-      "Ofício / Crafting",
-
-    controle_mana:
-      "Controle de Mana"
-
+    acrobacia: "Acrobacia",
+    atletismo: "Atletismo",
+    furtividade: "Furtividade",
+    percepcao: "Percepção",
+    investigacao: "Investigação",
+    conhecimento: "Conhecimento",
+    medicina: "Medicina",
+    sobrevivencia: "Sobrevivência",
+    persuasao: "Persuasão",
+    intuicao: "Intuição",
+    enganacao: "Enganação",
+    tatica: "Tática",
+    oficio: "Ofício / Crafting",
+    controle_mana: "Controle de Mana"
   });
 
 
-  /* =========================================================
+  /* =======================================================
      UTILITÁRIOS
-     ========================================================= */
+     ======================================================= */
 
-  function clone(
-    value
-  ) {
-
+  function clone(value) {
     try {
-
       return JSON.parse(
-        JSON.stringify(
-          value
-        )
+        JSON.stringify(value)
       );
-
     } catch {
-
       return value;
     }
   }
 
 
-  function text(
-    value
-  ) {
-
+  function text(value) {
     return String(
       value ?? ""
     ).trim();
@@ -389,13 +303,10 @@
     value,
     fallback = 0
   ) {
-
     const parsed =
       Number(value);
 
-    return Number.isFinite(
-      parsed
-    )
+    return Number.isFinite(parsed)
       ? parsed
       : fallback;
   }
@@ -406,7 +317,6 @@
     min,
     max
   ) {
-
     return Math.max(
       min,
       Math.min(
@@ -417,28 +327,18 @@
   }
 
 
-  function normalize(
-    value
-  ) {
-
+  function normalize(value) {
     return text(value)
-
       .toLowerCase()
-
-      .normalize(
-        "NFD"
-      )
-
+      .normalize("NFD")
       .replace(
         /[\u0300-\u036f]/g,
         ""
       )
-
       .replace(
         /\s+/g,
         "_"
       );
-
   }
 
 
@@ -446,7 +346,6 @@
     eventName,
     detail = {}
   ) {
-
     window.dispatchEvent(
       new CustomEvent(
         eventName,
@@ -455,151 +354,100 @@
         }
       )
     );
-
   }
 
 
   function getAssets() {
-
     return (
       window.AERIONPersonagemAssets ||
       window.AERION_CHARACTER_ASSETS ||
       null
     );
-
   }
 
 
   function getRaces() {
-
     const assets =
       getAssets();
-
 
     if (
       Array.isArray(
         assets?.races
       )
     ) {
-
       return assets.races;
-
     }
 
+    if (
+      Array.isArray(
+        assets?.RACES
+      )
+    ) {
+      return assets.RACES;
+    }
 
     if (
       Array.isArray(
         window.AERION_RACES
       )
     ) {
-
       return window.AERION_RACES;
-
     }
 
-
     return [];
-
   }
 
 
-  function getRaceById(
+  function findRace(
     raceId
   ) {
-
     const wanted =
-      normalize(
-        raceId
-      );
-
-
-    const assets =
-      getAssets();
-
-
-    if (
-      assets &&
-      typeof assets.getRace ===
-        "function"
-    ) {
-
-      return (
-        assets.getRace(
-          raceId
-        ) ||
-        null
-      );
-
-    }
-
+      normalize(raceId);
 
     return (
       getRaces().find(
-        race =>
-          normalize(
-            race?.id
-          ) ===
-          wanted
+        race => {
+          const id =
+            race?.id ??
+            race?.key ??
+            race?.slug ??
+            race?.name;
+
+          return (
+            normalize(id) ===
+            wanted
+          );
+        }
       ) ||
       null
     );
-
   }
 
 
-  function getAnimalhaAnimals() {
-
-    const assets =
-      getAssets();
-
-
-    if (
-      Array.isArray(
-        assets?.animalhaAnimals
-      )
-    ) {
-
-      return assets.animalhaAnimals;
-
-    }
-
-
-    return [];
-
-  }
-
-
-  function findAnimalha(
-    animalId
+  function getClass(
+    classId
   ) {
-
     const wanted =
-      normalize(
-        animalId
-      );
-
+      normalize(classId);
 
     return (
-      getAnimalhaAnimals()
+      Object.values(CLASSES)
         .find(
-          animal =>
+          item =>
             normalize(
-              animal?.id
-            ) ===
-            wanted
+              item.id
+            ) === wanted
         ) ||
       null
     );
-
   }
 
 
-  /* =========================================================
+  /* =======================================================
      ESTADO PADRÃO
-     ========================================================= */
+     ======================================================= */
 
-  function emptyAttributes() {
-
+  function makeAttributes() {
     return Object.fromEntries(
       ATTRIBUTES.map(
         attribute => [
@@ -608,12 +456,10 @@
         ]
       )
     );
-
   }
 
 
-  function emptyAssignedDice() {
-
+  function makeAssignedDice() {
     return Object.fromEntries(
       ATTRIBUTES.map(
         attribute => [
@@ -622,30 +468,25 @@
         ]
       )
     );
-
   }
 
 
-  function emptySkills() {
-
+  function makeSkills() {
     return Object.fromEntries(
       Object.keys(
         SKILLS
       ).map(
-        id => [
-          id,
+        key => [
+          key,
           0
         ]
       )
     );
-
   }
 
 
   function createDefaultState() {
-
     return {
-
       currentStep: 0,
 
       completedSteps:
@@ -653,223 +494,118 @@
           CONFIG.totalSteps
         ).fill(false),
 
-
-      /* =====================================================
-         IDENTIDADE
-         ===================================================== */
-
+      /* identidade */
       name: "",
-
       age: "",
-
       gender: "",
-
       description: "",
-
       origin: "",
 
-
-      /* =====================================================
-         CONCEITO COMPLETO
-         ===================================================== */
-
+      /* conceito */
       personality: "",
-
       objective: "",
-
       fear: "",
-
       importantBond: "",
-
       history: "",
-
       region: "",
 
-
-      /* =====================================================
-         RAÇA
-         ===================================================== */
-
+      /* raça */
       race: "",
-
       raceIndex: 0,
 
-
-      /* =====================================================
-         ANIMALHA
-         ===================================================== */
-
+      /* animalha */
       animalha: "",
-
       animalhaCategory: "",
 
-
-      /* =====================================================
-         APARÊNCIA
-         ===================================================== */
-
+      /* aparência */
       appearance: {
-
         height: null,
-
         hairColor: "",
-
         eyeColor: "",
-
         skinTone: "",
-
         hairType: "",
-
         physicalFeatures: "",
-
         scars: "",
-
         description: ""
-
       },
 
-
-      /* =====================================================
-         IMAGEM PERSONALIZADA
-         ===================================================== */
-
+      /* avatar */
       avatar: "",
-
       avatarName: "",
 
-
-      /* =====================================================
-         CLASSE
-         ===================================================== */
-
+      /* classe */
       class: "",
+      classIndex: 0,
 
-
-      /* =====================================================
-         ATRIBUTOS
-         ===================================================== */
-
+      /* atributos */
       attributes:
-        emptyAttributes(),
+        makeAttributes(),
 
+      selectedAttribute: "",
 
-      /* =====================================================
-         DADOS
-         ===================================================== */
-
+      /* dados */
       assignedDice:
-        emptyAssignedDice(),
+        makeAssignedDice(),
 
       diceResults: {},
 
       lastRoll: null,
 
-
-      /* =====================================================
-         PODER
-         ===================================================== */
-
+      /* poder */
       primaryPower: "",
-
       parallelPower: "",
 
-
-      /* =====================================================
-         MANA
-         ===================================================== */
-
+      /* mana */
       mana: {
-
         current: 0,
-
         max: 0,
-
         type: ""
-
       },
 
-
-      /* =====================================================
-         PERÍCIAS
-         ===================================================== */
-
+      /* perícias */
       skills:
-        emptySkills(),
+        makeSkills(),
 
-
-      /* =====================================================
-         TÉCNICAS
-         ===================================================== */
-
+      /* técnicas */
       techniques: [],
 
-
-      /* =====================================================
-         INVENTÁRIO
-         ===================================================== */
-
+      /* inventário */
       inventory: [],
 
-
-      /* =====================================================
-         VIDA / COMBATE
-         ===================================================== */
-
+      /* combate */
       hp: {
-
         current: 0,
-
         max: 0
-
       },
 
       defense: 0,
-
       initiative: 0,
-
       movement: 0,
-
-
-      /* =====================================================
-         DINHEIRO
-         ===================================================== */
 
       money: 0,
 
-
-      /* =====================================================
-         SALVAMENTO
-         ===================================================== */
-
       saved: false
-
     };
-
   }
 
 
-  /* =========================================================
-     ESTADO
-     ========================================================= */
-
   let state =
     createDefaultState();
+
 
   let saveTimer =
     null;
 
 
-  /* =========================================================
-     ESTADO NORMALIZADO
-     ========================================================= */
+  /* =======================================================
+     NORMALIZAÇÃO
+     ======================================================= */
 
   function normalizeState(
     incoming
   ) {
-
     const defaults =
       createDefaultState();
-
 
     const source =
       incoming &&
@@ -878,17 +614,13 @@
         ? incoming
         : {};
 
-
-    const result = {
-
+    const next = {
       ...defaults,
-
-      ...source
-
+      ...clone(source)
     };
 
 
-    result.currentStep =
+    next.currentStep =
       clamp(
         number(
           source.currentStep,
@@ -899,7 +631,7 @@
       );
 
 
-    result.completedSteps =
+    next.completedSteps =
       Array.from(
         {
           length:
@@ -915,1407 +647,825 @@
       );
 
 
-    result.appearance = {
-
+    next.appearance = {
       ...defaults.appearance,
-
       ...(
-        source.appearance ||
-        {}
+        source.appearance &&
+        typeof source.appearance ===
+          "object"
+          ? source.appearance
+          : {}
       )
-
     };
 
 
-    result.attributes = {
-
+    next.attributes = {
       ...defaults.attributes,
-
       ...(
-        source.attributes ||
-        {}
+        source.attributes &&
+        typeof source.attributes ===
+          "object"
+          ? source.attributes
+          : {}
       )
-
     };
 
 
-    result.assignedDice = {
-
+    next.assignedDice = {
       ...defaults.assignedDice,
-
       ...(
-        source.assignedDice ||
-        {}
+        source.assignedDice &&
+        typeof source.assignedDice ===
+          "object"
+          ? source.assignedDice
+          : {}
       )
-
     };
 
 
-    result.diceResults = {
-
+    next.diceResults = {
       ...(
-        source.diceResults ||
-        {}
+        source.diceResults &&
+        typeof source.diceResults ===
+          "object"
+          ? source.diceResults
+          : {}
       )
-
     };
 
 
-    result.skills = {
-
+    next.skills = {
       ...defaults.skills,
-
       ...(
-        source.skills ||
-        {}
+        source.skills &&
+        typeof source.skills ===
+          "object"
+          ? source.skills
+          : {}
       )
-
     };
 
 
-    result.mana = {
-
+    next.mana = {
       ...defaults.mana,
-
       ...(
-        source.mana ||
-        {}
+        source.mana &&
+        typeof source.mana ===
+          "object"
+          ? source.mana
+          : {}
       )
-
     };
 
 
-    result.hp = {
-
-      ...defaults.hp,
-
-      ...(
-        source.hp ||
-        {}
+    if (
+      !ATTRIBUTE_IDS.has(
+        next.selectedAttribute
       )
-
-    };
-
-
-    result.techniques =
-      Array.isArray(
-        source.techniques
-      )
-        ? source.techniques
-        : [];
-
-
-    result.inventory =
-      Array.isArray(
-        source.inventory
-      )
-        ? source.inventory
-        : [];
-
-
-    /*
-     * Nunca deixa etapas futuras
-     * marcadas como concluídas.
-     */
-
-    for (
-      let index = 0;
-      index < result.completedSteps.length;
-      index++
     ) {
-
-      if (
-        index >
-        result.currentStep
-      ) {
-
-        result.completedSteps[
-          index
-        ] = false;
-
-      }
-
+      next.selectedAttribute =
+        "";
     }
 
 
-    return result;
-
+    return next;
   }
 
 
-  /* =========================================================
-     SALVAMENTO
-     ========================================================= */
+  /* =======================================================
+     STORAGE
+     ======================================================= */
 
-  function updateSaveStatus(
-    saved
-  ) {
-
-    const element =
-      document.querySelector(
-        "#saveStatusText"
-      );
-
-
-    if (element) {
-
-      element.textContent =
-        saved
-          ? "Salvo"
-          : "Salvamento automático";
-
-    }
-
-  }
-
-
-  function saveNow() {
-
+  function loadState() {
     try {
-
-      state.saved =
-        true;
-
-      localStorage.setItem(
-        CONFIG.storageKey,
-        JSON.stringify(
-          state
-        )
-      );
-
-      updateSaveStatus(
-        true
-      );
-
-
-      emit(
-        "aerion:ficha:saved",
-        {
-          state:
-            clone(state)
-        }
-      );
-
-
-      return true;
-
-    } catch (
-      error
-    ) {
-
-      state.saved =
-        false;
-
-      updateSaveStatus(
-        false
-      );
-
-
-      console.error(
-        "[AERION][FICHA] Erro ao salvar:",
-        error
-      );
-
-
-      return false;
-
-    }
-
-  }
-
-
-  function scheduleSave() {
-
-    state.saved =
-      false;
-
-    updateSaveStatus(
-      false
-    );
-
-
-    if (saveTimer) {
-
-      clearTimeout(
-        saveTimer
-      );
-
-    }
-
-
-    saveTimer =
-      setTimeout(
-        saveNow,
-        CONFIG.autosaveDelay
-      );
-
-  }
-
-
-  /* =========================================================
-     CARREGAR
-     ========================================================= */
-
-  function loadSavedState() {
-
-    try {
-
       const raw =
         localStorage.getItem(
           CONFIG.storageKey
         );
 
-
       if (!raw) {
-
-        return false;
-
+        return createDefaultState();
       }
 
-
-      const parsed =
-        JSON.parse(
-          raw
-        );
-
-
-      state =
-        normalizeState(
-          parsed
-        );
-
-
-      state.saved =
-        true;
-
-
-      updateSaveStatus(
-        true
+      return normalizeState(
+        JSON.parse(raw)
       );
-
-
-      return true;
-
-    } catch (
-      error
-    ) {
-
+    } catch (error) {
       console.warn(
-        "[AERION][FICHA] Não foi possível carregar o rascunho:",
+        "[AERION] Falha ao carregar ficha:",
         error
       );
 
-
-      state =
-        createDefaultState();
-
-
-      return false;
-
+      return createDefaultState();
     }
-
   }
 
 
-  /* =========================================================
-     EVENTO CENTRAL DE ATUALIZAÇÃO
-     ========================================================= */
-
-  function notify(
-    reason = ""
+  function saveState(
+    immediate = false
   ) {
-
-    emit(
-      "aerion:ficha:updated",
-      {
-
-        state:
-          clone(state),
-
-        reason,
-
-        step:
-          state.currentStep,
-
-        stepId:
-          STEPS[
-            state.currentStep
-          ]?.id || ""
-
-      }
+    clearTimeout(
+      saveTimer
     );
 
+    const execute =
+      () => {
+        try {
+          state.saved = true;
+
+          localStorage.setItem(
+            CONFIG.storageKey,
+            JSON.stringify(state)
+          );
+
+          emit(
+            "aerion:save",
+            {
+              state: clone(state)
+            }
+          );
+        } catch (error) {
+          console.error(
+            "[AERION] Falha ao salvar:",
+            error
+          );
+        }
+      };
+
+
+    if (immediate) {
+      execute();
+      return;
+    }
+
+
+    saveTimer =
+      setTimeout(
+        execute,
+        CONFIG.autosaveDelay
+      );
   }
 
 
   function commit(
-    reason = ""
+    eventName =
+      "aerion:ficha:update"
   ) {
+    state.saved = false;
 
-    scheduleSave();
+    saveState();
 
-    notify(
-      reason
+    emit(
+      eventName,
+      {
+        state: clone(state)
+      }
     );
-
   }
 
 
-  /* =========================================================
-     GETTERS
-     ========================================================= */
+  /* =======================================================
+     GET / SET
+     ======================================================= */
 
   function getState() {
-
-    return clone(
-      state
-    );
-
+    return clone(state);
   }
 
 
-  function getCurrentStep() {
+  function setState(
+    partial
+  ) {
+    state =
+      normalizeState({
+        ...state,
+        ...clone(partial)
+      });
 
-    return state.currentStep;
-
+    commit();
   }
 
 
-  function getCurrentStepData() {
+  /* =======================================================
+     COMPLETAR ETAPAS
+     ======================================================= */
 
-    return (
-      STEPS[
-        state.currentStep
-      ] ||
-      null
-    );
+  function setStepComplete(
+    index,
+    complete = true
+  ) {
+    if (
+      index < 0 ||
+      index >= CONFIG.totalSteps
+    ) {
+      return;
+    }
 
+    state.completedSteps[index] =
+      Boolean(complete);
+
+    commit();
   }
 
 
-  /* =========================================================
-     VALIDAR IDENTIDADE
-     ========================================================= */
+  /* =======================================================
+     VALIDAÇÕES
+     ======================================================= */
 
   function validateIdentity() {
 
-    if (
-      !text(
-        state.name
-      )
-    ) {
+    const name =
+      text(state.name);
 
-      return {
-        valid: false,
-        message:
-          "Digite o nome do personagem."
-      };
+    if (!name) {
+      warn(
+        "Digite o nome do personagem."
+      );
 
+      focus(
+        "#characterName"
+      );
+
+      return false;
     }
 
 
-    if (
-      !text(
-        state.gender
-      )
-    ) {
+    const age =
+      text(state.age);
 
-      return {
-        valid: false,
-        message:
-          "Escolha o gênero do personagem."
-      };
+    if (!age) {
+      warn(
+        "Informe a idade do personagem."
+      );
 
+      focus(
+        "#characterAge"
+      );
+
+      return false;
     }
 
 
-    return {
-      valid: true,
-      message: ""
-    };
+    if (!text(state.gender)) {
+      warn(
+        "Escolha o gênero do personagem."
+      );
 
+      return false;
+    }
+
+
+    state.completedSteps[0] =
+      true;
+
+    saveState();
+
+    return true;
   }
 
-
-  /* =========================================================
-     RAÇA
-     ========================================================= */
 
   function validateRace() {
 
-    if (
-      !state.race
-    ) {
-
-      return {
-        valid: false,
-        message:
-          "Selecione uma raça antes de continuar."
-      };
-
-    }
-
-
-    const race =
-      getRaceById(
-        state.race
+    if (!state.race) {
+      warn(
+        "Escolha uma raça antes de continuar."
       );
 
-
-    if (!race) {
-
-      return {
-        valid: false,
-        message:
-          "A raça selecionada não foi encontrada."
-      };
-
+      return false;
     }
 
 
     if (
-      normalize(
-        race.id
-      ) ===
+      normalize(state.race) ===
       "animalha"
     ) {
-
-      if (
-        !state.animalhaCategory
-      ) {
-
-        return {
-          valid: false,
-          message:
-            "Escolha uma categoria de Animalha."
-        };
-
-      }
-
-
       if (
         !state.animalha
       ) {
+        warn(
+          "Escolha a categoria e a variação do Animalha."
+        );
 
-        return {
-          valid: false,
-          message:
-            "Escolha uma linhagem de Animalha."
-        };
-
+        return false;
       }
-
     }
 
 
-    return {
-      valid: true,
-      message: ""
-    };
+    state.completedSteps[1] =
+      true;
 
+    saveState();
+
+    return true;
   }
 
 
-  /* =========================================================
-     APARÊNCIA
-     ========================================================= */
-
   function validateAppearance() {
-
-    const race =
-      getRaceById(
-        state.race
-      );
-
-
-    if (!race) {
-
-      return {
-        valid: false,
-        message:
-          "Selecione uma raça primeiro."
-      };
-
-    }
-
-
-    const min =
-      number(
-        race.height?.min,
-        0
-      );
-
-    const max =
-      number(
-        race.height?.max,
-        0
-      );
-
 
     const height =
       number(
         state.appearance?.height,
-        NaN
+        0
       );
 
+    if (height <= 0) {
+      warn(
+        "Defina a altura do personagem."
+      );
 
-    if (
-      !Number.isFinite(
-        height
-      )
-    ) {
-
-      return {
-        valid: false,
-        message:
-          "Defina a altura do personagem."
-      };
-
+      return false;
     }
 
 
-    if (
-      min &&
-      max &&
-      (
-        height < min ||
-        height > max
-      )
-    ) {
+    state.completedSteps[2] =
+      true;
 
-      return {
-        valid: false,
-        message:
-          `A altura deve estar entre ${min} e ${max} cm.`
-      };
+    saveState();
 
-    }
-
-
-    return {
-      valid: true,
-      message: ""
-    };
-
+    return true;
   }
 
-
-  /* =========================================================
-     CLASSE
-     ========================================================= */
 
   function validateClass() {
 
-    const id =
-      normalize(
-        state.class
+    if (!state.class) {
+      warn(
+        "Escolha uma classe antes de continuar."
       );
 
-
-    if (!id) {
-
-      return {
-        valid: false,
-        message:
-          "Escolha uma classe."
-      };
-
+      return false;
     }
 
 
-    if (
-      !CLASSES[id]
-    ) {
+    state.completedSteps[3] =
+      true;
 
-      return {
-        valid: false,
-        message:
-          "A classe selecionada não existe."
-      };
+    saveState();
 
-    }
-
-
-    return {
-      valid: true,
-      message: ""
-    };
-
-  }
-
-
-  /* =========================================================
-     ATRIBUTOS
-     ========================================================= */
-
-  function isAttributeComplete(
-    attributeId
-  ) {
-
-    const die =
-      state.assignedDice?.[
-        attributeId
-      ];
-
-
-    const result =
-      state.diceResults?.[
-        attributeId
-      ];
-
-
-    return Boolean(
-      die &&
-      result !== undefined &&
-      result !== null
-    );
-
-  }
-
-
-  function countCompletedAttributes() {
-
-    return ATTRIBUTES.filter(
-      attribute =>
-        isAttributeComplete(
-          attribute.id
-        )
-    ).length;
-
+    return true;
   }
 
 
   function validateAttributes() {
 
-    const missing =
-      ATTRIBUTES.filter(
+    const missingAttribute =
+      ATTRIBUTES.find(
         attribute =>
-          !isAttributeComplete(
+          !state.assignedDice[
             attribute.id
-          )
+          ] ||
+          state.diceResults[
+            state.assignedDice[
+              attribute.id
+            ]
+          ] == null
       );
 
 
-    if (
-      missing.length
-    ) {
+    if (missingAttribute) {
+      warn(
+        `O atributo ${missingAttribute.name} ainda precisa de dado e resultado.`
+      );
 
-      return {
-        valid: false,
-        message:
-          `Preencha todos os 8 atributos. Faltam ${missing.length}.`
-      };
-
+      return false;
     }
 
 
-    return {
-      valid: true,
-      message: ""
-    };
+    state.completedSteps[4] =
+      true;
 
+    saveState();
+
+    return true;
   }
 
 
-  /* =========================================================
-     PODER
-     ========================================================= */
-
-  function validatePower() {
-
-    if (
-      !text(
-        state.primaryPower
-      )
-    ) {
-
-      return {
-        valid: false,
-        message:
-          "Escolha ou registre o poder do personagem."
-      };
-
-    }
-
-
-    return {
-      valid: true,
-      message: ""
-    };
-
-  }
-
-
-  /* =========================================================
-     MANA
-     ========================================================= */
-
-  function validateMana() {
-
-    return {
-      valid: true,
-      message: ""
-    };
-
-  }
-
-
-  /* =========================================================
-     PERÍCIAS
-     ========================================================= */
-
-  function validateSkills() {
-
-    return {
-      valid: true,
-      message: ""
-    };
-
-  }
-
-
-  /* =========================================================
-     TÉCNICAS
-     ========================================================= */
-
-  function validateTechniques() {
-
-    return {
-      valid: true,
-      message: ""
-    };
-
-  }
-
-
-  /* =========================================================
-     INVENTÁRIO
-     ========================================================= */
-
-  function validateInventory() {
-
-    return {
-      valid: true,
-      message: ""
-    };
-
-  }
-
-
-  /* =========================================================
-     REVISÃO
-     ========================================================= */
-
-  function validateReview() {
-
-    return {
-      valid: true,
-      message: ""
-    };
-
-  }
-
-
-  /* =========================================================
-     VALIDADOR CENTRAL
-     ========================================================= */
-
-  function validateStep(
-    index
-  ) {
+  function validateCurrentStep() {
 
     switch (
-      Number(index)
+      STEPS[
+        state.currentStep
+      ]?.id
     ) {
 
-      case 0:
+      case "identity":
         return validateIdentity();
 
-      case 1:
+      case "race":
         return validateRace();
 
-      case 2:
+      case "appearance":
         return validateAppearance();
 
-      case 3:
+      case "class":
         return validateClass();
 
-      case 4:
+      case "attributes":
         return validateAttributes();
 
-      case 5:
-        return validatePower();
-
-      case 6:
-        return validateMana();
-
-      case 7:
-        return validateSkills();
-
-      case 8:
-        return validateTechniques();
-
-      case 9:
-        return validateInventory();
-
-      case 10:
-        return validateReview();
-
       default:
+        state.completedSteps[
+          state.currentStep
+        ] = true;
 
-        return {
-          valid: false,
-          message:
-            "Etapa inválida."
-        };
+        saveState();
 
+        return true;
     }
-
   }
 
 
-  /* =========================================================
-     CONCLUIR ETAPA
-     ========================================================= */
+  /* =======================================================
+     NAVEGAÇÃO
+     ======================================================= */
 
-  function completeStep(
-    index
+  function goToStep(
+    index,
+    validate = true
   ) {
-
-    const validation =
-      validateStep(
-        index
+    const target =
+      clamp(
+        number(index, 0),
+        0,
+        CONFIG.totalSteps - 1
       );
 
 
     if (
-      !validation.valid
+      target >
+      state.currentStep
     ) {
-
-      return validation;
-
+      if (
+        validate &&
+        !validateCurrentStep()
+      ) {
+        return false;
+      }
     }
 
 
-    state.completedSteps[
-      index
-    ] = true;
+    /*
+      Não permite pular várias etapas
+      futuras.
+    */
+
+    if (
+      target >
+      state.currentStep + 1
+    ) {
+      return false;
+    }
 
 
-    commit(
-      `step-${index}-completed`
+    state.currentStep =
+      target;
+
+    state.saved =
+      false;
+
+    saveState();
+
+    emit(
+      "aerion:ficha:update",
+      {
+        state: clone(state)
+      }
     );
 
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth"
+    });
 
-    return validation;
-
+    return true;
   }
 
 
-  /* =========================================================
+  function nextStep() {
+    return goToStep(
+      state.currentStep + 1,
+      true
+    );
+  }
+
+
+  function previousStep() {
+    if (
+      state.currentStep <= 0
+    ) {
+      return false;
+    }
+
+    return goToStep(
+      state.currentStep - 1,
+      false
+    );
+  }
+
+
+  /* =======================================================
      IDENTIDADE
-     ========================================================= */
+     ======================================================= */
 
   function setIdentity(
     field,
     value
   ) {
-
-    const allowed =
-      new Set([
-
-        "name",
-        "age",
-        "gender",
-        "description",
-        "origin",
-        "personality",
-        "objective",
-        "fear",
-        "importantBond",
-        "history",
-        "region"
-
-      ]);
-
+    const allowed = new Set([
+      "name",
+      "age",
+      "gender",
+      "description",
+      "origin",
+      "personality",
+      "objective",
+      "fear",
+      "importantBond",
+      "history",
+      "region"
+    ]);
 
     if (
-      !allowed.has(
-        field
-      )
+      !allowed.has(field)
     ) {
-
       return false;
-
     }
-
 
     state[field] =
-      text(
-        value
-      );
-
+      text(value);
 
     /*
-     * Alterar identidade pode
-     * invalidar a conclusão.
-     */
+      Evita recalcular classes/dados
+      sem necessidade.
+    */
 
-    if (
-      field === "name" ||
-      field === "gender"
-    ) {
+    state.saved = false;
 
-      state.completedSteps[0] =
-        false;
-
-    }
-
-
-    commit(
-      `identity-${field}`
-    );
-
-
-    return true;
-
-  }
-
-
-  /* =========================================================
-     GÊNERO
-     ========================================================= */
-
-  function setGender(
-    gender
-  ) {
-
-    const value =
-      normalize(
-        gender
-      );
-
-
-    if (
-      value !== "masculino" &&
-      value !== "feminino"
-    ) {
-
-      return false;
-
-    }
-
-
-    state.gender =
-      value;
-
-
-    /*
-     * A mudança do gênero muda
-     * somente a imagem escolhida.
-     */
-
-    commit(
-      "gender"
-    );
-
+    saveState();
 
     emit(
-      "aerion:gender:updated",
+      "aerion:ficha:update",
       {
-        gender:
-          value
+        state: clone(state)
       }
     );
 
-
     return true;
-
   }
 
 
-  /* =========================================================
-     RAÇA — PRÉ-VISUALIZAÇÃO
-     ========================================================= */
-
-  function getRaceIndex() {
-
-    const races =
-      getRaces();
-
-
-    if (
-      !races.length
-    ) {
-
-      return 0;
-
-    }
-
-
-    return clamp(
-      number(
-        state.raceIndex,
-        0
-      ),
-      0,
-      races.length - 1
-    );
-
-  }
-
-
-  function getPreviewRace() {
-
-    const races =
-      getRaces();
-
-
-    if (
-      !races.length
-    ) {
-
-      return null;
-
-    }
-
-
-    return (
-      races[
-        getRaceIndex()
-      ] ||
-      races[0] ||
-      null
-    );
-
-  }
-
+  /* =======================================================
+     RAÇA
+     ======================================================= */
 
   function previewRace(
     direction
   ) {
-
     const races =
       getRaces();
 
+    if (!races.length) {
+      warn(
+        "Nenhuma raça foi cadastrada."
+      );
 
-    if (
-      !races.length
-    ) {
-
-      return null;
-
+      return false;
     }
 
 
-    let index =
-      getRaceIndex();
+    const current =
+      clamp(
+        number(
+          state.raceIndex,
+          0
+        ),
+        0,
+        races.length - 1
+      );
 
 
-    const step =
-      Number(direction) < 0
-        ? -1
-        : 1;
-
-
-    index += step;
-
-
-    if (
-      index < 0
-    ) {
-
-      index =
-        races.length - 1;
-
-    }
-
-
-    if (
-      index >=
-      races.length
-    ) {
-
-      index = 0;
-
-    }
+    const next =
+      clamp(
+        current +
+          number(
+            direction,
+            0
+          ),
+        0,
+        races.length - 1
+      );
 
 
     state.raceIndex =
-      index;
-
-
-    const race =
-      races[index];
+      next;
 
 
     emit(
       "aerion:race:preview",
       {
         race:
-          clone(race),
-
-        index
+          races[next],
+        index: next
       }
     );
 
 
-    notify(
-      "race-preview"
+    emit(
+      "aerion:ficha:update",
+      {
+        state: clone(state)
+      }
     );
 
 
-    return race;
-
+    return true;
   }
 
 
-  /* =========================================================
-     RAÇA — SELEÇÃO
-     ========================================================= */
-
-  function selectRace(
-    raceId,
-    raceIndex = null
+  function gotoRace(
+    index
   ) {
-
-    const race =
-      getRaceById(
-        raceId
-      );
-
-
-    if (!race) {
-
-      console.warn(
-        "[AERION][FICHA] Raça não encontrada:",
-        raceId
-      );
-
-
-      return false;
-
-    }
-
-
-    const previousRace =
-      state.race;
-
-
-    state.race =
-      race.id;
-
-
     const races =
       getRaces();
 
-
-    const indexFromId =
-      races.findIndex(
-        item =>
-          item.id ===
-          race.id
+    const next =
+      clamp(
+        number(index, 0),
+        0,
+        Math.max(
+          0,
+          races.length - 1
+        )
       );
 
 
     state.raceIndex =
-      raceIndex !== null
-        ? clamp(
-            number(
-              raceIndex,
-              indexFromId >= 0
-                ? indexFromId
-                : 0
-            ),
-            0,
-            Math.max(
-              0,
-              races.length - 1
-            )
-          )
-        : (
-            indexFromId >= 0
-              ? indexFromId
-              : 0
-          );
+      next;
+
+
+    emit(
+      "aerion:race:preview",
+      {
+        race:
+          races[next] ||
+          null,
+        index: next
+      }
+    );
+
+
+    emit(
+      "aerion:ficha:update",
+      {
+        state: clone(state)
+      }
+    );
+  }
+
+
+  function selectCurrentRace() {
+    const races =
+      getRaces();
+
+    if (!races.length) {
+      warn(
+        "Nenhuma raça foi cadastrada."
+      );
+
+      return false;
+    }
+
+
+    const index =
+      clamp(
+        number(
+          state.raceIndex,
+          0
+        ),
+        0,
+        races.length - 1
+      );
+
+
+    const race =
+      races[index];
+
+    if (!race) {
+      return false;
+    }
+
+
+    state.race =
+      race.id ||
+      race.key ||
+      race.slug ||
+      race.name ||
+      "";
 
 
     /*
-     * Ao trocar de raça,
-     * a escolha de Animalha precisa
-     * ser apagada quando deixa
-     * de ser Animalha.
-     */
+      Ao trocar a raça, o Animalha antigo
+      não pode permanecer escondido.
+    */
 
     if (
-      normalize(
-        race.id
-      ) !==
+      normalize(state.race) !==
       "animalha"
     ) {
-
       state.animalha =
         "";
 
       state.animalhaCategory =
         "";
-
     }
 
 
     /*
-     * Ajusta altura para ficar
-     * dentro do limite da raça.
-     */
+      Ajuste automático da altura
+      para dentro dos limites da raça.
+    */
 
-    const min =
+    const minHeight =
       number(
-        race.height?.min,
+        race?.height?.min ??
+        race?.heightMin ??
+        race?.minHeight,
         0
       );
 
-    const max =
+    const maxHeight =
       number(
-        race.height?.max,
+        race?.height?.max ??
+        race?.heightMax ??
+        race?.maxHeight,
         0
       );
 
 
     if (
-      min &&
-      max
+      minHeight > 0 &&
+      maxHeight >= minHeight
     ) {
 
-      const current =
+      const currentHeight =
         number(
-          state.appearance?.height,
-          NaN
+          state.appearance.height,
+          0
         );
 
 
-      if (
-        !Number.isFinite(
-          current
-        )
-      ) {
-
-        state.appearance.height =
-          Math.round(
-            (
-              min +
-              max
-            ) / 2
-          );
-
-        } else {
-
-          state.appearance.height =
-            clamp(
-              current,
-              min,
-              max
+      state.appearance.height =
+        currentHeight >= minHeight &&
+        currentHeight <= maxHeight
+          ? currentHeight
+          : Math.round(
+              (
+                minHeight +
+                maxHeight
+              ) / 2
             );
-
-        }
-
     }
 
 
     state.completedSteps[1] =
       false;
 
-    state.completedSteps[2] =
-      false;
-
 
     commit(
-      "race-selected"
+      "aerion:race:selected"
     );
 
 
     emit(
-      "aerion:race:selected",
+      "aerion:toast",
       {
-
-        race:
-          clone(race),
-
-        previousRace,
-
-        index:
-          state.raceIndex
-
+        message:
+          `${race.name || "Raça"} selecionada.`,
+        type: "success"
       }
     );
 
 
     return true;
-
   }
 
 
-  function selectPreviewRace() {
-
-    const race =
-      getPreviewRace();
-
-
-    if (!race) {
-
-      return false;
-
-    }
-
-
-    return selectRace(
-      race.id,
-      state.raceIndex
-    );
-
-  }
-
-
-  /* =========================================================
+  /* =======================================================
      ANIMALHA
-     ========================================================= */
+     ======================================================= */
 
   function selectAnimalhaCategory(
     category
   ) {
-
-    const value =
-      normalize(
-        category
-      );
-
-
     if (
-      normalize(
-        state.race
-      ) !==
-      "animalha"
+      !category
     ) {
-
       return false;
-
-    }
-
-
-    if (!value) {
-
-      return false;
-
     }
 
 
     state.animalhaCategory =
-      value;
-
-
-    /*
-     * Trocar categoria apaga
-     * a variação anterior.
-     */
+      text(category);
 
     state.animalha =
       "";
@@ -2326,460 +1476,451 @@
 
 
     commit(
-      "animalha-category"
-    );
-
-
-    emit(
-      "aerion:animalha:category",
-      {
-        category:
-          value
-      }
+      "aerion:animalha:category"
     );
 
 
     return true;
-
   }
 
 
-  function selectAnimalha(
-    animalId
+  function selectAnimalhaAnimal(
+    animal
   ) {
-
     if (
-      normalize(
-        state.race
-      ) !==
-      "animalha"
+      !animal
     ) {
-
       return false;
-
-    }
-
-
-    const animal =
-      findAnimalha(
-        animalId
-      );
-
-
-    if (!animal) {
-
-      console.warn(
-        "[AERION][FICHA] Animalha não encontrada:",
-        animalId
-      );
-
-
-      return false;
-
-    }
-
-
-    const animalCategory =
-      normalize(
-        animal.category
-      );
-
-
-    if (
-      state.animalhaCategory &&
-      normalize(
-        state.animalhaCategory
-      ) !==
-      animalCategory
-    ) {
-
-      return false;
-
     }
 
 
     state.animalha =
-      animal.id;
+      text(animal);
 
-
-    state.animalhaCategory =
-      animalCategory;
-
-
-    /*
-     * Ao possuir categoria +
-     * variação, a etapa de raça
-     * pode ser concluída.
-     */
 
     state.completedSteps[1] =
       true;
 
 
     commit(
-      "animalha-selected"
+      "aerion:animalha:selected"
     );
 
 
     emit(
-      "aerion:animalha:selected",
+      "aerion:toast",
       {
-        animal:
-          clone(animal)
+        message:
+          "Variação Animalha selecionada.",
+        type: "success"
       }
     );
 
 
     return true;
-
   }
 
 
-  /* =========================================================
+  /* =======================================================
      APARÊNCIA
-     ========================================================= */
+     ======================================================= */
 
   function setAppearance(
     field,
     value
   ) {
-
     const allowed =
       new Set([
-
         "height",
-
         "hairColor",
-
         "eyeColor",
-
         "skinTone",
-
         "hairType",
-
         "physicalFeatures",
-
         "scars",
-
         "description"
-
       ]);
 
 
     if (
-      !allowed.has(
-        field
-      )
+      !allowed.has(field)
     ) {
-
       return false;
-
     }
 
 
     if (
-      field ===
-      "height"
+      field === "height"
     ) {
-
-      const race =
-        getRaceById(
-          state.race
-        );
-
-
-      const min =
-        number(
-          race?.height?.min,
-          0
-        );
-
-      const max =
-        number(
-          race?.height?.max,
-          999
-        );
-
-
-      const height =
+      state.appearance.height =
         number(
           value,
-          NaN
+          state.appearance.height ||
+            0
         );
-
-
-      if (
-        !Number.isFinite(
-          height
-        )
-      ) {
-
-        return false;
-
-      }
-
-
-      state.appearance.height =
-        clamp(
-          height,
-          min || height,
-          max || height
-        );
-
     } else {
-
       state.appearance[field] =
-        text(
-          value
-        );
-
+        text(value);
     }
 
-
-    /*
-     * Qualquer alteração de aparência
-     * exige nova validação da etapa.
-     */
 
     state.completedSteps[2] =
       false;
 
 
-    commit(
-      `appearance-${field}`
-    );
+    state.saved = false;
 
+    saveState();
 
     emit(
-      "aerion:appearance:updated",
+      "aerion:appearance:update",
       {
+        state: clone(state),
         field,
-        value:
-          state.appearance[field]
+        value
+      }
+    );
+
+    emit(
+      "aerion:ficha:update",
+      {
+        state: clone(state)
       }
     );
 
 
     return true;
-
   }
 
 
-  /* =========================================================
+  /* =======================================================
      CLASSE
-     ========================================================= */
+     ======================================================= */
 
   function selectClass(
     classId
   ) {
+    const selected =
+      getClass(classId);
 
-    const id =
-      normalize(
-        classId
+    if (!selected) {
+      warn(
+        "Classe inválida."
       );
 
-
-    if (
-      !CLASSES[id]
-    ) {
-
       return false;
-
     }
 
 
     state.class =
-      id;
+      selected.id;
 
 
-    state.completedSteps[3] =
-      false;
+    state.classIndex =
+      Object.keys(
+        CLASSES
+      ).indexOf(
+        selected.id
+      );
 
 
     /*
-     * Bônus de Controle de Mana
-     * da classe segundo o Livro I.
-     */
+      O bônus de mana da classe
+      fica guardado junto da mana máxima.
+    */
 
-    const manaBonus =
+    const oldBonus =
       number(
-        CLASSES[id].manaBonus,
+        state.mana.classBonus,
         0
       );
 
 
-    if (
-      manaBonus
-    ) {
+    const baseMax =
+      Math.max(
+        0,
+        number(
+          state.mana.max,
+          0
+        ) - oldBonus
+      );
 
-      state.mana.max =
-        Math.max(
-          0,
-          number(
-            state.mana.max,
-            0
+
+    state.mana =
+      {
+        ...state.mana,
+        classBonus:
+          selected.manaBonus,
+        max:
+          baseMax +
+          selected.manaBonus,
+        current:
+          Math.min(
+            number(
+              state.mana.current,
+              0
+            ),
+            baseMax +
+              selected.manaBonus
           )
-        );
+      };
 
-    }
+
+    state.completedSteps[3] =
+      true;
 
 
     commit(
-      "class-selected"
+      "aerion:class:selected"
     );
 
 
     emit(
-      "aerion:class:selected",
+      "aerion:toast",
       {
-        class:
-          clone(
-            CLASSES[id]
-          )
+        message:
+          `${selected.name} selecionado.`,
+        type: "success"
       }
     );
 
 
     return true;
-
   }
 
 
-  /* =========================================================
-     DADOS — DISPONIBILIDADE
-     ========================================================= */
+  function previewClass(
+    direction
+  ) {
+    const ids =
+      Object.keys(
+        CLASSES
+      );
+
+    if (!ids.length) {
+      return false;
+    }
+
+
+    const current =
+      clamp(
+        number(
+          state.classIndex,
+          0
+        ),
+        0,
+        ids.length - 1
+      );
+
+
+    const next =
+      clamp(
+        current +
+          number(
+            direction,
+            0
+          ),
+        0,
+        ids.length - 1
+      );
+
+
+    state.classIndex =
+      next;
+
+
+    emit(
+      "aerion:ficha:update",
+      {
+        state: clone(state)
+      }
+    );
+
+
+    return true;
+  }
+
+
+  /* =======================================================
+     ATRIBUTOS
+     ======================================================= */
+
+  function selectAttribute(
+    attributeId
+  ) {
+    const id =
+      normalize(attributeId);
+
+    if (
+      !ATTRIBUTE_IDS.has(id)
+    ) {
+      warn(
+        "Atributo inválido."
+      );
+
+      return false;
+    }
+
+
+    state.selectedAttribute =
+      id;
+
+
+    state.saved = false;
+
+    saveState();
+
+    emit(
+      "aerion:attribute:selected",
+      {
+        attributeId: id,
+        state: clone(state)
+      }
+    );
+
+
+    emit(
+      "aerion:ficha:update",
+      {
+        state: clone(state)
+      }
+    );
+
+
+    return true;
+  }
+
+
+  /* =======================================================
+     DADOS
+     ======================================================= */
 
   function isDieAssigned(
     dieId
   ) {
-
-    return ATTRIBUTES.some(
-      attribute =>
-        state.assignedDice?.[
-          attribute.id
-        ] ===
-        dieId
+    return Object.values(
+      state.assignedDice
+    ).includes(
+      dieId
     );
-
   }
 
 
-  function getRemainingDice() {
-
-    return DICE.filter(
-      die =>
-        !isDieAssigned(
-          die.id
-        )
-    );
-
-  }
-
-
-  function getDie(
+  function getAttributeForDie(
     dieId
   ) {
-
-    return (
-      DICE_BY_ID[
-        dieId
-      ] ||
-      null
-    );
-
+    return ATTRIBUTES.find(
+      attribute =>
+        state.assignedDice[
+          attribute.id
+        ] === dieId
+    ) || null;
   }
 
-
-  /* =========================================================
-     DADO — ATRIBUIR
-     ========================================================= */
 
   function assignDie(
     attributeId,
     dieId
   ) {
+    const id =
+      normalize(attributeId);
 
-    const attribute =
-      normalize(
-        attributeId
+    if (
+      !ATTRIBUTE_IDS.has(id)
+    ) {
+      warn(
+        "Primeiro selecione um atributo."
       );
 
+      return false;
+    }
 
-    const die =
-      getDie(
+
+    if (
+      !DICE_BY_ID[dieId]
+    ) {
+      warn(
+        "Dado inválido."
+      );
+
+      return false;
+    }
+
+
+    const currentAttribute =
+      state.assignedDice[id];
+
+
+    /*
+      Clicando no mesmo dado novamente:
+      remove o dado daquele atributo.
+    */
+
+    if (
+      currentAttribute ===
+      dieId
+    ) {
+
+      state.assignedDice[id] =
+        null;
+
+      delete state.diceResults[
+        dieId
+      ];
+
+      state.completedSteps[4] =
+        false;
+
+      commit(
+        "aerion:dice:update"
+      );
+
+      return true;
+    }
+
+
+    /*
+      Não permite o mesmo dado em
+      dois atributos.
+    */
+
+    const occupiedBy =
+      getAttributeForDie(
         dieId
       );
 
 
     if (
-      !ATTRIBUTE_IDS.has(
-        attribute
-      )
+      occupiedBy &&
+      occupiedBy.id !== id
     ) {
+      warn(
+        `${DICE_BY_ID[dieId].type.toUpperCase()} já está atribuído a ${occupiedBy.name}.`
+      );
 
       return false;
-
     }
 
+
+    /*
+      Se o atributo já possuía outro dado,
+      retiramos o resultado anterior.
+    */
 
     if (
-      !die
+      currentAttribute
     ) {
-
-      return false;
-
+      delete state.diceResults[
+        currentAttribute
+      ];
     }
 
 
-    /*
-     * Se o dado já estiver em
-     * outro atributo, não pode
-     * ser reutilizado.
-     */
-
-    if (
-      isDieAssigned(
-        die.id
-      )
-    ) {
-
-      /*
-       * Permite clicar novamente
-       * no próprio dado para mantê-lo.
-       */
-
-      if (
-        state.assignedDice[
-          attribute
-        ] !==
-        die.id
-      ) {
-
-        return false;
-
-      }
-
-    }
-
-
-    /*
-     * Se o atributo já tinha
-     * outro dado, liberamos o antigo.
-     */
-
-    state.assignedDice[
-      attribute
-    ] =
-      die.id;
-
-
-    /*
-     * Trocar o dado invalida
-     * o resultado anterior.
-     */
+    state.assignedDice[id] =
+      dieId;
 
     delete state.diceResults[
-      attribute
+      dieId
     ];
 
 
@@ -2788,746 +1929,358 @@
 
 
     commit(
-      `die-assigned-${attribute}`
-    );
-
-
-    emit(
-      "aerion:die:assigned",
-      {
-
-        attribute,
-
-        die:
-          clone(die)
-
-      }
+      "aerion:dice:update"
     );
 
 
     return true;
-
-  }
-
-
-  /* =========================================================
-     DADO — REMOVER
-     ========================================================= */
-
-  function removeDie(
-    attributeId
-  ) {
-
-    const attribute =
-      normalize(
-        attributeId
-      );
-
-
-    if (
-      !ATTRIBUTE_IDS.has(
-        attribute
-      )
-    ) {
-
-      return false;
-
-    }
-
-
-    delete state.diceResults[
-      attribute
-    ];
-
-
-    state.assignedDice[
-      attribute
-    ] =
-      null;
-
-
-    state.completedSteps[4] =
-      false;
-
-
-    commit(
-      `die-removed-${attribute}`
-    );
-
-
-    return true;
-
-  }
-
-
-  /* =========================================================
-     ROLAGEM
-     ========================================================= */
-
-  function rollDie(
-    sides
-  ) {
-
-    const max =
-      number(
-        sides,
-        0
-      );
-
-
-    if (
-      max <= 0
-    ) {
-
-      return null;
-
-    }
-
-
-    return (
-      Math.floor(
-        Math.random() *
-        max
-      ) + 1
-    );
-
   }
 
 
   function rollAttribute(
     attributeId
   ) {
-
-    const attribute =
-      normalize(
-        attributeId
-      );
-
+    const id =
+      normalize(attributeId);
 
     if (
-      !ATTRIBUTE_IDS.has(
-        attribute
-      )
+      !ATTRIBUTE_IDS.has(id)
     ) {
+      warn(
+        "Selecione um atributo."
+      );
 
-      return null;
-
+      return false;
     }
 
 
     const dieId =
-      state.assignedDice?.[
-        attribute
-      ];
+      state.assignedDice[id];
+
+    if (!dieId) {
+      warn(
+        "Atribua um dado a esse atributo primeiro."
+      );
+
+      return false;
+    }
 
 
     const die =
-      getDie(
-        dieId
-      );
+      DICE_BY_ID[dieId];
 
-
-    if (
-      !die
-    ) {
-
-      emit(
-        "aerion:ficha:warning",
-        {
-          message:
-            "Adicione um dado a este atributo primeiro."
-        }
-      );
-
-
-      return null;
-
+    if (!die) {
+      return false;
     }
 
 
     const result =
-      rollDie(
-        die.sides
-      );
+      Math.floor(
+        Math.random() *
+          die.sides
+      ) + 1;
 
 
-    state.diceResults[
-      attribute
-    ] =
+    state.diceResults[dieId] =
+      result;
+
+
+    state.attributes[id] =
       result;
 
 
     state.lastRoll = {
-
-      attribute,
-
-      attributeName:
-        ATTRIBUTES.find(
-          item =>
-            item.id ===
-            attribute
-        )?.name ||
-        attribute,
-
+      attribute:
+        id,
       die:
-        die.type,
-
-      dieId:
-        die.id,
-
+        dieId,
+      sides:
+        die.sides,
       result,
-
       timestamp:
         Date.now()
-
     };
 
 
+    const complete =
+      ATTRIBUTES.every(
+        attribute =>
+          Boolean(
+            state.assignedDice[
+              attribute.id
+            ]
+          ) &&
+          state.diceResults[
+            state.assignedDice[
+              attribute.id
+            ]
+          ] != null
+      );
+
+
+    state.completedSteps[4] =
+      complete;
+
+
     commit(
-      `attribute-rolled-${attribute}`
+      "aerion:dice:update"
     );
 
 
     emit(
-      "aerion:attribute:rolled",
+      "aerion:toast",
       {
-        attribute,
-        result,
-        die:
-          clone(die)
+        message:
+          `${attributeName(id)}: ${result} no D${die.sides}.`,
+        type: "success"
       }
     );
-
-
-    /*
-     * Marca a etapa somente quando
-     * TODOS os oito tiverem resultado.
-     */
-
-    if (
-      countCompletedAttributes() ===
-      ATTRIBUTES.length
-    ) {
-
-      state.completedSteps[4] =
-        true;
-
-      commit(
-        "attributes-completed"
-      );
-
-    }
 
 
     return result;
-
   }
 
 
-  function rollAllAttributes() {
-
-    for (
-      const attribute of ATTRIBUTES
+  function rollSelectedAttribute() {
+    if (
+      !state.selectedAttribute
     ) {
+      warn(
+        "Selecione um atributo antes de rolar."
+      );
 
-      if (
-        !isAttributeComplete(
+      return false;
+    }
+
+    return rollAttribute(
+      state.selectedAttribute
+    );
+  }
+
+
+  function rollAllDice() {
+    let rolled = 0;
+
+
+    ATTRIBUTES.forEach(
+      attribute => {
+
+        const dieId =
+          state.assignedDice[
+            attribute.id
+          ];
+
+        if (!dieId) {
+          return;
+        }
+
+        const die =
+          DICE_BY_ID[dieId];
+
+        if (!die) {
+          return;
+        }
+
+        const result =
+          Math.floor(
+            Math.random() *
+              die.sides
+          ) + 1;
+
+        state.diceResults[
+          dieId
+        ] = result;
+
+        state.attributes[
           attribute.id
-        )
-      ) {
+        ] = result;
 
-        rollAttribute(
-          attribute.id
-        );
-
+        rolled++;
       }
+    );
 
+
+    const complete =
+      ATTRIBUTES.every(
+        attribute =>
+          Boolean(
+            state.assignedDice[
+              attribute.id
+            ]
+          ) &&
+          state.diceResults[
+            state.assignedDice[
+              attribute.id
+            ]
+          ] != null
+      );
+
+
+    state.completedSteps[4] =
+      complete;
+
+
+    if (rolled) {
+      state.lastRoll = {
+        attribute:
+          "all",
+        count:
+          rolled,
+        timestamp:
+          Date.now()
+      };
     }
 
 
-    return (
-      countCompletedAttributes() ===
-      ATTRIBUTES.length
+    commit(
+      "aerion:dice:update"
     );
 
+
+    emit(
+      "aerion:toast",
+      {
+        message:
+          `${rolled} dado(s) rolado(s).`,
+        type:
+          rolled
+            ? "success"
+            : "warning"
+      }
+    );
+
+
+    return rolled;
   }
 
 
-  /* =========================================================
+  function attributeName(
+    id
+  ) {
+    return (
+      ATTRIBUTES.find(
+        item =>
+          item.id === id
+      )?.name ||
+      id
+    );
+  }
+
+
+  /* =======================================================
      PODER
-     ========================================================= */
+     ======================================================= */
 
   function setPower(
     field,
     value
   ) {
-
-    const allowed =
-      new Set([
-        "primaryPower",
-        "parallelPower"
-      ]);
-
-
     if (
-      !allowed.has(
-        field
-      )
+      field !==
+        "primaryPower" &&
+      field !==
+        "parallelPower"
     ) {
-
       return false;
-
     }
 
 
     state[field] =
-      text(
-        value
-      );
+      text(value);
 
-
-    state.completedSteps[5] =
-      false;
-
-
-    commit(
-      `power-${field}`
-    );
-
+    commit();
 
     return true;
-
   }
 
 
-  /* =========================================================
+  /* =======================================================
      MANA
-     ========================================================= */
+     ======================================================= */
 
   function setMana(
     field,
     value
   ) {
-
     if (
       ![
         "current",
         "max",
         "type"
-      ].includes(
-        field
-      )
+      ].includes(field)
     ) {
-
       return false;
-
     }
 
 
     if (
-      field === "type"
+      field ===
+      "current" ||
+      field ===
+      "max"
     ) {
-
-      state.mana.type =
-        text(
-          value
-        );
-
-    } else {
-
       state.mana[field] =
         Math.max(
           0,
-          number(
-            value,
-            0
-          )
+          number(value, 0)
         );
-
+    } else {
+      state.mana[field] =
+        text(value);
     }
 
 
-    commit(
-      `mana-${field}`
-    );
+    if (
+      state.mana.current >
+      state.mana.max
+    ) {
+      state.mana.current =
+        state.mana.max;
+    }
 
+
+    commit();
 
     return true;
-
   }
 
 
-  /* =========================================================
+  /* =======================================================
      PERÍCIAS
-     ========================================================= */
+     ======================================================= */
 
   function setSkill(
-    skillId,
+    skill,
     value
   ) {
-
-    const id =
-      normalize(
-        skillId
-      );
-
-
     if (
       !Object.prototype.hasOwnProperty.call(
         SKILLS,
-        id
+        skill
       )
     ) {
-
       return false;
-
     }
 
 
-    state.skills[id] =
-      Math.max(
-        0,
-        number(
-          value,
-          0
-        )
-      );
+    state.skills[skill] =
+      number(value, 0);
 
-
-    commit(
-      `skill-${id}`
-    );
-
+    commit();
 
     return true;
-
   }
 
 
-  /* =========================================================
-     TÉCNICAS
-     ========================================================= */
-
-  function addTechnique(
-    technique
-  ) {
-
-    const item =
-      typeof technique ===
-      "string"
-
-        ? {
-            name:
-              text(
-                technique
-              )
-          }
-
-        : {
-
-            name:
-              text(
-                technique?.name
-              ),
-
-            description:
-              text(
-                technique?.description
-              ),
-
-            range:
-              text(
-                technique?.range
-              ),
-
-            target:
-              text(
-                technique?.target
-              ),
-
-            effect:
-              text(
-                technique?.effect
-              ),
-
-            cost:
-              text(
-                technique?.cost
-              ),
-
-            test:
-              text(
-                technique?.test
-              ),
-
-            limitation:
-              text(
-                technique?.limitation
-              )
-
-          };
-
-
-    if (
-      !item.name
-    ) {
-
-      return false;
-
-    }
-
-
-    state.techniques.push(
-      item
-    );
-
-
-    commit(
-      "technique-added"
-    );
-
-
-    return true;
-
-  }
-
-
-  function removeTechnique(
-    index
-  ) {
-
-    const numericIndex =
-      number(
-        index,
-        -1
-      );
-
-
-    if (
-      numericIndex < 0 ||
-      numericIndex >=
-        state.techniques.length
-    ) {
-
-      return false;
-
-    }
-
-
-    state.techniques.splice(
-      numericIndex,
-      1
-    );
-
-
-    commit(
-      "technique-removed"
-    );
-
-
-    return true;
-
-  }
-
-
-  /* =========================================================
-     INVENTÁRIO
-     ========================================================= */
-
-  function addInventory(
-    item
-  ) {
-
-    const data =
-      typeof item ===
-      "string"
-
-        ? {
-            name:
-              text(item)
-          }
-
-        : {
-
-            name:
-              text(
-                item?.name
-              ),
-
-            quantity:
-              Math.max(
-                1,
-                number(
-                  item?.quantity,
-                  1
-                )
-              ),
-
-            description:
-              text(
-                item?.description
-              ),
-
-            category:
-              text(
-                item?.category
-              )
-
-          };
-
-
-    if (
-      !data.name
-    ) {
-
-      return false;
-
-    }
-
-
-    state.inventory.push(
-      data
-    );
-
-
-    commit(
-      "inventory-added"
-    );
-
-
-    return true;
-
-  }
-
-
-  function removeInventory(
-    index
-  ) {
-
-    const numericIndex =
-      number(
-        index,
-        -1
-      );
-
-
-    if (
-      numericIndex < 0 ||
-      numericIndex >=
-        state.inventory.length
-    ) {
-
-      return false;
-
-    }
-
-
-    state.inventory.splice(
-      numericIndex,
-      1
-    );
-
-
-    commit(
-      "inventory-removed"
-    );
-
-
-    return true;
-
-  }
-
-
-  /* =========================================================
+  /* =======================================================
      AVATAR
-     ========================================================= */
+     ======================================================= */
 
-  function setAvatar(
-    dataUrl,
-    fileName = ""
-  ) {
-
-    if (
-      !text(
-        dataUrl
-      )
-    ) {
-
-      return false;
-
-    }
-
-
-    state.avatar =
-      dataUrl;
-
-    state.avatarName =
-      text(
-        fileName
-      );
-
-
-    commit(
-      "avatar"
-    );
-
-
-    emit(
-      "aerion:avatar:updated"
-    );
-
-
-    return true;
-
-  }
-
-
-  function removeAvatar() {
-
-    state.avatar =
-      "";
-
-    state.avatarName =
-      "";
-
-
-    commit(
-      "avatar-removed"
-    );
-
-
-    return true;
-
-  }
-
-
-  async function handleAvatarFile(
+  function setAvatarFile(
     file
   ) {
-
     if (!file) {
-
       return false;
-
-    }
-
-
-    if (
-      file.size >
-      CONFIG.maxImageSize
-    ) {
-
-      emit(
-        "aerion:ficha:warning",
-        {
-          message:
-            "A imagem é muito grande."
-        }
-      );
-
-
-      return false;
-
     }
 
 
@@ -3536,655 +2289,228 @@
         "image/"
       )
     ) {
-
-      emit(
-        "aerion:ficha:warning",
-        {
-          message:
-            "Selecione um arquivo de imagem."
-        }
+      warn(
+        "Escolha uma imagem válida."
       );
-
 
       return false;
-
     }
 
 
-    return new Promise(
-      resolve => {
-
-        const reader =
-          new FileReader();
-
-
-        reader.onload =
-          () => {
-
-            const result =
-              setAvatar(
-                reader.result,
-                file.name
-              );
-
-            resolve(
-              result
-            );
-
-          };
-
-
-        reader.onerror =
-          () => {
-
-            resolve(
-              false
-            );
-
-          };
-
-
-        reader.readAsDataURL(
-          file
-        );
-
-      }
-    );
-
-  }
-
-
-  /* =========================================================
-     VALIDAÇÃO PARA AVANÇAR
-     ========================================================= */
-
-  function validateCurrentStep() {
-
-    return validateStep(
-      state.currentStep
-    );
-
-  }
-
-
-  /* =========================================================
-     NAVEGAÇÃO
-     ========================================================= */
-
-  function goToStep(
-    target
-  ) {
-
-    const destination =
-      clamp(
-        number(
-          target,
-          0
-        ),
-        0,
-        CONFIG.totalSteps - 1
+    if (
+      file.size >
+      CONFIG.maxImageSize
+    ) {
+      warn(
+        "A imagem é muito grande. Limite: 6 MB."
       );
 
-
-    const current =
-      state.currentStep;
-
-
-    if (
-      destination ===
-      current
-    ) {
-
-      return true;
-
+      return false;
     }
 
 
-    /*
-     * Voltar é permitido.
-     */
+    const reader =
+      new FileReader();
 
-    if (
-      destination <
-      current
-    ) {
 
-      state.currentStep =
-        destination;
+    reader.onload = () => {
+
+      state.avatar =
+        String(
+          reader.result || ""
+        );
+
+      state.avatarName =
+        file.name;
 
 
       commit(
-        `step-back-${destination}`
+        "aerion:avatar:update"
       );
 
-
-      return true;
-
-    }
-
-
-    /*
-     * Não permite pular etapas.
-     */
-
-    if (
-      destination >
-      current + 1
-    ) {
-
-      return false;
-
-    }
-
-
-    /*
-     * Para avançar uma etapa,
-     * a atual precisa estar válida.
-     */
-
-    const validation =
-      validateCurrentStep();
-
-
-    if (
-      !validation.valid
-    ) {
 
       emit(
-        "aerion:ficha:warning",
+        "aerion:toast",
         {
           message:
-            validation.message
+            "Imagem adicionada.",
+          type:
+            "success"
         }
       );
 
-
-      return false;
-
-    }
+    };
 
 
-    state.completedSteps[
-      current
-    ] = true;
-
-
-    state.currentStep =
-      destination;
-
-
-    commit(
-      `step-forward-${destination}`
-    );
-
-
-    return true;
-
-  }
-
-
-  function nextStep() {
-
-    if (
-      state.currentStep >=
-      CONFIG.totalSteps - 1
-    ) {
-
-      return false;
-
-    }
-
-
-    return goToStep(
-      state.currentStep + 1
-    );
-
-  }
-
-
-  function previousStep() {
-
-    if (
-      state.currentStep <=
-      0
-    ) {
-
-      return false;
-
-    }
-
-
-    return goToStep(
-      state.currentStep - 1
-    );
-
-  }
-
-
-  /* =========================================================
-     REINICIAR
-     ========================================================= */
-
-  function reset() {
-
-    state =
-      createDefaultState();
-
-
-    try {
-
-      localStorage.removeItem(
-        CONFIG.storageKey
+    reader.onerror = () => {
+      warn(
+        "Não foi possível carregar a imagem."
       );
-
-    } catch {
-      /* ignore */
-    }
+    };
 
 
-    updateSaveStatus(
-      false
-    );
-
-
-    commit(
-      "reset"
+    reader.readAsDataURL(
+      file
     );
 
 
     return true;
-
   }
 
 
-  /* =========================================================
-     AÇÕES DA INTERFACE
-     ========================================================= */
+  function removeAvatar() {
+    state.avatar = "";
+    state.avatarName = "";
 
-  function handleAction(
-    action,
-    element
+    commit(
+      "aerion:avatar:update"
+    );
+
+    return true;
+  }
+
+
+  /* =======================================================
+     TÉCNICAS
+     ======================================================= */
+
+  function setTechnique(
+    index,
+    field,
+    value
   ) {
-
-    const normalizedAction =
-      normalize(
-        action
+    const techniqueIndex =
+      Math.max(
+        0,
+        number(index, 0)
       );
 
 
-    switch (
-      normalizedAction
+    if (
+      !state.techniques[
+        techniqueIndex
+      ]
     ) {
-
-      /* ===============================================
-         NAVEGAÇÃO
-         =============================================== */
-
-      case "next-step":
-      case "next":
-      case "proximo":
-      case "proximo-step":
-
-        return nextStep();
-
-
-      case "previous-step":
-      case "previous":
-      case "voltar-step":
-      case "voltar":
-
-        return previousStep();
-
-
-      case "go-step": {
-
-        const target =
-          number(
-            element?.dataset?.step,
-            state.currentStep
-          );
-
-        return goToStep(
-          target
-        );
-
-      }
-
-
-      /* ===============================================
-         RAÇA
-         =============================================== */
-
-      case "race-next":
-
-        return Boolean(
-          previewRace(
-            1
-          )
-        );
-
-
-      case "race-previous":
-
-        return Boolean(
-          previewRace(
-            -1
-          )
-        );
-
-
-      case "select-race-current":
-      case "select-race":
-
-        return selectPreviewRace();
-
-
-      case "race-goto": {
-
-        const index =
-          number(
-            element?.dataset?.index,
-            -1
-          );
-
-
-        const races =
-          getRaces();
-
-
-        if (
-          index < 0 ||
-          index >=
-            races.length
-        ) {
-
-          return false;
-
-        }
-
-
-        state.raceIndex =
-          index;
-
-
-        emit(
-          "aerion:race:preview",
-          {
-            race:
-              clone(
-                races[index]
-              ),
-
-            index
-          }
-        );
-
-
-        return true;
-
-      }
-
-
-      case "confirm-race":
-
-        return selectPreviewRace();
-
-
-      /* ===============================================
-         ANIMALHA
-         =============================================== */
-
-      case "select-animalha-category": {
-
-        const category =
-          element?.dataset?.category ||
-          element?.dataset?.animalhaCategory ||
-          "";
-
-
-        return selectAnimalhaCategory(
-          category
-        );
-
-      }
-
-
-      case "select-animalha": {
-
-        const animal =
-          element?.dataset?.animal ||
-          element?.dataset?.animalha ||
-          "";
-
-
-        return selectAnimalha(
-          animal
-        );
-
-      }
-
-
-      case "select-animalha-variation": {
-
-        const animal =
-          element?.dataset?.animal ||
-          element?.dataset?.variation ||
-          "";
-
-
-        return selectAnimalha(
-          animal
-        );
-
-      }
-
-
-      /* ===============================================
-         CLASSE
-         =============================================== */
-
-      case "select-class":
-
-        return selectClass(
-          element?.dataset?.class ||
-          element?.dataset?.classId ||
-          ""
-        );
-
-
-      case "class-next": {
-
-        const classes =
-          Object.keys(
-            CLASSES
-          );
-
-
-        if (
-          !classes.length
-        ) {
-
-          return false;
-
-        }
-
-
-        let index =
-          classes.indexOf(
-            state.class
-          );
-
-
-        index =
-          (
-            index + 1
-          ) %
-          classes.length;
-
-
-        return selectClass(
-          classes[index]
-        );
-
-      }
-
-
-      case "class-previous": {
-
-        const classes =
-          Object.keys(
-            CLASSES
-          );
-
-
-        if (
-          !classes.length
-        ) {
-
-          return false;
-
-        }
-
-
-        let index =
-          classes.indexOf(
-            state.class
-          );
-
-
-        index =
-          index <= 0
-            ? classes.length - 1
-            : index - 1;
-
-
-        return selectClass(
-          classes[index]
-        );
-
-      }
-
-
-      /* ===============================================
-         DADOS
-         =============================================== */
-
-      case "assign-die":
-
-        return assignDie(
-
-          element?.dataset?.attribute ||
-          "",
-
-          element?.dataset?.die ||
-          element?.dataset?.dieId ||
-          ""
-
-        );
-
-
-      case "remove-die":
-
-        return removeDie(
-          element?.dataset?.attribute ||
-          ""
-        );
-
-
-      case "roll-attribute":
-
-        return (
-          rollAttribute(
-            element?.dataset?.attribute ||
-            ""
-          ) !== null
-        );
-
-
-      case "roll-all-attributes":
-
-        return rollAllAttributes();
-
-
-      /* ===============================================
-         PODER
-         =============================================== */
-
-      case "select-power":
-
-        return setPower(
-          "primaryPower",
-          element?.dataset?.power ||
-          ""
-        );
-
-
-      /* ===============================================
-         TÉCNICAS
-         =============================================== */
-
-      case "remove-technique":
-
-        return removeTechnique(
-          element?.dataset?.index
-        );
-
-
-      /* ===============================================
-         INVENTÁRIO
-         =============================================== */
-
-      case "remove-inventory":
-
-        return removeInventory(
-          element?.dataset?.index
-        );
-
-
-      /* ===============================================
-         AVATAR
-         =============================================== */
-
-      case "remove-avatar":
-
-        return removeAvatar();
-
-
-      /* ===============================================
-         SALVAR
-         =============================================== */
-
-      case "save":
-
-        return saveNow();
-
-
-      /* ===============================================
-         RESET
-         =============================================== */
-
-      case "reset":
-
-        return reset();
-
-
-      default:
-
-        return false;
-
+      state.techniques[
+        techniqueIndex
+      ] = {};
     }
 
+
+    state.techniques[
+      techniqueIndex
+    ][field] =
+      text(value);
+
+
+    commit();
+
+    return true;
   }
 
 
-  /* =========================================================
-     EVENTOS DE FORMULÁRIO
-     ========================================================= */
+  /* =======================================================
+     INVENTÁRIO
+     ======================================================= */
+
+  function setInventory(
+    index,
+    field,
+    value
+  ) {
+    const itemIndex =
+      Math.max(
+        0,
+        number(index, 0)
+      );
+
+
+    if (
+      !state.inventory[
+        itemIndex
+      ]
+    ) {
+      state.inventory[
+        itemIndex
+      ] = {};
+    }
+
+
+    state.inventory[
+      itemIndex
+    ][field] =
+      text(value);
+
+
+    commit();
+
+    return true;
+  }
+
+
+  /* =======================================================
+     FOCO
+     ======================================================= */
+
+  function focus(
+    selector
+  ) {
+    setTimeout(() => {
+      const element =
+        document.querySelector(
+          selector
+        );
+
+      if (
+        element &&
+        typeof element.focus ===
+          "function"
+      ) {
+        element.focus();
+      }
+    }, 20);
+  }
+
+
+  /* =======================================================
+     AVISOS
+     ======================================================= */
+
+  function warn(
+    message
+  ) {
+    emit(
+      "aerion:toast",
+      {
+        message,
+        type:
+          "warning"
+      }
+    );
+
+
+    emit(
+      "aerion:warning",
+      {
+        message
+      }
+    );
+
+
+    console.warn(
+      "[AERION]",
+      message
+    );
+  }
+
+
+  /* =======================================================
+     EVENTOS DE INPUT
+     ======================================================= */
 
   function handleInput(
     event
   ) {
-
     const target =
       event.target;
 
@@ -4194,82 +2520,219 @@
     }
 
 
-    const id =
-      target.id;
+    /*
+      Identidade.
+    */
+
+    const identityField =
+      target.dataset
+        ?.identityField;
+
+
+    if (identityField) {
+
+      setIdentity(
+        identityField,
+        target.value
+      );
+
+      return;
+    }
 
 
     /*
-     * Identidade
-     */
+      Compatibilidade com IDs antigos.
+    */
 
-    if (
-      id ===
-      "characterName"
-    ) {
-
-      setIdentity(
+    const identityById = {
+      characterName:
         "name",
-        target.value
-      );
 
-      return;
-
-    }
-
-
-    if (
-      id ===
-      "characterAge"
-    ) {
-
-      setIdentity(
+      characterAge:
         "age",
-        target.value
-      );
 
-      return;
-
-    }
-
-
-    if (
-      id ===
-      "characterDescription"
-    ) {
-
-      setIdentity(
+      characterDescription:
         "description",
-        target.value
-      );
 
-      return;
-
-    }
+      characterOrigin:
+        "origin"
+    };
 
 
     if (
-      id ===
-      "characterOrigin"
+      identityById[
+        target.id
+      ]
     ) {
 
       setIdentity(
-        "origin",
+        identityById[
+          target.id
+        ],
         target.value
       );
 
       return;
-
     }
 
 
     /*
-     * Aparência — altura
-     */
+      Conceito.
+    */
+
+    const conceptField =
+      target.dataset
+        ?.conceptField;
+
+
+    if (conceptField) {
+
+      setIdentity(
+        conceptField,
+        target.value
+      );
+
+      return;
+    }
+
+
+    /*
+      Aparência.
+    */
+
+    const appearanceField =
+      target.dataset
+        ?.appearanceField ||
+      target.dataset
+        ?.appearanceCustom;
+
+
+    if (appearanceField) {
+
+      setAppearance(
+        appearanceField,
+        target.value
+      );
+
+      return;
+    }
+
+
+    /*
+      Poder.
+    */
+
+    const powerField =
+      target.dataset
+        ?.power;
+
+
+    if (powerField) {
+
+      setPower(
+        powerField,
+        target.value
+      );
+
+      return;
+    }
+
+
+    /*
+      Mana.
+    */
+
+    const manaField =
+      target.dataset
+        ?.mana;
+
+
+    if (manaField) {
+
+      setMana(
+        manaField,
+        target.value
+      );
+
+      return;
+    }
+
+
+    /*
+      Perícia.
+    */
+
+    const skill =
+      target.dataset
+        ?.skill;
+
+
+    if (skill) {
+
+      setSkill(
+        skill,
+        target.value
+      );
+
+      return;
+    }
+
+
+    /*
+      Técnica.
+    */
 
     if (
-      target.matches(
-        'input[data-height]'
-      )
+      target.dataset
+        ?.techniqueField
+    ) {
+
+      setTechnique(
+        target.closest(
+          "[data-technique-index]"
+        )?.dataset
+          ?.techniqueIndex,
+        target.dataset
+          .techniqueField,
+        target.value
+      );
+
+      return;
+    }
+
+
+    /*
+      Inventário.
+    */
+
+    if (
+      target.dataset
+        ?.inventoryField
+    ) {
+
+      setInventory(
+        target.closest(
+          "[data-inventory-index]"
+        )?.dataset
+          ?.inventoryIndex,
+        target.dataset
+          .inventoryField,
+        target.value
+      );
+
+      return;
+    }
+
+
+    /*
+      Altura.
+    */
+
+    if (
+      target.dataset
+        ?.height !== undefined ||
+      target.id ===
+        "appearanceHeight"
     ) {
 
       setAppearance(
@@ -4278,86 +2741,17 @@
       );
 
       return;
-
     }
-
-
-    /*
-     * Aparência — campos genéricos.
-     */
-
-    if (
-      target.dataset.appearanceField
-    ) {
-
-      setAppearance(
-        target.dataset.appearanceField,
-        target.value
-      );
-
-      return;
-
-    }
-
-
-    /*
-     * Poder
-     */
-
-    if (
-      target.dataset.powerField
-    ) {
-
-      setPower(
-        target.dataset.powerField,
-        target.value
-      );
-
-      return;
-
-    }
-
-
-    /*
-     * Mana
-     */
-
-    if (
-      target.dataset.manaField
-    ) {
-
-      setMana(
-        target.dataset.manaField,
-        target.value
-      );
-
-      return;
-
-    }
-
-
-    /*
-     * Perícias
-     */
-
-    if (
-      target.dataset.skillId
-    ) {
-
-      setSkill(
-        target.dataset.skillId,
-        target.value
-      );
-
-    }
-
   }
 
+
+  /* =======================================================
+     CHANGE
+     ======================================================= */
 
   function handleChange(
     event
   ) {
-
     const target =
       event.target;
 
@@ -4368,121 +2762,314 @@
 
 
     /*
-     * Gênero.
-     */
+      Gênero.
+    */
 
     if (
       target.name ===
       "gender"
     ) {
 
-      setGender(
+      setIdentity(
+        "gender",
         target.value
       );
 
       return;
-
     }
 
 
     /*
-     * Campos de aparência
-     * com select.
-     */
-
-    if (
-      target.dataset.appearanceField
-    ) {
-
-      setAppearance(
-        target.dataset.appearanceField,
-        target.value
-      );
-
-      return;
-
-    }
-
-
-    /*
-     * Upload.
-     */
+      Avatar.
+    */
 
     if (
       target.id ===
       "avatarInput"
     ) {
 
-      const file =
-        target.files?.[0];
+      setAvatarFile(
+        target.files?.[0]
+      );
 
-
-      if (file) {
-
-        handleAvatarFile(
-          file
-        );
-
-      }
-
+      return;
     }
 
+
+    /*
+      Inputs de aparência,
+      caso o navegador só dispare change.
+    */
+
+    const appearanceField =
+      target.dataset
+        ?.appearanceField ||
+      target.dataset
+        ?.appearanceCustom;
+
+
+    if (
+      appearanceField
+    ) {
+
+      setAppearance(
+        appearanceField,
+        target.value
+      );
+
+      return;
+    }
   }
 
 
-  /* =========================================================
-     CLIQUES
-     ========================================================= */
+  /* =======================================================
+     ACTION DISPATCHER
+     ======================================================= */
+
+  function handleAction(
+    action,
+    target
+  ) {
+    switch (action) {
+
+      /* -----------------------------------------
+         NAVEGAÇÃO
+         ----------------------------------------- */
+
+      case "next-step":
+        nextStep();
+        return;
+
+
+      case "previous-step":
+        previousStep();
+        return;
+
+
+      case "go-step":
+        goToStep(
+          target.dataset.step,
+          true
+        );
+        return;
+
+
+      /* -----------------------------------------
+         RAÇA
+         ----------------------------------------- */
+
+      case "race-previous":
+        previewRace(-1);
+        return;
+
+
+      case "race-next":
+        previewRace(1);
+        return;
+
+
+      case "race-goto":
+        gotoRace(
+          target.dataset
+            .raceIndex
+        );
+        return;
+
+
+      case "select-race-current":
+        selectCurrentRace();
+        return;
+
+
+      /* -----------------------------------------
+         ANIMALHA
+         ----------------------------------------- */
+
+      case "select-animalha-category":
+        selectAnimalhaCategory(
+          target.dataset
+            .category
+        );
+        return;
+
+
+      case "select-animalha-animal":
+        selectAnimalhaAnimal(
+          target.dataset
+            .animal
+        );
+        return;
+
+
+      /* -----------------------------------------
+         APARÊNCIA
+         ----------------------------------------- */
+
+      case "remove-avatar":
+        removeAvatar();
+        return;
+
+
+      /* -----------------------------------------
+         CLASSE
+         ----------------------------------------- */
+
+      case "class-previous":
+        previewClass(-1);
+        return;
+
+
+      case "class-next":
+        previewClass(1);
+        return;
+
+
+      case "select-class":
+
+        selectClass(
+          target.dataset
+            .classId
+        );
+
+        return;
+
+
+      /* -----------------------------------------
+         ATRIBUTOS
+         ----------------------------------------- */
+
+      case "select-attribute":
+
+        selectAttribute(
+          target.dataset
+            .attribute ||
+          target.dataset
+            .attributeCard
+        );
+
+        return;
+
+
+      /* -----------------------------------------
+         DADOS
+         ----------------------------------------- */
+
+      case "assign-die": {
+
+        const selectedAttribute =
+          state.selectedAttribute ||
+          target.dataset
+            .attribute;
+
+
+        if (
+          !selectedAttribute
+        ) {
+
+          warn(
+            "Selecione um atributo primeiro."
+          );
+
+          return;
+        }
+
+
+        assignDie(
+          selectedAttribute,
+          target.dataset
+            .dieId
+        );
+
+        return;
+      }
+
+
+      case "roll-selected-die":
+        rollSelectedAttribute();
+        return;
+
+
+      case "roll-all-dice":
+        rollAllDice();
+        return;
+
+
+      /* -----------------------------------------
+         SALVAR
+         ----------------------------------------- */
+
+      case "save":
+        saveState(true);
+
+        emit(
+          "aerion:toast",
+          {
+            message:
+              "Ficha salva.",
+            type:
+              "success"
+          }
+        );
+
+        return;
+
+
+      default:
+
+        console.warn(
+          `[AERION] Ação desconhecida: ${action}`
+        );
+
+    }
+  }
+
+
+  /* =======================================================
+     CLICK GLOBAL
+     ======================================================= */
 
   function handleClick(
     event
   ) {
-
-    const actionElement =
-      event.target.closest(
+    const target =
+      event.target?.closest(
         "[data-action]"
       );
 
 
-    if (
-      !actionElement
-    ) {
-
+    if (!target) {
       return;
-
     }
 
 
-    /*
-     * O clique pertence
-     * exclusivamente ao ficha.js.
-     */
+    const action =
+      target.dataset.action;
+
+
+    if (!action) {
+      return;
+    }
+
 
     event.preventDefault();
 
 
-    const action =
-      actionElement.dataset.action;
-
-
     handleAction(
       action,
-      actionElement
+      target
     );
-
   }
 
 
-  /* =========================================================
-     INICIALIZAÇÃO DOS EVENTOS
-     ========================================================= */
+  /* =======================================================
+     INIT
+     ======================================================= */
 
-  function initEvents() {
+  function init() {
 
-    /*
-     * APENAS este arquivo registra
-     * o listener de data-action.
-     */
+    state =
+      loadState();
+
 
     document.addEventListener(
       "click",
@@ -4502,242 +3089,121 @@
     );
 
 
+    /*
+      Sincronização inicial.
+    */
+
+    emit(
+      "aerion:ficha:update",
+      {
+        state: clone(state)
+      }
+    );
+
+
     window.addEventListener(
       "beforeunload",
       () => {
-
-        if (saveTimer) {
-
-          clearTimeout(
-            saveTimer
-          );
-
-        }
-
-
-        saveNow();
-
+        saveState(true);
       }
     );
 
+
+    console.log(
+      "[AERION] Ficha inicializada."
+    );
   }
 
 
-  /* =========================================================
-     INICIALIZAÇÃO
-     ========================================================= */
-
-  let initialized =
-    false;
-
-
-  function init() {
-
-    if (
-      initialized
-    ) {
-
-      return;
-
-    }
-
-
-    initialized =
-      true;
-
-
-    loadSavedState();
-
-
-    initEvents();
-
-
-    notify(
-      "init"
-    );
-
-
-    emit(
-      "aerion:ficha:ready",
-      {
-        state:
-          clone(state)
-      }
-    );
-
-  }
-
-
-  /* =========================================================
+  /* =======================================================
      API PÚBLICA
-     ========================================================= */
+     ======================================================= */
 
-  const API = {
-
-    init,
+  window.AERIONFicha = {
 
     getState,
 
-    getCurrentStep,
+    setState,
 
-    getCurrentStepData,
+    save:
+      () => saveState(true),
 
-    getRaces,
+    reset:
+      () => {
+        state =
+          createDefaultState();
 
-    getRaceById,
+        saveState(true);
 
-    getPreviewRace,
-
-    getRaceIndex,
-
-    getRemainingDice,
-
-    getDie,
-
-    getStateClone:
-      getState,
-
-
-    /* identidade */
-
-    setIdentity,
-
-    setGender,
-
-
-    /* raça */
-
-    selectRace,
-
-    selectPreviewRace,
-
-    previewRace,
-
-
-    /* Animalha */
-
-    selectAnimalhaCategory,
-
-    selectAnimalha,
-
-
-    /* aparência */
-
-    setAppearance,
-
-
-    /* classe */
-
-    selectClass,
-
-
-    /* atributos */
-
-    validateAttributes,
-
-    countCompletedAttributes,
-
-    isAttributeComplete,
-
-
-    /* dados */
-
-    assignDie,
-
-    removeDie,
-
-    rollAttribute,
-
-    rollAllAttributes,
-
-
-    /* poder */
-
-    setPower,
-
-
-    /* mana */
-
-    setMana,
-
-
-    /* perícias */
-
-    setSkill,
-
-
-    /* técnicas */
-
-    addTechnique,
-
-    removeTechnique,
-
-
-    /* inventário */
-
-    addInventory,
-
-    removeInventory,
-
-
-    /* avatar */
-
-    setAvatar,
-
-    removeAvatar,
-
-    handleAvatarFile,
-
-
-    /* navegação */
-
-    goToStep,
+        emit(
+          "aerion:ficha:update",
+          {
+            state:
+              clone(state)
+          }
+        );
+      },
 
     nextStep,
 
     previousStep,
 
+    goToStep,
 
-    /* validação */
+    selectCurrentRace,
 
-    validateStep,
+    previewRace,
 
-    validateCurrentStep,
+    selectAnimalhaCategory,
 
+    selectAnimalhaAnimal,
 
-    /* salvamento */
+    setAppearance,
 
-    saveNow,
+    selectClass,
 
-    scheduleSave,
+    previewClass,
 
+    selectAttribute,
 
-    /* reset */
+    assignDie,
 
-    reset,
+    rollAttribute,
 
+    rollSelectedAttribute,
 
-    /* ações */
+    rollAllDice,
 
-    handleAction
+    setIdentity,
 
+    setPower,
+
+    setMana,
+
+    setSkill,
+
+    setTechnique,
+
+    setInventory,
+
+    setAvatarFile,
+
+    removeAvatar
   };
 
 
-  /* =========================================================
-     EXPOSIÇÃO GLOBAL
-     ========================================================= */
-
-  window.AERIONFicha =
-    API;
+  /*
+    Compatibilidade com possíveis scripts
+    antigos do projeto.
+  */
 
   window.AERION_FICHA =
-    API;
+    window.AERIONFicha;
 
 
-  /* =========================================================
-     DOM READY
-     ========================================================= */
+  /* =======================================================
+     START
+     ======================================================= */
 
   if (
     document.readyState ===
