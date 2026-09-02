@@ -55,12 +55,6 @@
 
   <!-- ======================================================
        AERION
-       ORDEM DE EXECUÇÃO
-
-       1. Assets
-       2. Núcleo da ficha
-       3. Renderizador do personagem
-       4. Renderizador da ficha
        ====================================================== -->
 
   <script
@@ -102,7 +96,7 @@
 
       <a
         class="ficha-back"
-        href="./fichas.html"
+        href="./index.html"
         aria-label="Voltar"
       >
         ←
@@ -140,7 +134,6 @@
       </div>
 
     </header>
-
 
 
     <!-- ====================================================
@@ -335,7 +328,6 @@
     </section>
 
 
-
     <!-- ====================================================
          MAIN
          ==================================================== -->
@@ -444,7 +436,6 @@
           </article>
 
 
-
           <!-- FORM -->
 
           <div class="form-stack">
@@ -486,38 +477,6 @@
             </label>
 
 
-            <label class="field">
-
-              <span class="field-label">
-                Descrição
-              </span>
-
-              <textarea
-                id="characterDescription"
-                maxlength="1000"
-                rows="5"
-                placeholder="Conte um pouco sobre o personagem..."
-              ></textarea>
-
-            </label>
-
-
-            <label class="field">
-
-              <span class="field-label">
-                Origem
-              </span>
-
-              <input
-                id="characterOrigin"
-                type="text"
-                maxlength="120"
-                placeholder="Cidade, vila, reino..."
-              >
-
-            </label>
-
-
             <div class="gender-field">
 
               <span class="field-label">
@@ -527,7 +486,6 @@
 
 
               <div class="choice-grid choice-grid-2">
-
 
                 <label class="choice-card">
 
@@ -578,12 +536,145 @@
 
             </div>
 
+
+            <label class="field">
+
+              <span class="field-label">
+                Origem
+              </span>
+
+              <input
+                id="characterOrigin"
+                type="text"
+                maxlength="120"
+                placeholder="Cidade, vila, reino..."
+              >
+
+            </label>
+
+
+            <label class="field">
+
+              <span class="field-label">
+                Descrição
+              </span>
+
+              <textarea
+                id="characterDescription"
+                maxlength="1000"
+                rows="4"
+                placeholder="Descrição inicial do personagem..."
+              ></textarea>
+
+            </label>
+
           </div>
 
         </div>
 
-      </section>
 
+        <!-- CONCEITO DO PERSONAGEM -->
+
+        <div class="identity-extra-grid">
+
+          <label class="field">
+
+            <span class="field-label">
+              Personalidade
+            </span>
+
+            <textarea
+              data-identity-field="personality"
+              maxlength="800"
+              rows="4"
+              placeholder="Como esse personagem age?"
+            ></textarea>
+
+          </label>
+
+
+          <label class="field">
+
+            <span class="field-label">
+              Objetivo
+            </span>
+
+            <textarea
+              data-identity-field="objective"
+              maxlength="800"
+              rows="4"
+              placeholder="O que ele busca?"
+            ></textarea>
+
+          </label>
+
+
+          <label class="field">
+
+            <span class="field-label">
+              Medo
+            </span>
+
+            <textarea
+              data-identity-field="fear"
+              maxlength="600"
+              rows="4"
+              placeholder="Do que ele tem medo?"
+            ></textarea>
+
+          </label>
+
+
+          <label class="field">
+
+            <span class="field-label">
+              Vínculo importante
+            </span>
+
+            <textarea
+              data-identity-field="importantBond"
+              maxlength="800"
+              rows="4"
+              placeholder="Pessoa, lugar ou grupo importante..."
+            ></textarea>
+
+          </label>
+
+
+          <label class="field">
+
+            <span class="field-label">
+              Breve história
+            </span>
+
+            <textarea
+              data-identity-field="history"
+              maxlength="2000"
+              rows="5"
+              placeholder="Conte resumidamente a história do personagem..."
+            ></textarea>
+
+          </label>
+
+
+          <label class="field">
+
+            <span class="field-label">
+              Região / Reino
+            </span>
+
+            <input
+              data-identity-field="region"
+              type="text"
+              maxlength="120"
+              placeholder="Região ou reino de origem..."
+            >
+
+          </label>
+
+        </div>
+
+      </section>
 
 
       <!-- ==================================================
@@ -607,14 +698,14 @@
           </h2>
 
           <p>
-            Veja a aparência da raça antes de confirmar sua escolha.
+            Navegue entre as raças e confirme quando encontrar
+            a que combina com seu personagem.
           </p>
 
         </div>
 
 
-        <div class="carousel-shell">
-
+        <div class="race-carousel">
 
           <button
             type="button"
@@ -632,12 +723,6 @@
           >
 
             <div class="race-image-wrap">
-
-              <div
-                class="race-image-loader"
-                aria-hidden="true"
-              ></div>
-
 
               <img
                 id="raceImage"
@@ -672,41 +757,45 @@
 
               <div class="race-meta">
 
-                <span>
+                <div class="race-meta-item">
 
-                  <b>
+                  <span>
                     Perfil
-                  </b>
+                  </span>
 
-                  <strong data-race-profile>
+                  <strong
+                    data-race-profile
+                  >
                     —
                   </strong>
 
-                </span>
+                </div>
 
 
-                <span>
+                <div class="race-meta-item">
 
-                  <b>
+                  <span>
                     Característica
-                  </b>
+                  </span>
 
-                  <strong data-race-feature>
+                  <strong
+                    data-race-feature
+                  >
                     —
                   </strong>
 
-                </span>
+                </div>
 
               </div>
 
 
               <div class="race-height-meta">
 
-                <span>
+                <div>
 
-                  <b>
+                  <span>
                     Altura mínima
-                  </b>
+                  </span>
 
                   <strong
                     id="raceHeightMin"
@@ -714,14 +803,14 @@
                     —
                   </strong>
 
-                </span>
+                </div>
 
 
-                <span>
+                <div>
 
-                  <b>
+                  <span>
                     Altura máxima
-                  </b>
+                  </span>
 
                   <strong
                     id="raceHeightMax"
@@ -729,24 +818,24 @@
                     —
                   </strong>
 
-                </span>
+                </div>
 
               </div>
 
+
+              <button
+                type="button"
+                class="race-confirm-button"
+                data-action="select-race-current"
+              >
+
+                <span id="raceSelectedText">
+                  Selecionar esta raça
+                </span>
+
+              </button>
+
             </div>
-
-
-            <button
-              type="button"
-              class="race-select-indicator"
-              data-action="select-race-current"
-            >
-
-              <span id="raceSelectedText">
-                Selecionar
-              </span>
-
-            </button>
 
           </article>
 
@@ -770,27 +859,36 @@
         ></div>
 
 
-        <!-- ANIMALHA -->
+        <div
+          id="raceConfirmation"
+          class="selection-confirmation"
+          aria-live="polite"
+        >
+        </div>
+
+
+        <!-- =================================================
+             ANIMALHA
+             ================================================= -->
 
         <div
           class="animalha-selection"
-          data-animalha-variants
+          data-animalha-section
           hidden
         >
 
           <div class="section-heading compact">
 
             <span class="eyebrow">
-              ANIMALHA
+              LINHAGEM ANIMALHA
             </span>
 
             <h3>
-              Escolha sua linhagem
+              Escolha uma categoria
             </h3>
 
             <p>
-              Primeiro escolha uma categoria. Depois escolha
-              a variação animal.
+              A categoria define quais linhagens estarão disponíveis.
             </p>
 
           </div>
@@ -801,26 +899,40 @@
             data-animalha-categories
           >
 
+            <!--
+              Os cards abaixo possuem somente texto e
+              espaço visual para ícones de fundo.
+              O CSS poderá colocar SVGs/imagens por
+              categoria sem usar emojis.
+            -->
+
+
             <button
               type="button"
               class="animalha-category-card"
               data-action="select-animalha-category"
+              data-category="voadores"
               data-animalha-category="voadores"
             >
+
               <span
-                class="animalha-category-icon"
+                class="animalha-category-art"
+                data-art="voadores"
                 aria-hidden="true"
-              >
-                ◇
+              ></span>
+
+              <span class="animalha-category-content">
+
+                <strong>
+                  Voadores
+                </strong>
+
+                <small>
+                  Linhagens aéreas
+                </small>
+
               </span>
 
-              <strong>
-                Voadores
-              </strong>
-
-              <small>
-                Linhagens aéreas
-              </small>
             </button>
 
 
@@ -828,22 +940,28 @@
               type="button"
               class="animalha-category-card"
               data-action="select-animalha-category"
+              data-category="terrestres"
               data-animalha-category="terrestres"
             >
+
               <span
-                class="animalha-category-icon"
+                class="animalha-category-art"
+                data-art="terrestres"
                 aria-hidden="true"
-              >
-                ◇
+              ></span>
+
+              <span class="animalha-category-content">
+
+                <strong>
+                  Terrestres
+                </strong>
+
+                <small>
+                  Linhagens terrestres
+                </small>
+
               </span>
 
-              <strong>
-                Terrestres
-              </strong>
-
-              <small>
-                Linhagens terrestres
-              </small>
             </button>
 
 
@@ -851,22 +969,28 @@
               type="button"
               class="animalha-category-card"
               data-action="select-animalha-category"
+              data-category="marinhos"
               data-animalha-category="marinhos"
             >
+
               <span
-                class="animalha-category-icon"
+                class="animalha-category-art"
+                data-art="marinhos"
                 aria-hidden="true"
-              >
-                ◇
+              ></span>
+
+              <span class="animalha-category-content">
+
+                <strong>
+                  Marinhos
+                </strong>
+
+                <small>
+                  Linhagens aquáticas
+                </small>
+
               </span>
 
-              <strong>
-                Marinhos
-              </strong>
-
-              <small>
-                Linhagens aquáticas
-              </small>
             </button>
 
 
@@ -874,22 +998,28 @@
               type="button"
               class="animalha-category-card"
               data-action="select-animalha-category"
+              data-category="reptilianos"
               data-animalha-category="reptilianos"
             >
+
               <span
-                class="animalha-category-icon"
+                class="animalha-category-art"
+                data-art="reptilianos"
                 aria-hidden="true"
-              >
-                ◇
+              ></span>
+
+              <span class="animalha-category-content">
+
+                <strong>
+                  Reptilianos
+                </strong>
+
+                <small>
+                  Linhagens reptilianas
+                </small>
+
               </span>
 
-              <strong>
-                Reptilianos
-              </strong>
-
-              <small>
-                Linhagens reptilianas
-              </small>
             </button>
 
 
@@ -897,22 +1027,28 @@
               type="button"
               class="animalha-category-card"
               data-action="select-animalha-category"
+              data-category="pequenos"
               data-animalha-category="pequenos"
             >
+
               <span
-                class="animalha-category-icon"
+                class="animalha-category-art"
+                data-art="pequenos"
                 aria-hidden="true"
-              >
-                ◇
+              ></span>
+
+              <span class="animalha-category-content">
+
+                <strong>
+                  Pequenos
+                </strong>
+
+                <small>
+                  Linhagens de pequeno porte
+                </small>
+
               </span>
 
-              <strong>
-                Pequenos
-              </strong>
-
-              <small>
-                Pequeno porte
-              </small>
             </button>
 
 
@@ -920,227 +1056,65 @@
               type="button"
               class="animalha-category-card"
               data-action="select-animalha-category"
+              data-category="grandes"
               data-animalha-category="grandes"
             >
+
               <span
-                class="animalha-category-icon"
+                class="animalha-category-art"
+                data-art="grandes"
                 aria-hidden="true"
-              >
-                ◇
+              ></span>
+
+              <span class="animalha-category-content">
+
+                <strong>
+                  Grandes
+                </strong>
+
+                <small>
+                  Linhagens de grande porte
+                </small>
+
               </span>
 
-              <strong>
-                Grandes
-              </strong>
-
-              <small>
-                Grande porte
-              </small>
             </button>
 
           </div>
 
 
-          <!-- VARIAÇÕES -->
-
           <div
-            class="animalha-variants"
-            data-animalha-options
+            class="animalha-variation-area"
+            data-animalha-animals
           >
 
-            <div class="section-heading compact">
-
-              <span class="eyebrow">
-                VARIAÇÃO
-              </span>
-
-              <h3>
-                Escolha o animal
-              </h3>
-
+            <div class="empty-state">
+              Escolha uma categoria.
             </div>
 
+          </div>
 
-            <div
-              class="animalha-option-grid"
-              data-animalha-options-grid
+
+          <div
+            class="animalha-selected-info"
+            aria-live="polite"
+          >
+
+            <span>
+              Linhagem selecionada
+            </span>
+
+            <strong
+              data-animalha-category-name
             >
-
-              <button
-                type="button"
-                class="animalha-option-card"
-                data-action="select-animalha"
-                data-animalha="gato"
-              >
-                <strong>
-                  Gato
-                </strong>
-              </button>
-
-
-              <button
-                type="button"
-                class="animalha-option-card"
-                data-action="select-animalha"
-                data-animalha="pantera"
-              >
-                <strong>
-                  Pantera
-                </strong>
-              </button>
-
-
-              <button
-                type="button"
-                class="animalha-option-card"
-                data-action="select-animalha"
-                data-animalha="tigre"
-              >
-                <strong>
-                  Tigre
-                </strong>
-              </button>
-
-
-              <button
-                type="button"
-                class="animalha-option-card"
-                data-action="select-animalha"
-                data-animalha="leao"
-              >
-                <strong>
-                  Leão
-                </strong>
-              </button>
-
-
-              <button
-                type="button"
-                class="animalha-option-card"
-                data-action="select-animalha"
-                data-animalha="lobo"
-              >
-                <strong>
-                  Lobo
-                </strong>
-              </button>
-
-
-              <button
-                type="button"
-                class="animalha-option-card"
-                data-action="select-animalha"
-                data-animalha="raposa"
-              >
-                <strong>
-                  Raposa
-                </strong>
-              </button>
-
-
-              <button
-                type="button"
-                class="animalha-option-card"
-                data-action="select-animalha"
-                data-animalha="urso"
-              >
-                <strong>
-                  Urso
-                </strong>
-              </button>
-
-
-              <button
-                type="button"
-                class="animalha-option-card"
-                data-action="select-animalha"
-                data-animalha="falcao"
-              >
-                <strong>
-                  Falcão
-                </strong>
-              </button>
-
-
-              <button
-                type="button"
-                class="animalha-option-card"
-                data-action="select-animalha"
-                data-animalha="aguia"
-              >
-                <strong>
-                  Águia
-                </strong>
-              </button>
-
-
-              <button
-                type="button"
-                class="animalha-option-card"
-                data-action="select-animalha"
-                data-animalha="coruja"
-              >
-                <strong>
-                  Coruja
-                </strong>
-              </button>
-
-
-              <button
-                type="button"
-                class="animalha-option-card"
-                data-action="select-animalha"
-                data-animalha="cobra"
-              >
-                <strong>
-                  Cobra
-                </strong>
-              </button>
-
-
-              <button
-                type="button"
-                class="animalha-option-card"
-                data-action="select-animalha"
-                data-animalha="crocodilo"
-              >
-                <strong>
-                  Crocodilo
-                </strong>
-              </button>
-
-
-              <button
-                type="button"
-                class="animalha-option-card"
-                data-action="select-animalha"
-                data-animalha="tubarao"
-              >
-                <strong>
-                  Tubarão
-                </strong>
-              </button>
-
-
-              <button
-                type="button"
-                class="animalha-option-card"
-                data-action="select-animalha"
-                data-animalha="foca"
-              >
-                <strong>
-                  Foca
-                </strong>
-              </button>
-
-            </div>
+              —
+            </strong>
 
           </div>
 
         </div>
 
       </section>
-
 
 
       <!-- ==================================================
@@ -1160,12 +1134,12 @@
           </span>
 
           <h2>
-            Aparência
+            Defina a aparência
           </h2>
 
           <p>
-            A mesma imagem da raça selecionada será usada
-            como visualização do personagem.
+            A imagem representa a raça ou linhagem escolhida.
+            Os detalhes abaixo complementam a descrição do personagem.
           </p>
 
         </div>
@@ -1174,87 +1148,440 @@
         <div class="appearance-layout">
 
 
-          <!-- VISUALIZADOR -->
+          <!-- =================================================
+               VISUAL
+               ================================================= -->
 
-          <div
-            id="appearanceFigure"
-            class="appearance-render"
-            aria-label="Visualizador do personagem"
-          >
-          </div>
+          <div class="appearance-visual-column">
+
+            <div
+              id="appearanceFigure"
+              class="appearance-render"
+              aria-label="Visualizador do personagem"
+            >
+            </div>
 
 
-          <!-- CONTROLES -->
+            <div class="appearance-height-card">
 
-          <div class="appearance-controls">
+              <div class="appearance-height-heading">
 
+                <div>
 
-            <article class="appearance-control-card">
+                  <span class="eyebrow">
+                    ALTURA
+                  </span>
 
-              <div class="appearance-control-title">
+                  <strong
+                    id="appearanceHeightValue"
+                    data-appearance-height
+                  >
+                    —
+                  </strong>
 
-                <span>
-                  Altura
-                </span>
+                </div>
 
-                <strong
-                  id="appearanceHeightValue"
-                >
-                  —
-                </strong>
+                <small>
+                  Altura em centímetros
+                </small>
 
               </div>
 
 
-              <label
-                class="appearance-control-label"
-                for="appearanceHeight"
-              >
-                Altura do personagem
+              <div class="vertical-height-control">
+
+                <span
+                  class="height-bound height-max"
+                  data-height-max
+                >
+                  —
+                </span>
+
+
+                <div class="height-range-track">
+
+                  <input
+                    id="appearanceHeight"
+                    class="appearance-height-range"
+                    type="range"
+                    data-height
+                    min="0"
+                    max="300"
+                    value="0"
+                    orient="vertical"
+                    aria-label="Altura do personagem"
+                  >
+
+                </div>
+
+
+                <span
+                  class="height-bound height-min"
+                  data-height-min
+                >
+                  —
+                </span>
+
+              </div>
+
+            </div>
+
+          </div>
+
+
+          <!-- =================================================
+               DETALHES
+               ================================================= -->
+
+          <div class="appearance-details-column">
+
+
+            <div class="appearance-details-heading">
+
+              <span class="eyebrow">
+                DETALHES
+              </span>
+
+              <h3>
+                Personalize sem alterar a imagem-base
+              </h3>
+
+              <p>
+                Escolha opções prontas ou use a opção
+                personalizada para escrever livremente.
+              </p>
+
+            </div>
+
+
+            <!-- CABELO -->
+
+            <div class="appearance-field-card">
+
+              <label class="field">
+
+                <span class="field-label">
+                  Cor do cabelo
+                </span>
+
+                <select
+                  data-appearance-field="hairColor"
+                >
+                  <option value="">
+                    Escolher
+                  </option>
+
+                  <option value="preto">
+                    Preto
+                  </option>
+
+                  <option value="castanho">
+                    Castanho
+                  </option>
+
+                  <option value="loiro">
+                    Loiro
+                  </option>
+
+                  <option value="ruivo">
+                    Ruivo
+                  </option>
+
+                  <option value="branco">
+                    Branco
+                  </option>
+
+                  <option value="cinza">
+                    Cinza
+                  </option>
+
+                  <option value="azul">
+                    Azul
+                  </option>
+
+                  <option value="verde">
+                    Verde
+                  </option>
+
+                  <option value="rosa">
+                    Rosa
+                  </option>
+
+                  <option value="roxo">
+                    Roxo
+                  </option>
+
+                  <option value="personalizado">
+                    Personalizado
+                  </option>
+
+                </select>
+
               </label>
 
 
               <input
-                id="appearanceHeight"
-                class="appearance-range"
-                type="range"
-                min="150"
-                max="200"
-                step="1"
-                value="175"
-                data-appearance-field="height"
+                type="text"
+                data-appearance-custom="hairColor"
+                class="appearance-custom-input"
+                placeholder="Escreva uma cor personalizada..."
+                hidden
               >
 
+            </div>
 
-              <div class="range-value">
 
-                <span
-                  id="appearanceHeightMin"
+            <!-- OLHOS -->
+
+            <div class="appearance-field-card">
+
+              <label class="field">
+
+                <span class="field-label">
+                  Cor dos olhos
+                </span>
+
+                <select
+                  data-appearance-field="eyeColor"
                 >
-                  —
+                  <option value="">
+                    Escolher
+                  </option>
+
+                  <option value="castanho">
+                    Castanho
+                  </option>
+
+                  <option value="preto">
+                    Preto
+                  </option>
+
+                  <option value="azul">
+                    Azul
+                  </option>
+
+                  <option value="verde">
+                    Verde
+                  </option>
+
+                  <option value="cinza">
+                    Cinza
+                  </option>
+
+                  <option value="dourado">
+                    Dourado
+                  </option>
+
+                  <option value="vermelho">
+                    Vermelho
+                  </option>
+
+                  <option value="violeta">
+                    Violeta
+                  </option>
+
+                  <option value="personalizado">
+                    Personalizado
+                  </option>
+
+                </select>
+
+              </label>
+
+
+              <input
+                type="text"
+                data-appearance-custom="eyeColor"
+                class="appearance-custom-input"
+                placeholder="Escreva uma cor personalizada..."
+                hidden
+              >
+
+            </div>
+
+
+            <!-- PELE -->
+
+            <div class="appearance-field-card">
+
+              <label class="field">
+
+                <span class="field-label">
+                  Tom de pele
                 </span>
 
-                <span>
-                  Altura
-                </span>
-
-                <span
-                  id="appearanceHeightMax"
+                <select
+                  data-appearance-field="skinTone"
                 >
-                  —
+                  <option value="">
+                    Escolher
+                  </option>
+
+                  <option value="claro">
+                    Claro
+                  </option>
+
+                  <option value="medio">
+                    Médio
+                  </option>
+
+                  <option value="escuro">
+                    Escuro
+                  </option>
+
+                  <option value="avermelhado">
+                    Avermelhado
+                  </option>
+
+                  <option value="acinzentado">
+                    Acinzentado
+                  </option>
+
+                  <option value="azulado">
+                    Azulado
+                  </option>
+
+                  <option value="esverdeado">
+                    Esverdeado
+                  </option>
+
+                  <option value="personalizado">
+                    Personalizado
+                  </option>
+
+                </select>
+
+              </label>
+
+
+              <input
+                type="text"
+                data-appearance-custom="skinTone"
+                class="appearance-custom-input"
+                placeholder="Descreva o tom..."
+                hidden
+              >
+
+            </div>
+
+
+            <!-- CABELO / ESTILO -->
+
+            <div class="appearance-field-card">
+
+              <label class="field">
+
+                <span class="field-label">
+                  Tipo de cabelo
                 </span>
 
-              </div>
+                <select
+                  data-appearance-field="hairType"
+                >
+                  <option value="">
+                    Escolher
+                  </option>
 
-            </article>
+                  <option value="liso">
+                    Liso
+                  </option>
 
+                  <option value="ondulado">
+                    Ondulado
+                  </option>
+
+                  <option value="cacheado">
+                    Cacheado
+                  </option>
+
+                  <option value="crespo">
+                    Crespo
+                  </option>
+
+                  <option value="curto">
+                    Curto
+                  </option>
+
+                  <option value="longo">
+                    Longo
+                  </option>
+
+                  <option value="raspado">
+                    Raspado
+                  </option>
+
+                  <option value="personalizado">
+                    Personalizado
+                  </option>
+
+                </select>
+
+              </label>
+
+
+              <input
+                type="text"
+                data-appearance-custom="hairType"
+                class="appearance-custom-input"
+                placeholder="Descreva o cabelo..."
+                hidden
+              >
+
+            </div>
+
+
+            <label class="field">
+
+              <span class="field-label">
+                Características físicas
+              </span>
+
+              <textarea
+                data-appearance-field="physicalFeatures"
+                maxlength="1000"
+                rows="4"
+                placeholder="Cicatriz, tatuagem, chifres, marcas, porte físico..."
+              ></textarea>
+
+            </label>
+
+
+            <label class="field">
+
+              <span class="field-label">
+                Marcas / cicatrizes
+              </span>
+
+              <textarea
+                data-appearance-field="scars"
+                maxlength="800"
+                rows="3"
+                placeholder="Descreva marcas relevantes..."
+              ></textarea>
+
+            </label>
+
+
+            <label class="field">
+
+              <span class="field-label">
+                Descrição da aparência
+              </span>
+
+              <textarea
+                data-appearance-field="description"
+                maxlength="1500"
+                rows="5"
+                placeholder="Descreva livremente a aparência do personagem..."
+              ></textarea>
+
+            </label>
 
           </div>
 
         </div>
 
       </section>
-
 
 
       <!-- ==================================================
@@ -1278,123 +1605,303 @@
           </h2>
 
           <p>
-            Defina a especialização principal do personagem.
+            Navegue entre as classes e selecione uma para continuar.
           </p>
 
         </div>
 
 
-        <div class="class-grid">
+        <div class="class-carousel">
 
 
           <button
             type="button"
-            class="class-card"
-            data-action="select-class"
-            data-class-id="guerreiro"
+            class="carousel-arrow"
+            data-action="class-previous"
+            aria-label="Classe anterior"
+          >
+            ‹
+          </button>
+
+
+          <div
+            id="classCarouselCard"
+            class="class-carousel-card"
           >
 
-            <span class="class-icon">
-              ⚔
-            </span>
 
-            <div>
+            <!-- GUERREIRO -->
+
+            <article
+              class="class-option"
+              data-class-id="guerreiro"
+              data-class-index="0"
+            >
+
+              <div class="class-icon-wrap">
+
+                <span
+                  class="class-icon"
+                  aria-hidden="true"
+                >
+                  ⚔
+                </span>
+
+              </div>
+
+              <span class="eyebrow">
+                COMBATENTE
+              </span>
 
               <h3>
                 Guerreiro
               </h3>
 
               <p>
-                Especialista em combate direto.
+                Especialista em combate direto,
+                força física e resistência.
               </p>
 
-            </div>
+              <div class="class-feature">
 
-          </button>
+                <span>
+                  Função
+                </span>
+
+                <strong>
+                  Combatente
+                </strong>
+
+              </div>
 
 
-          <button
-            type="button"
-            class="class-card"
-            data-action="select-class"
-            data-class-id="feiticeiro"
-          >
+              <button
+                type="button"
+                class="class-select-button"
+                data-action="select-class"
+                data-class="guerreiro"
+              >
+                Selecionar Guerreiro
+              </button>
 
-            <span class="class-icon">
-              ✦
-            </span>
+            </article>
 
-            <div>
+
+            <!-- FEITICEIRO -->
+
+            <article
+              class="class-option"
+              data-class-id="feiticeiro"
+              data-class-index="1"
+              hidden
+            >
+
+              <div class="class-icon-wrap">
+
+                <span
+                  class="class-icon"
+                  aria-hidden="true"
+                >
+                  ✦
+                </span>
+
+              </div>
+
+              <span class="eyebrow">
+                MÁGICO
+              </span>
 
               <h3>
                 Feiticeiro
               </h3>
 
               <p>
-                Especialista em manipulação de Mana.
+                Especialista em manipulação de Mana
+                e poderes sobrenaturais.
               </p>
 
-            </div>
+              <div class="class-feature">
 
-          </button>
+                <span>
+                  Função
+                </span>
+
+                <strong>
+                  Mágico
+                </strong>
+
+              </div>
+
+              <button
+                type="button"
+                class="class-select-button"
+                data-action="select-class"
+                data-class="feiticeiro"
+              >
+                Selecionar Feiticeiro
+              </button>
+
+            </article>
 
 
-          <button
-            type="button"
-            class="class-card"
-            data-action="select-class"
-            data-class-id="curandeiro"
-          >
+            <!-- CURANDEIRO -->
 
-            <span class="class-icon">
-              ✚
-            </span>
+            <article
+              class="class-option"
+              data-class-id="curandeiro"
+              data-class-index="2"
+              hidden
+            >
 
-            <div>
+              <div class="class-icon-wrap">
+
+                <span
+                  class="class-icon"
+                  aria-hidden="true"
+                >
+                  ✚
+                </span>
+
+              </div>
+
+              <span class="eyebrow">
+                SUPORTE
+              </span>
 
               <h3>
                 Curandeiro
               </h3>
 
               <p>
-                Especialista em suporte e recuperação.
+                Especialista em recuperação,
+                suporte e preservação do grupo.
               </p>
 
-            </div>
+              <div class="class-feature">
 
-          </button>
+                <span>
+                  Função
+                </span>
+
+                <strong>
+                  Suporte
+                </strong>
+
+              </div>
+
+              <button
+                type="button"
+                class="class-select-button"
+                data-action="select-class"
+                data-class="curandeiro"
+              >
+                Selecionar Curandeiro
+              </button>
+
+            </article>
 
 
-          <button
-            type="button"
-            class="class-card"
-            data-action="select-class"
-            data-class-id="monge"
-          >
+            <!-- MONGE -->
 
-            <span class="class-icon">
-              ◈
-            </span>
+            <article
+              class="class-option"
+              data-class-id="monge"
+              data-class-index="3"
+              hidden
+            >
 
-            <div>
+              <div class="class-icon-wrap">
+
+                <span
+                  class="class-icon"
+                  aria-hidden="true"
+                >
+                  ◈
+                </span>
+
+              </div>
+
+              <span class="eyebrow">
+                MARCIAL
+              </span>
 
               <h3>
                 Monge
               </h3>
 
               <p>
-                Especialista em combate corporal.
+                Especialista em disciplina,
+                combate corporal e controle.
               </p>
 
-            </div>
+              <div class="class-feature">
 
+                <span>
+                  Função
+                </span>
+
+                <strong>
+                  Marcial
+                </strong>
+
+              </div>
+
+              <button
+                type="button"
+                class="class-select-button"
+                data-action="select-class"
+                data-class="monge"
+              >
+                Selecionar Monge
+              </button>
+
+            </article>
+
+          </div>
+
+
+          <button
+            type="button"
+            class="carousel-arrow"
+            data-action="class-next"
+            aria-label="Próxima classe"
+          >
+            ›
           </button>
-
 
         </div>
 
-      </section>
 
+        <div
+          class="class-carousel-counter"
+          aria-live="polite"
+        >
+
+          <span
+            id="classCurrentNumber"
+          >
+            1
+          </span>
+
+          <span>
+            /
+          </span>
+
+          <span>
+            4
+          </span>
+
+        </div>
+
+
+        <div
+          id="classConfirmation"
+          class="selection-confirmation"
+          aria-live="polite"
+        >
+        </div>
+
+      </section>
 
 
       <!-- ==================================================
@@ -1414,61 +1921,327 @@
           </span>
 
           <h2>
-            Atributos
+            Distribua seus dados
           </h2>
 
           <p>
-            Distribua os dados e role cada atributo.
+            Cada atributo recebe um dado. Depois role o dado
+            para descobrir o resultado.
           </p>
 
         </div>
 
 
-        <div class="attributes-layout">
+        <!-- =================================================
+             DADOS DISPONÍVEIS
+             ================================================= -->
+
+        <div class="dice-pool-section">
+
+          <div class="dice-pool-heading">
+
+            <div>
+
+              <span class="eyebrow">
+                DADOS DISPONÍVEIS
+              </span>
+
+              <h3>
+                Escolha um dado
+              </h3>
+
+            </div>
 
 
-          <div class="attributes-list">
+            <span
+              class="dice-pool-status"
+              data-dice-pool-status
+            >
+              Selecione um atributo
+            </span>
+
+          </div>
 
 
-            <article
-              class="attribute-card"
-              data-attribute-card="forca"
+          <div
+            class="dice-pool"
+            data-dice-pool
+          >
+
+            <button
+              type="button"
+              class="die-card"
+              data-die-id="d4-1"
+              data-die="d4-1"
+              data-action="assign-die"
+              data-attribute=""
             >
 
-              <div class="attribute-card-top">
+              <span class="die-shape">
+                D4
+              </span>
+
+              <strong>
+                D4
+              </strong>
+
+              <small>
+                1 disponível
+              </small>
+
+            </button>
+
+
+            <button
+              type="button"
+              class="die-card"
+              data-die-id="d6-1"
+              data-die="d6-1"
+              data-action="assign-die"
+              data-attribute=""
+            >
+
+              <span class="die-shape">
+                D6
+              </span>
+
+              <strong>
+                D6
+              </strong>
+
+              <small>
+                1º D6
+              </small>
+
+            </button>
+
+
+            <button
+              type="button"
+              class="die-card"
+              data-die-id="d6-2"
+              data-die="d6-2"
+              data-action="assign-die"
+              data-attribute=""
+            >
+
+              <span class="die-shape">
+                D6
+              </span>
+
+              <strong>
+                D6
+              </strong>
+
+              <small>
+                2º D6
+              </small>
+
+            </button>
+
+
+            <button
+              type="button"
+              class="die-card"
+              data-die-id="d8-1"
+              data-die="d8-1"
+              data-action="assign-die"
+              data-attribute=""
+            >
+
+              <span class="die-shape">
+                D8
+              </span>
+
+              <strong>
+                D8
+              </strong>
+
+              <small>
+                1 disponível
+              </small>
+
+            </button>
+
+
+            <button
+              type="button"
+              class="die-card"
+              data-die-id="d10-1"
+              data-die="d10-1"
+              data-action="assign-die"
+              data-attribute=""
+            >
+
+              <span class="die-shape">
+                D10
+              </span>
+
+              <strong>
+                D10
+              </strong>
+
+              <small>
+                1 disponível
+              </small>
+
+            </button>
+
+
+            <button
+              type="button"
+              class="die-card"
+              data-die-id="d12-1"
+              data-die="d12-1"
+              data-action="assign-die"
+              data-attribute=""
+            >
+
+              <span class="die-shape">
+                D12
+              </span>
+
+              <strong>
+                D12
+              </strong>
+
+              <small>
+                1 disponível
+              </small>
+
+            </button>
+
+
+            <button
+              type="button"
+              class="die-card"
+              data-die-id="d20-1"
+              data-die="d20-1"
+              data-action="assign-die"
+              data-attribute=""
+            >
+
+              <span class="die-shape">
+                D20
+              </span>
+
+              <strong>
+                D20
+              </strong>
+
+              <small>
+                1º D20
+              </small>
+
+            </button>
+
+
+            <button
+              type="button"
+              class="die-card"
+              data-die-id="d20-2"
+              data-die="d20-2"
+              data-action="assign-die"
+              data-attribute=""
+            >
+
+              <span class="die-shape">
+                D20
+              </span>
+
+              <strong>
+                D20
+              </strong>
+
+              <small>
+                2º D20
+              </small>
+
+            </button>
+
+          </div>
+
+        </div>
+
+
+        <!-- =================================================
+             ATRIBUTOS
+             ================================================= -->
+
+        <div
+          class="attributes-editor"
+          data-attributes-list
+        >
+
+
+          <!-- FORÇA -->
+
+          <article
+            class="attribute-card"
+            data-attribute="forca"
+          >
+
+            <div class="attribute-card-header">
+
+              <div class="attribute-heading">
+
+                <span
+                  class="attribute-short"
+                  data-attribute-short
+                >
+                  FOR
+                </span>
 
                 <div>
 
-                  <span class="eyebrow">
-                    FOR
+                  <span
+                    class="attribute-label"
+                    data-attribute-name
+                  >
+                    Força
                   </span>
 
-                  <h3>
-                    Força
-                  </h3>
+                  <small
+                    data-attribute-description
+                  >
+                    Potência física
+                  </small>
 
                 </div>
 
-                <strong
-                  data-attribute-value="forca"
-                >
-                  —
-                </strong>
-
               </div>
 
+
+              <strong
+                class="attribute-value"
+                data-attribute-value
+              >
+                —
+              </strong>
+
+            </div>
+
+
+            <div class="attribute-card-middle">
 
               <div
                 class="attribute-die-slot"
-                data-attribute-die="forca"
+                data-attribute-die
               >
-
-                <span data-die-label>
-                  Adicionar dado
-                </span>
-
+                Adicionar dado
               </div>
 
+              <div
+                class="attribute-result"
+                data-attribute-result
+              >
+                —
+              </div>
+
+            </div>
+
+
+            <div class="attribute-card-actions">
 
               <button
                 type="button"
@@ -1479,49 +2252,88 @@
                 Rolar
               </button>
 
-            </article>
+              <button
+                type="button"
+                class="attribute-remove-button"
+                data-action="remove-die"
+                data-attribute="forca"
+              >
+                Remover dado
+              </button>
+
+            </div>
+
+          </article>
 
 
+          <!-- VIGOR -->
 
-            <article
-              class="attribute-card"
-              data-attribute-card="vigor"
-            >
+          <article
+            class="attribute-card"
+            data-attribute="vigor"
+          >
 
-              <div class="attribute-card-top">
+            <div class="attribute-card-header">
+
+              <div class="attribute-heading">
+
+                <span
+                  class="attribute-short"
+                  data-attribute-short
+                >
+                  VIG
+                </span>
 
                 <div>
 
-                  <span class="eyebrow">
-                    VIG
+                  <span
+                    class="attribute-label"
+                    data-attribute-name
+                  >
+                    Vigor
                   </span>
 
-                  <h3>
-                    Vigor
-                  </h3>
+                  <small
+                    data-attribute-description
+                  >
+                    Resistência
+                  </small>
 
                 </div>
 
-                <strong
-                  data-attribute-value="vigor"
-                >
-                  —
-                </strong>
-
               </div>
 
+
+              <strong
+                class="attribute-value"
+                data-attribute-value
+              >
+                —
+              </strong>
+
+            </div>
+
+
+            <div class="attribute-card-middle">
 
               <div
                 class="attribute-die-slot"
-                data-attribute-die="vigor"
+                data-attribute-die
               >
-
-                <span data-die-label>
-                  Adicionar dado
-                </span>
-
+                Adicionar dado
               </div>
 
+              <div
+                class="attribute-result"
+                data-attribute-result
+              >
+                —
+              </div>
+
+            </div>
+
+
+            <div class="attribute-card-actions">
 
               <button
                 type="button"
@@ -1532,49 +2344,88 @@
                 Rolar
               </button>
 
-            </article>
+              <button
+                type="button"
+                class="attribute-remove-button"
+                data-action="remove-die"
+                data-attribute="vigor"
+              >
+                Remover dado
+              </button>
+
+            </div>
+
+          </article>
 
 
+          <!-- AGILIDADE -->
 
-            <article
-              class="attribute-card"
-              data-attribute-card="agilidade"
-            >
+          <article
+            class="attribute-card"
+            data-attribute="agilidade"
+          >
 
-              <div class="attribute-card-top">
+            <div class="attribute-card-header">
+
+              <div class="attribute-heading">
+
+                <span
+                  class="attribute-short"
+                  data-attribute-short
+                >
+                  AGI
+                </span>
 
                 <div>
 
-                  <span class="eyebrow">
-                    AGI
+                  <span
+                    class="attribute-label"
+                    data-attribute-name
+                  >
+                    Agilidade
                   </span>
 
-                  <h3>
-                    Agilidade
-                  </h3>
+                  <small
+                    data-attribute-description
+                  >
+                    Reflexos e movimento
+                  </small>
 
                 </div>
 
-                <strong
-                  data-attribute-value="agilidade"
-                >
-                  —
-                </strong>
-
               </div>
 
+
+              <strong
+                class="attribute-value"
+                data-attribute-value
+              >
+                —
+              </strong>
+
+            </div>
+
+
+            <div class="attribute-card-middle">
 
               <div
                 class="attribute-die-slot"
-                data-attribute-die="agilidade"
+                data-attribute-die
               >
-
-                <span data-die-label>
-                  Adicionar dado
-                </span>
-
+                Adicionar dado
               </div>
 
+              <div
+                class="attribute-result"
+                data-attribute-result
+              >
+                —
+              </div>
+
+            </div>
+
+
+            <div class="attribute-card-actions">
 
               <button
                 type="button"
@@ -1585,49 +2436,88 @@
                 Rolar
               </button>
 
-            </article>
+              <button
+                type="button"
+                class="attribute-remove-button"
+                data-action="remove-die"
+                data-attribute="agilidade"
+              >
+                Remover dado
+              </button>
+
+            </div>
+
+          </article>
 
 
+          <!-- PRECISÃO -->
 
-            <article
-              class="attribute-card"
-              data-attribute-card="precisao"
-            >
+          <article
+            class="attribute-card"
+            data-attribute="precisao"
+          >
 
-              <div class="attribute-card-top">
+            <div class="attribute-card-header">
+
+              <div class="attribute-heading">
+
+                <span
+                  class="attribute-short"
+                  data-attribute-short
+                >
+                  PRE
+                </span>
 
                 <div>
 
-                  <span class="eyebrow">
-                    PRE
+                  <span
+                    class="attribute-label"
+                    data-attribute-name
+                  >
+                    Precisão
                   </span>
 
-                  <h3>
-                    Precisão
-                  </h3>
+                  <small
+                    data-attribute-description
+                  >
+                    Mira e precisão
+                  </small>
 
                 </div>
 
-                <strong
-                  data-attribute-value="precisao"
-                >
-                  —
-                </strong>
-
               </div>
 
+
+              <strong
+                class="attribute-value"
+                data-attribute-value
+              >
+                —
+              </strong>
+
+            </div>
+
+
+            <div class="attribute-card-middle">
 
               <div
                 class="attribute-die-slot"
-                data-attribute-die="precisao"
+                data-attribute-die
               >
-
-                <span data-die-label>
-                  Adicionar dado
-                </span>
-
+                Adicionar dado
               </div>
 
+              <div
+                class="attribute-result"
+                data-attribute-result
+              >
+                —
+              </div>
+
+            </div>
+
+
+            <div class="attribute-card-actions">
 
               <button
                 type="button"
@@ -1638,49 +2528,88 @@
                 Rolar
               </button>
 
-            </article>
+              <button
+                type="button"
+                class="attribute-remove-button"
+                data-action="remove-die"
+                data-attribute="precisao"
+              >
+                Remover dado
+              </button>
+
+            </div>
+
+          </article>
 
 
+          <!-- INTELECTO -->
 
-            <article
-              class="attribute-card"
-              data-attribute-card="intelecto"
-            >
+          <article
+            class="attribute-card"
+            data-attribute="intelecto"
+          >
 
-              <div class="attribute-card-top">
+            <div class="attribute-card-header">
+
+              <div class="attribute-heading">
+
+                <span
+                  class="attribute-short"
+                  data-attribute-short
+                >
+                  INT
+                </span>
 
                 <div>
 
-                  <span class="eyebrow">
-                    INT
+                  <span
+                    class="attribute-label"
+                    data-attribute-name
+                  >
+                    Intelecto
                   </span>
 
-                  <h3>
-                    Intelecto
-                  </h3>
+                  <small
+                    data-attribute-description
+                  >
+                    Conhecimento e raciocínio
+                  </small>
 
                 </div>
 
-                <strong
-                  data-attribute-value="intelecto"
-                >
-                  —
-                </strong>
-
               </div>
 
+
+              <strong
+                class="attribute-value"
+                data-attribute-value
+              >
+                —
+              </strong>
+
+            </div>
+
+
+            <div class="attribute-card-middle">
 
               <div
                 class="attribute-die-slot"
-                data-attribute-die="intelecto"
+                data-attribute-die
               >
-
-                <span data-die-label>
-                  Adicionar dado
-                </span>
-
+                Adicionar dado
               </div>
 
+              <div
+                class="attribute-result"
+                data-attribute-result
+              >
+                —
+              </div>
+
+            </div>
+
+
+            <div class="attribute-card-actions">
 
               <button
                 type="button"
@@ -1691,49 +2620,88 @@
                 Rolar
               </button>
 
-            </article>
+              <button
+                type="button"
+                class="attribute-remove-button"
+                data-action="remove-die"
+                data-attribute="intelecto"
+              >
+                Remover dado
+              </button>
+
+            </div>
+
+          </article>
 
 
+          <!-- CONTROLE -->
 
-            <article
-              class="attribute-card"
-              data-attribute-card="controle"
-            >
+          <article
+            class="attribute-card"
+            data-attribute="controle"
+          >
 
-              <div class="attribute-card-top">
+            <div class="attribute-card-header">
+
+              <div class="attribute-heading">
+
+                <span
+                  class="attribute-short"
+                  data-attribute-short
+                >
+                  CON
+                </span>
 
                 <div>
 
-                  <span class="eyebrow">
-                    CON
+                  <span
+                    class="attribute-label"
+                    data-attribute-name
+                  >
+                    Controle
                   </span>
 
-                  <h3>
-                    Controle
-                  </h3>
+                  <small
+                    data-attribute-description
+                  >
+                    Controle de Mana
+                  </small>
 
                 </div>
 
-                <strong
-                  data-attribute-value="controle"
-                >
-                  —
-                </strong>
-
               </div>
 
+
+              <strong
+                class="attribute-value"
+                data-attribute-value
+              >
+                —
+              </strong>
+
+            </div>
+
+
+            <div class="attribute-card-middle">
 
               <div
                 class="attribute-die-slot"
-                data-attribute-die="controle"
+                data-attribute-die
               >
-
-                <span data-die-label>
-                  Adicionar dado
-                </span>
-
+                Adicionar dado
               </div>
 
+              <div
+                class="attribute-result"
+                data-attribute-result
+              >
+                —
+              </div>
+
+            </div>
+
+
+            <div class="attribute-card-actions">
 
               <button
                 type="button"
@@ -1744,49 +2712,88 @@
                 Rolar
               </button>
 
-            </article>
+              <button
+                type="button"
+                class="attribute-remove-button"
+                data-action="remove-die"
+                data-attribute="controle"
+              >
+                Remover dado
+              </button>
+
+            </div>
+
+          </article>
 
 
+          <!-- PRESENÇA -->
 
-            <article
-              class="attribute-card"
-              data-attribute-card="presenca"
-            >
+          <article
+            class="attribute-card"
+            data-attribute="presenca"
+          >
 
-              <div class="attribute-card-top">
+            <div class="attribute-card-header">
+
+              <div class="attribute-heading">
+
+                <span
+                  class="attribute-short"
+                  data-attribute-short
+                >
+                  PRS
+                </span>
 
                 <div>
 
-                  <span class="eyebrow">
-                    PRE
+                  <span
+                    class="attribute-label"
+                    data-attribute-name
+                  >
+                    Presença
                   </span>
 
-                  <h3>
-                    Presença
-                  </h3>
+                  <small
+                    data-attribute-description
+                  >
+                    Influência e interação
+                  </small>
 
                 </div>
 
-                <strong
-                  data-attribute-value="presenca"
-                >
-                  —
-                </strong>
-
               </div>
 
+
+              <strong
+                class="attribute-value"
+                data-attribute-value
+              >
+                —
+              </strong>
+
+            </div>
+
+
+            <div class="attribute-card-middle">
 
               <div
                 class="attribute-die-slot"
-                data-attribute-die="presenca"
+                data-attribute-die
               >
-
-                <span data-die-label>
-                  Adicionar dado
-                </span>
-
+                Adicionar dado
               </div>
 
+              <div
+                class="attribute-result"
+                data-attribute-result
+              >
+                —
+              </div>
+
+            </div>
+
+
+            <div class="attribute-card-actions">
 
               <button
                 type="button"
@@ -1797,49 +2804,88 @@
                 Rolar
               </button>
 
-            </article>
+              <button
+                type="button"
+                class="attribute-remove-button"
+                data-action="remove-die"
+                data-attribute="presenca"
+              >
+                Remover dado
+              </button>
+
+            </div>
+
+          </article>
 
 
+          <!-- PERCEPÇÃO -->
 
-            <article
-              class="attribute-card"
-              data-attribute-card="percepcao"
-            >
+          <article
+            class="attribute-card"
+            data-attribute="percepcao"
+          >
 
-              <div class="attribute-card-top">
+            <div class="attribute-card-header">
+
+              <div class="attribute-heading">
+
+                <span
+                  class="attribute-short"
+                  data-attribute-short
+                >
+                  PER
+                </span>
 
                 <div>
 
-                  <span class="eyebrow">
-                    PER
+                  <span
+                    class="attribute-label"
+                    data-attribute-name
+                  >
+                    Percepção
                   </span>
 
-                  <h3>
-                    Percepção
-                  </h3>
+                  <small
+                    data-attribute-description
+                  >
+                    Ambiente e detalhes
+                  </small>
 
                 </div>
 
-                <strong
-                  data-attribute-value="percepcao"
-                >
-                  —
-                </strong>
-
               </div>
 
+
+              <strong
+                class="attribute-value"
+                data-attribute-value
+              >
+                —
+              </strong>
+
+            </div>
+
+
+            <div class="attribute-card-middle">
 
               <div
                 class="attribute-die-slot"
-                data-attribute-die="percepcao"
+                data-attribute-die
               >
-
-                <span data-die-label>
-                  Adicionar dado
-                </span>
-
+                Adicionar dado
               </div>
 
+              <div
+                class="attribute-result"
+                data-attribute-result
+              >
+                —
+              </div>
+
+            </div>
+
+
+            <div class="attribute-card-actions">
 
               <button
                 type="button"
@@ -1850,45 +2896,175 @@
                 Rolar
               </button>
 
-            </article>
+              <button
+                type="button"
+                class="attribute-remove-button"
+                data-action="remove-die"
+                data-attribute="percepcao"
+              >
+                Remover dado
+              </button>
+
+            </div>
+
+          </article>
+
+        </div>
+
+
+        <!-- =================================================
+             GRÁFICO
+             ================================================= -->
+
+        <section
+          class="attributes-chart-section"
+        >
+
+          <div class="attributes-chart-heading">
+
+            <div>
+
+              <span class="eyebrow">
+                PERFIL
+              </span>
+
+              <h3>
+                Perfil de atributos
+              </h3>
+
+            </div>
+
+
+            <strong
+              data-attributes-complete
+            >
+              0/8
+            </strong>
 
           </div>
 
 
-          <!-- GRÁFICO -->
-
-          <aside
-            class="attributes-graph-card"
-            data-attribute-graph
+          <div
+            class="attributes-chart"
+            data-attributes-chart
           >
 
-            <span class="eyebrow">
-              DISTRIBUIÇÃO
-            </span>
+            <div
+              class="chart-axis"
+              data-graph-attribute="forca"
+              style="--attribute-percent:0%"
+            >
+              <span>
+                FOR
+              </span>
 
-            <h3>
-              Perfil de atributos
-            </h3>
-
-
-            <div class="attribute-graph">
-
-              <div class="graph-placeholder">
-
-                <span>
-                  Gráfico
-                </span>
-
-              </div>
-
+              <i></i>
             </div>
 
-          </aside>
 
+            <div
+              class="chart-axis"
+              data-graph-attribute="vigor"
+              style="--attribute-percent:0%"
+            >
+              <span>
+                VIG
+              </span>
+
+              <i></i>
+            </div>
+
+
+            <div
+              class="chart-axis"
+              data-graph-attribute="agilidade"
+              style="--attribute-percent:0%"
+            >
+              <span>
+                AGI
+              </span>
+
+              <i></i>
+            </div>
+
+
+            <div
+              class="chart-axis"
+              data-graph-attribute="precisao"
+              style="--attribute-percent:0%"
+            >
+              <span>
+                PRE
+              </span>
+
+              <i></i>
+            </div>
+
+
+            <div
+              class="chart-axis"
+              data-graph-attribute="intelecto"
+              style="--attribute-percent:0%"
+            >
+              <span>
+                INT
+              </span>
+
+              <i></i>
+            </div>
+
+
+            <div
+              class="chart-axis"
+              data-graph-attribute="controle"
+              style="--attribute-percent:0%"
+            >
+              <span>
+                CON
+              </span>
+
+              <i></i>
+            </div>
+
+
+            <div
+              class="chart-axis"
+              data-graph-attribute="presenca"
+              style="--attribute-percent:0%"
+            >
+              <span>
+                PRS
+              </span>
+
+              <i></i>
+            </div>
+
+
+            <div
+              class="chart-axis"
+              data-graph-attribute="percepcao"
+              style="--attribute-percent:0%"
+            >
+              <span>
+                PER
+              </span>
+
+              <i></i>
+            </div>
+
+          </div>
+
+        </section>
+
+
+        <div
+          class="attributes-status"
+          data-attributes-status
+        >
+          0 de 8 atributos preenchidos.
         </div>
 
       </section>
-
 
 
       <!-- ==================================================
@@ -1908,30 +3084,30 @@
           </span>
 
           <h2>
-            Poder
+            Escolha seu poder
           </h2>
 
           <p>
-            Defina os poderes principais do personagem.
+            Defina o poder principal do personagem.
           </p>
 
         </div>
 
 
-        <div class="form-stack">
+        <div class="power-panel">
 
           <label class="field">
 
             <span class="field-label">
               Poder principal
+              <b>*</b>
             </span>
 
             <input
-              id="primaryPower"
               type="text"
+              data-power-field="primaryPower"
               maxlength="120"
-              data-power-field="primary"
-              placeholder="Poder principal"
+              placeholder="Ex.: Manipulação de fogo"
             >
 
           </label>
@@ -1944,11 +3120,10 @@
             </span>
 
             <input
-              id="parallelPower"
               type="text"
+              data-power-field="parallelPower"
               maxlength="120"
-              data-power-field="parallel"
-              placeholder="Poder paralelo"
+              placeholder="Opcional"
             >
 
           </label>
@@ -1956,7 +3131,6 @@
         </div>
 
       </section>
-
 
 
       <!-- ==================================================
@@ -1980,140 +3154,13 @@
           </h2>
 
           <p>
-            Defina a afinidade e os valores de Mana.
+            Configure a reserva de Mana do personagem.
           </p>
 
         </div>
 
 
-        <div class="mana-grid">
-
-
-          <button
-            type="button"
-            class="mana-card"
-            data-mana="azul"
-            data-mana-type="azul"
-          >
-
-            <span
-              class="mana-icon"
-              aria-hidden="true"
-            >
-              ◆
-            </span>
-
-            <span class="mana-name">
-              Mana Azul
-            </span>
-
-          </button>
-
-
-          <button
-            type="button"
-            class="mana-card"
-            data-mana="dourada"
-            data-mana-type="dourada"
-          >
-
-            <span
-              class="mana-icon"
-              aria-hidden="true"
-            >
-              ◆
-            </span>
-
-            <span class="mana-name">
-              Mana Dourada
-            </span>
-
-          </button>
-
-
-          <button
-            type="button"
-            class="mana-card"
-            data-mana="branca"
-            data-mana-type="branca"
-          >
-
-            <span
-              class="mana-icon"
-              aria-hidden="true"
-            >
-              ◆
-            </span>
-
-            <span class="mana-name">
-              Mana Branca
-            </span>
-
-          </button>
-
-
-          <button
-            type="button"
-            class="mana-card"
-            data-mana="vermelha"
-            data-mana-type="vermelha"
-          >
-
-            <span
-              class="mana-icon"
-              aria-hidden="true"
-            >
-              ◆
-            </span>
-
-            <span class="mana-name">
-              Mana Vermelha
-            </span>
-
-          </button>
-
-
-          <button
-            type="button"
-            class="mana-card"
-            data-mana="negra"
-            data-mana-type="negra"
-          >
-
-            <span
-              class="mana-icon"
-              aria-hidden="true"
-            >
-              ◆
-            </span>
-
-            <span class="mana-name">
-              Mana Negra
-            </span>
-
-          </button>
-
-        </div>
-
-
-        <div class="mana-values">
-
-          <label class="field">
-
-            <span class="field-label">
-              Mana atual
-            </span>
-
-            <input
-              id="manaCurrent"
-              type="number"
-              min="0"
-              inputmode="numeric"
-              data-mana-current
-            >
-
-          </label>
-
+        <div class="mana-panel">
 
           <label class="field">
 
@@ -2122,11 +3169,44 @@
             </span>
 
             <input
-              id="manaMax"
               type="number"
               min="0"
               inputmode="numeric"
-              data-mana-max
+              data-mana-field="max"
+              placeholder="0"
+            >
+
+          </label>
+
+
+          <label class="field">
+
+            <span class="field-label">
+              Mana atual
+            </span>
+
+            <input
+              type="number"
+              min="0"
+              inputmode="numeric"
+              data-mana-field="current"
+              placeholder="0"
+            >
+
+          </label>
+
+
+          <label class="field">
+
+            <span class="field-label">
+              Tipo de Mana
+            </span>
+
+            <input
+              type="text"
+              data-mana-field="type"
+              maxlength="80"
+              placeholder="Opcional"
             >
 
           </label>
@@ -2134,7 +3214,6 @@
         </div>
 
       </section>
-
 
 
       <!-- ==================================================
@@ -2158,171 +3237,271 @@
           </h2>
 
           <p>
-            Defina os conhecimentos e capacidades do personagem.
+            Distribua e ajuste as perícias do personagem.
           </p>
 
         </div>
 
 
-        <div class="skills-grid">
+        <div
+          class="skills-grid"
+          data-skills-list
+        >
 
-          <label class="skill-card">
-            <span>Acrobacia</span>
+          <div
+            class="skill-card"
+            data-skill-id="acrobacia"
+          >
+            <span data-skill-name>
+              Acrobacia
+            </span>
+
             <input
               type="number"
               min="0"
               value="0"
-              data-skill="acrobacia"
+              data-skill-id="acrobacia"
+              data-skill-value
             >
-          </label>
+          </div>
 
 
-          <label class="skill-card">
-            <span>Atletismo</span>
+          <div
+            class="skill-card"
+            data-skill-id="atletismo"
+          >
+            <span data-skill-name>
+              Atletismo
+            </span>
+
             <input
               type="number"
               min="0"
               value="0"
-              data-skill="atletismo"
+              data-skill-id="atletismo"
+              data-skill-value
             >
-          </label>
+          </div>
 
 
-          <label class="skill-card">
-            <span>Furtividade</span>
+          <div
+            class="skill-card"
+            data-skill-id="furtividade"
+          >
+            <span data-skill-name>
+              Furtividade
+            </span>
+
             <input
               type="number"
               min="0"
               value="0"
-              data-skill="furtividade"
+              data-skill-id="furtividade"
+              data-skill-value
             >
-          </label>
+          </div>
 
 
-          <label class="skill-card">
-            <span>Percepção</span>
+          <div
+            class="skill-card"
+            data-skill-id="percepcao"
+          >
+            <span data-skill-name>
+              Percepção
+            </span>
+
             <input
               type="number"
               min="0"
               value="0"
-              data-skill="percepcao"
+              data-skill-id="percepcao"
+              data-skill-value
             >
-          </label>
+          </div>
 
 
-          <label class="skill-card">
-            <span>Investigação</span>
+          <div
+            class="skill-card"
+            data-skill-id="investigacao"
+          >
+            <span data-skill-name>
+              Investigação
+            </span>
+
             <input
               type="number"
               min="0"
               value="0"
-              data-skill="investigacao"
+              data-skill-id="investigacao"
+              data-skill-value
             >
-          </label>
+          </div>
 
 
-          <label class="skill-card">
-            <span>Conhecimento</span>
+          <div
+            class="skill-card"
+            data-skill-id="conhecimento"
+          >
+            <span data-skill-name>
+              Conhecimento
+            </span>
+
             <input
               type="number"
               min="0"
               value="0"
-              data-skill="conhecimento"
+              data-skill-id="conhecimento"
+              data-skill-value
             >
-          </label>
+          </div>
 
 
-          <label class="skill-card">
-            <span>Medicina</span>
+          <div
+            class="skill-card"
+            data-skill-id="medicina"
+          >
+            <span data-skill-name>
+              Medicina
+            </span>
+
             <input
               type="number"
               min="0"
               value="0"
-              data-skill="medicina"
+              data-skill-id="medicina"
+              data-skill-value
             >
-          </label>
+          </div>
 
 
-          <label class="skill-card">
-            <span>Sobrevivência</span>
+          <div
+            class="skill-card"
+            data-skill-id="sobrevivencia"
+          >
+            <span data-skill-name>
+              Sobrevivência
+            </span>
+
             <input
               type="number"
               min="0"
               value="0"
-              data-skill="sobrevivencia"
+              data-skill-id="sobrevivencia"
+              data-skill-value
             >
-          </label>
+          </div>
 
 
-          <label class="skill-card">
-            <span>Persuasão</span>
+          <div
+            class="skill-card"
+            data-skill-id="persuasao"
+          >
+            <span data-skill-name>
+              Persuasão
+            </span>
+
             <input
               type="number"
               min="0"
               value="0"
-              data-skill="persuasao"
+              data-skill-id="persuasao"
+              data-skill-value
             >
-          </label>
+          </div>
 
 
-          <label class="skill-card">
-            <span>Intuição</span>
+          <div
+            class="skill-card"
+            data-skill-id="intuicao"
+          >
+            <span data-skill-name>
+              Intuição
+            </span>
+
             <input
               type="number"
               min="0"
               value="0"
-              data-skill="intuicao"
+              data-skill-id="intuicao"
+              data-skill-value
             >
-          </label>
+          </div>
 
 
-          <label class="skill-card">
-            <span>Enganação</span>
+          <div
+            class="skill-card"
+            data-skill-id="enganacao"
+          >
+            <span data-skill-name>
+              Enganação
+            </span>
+
             <input
               type="number"
               min="0"
               value="0"
-              data-skill="enganacao"
+              data-skill-id="enganacao"
+              data-skill-value
             >
-          </label>
+          </div>
 
 
-          <label class="skill-card">
-            <span>Tática</span>
+          <div
+            class="skill-card"
+            data-skill-id="tatica"
+          >
+            <span data-skill-name>
+              Tática
+            </span>
+
             <input
               type="number"
               min="0"
               value="0"
-              data-skill="tatica"
+              data-skill-id="tatica"
+              data-skill-value
             >
-          </label>
+          </div>
 
 
-          <label class="skill-card">
-            <span>Ofício / Crafting</span>
+          <div
+            class="skill-card"
+            data-skill-id="oficio"
+          >
+            <span data-skill-name>
+              Ofício / Crafting
+            </span>
+
             <input
               type="number"
               min="0"
               value="0"
-              data-skill="oficio"
+              data-skill-id="oficio"
+              data-skill-value
             >
-          </label>
+          </div>
 
 
-          <label class="skill-card">
-            <span>Controle de Mana</span>
+          <div
+            class="skill-card"
+            data-skill-id="controle_mana"
+          >
+            <span data-skill-name>
+              Controle de Mana
+            </span>
+
             <input
               type="number"
               min="0"
               value="0"
-              data-skill="controle_mana"
+              data-skill-id="controle_mana"
+              data-skill-value
             >
-          </label>
+          </div>
 
         </div>
 
       </section>
-
 
 
       <!-- ==================================================
@@ -2346,65 +3525,24 @@
           </h2>
 
           <p>
-            Registre as técnicas conhecidas pelo personagem.
+            Registre as técnicas do personagem.
           </p>
 
         </div>
 
 
-        <div class="technique-form">
+        <div
+          class="techniques-list"
+          data-techniques-list
+        >
 
-          <label class="field">
-
-            <span class="field-label">
-              Nome da técnica
-            </span>
-
-            <input
-              id="techniqueName"
-              type="text"
-              maxlength="100"
-              placeholder="Ex.: Golpe Crescente"
-            >
-
-          </label>
-
-
-          <label class="field">
-
-            <span class="field-label">
-              Descrição
-            </span>
-
-            <textarea
-              id="techniqueDescription"
-              maxlength="500"
-              rows="4"
-              placeholder="Como a técnica funciona..."
-            ></textarea>
-
-          </label>
-
-
-          <button
-            type="button"
-            class="button button-primary"
-            id="addTechniqueButton"
-            data-action="add-technique"
-          >
-            Adicionar técnica
-          </button>
+          <div class="empty-state">
+            Nenhuma técnica adicionada.
+          </div>
 
         </div>
 
-
-        <div
-          id="techniquesList"
-          class="techniques-list"
-        ></div>
-
       </section>
-
 
 
       <!-- ==================================================
@@ -2428,65 +3566,24 @@
           </h2>
 
           <p>
-            Organize equipamentos, objetos e recursos.
+            Registre os itens carregados pelo personagem.
           </p>
 
         </div>
 
 
-        <div class="inventory-form">
+        <div
+          class="inventory-list"
+          data-inventory-list
+        >
 
-          <label class="field">
-
-            <span class="field-label">
-              Item
-            </span>
-
-            <input
-              id="inventoryItem"
-              type="text"
-              maxlength="120"
-              placeholder="Nome do item"
-            >
-
-          </label>
-
-
-          <label class="field">
-
-            <span class="field-label">
-              Quantidade
-            </span>
-
-            <input
-              id="inventoryQuantity"
-              type="number"
-              min="1"
-              value="1"
-            >
-
-          </label>
-
-
-          <button
-            type="button"
-            class="button button-primary"
-            id="addInventoryButton"
-            data-action="add-inventory"
-          >
-            Adicionar item
-          </button>
+          <div class="empty-state">
+            Inventário vazio.
+          </div>
 
         </div>
 
-
-        <div
-          id="inventoryList"
-          class="inventory-list"
-        ></div>
-
       </section>
-
 
 
       <!-- ==================================================
@@ -2502,24 +3599,21 @@
         <div class="section-heading">
 
           <span class="eyebrow">
-            DÉCIMA PRIMEIRA ETAPA
+            ÚLTIMA ETAPA
           </span>
 
           <h2>
-            Revisão
+            Revise seu personagem
           </h2>
 
           <p>
-            Confira a ficha antes de finalizar.
+            Confira os dados antes de finalizar a ficha.
           </p>
 
         </div>
 
 
-        <div
-          id="characterReview"
-          class="character-review"
-        >
+        <div class="review-grid">
 
           <article class="review-card">
 
@@ -2533,10 +3627,16 @@
               —
             </h3>
 
-            <p
-              data-review-description
-            >
-              —
+            <p>
+              <strong>
+                Gênero:
+              </strong>
+
+              <span
+                data-review-gender
+              >
+                —
+              </span>
             </p>
 
           </article>
@@ -2554,10 +3654,16 @@
               —
             </h3>
 
-            <p
-              data-review-animalha
-            >
-              —
+            <p>
+              <strong>
+                Animalha:
+              </strong>
+
+              <span
+                data-review-animalha
+              >
+                —
+              </span>
             </p>
 
           </article>
@@ -2584,48 +3690,78 @@
               ATRIBUTOS
             </span>
 
-            <div
-              class="review-attributes"
-            >
+            <div class="review-attributes">
 
               <span>
-                Força:
-                <strong data-review-forca>—</strong>
+                FOR:
+                <b
+                  data-review-attribute="forca"
+                >
+                  —
+                </b>
               </span>
 
               <span>
-                Vigor:
-                <strong data-review-vigor>—</strong>
+                VIG:
+                <b
+                  data-review-attribute="vigor"
+                >
+                  —
+                </b>
               </span>
 
               <span>
-                Agilidade:
-                <strong data-review-agilidade>—</strong>
+                AGI:
+                <b
+                  data-review-attribute="agilidade"
+                >
+                  —
+                </b>
               </span>
 
               <span>
-                Precisão:
-                <strong data-review-precisao>—</strong>
+                PRE:
+                <b
+                  data-review-attribute="precisao"
+                >
+                  —
+                </b>
               </span>
 
               <span>
-                Intelecto:
-                <strong data-review-intelecto>—</strong>
+                INT:
+                <b
+                  data-review-attribute="intelecto"
+                >
+                  —
+                </b>
               </span>
 
               <span>
-                Controle:
-                <strong data-review-controle>—</strong>
+                CON:
+                <b
+                  data-review-attribute="controle"
+                >
+                  —
+                </b>
               </span>
 
               <span>
-                Presença:
-                <strong data-review-presenca>—</strong>
+                PRS:
+                <b
+                  data-review-attribute="presenca"
+                >
+                  —
+                </b>
               </span>
 
               <span>
-                Percepção:
-                <strong data-review-percepcao>—</strong>
+                PER:
+                <b
+                  data-review-attribute="percepcao"
+                >
+                  —
+                </b>
               </span>
 
             </div>
@@ -2634,60 +3770,77 @@
 
         </div>
 
-
-        <button
-          type="button"
-          class="button button-primary final-button"
-          id="finishCharacterButton"
-          data-action="finish-character"
-        >
-          Finalizar ficha
-        </button>
-
       </section>
 
     </main>
 
 
-
     <!-- ====================================================
-         NAVEGAÇÃO INFERIOR
+         RODAPÉ DE NAVEGAÇÃO
          ==================================================== -->
 
-    <footer class="ficha-footer">
+    <footer class="creation-footer">
 
       <button
         type="button"
-        class="button button-secondary"
-        data-action="previous"
+        class="creation-navigation-button previous"
+        data-action="previous-step"
       >
-        ← Voltar
+
+        <span
+          aria-hidden="true"
+        >
+          ←
+        </span>
+
+        <span>
+          Voltar
+        </span>
+
       </button>
 
 
-      <div class="ficha-step-counter">
+      <div
+        class="creation-navigation-status"
+        aria-live="polite"
+      >
 
-        <strong data-current-step>
+        <span
+          class="creation-navigation-current"
+          data-current-step
+        >
           1
-        </strong>
+        </span>
 
         <span>
           /
         </span>
 
-        <strong data-total-steps>
+        <span
+          data-total-steps
+        >
           11
-        </strong>
+        </span>
 
       </div>
 
 
       <button
         type="button"
-        class="button button-primary"
-        data-action="next"
+        class="creation-navigation-button next"
+        data-action="next-step"
       >
-        Próximo →
+
+        <span>
+          Próximo
+        </span>
+
+        <span
+          aria-hidden="true"
+        >
+          →
+        </span>
+
       </button>
 
     </footer>
@@ -2707,6 +3860,16 @@
     aria-atomic="true"
   ></div>
 
+
+  <!-- ======================================================
+       TOAST
+       ====================================================== -->
+
+  <div
+    id="aerionToast"
+    class="toast"
+    hidden
+  ></div>
 
 </body>
 
