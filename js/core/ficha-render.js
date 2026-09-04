@@ -2673,6 +2673,36 @@
     );
 
 
+    /*
+      Contador de dados atribuídos.
+      O HTML mostra 0/8 por padrão, mas esse indicador
+      precisa acompanhar o estado real da distribuição.
+      A regra oficial usa 8 atributos; o contador aqui
+      representa quantos já receberam um dado.
+    */
+
+    const assignedCount =
+      ATTRIBUTES.filter(
+        attribute =>
+          Boolean(
+            currentState?.assignedDice?.[
+              attribute.id
+            ]
+          )
+      ).length;
+
+    $$('[data-attributes-complete]').forEach(
+      element => {
+        element.textContent =
+          `${assignedCount}/${ATTRIBUTES.length}`;
+
+        element.setAttribute(
+          'aria-label',
+          `${assignedCount} de ${ATTRIBUTES.length} atributos com dado`
+        );
+      }
+    );
+
     renderAttributeGraph(
       currentState
     );
