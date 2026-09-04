@@ -2928,7 +2928,9 @@
 
         selectClass(
           target.dataset
-            .classId
+            .classId ||
+          target.dataset
+            .class
         );
 
         return;
