@@ -58,6 +58,12 @@
        ====================================================== -->
 
   <script
+    type="module"
+    src="./js/core/main.js"
+  ></script>
+
+
+  <script
     src="./js/core/personagem-assets.js"
     defer
   ></script>
@@ -2178,6 +2184,7 @@
 
           <article
             class="attribute-card"
+            data-action="select-attribute"
             data-attribute="forca"
           >
 
@@ -2270,6 +2277,7 @@
 
           <article
             class="attribute-card"
+            data-action="select-attribute"
             data-attribute="vigor"
           >
 
@@ -2362,6 +2370,7 @@
 
           <article
             class="attribute-card"
+            data-action="select-attribute"
             data-attribute="agilidade"
           >
 
@@ -2454,6 +2463,7 @@
 
           <article
             class="attribute-card"
+            data-action="select-attribute"
             data-attribute="precisao"
           >
 
@@ -2546,6 +2556,7 @@
 
           <article
             class="attribute-card"
+            data-action="select-attribute"
             data-attribute="intelecto"
           >
 
@@ -2638,6 +2649,7 @@
 
           <article
             class="attribute-card"
+            data-action="select-attribute"
             data-attribute="controle"
           >
 
@@ -2730,6 +2742,7 @@
 
           <article
             class="attribute-card"
+            data-action="select-attribute"
             data-attribute="presenca"
           >
 
@@ -2822,6 +2835,7 @@
 
           <article
             class="attribute-card"
+            data-action="select-attribute"
             data-attribute="percepcao"
           >
 
@@ -3105,7 +3119,7 @@
 
             <input
               type="text"
-              data-power-field="primaryPower"
+              data-power="primaryPower"
               maxlength="120"
               placeholder="Ex.: Manipulação de fogo"
             >
@@ -3121,7 +3135,7 @@
 
             <input
               type="text"
-              data-power-field="parallelPower"
+              data-power="parallelPower"
               maxlength="120"
               placeholder="Opcional"
             >
@@ -3172,7 +3186,7 @@
               type="number"
               min="0"
               inputmode="numeric"
-              data-mana-field="max"
+              data-mana="max"
               placeholder="0"
             >
 
@@ -3189,7 +3203,7 @@
               type="number"
               min="0"
               inputmode="numeric"
-              data-mana-field="current"
+              data-mana="current"
               placeholder="0"
             >
 
@@ -3204,7 +3218,7 @@
 
             <input
               type="text"
-              data-mana-field="type"
+              data-mana="type"
               maxlength="80"
               placeholder="Opcional"
             >
@@ -3260,7 +3274,7 @@
               type="number"
               min="0"
               value="0"
-              data-skill-id="acrobacia"
+              data-skill="acrobacia" data-skill-id="acrobacia"
               data-skill-value
             >
           </div>
@@ -3278,7 +3292,7 @@
               type="number"
               min="0"
               value="0"
-              data-skill-id="atletismo"
+              data-skill="atletismo" data-skill-id="atletismo"
               data-skill-value
             >
           </div>
@@ -3296,7 +3310,7 @@
               type="number"
               min="0"
               value="0"
-              data-skill-id="furtividade"
+              data-skill="furtividade" data-skill-id="furtividade"
               data-skill-value
             >
           </div>
@@ -3314,7 +3328,7 @@
               type="number"
               min="0"
               value="0"
-              data-skill-id="percepcao"
+              data-skill="percepcao" data-skill-id="percepcao"
               data-skill-value
             >
           </div>
@@ -3332,7 +3346,7 @@
               type="number"
               min="0"
               value="0"
-              data-skill-id="investigacao"
+              data-skill="investigacao" data-skill-id="investigacao"
               data-skill-value
             >
           </div>
@@ -3350,7 +3364,7 @@
               type="number"
               min="0"
               value="0"
-              data-skill-id="conhecimento"
+              data-skill="conhecimento" data-skill-id="conhecimento"
               data-skill-value
             >
           </div>
@@ -3368,7 +3382,7 @@
               type="number"
               min="0"
               value="0"
-              data-skill-id="medicina"
+              data-skill="medicina" data-skill-id="medicina"
               data-skill-value
             >
           </div>
@@ -3386,7 +3400,7 @@
               type="number"
               min="0"
               value="0"
-              data-skill-id="sobrevivencia"
+              data-skill="sobrevivencia" data-skill-id="sobrevivencia"
               data-skill-value
             >
           </div>
@@ -3404,7 +3418,7 @@
               type="number"
               min="0"
               value="0"
-              data-skill-id="persuasao"
+              data-skill="persuasao" data-skill-id="persuasao"
               data-skill-value
             >
           </div>
@@ -3422,7 +3436,7 @@
               type="number"
               min="0"
               value="0"
-              data-skill-id="intuicao"
+              data-skill="intuicao" data-skill-id="intuicao"
               data-skill-value
             >
           </div>
@@ -3440,7 +3454,7 @@
               type="number"
               min="0"
               value="0"
-              data-skill-id="enganacao"
+              data-skill="enganacao" data-skill-id="enganacao"
               data-skill-value
             >
           </div>
@@ -3458,7 +3472,7 @@
               type="number"
               min="0"
               value="0"
-              data-skill-id="tatica"
+              data-skill="tatica" data-skill-id="tatica"
               data-skill-value
             >
           </div>
@@ -3476,7 +3490,7 @@
               type="number"
               min="0"
               value="0"
-              data-skill-id="oficio"
+              data-skill="oficio" data-skill-id="oficio"
               data-skill-value
             >
           </div>
@@ -3494,7 +3508,7 @@
               type="number"
               min="0"
               value="0"
-              data-skill-id="controle_mana"
+              data-skill="controle_mana" data-skill-id="controle_mana"
               data-skill-value
             >
           </div>
