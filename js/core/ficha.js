@@ -828,6 +828,51 @@
     }
 
 
+    /*
+      Recalcula apenas as etapas que possuem requisitos objetivos.
+      Isso impede que um completedSteps antigo/liberado por uma versão
+      anterior do formulário desbloqueie etapas sem preenchimento real.
+    */
+    next.completedSteps[0] =
+      Boolean(text(next.name)) &&
+      Boolean(text(next.gender));
+
+    next.completedSteps[1] =
+      Boolean(text(next.race)) &&
+      (normalize(next.race) !==
+        "animalha" ||
+        (Boolean(text(next.animalhaCategory)) &&
+          Boolean(
+            text(
+              typeof next.animalha ===
+                "string"
+                ? next.animalha
+                : next.animalha?.animal ||
+                  next.animalha?.variation ||
+                  next.animalhaAnimal
+            )
+          )));
+
+    next.completedSteps[2] =
+      Number(next.appearance?.height) > 0;
+
+    next.completedSteps[3] =
+      Boolean(text(next.class));
+
+    next.completedSteps[4] =
+      ATTRIBUTES.every(
+        attribute =>
+          Boolean(
+            next.assignedDice[
+              attribute.id
+            ]
+          )
+      );
+
+    next.completedSteps[5] =
+      Boolean(text(next.primaryPower));
+
+
     return next;
   }
 
@@ -1092,23 +1137,25 @@
 
   function validateAttributes() {
 
+    /*
+      Na criação, atributo NÃO é um número.
+      O atributo recebe um tipo de dado (D4, D6, etc.).
+      A rolagem acontece somente quando um teste for realizado
+      durante o jogo.
+    */
+
     const missingAttribute =
       ATTRIBUTES.find(
         attribute =>
           !state.assignedDice[
             attribute.id
-          ] ||
-          state.diceResults[
-            state.assignedDice[
-              attribute.id
-            ]
-          ] == null
+          ]
       );
 
 
     if (missingAttribute) {
       warn(
-        `O atributo ${missingAttribute.name} ainda precisa de dado e resultado.`
+        `Atribua um dado ao atributo ${missingAttribute.name} antes de continuar.`
       );
 
       return false;
@@ -2092,7 +2139,14 @@
       ];
 
       state.completedSteps[4] =
-        false;
+        ATTRIBUTES.every(
+          attribute =>
+            Boolean(
+              state.assignedDice[
+                attribute.id
+              ]
+            )
+        );
 
       commit(
         "aerion:dice:update"
@@ -2148,7 +2202,14 @@
 
 
     state.completedSteps[4] =
-      false;
+      ATTRIBUTES.every(
+        attribute =>
+          Boolean(
+            state.assignedDice[
+              attribute.id
+            ]
+          )
+      );
 
 
     commit(
@@ -2183,7 +2244,15 @@
     state.assignedDice[id] = null;
     delete state.diceResults[dieId];
     state.attributes[id] = null;
-    state.completedSteps[4] = false;
+    state.completedSteps[4] =
+      ATTRIBUTES.every(
+        attribute =>
+          Boolean(
+            state.assignedDice[
+              attribute.id
+            ]
+          )
+      );
 
     commit(
       "aerion:dice:update"
@@ -2275,7 +2344,14 @@
 
 
     state.completedSteps[4] =
-      complete;
+      ATTRIBUTES.every(
+        attribute =>
+          Boolean(
+            state.assignedDice[
+              attribute.id
+            ]
+          )
+      );
 
 
     commit(
