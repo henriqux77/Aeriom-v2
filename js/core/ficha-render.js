@@ -666,6 +666,113 @@
           "";
       });
 
+    /*
+      O botão Próximo só fica habilitado quando a etapa atual
+      realmente está pronta. Isso evita desbloqueio por cliques
+      em áreas aleatórias da tela ou por estado antigo salvo.
+    */
+    const nextButton =
+      $('[data-action="next-step"]');
+
+    if (nextButton) {
+      const stepId =
+        normalize(
+          currentStepId(
+            currentState
+          )
+        );
+
+      let ready = false;
+
+      switch (stepId) {
+        case "identity":
+          ready =
+            Boolean(
+              text(currentState?.name)
+            ) &&
+            Boolean(
+              text(currentState?.gender)
+            );
+          break;
+
+        case "race":
+          ready =
+            Boolean(
+              text(currentState?.race)
+            );
+
+          if (
+            ready &&
+            normalize(currentState?.race) ===
+              "animalha"
+          ) {
+            ready =
+              Boolean(
+                text(currentState?.animalhaCategory)
+              ) &&
+              Boolean(
+                text(
+                  typeof currentState?.animalha ===
+                    "string"
+                    ? currentState.animalha
+                    : currentState?.animalha?.animal ||
+                      currentState?.animalha?.variation ||
+                      currentState?.animalhaAnimal
+                )
+              );
+          }
+          break;
+
+        case "appearance":
+          ready =
+            Number(
+              currentState?.appearance?.height
+            ) > 0;
+          break;
+
+        case "class":
+          ready =
+            Boolean(
+              text(currentState?.class)
+            );
+          break;
+
+        case "attributes":
+          ready =
+            ATTRIBUTES.every(
+              attribute =>
+                Boolean(
+                  currentState?.assignedDice?.[
+                    attribute.id
+                  ]
+                )
+            );
+          break;
+
+        case "power":
+          ready =
+            Boolean(
+              text(currentState?.primaryPower)
+            );
+          break;
+
+        default:
+          ready = true;
+      }
+
+      nextButton.disabled =
+        current >= TOTAL_STEPS - 1 ||
+        !ready;
+
+      nextButton.setAttribute(
+        "aria-disabled",
+        nextButton.disabled
+          ? "true"
+          : "false"
+      );
+    }
+
+
     const track =
       $(".progress-track");
 
@@ -2674,13 +2781,8 @@
 
 
     /*
-      Contador de dados atribuídos.
-      O HTML mostra 0/8 por padrão, mas esse indicador
-      precisa acompanhar o estado real da distribuição.
-      A regra oficial usa 8 atributos; o contador aqui
-      representa quantos já receberam um dado.
+      Na criação contamos DADOS ATRIBUÍDOS, não rolagens.
     */
-
     const assignedCount =
       ATTRIBUTES.filter(
         attribute =>
@@ -2691,17 +2793,17 @@
           )
       ).length;
 
-    $$('[data-attributes-complete]').forEach(
-      element => {
-        element.textContent =
-          `${assignedCount}/${ATTRIBUTES.length}`;
+    $$
+      (
+        "[data-attributes-complete]"
+      )
+      .forEach(
+        element => {
+          element.textContent =
+            `${assignedCount}/${ATTRIBUTES.length}`;
+        }
+      );
 
-        element.setAttribute(
-          'aria-label',
-          `${assignedCount} de ${ATTRIBUTES.length} atributos com dado`
-        );
-      }
-    );
 
     renderAttributeGraph(
       currentState
@@ -2713,12 +2815,6 @@
     currentState,
     attribute
   ) {
-    const value =
-      getAttributeValue(
-        currentState,
-        attribute.id
-      );
-
     const dieId =
       getAssignedDie(
         currentState,
@@ -2728,12 +2824,6 @@
     const die =
       getDieById(
         dieId
-      );
-
-    const result =
-      getDieResult(
-        currentState,
-        attribute.id
       );
 
     return `
@@ -2747,76 +2837,49 @@
       >
 
         <div class="attribute-card-header">
-
           <div class="attribute-heading">
-
             <span
               class="attribute-short attribute-abbr"
               data-attribute-short
             >
-              ${escapeHTML(
-                attribute.short
-              )}
+              ${escapeHTML(attribute.short)}
             </span>
 
             <span
               class="attribute-label attribute-name"
               data-attribute-name
             >
-              ${escapeHTML(
-                attribute.name
-              )}
+              ${escapeHTML(attribute.name)}
             </span>
-
           </div>
-
-          <div
-            class="attribute-result"
-            data-attribute-result
-          >
-            ${result === "" ? "—" : escapeHTML(result)}
-          </div>
-
-        </div>
-
-        <div class="attribute-card-middle">
 
           <strong
             class="attribute-value"
             data-attribute-value
           >
-            ${value || "—"}
+            ${escapeHTML(die?.label || "Escolha um dado")}
           </strong>
+        </div>
 
+        <div class="attribute-card-middle">
           <div
             class="attribute-die-slot attribute-die"
             data-attribute-die
           >
-            ${die ? escapeHTML(die.label) : "Nenhum dado"}
+            ${die ? escapeHTML(die.label) : "Nenhum dado atribuído"}
           </div>
-
         </div>
 
         <div class="attribute-card-actions">
-
-          <button
-            type="button"
-            class="attribute-roll-button"
-            data-action="roll-attribute"
-            data-attribute="${escapeHTML(attribute.id)}"
-          >
-            Rolar
-          </button>
-
           <button
             type="button"
             class="attribute-remove-button"
             data-action="remove-die"
             data-attribute="${escapeHTML(attribute.id)}"
+            ${die ? "" : "disabled"}
           >
-            Remover
+            ${die ? "Remover dado" : "Aguardando dado"}
           </button>
-
         </div>
 
       </article>
@@ -2838,12 +2901,6 @@
       return;
     }
 
-    const value =
-      getAttributeValue(
-        currentState,
-        id
-      );
-
     const dieId =
       getAssignedDie(
         currentState,
@@ -2855,13 +2912,6 @@
         dieId
       );
 
-    const result =
-      getDieResult(
-        currentState,
-        id
-      );
-
-
     const name =
       $(".attribute-name", card);
 
@@ -2870,7 +2920,6 @@
 
     const valueElement =
       $(".attribute-value", card);
-
 
     if (name) {
       name.textContent =
@@ -2884,32 +2933,46 @@
 
     if (valueElement) {
       valueElement.textContent =
-        String(value);
+        die?.label ||
+        "Escolha um dado";
     }
-
 
     const dieElement =
       $(".attribute-die", card);
 
     if (dieElement) {
       dieElement.textContent =
-        die?.label || "";
+        die?.label ||
+        "Nenhum dado atribuído";
       dieElement.hidden =
-        !die;
+        false;
     }
 
+    const rollButton =
+      $('[data-action="roll-attribute"]', card);
+
+    if (rollButton) {
+      rollButton.remove();
+    }
+
+    const removeButton =
+      $('[data-action="remove-die"]', card);
+
+    if (removeButton) {
+      removeButton.disabled =
+        !Boolean(die);
+      removeButton.textContent =
+        die
+          ? "Remover dado"
+          : "Aguardando dado";
+    }
 
     const resultElement =
       $(".attribute-result", card);
 
     if (resultElement) {
-      resultElement.textContent =
-        result === ""
-          ? ""
-          : String(result);
-
-      resultElement.hidden =
-        result === "";
+      resultElement.textContent = "";
+      resultElement.hidden = true;
     }
   }
 
@@ -2922,109 +2985,35 @@
     currentState
   ) {
     const graph =
-      $(
-        "[data-attribute-graph]"
-      ) ||
+      $("[data-attribute-graph]") ||
       $("#attributeGraph") ||
       $("[data-attributes-chart]");
-
 
     if (!graph) {
       return;
     }
 
-
-    const values =
-      ATTRIBUTES.map(
-        attribute =>
-          clamp(
-            getAttributeValue(
-              currentState,
-              attribute.id
-            ),
-            0,
-            20
-          )
-      );
-
-
-    const hasValue =
-      values.some(
-        value =>
-          value > 0
-      );
-
-
-    if (!hasValue) {
-      graph.innerHTML = `
-        <div class="attribute-graph-empty">
-          Os atributos aparecerão aqui
-          depois das rolagens.
-        </div>
-      `;
-
-      return;
-    }
-
-
-    /*
-      O gráfico usa CSS/HTML
-      sem interferir no estado.
-    */
-
-    const max =
-      Math.max(
-        1,
-        ...values
-      );
-
-
     graph.innerHTML = `
-      <div class="attribute-graph-bars">
+      <div class="attribute-dice-summary">
         ${ATTRIBUTES
-          .map(
-            (attribute, index) => {
+          .map(attribute => {
+            const die =
+              getDieById(
+                getAssignedDie(
+                  currentState,
+                  attribute.id
+                )
+              );
 
-              const value =
-                values[index];
-
-              const height =
-                Math.round(
-                  (
-                    value /
-                    max
-                  ) * 100
-                );
-
-              return `
-                <div
-                  class="graph-bar"
-                  data-graph-attribute="${escapeHTML(
-                    attribute.id
-                  )}"
-                >
-                  <div class="graph-bar-value">
-                    ${escapeHTML(
-                      value
-                    )}
-                  </div>
-
-                  <div class="graph-bar-track">
-                    <div
-                      class="graph-bar-fill"
-                      style="height:${height}%"
-                    ></div>
-                  </div>
-
-                  <div class="graph-bar-label">
-                    ${escapeHTML(
-                      attribute.short
-                    )}
-                  </div>
-                </div>
-              `;
-            }
-          )
+            return `
+              <div class="attribute-dice-summary-item">
+                <span>${escapeHTML(attribute.short)}</span>
+                <strong>${escapeHTML(
+                  die?.label || "—"
+                )}</strong>
+              </div>
+            `;
+          })
           .join("")}
       </div>
     `;
