@@ -889,23 +889,6 @@
       return false;
     }
 
-
-    const age =
-      text(state.age);
-
-    if (!age) {
-      warn(
-        "Informe a idade do personagem."
-      );
-
-      focus(
-        "#characterAge"
-      );
-
-      return false;
-    }
-
-
     if (!text(state.gender)) {
       warn(
         "Escolha o gênero do personagem."
@@ -1937,6 +1920,39 @@
   }
 
 
+  function removeDie(
+    attributeId
+  ) {
+    const id =
+      normalize(attributeId);
+
+    if (!ATTRIBUTE_IDS.has(id)) {
+      warn(
+        "Atributo inválido."
+      );
+      return false;
+    }
+
+    const dieId =
+      state.assignedDice[id];
+
+    if (!dieId) {
+      return false;
+    }
+
+    state.assignedDice[id] = null;
+    delete state.diceResults[dieId];
+    state.attributes[id] = null;
+    state.completedSteps[4] = false;
+
+    commit(
+      "aerion:dice:update"
+    );
+
+    return true;
+  }
+
+
   function rollAttribute(
     attributeId
   ) {
@@ -2624,7 +2640,9 @@
 
     const powerField =
       target.dataset
-        ?.power;
+        ?.power ||
+      target.dataset
+        ?.powerField;
 
 
     if (powerField) {
@@ -2644,7 +2662,9 @@
 
     const manaField =
       target.dataset
-        ?.mana;
+        ?.mana ||
+      target.dataset
+        ?.manaField;
 
 
     if (manaField) {
@@ -2664,7 +2684,9 @@
 
     const skill =
       target.dataset
-        ?.skill;
+        ?.skill ||
+      target.dataset
+        ?.skillId;
 
 
     if (skill) {
@@ -2956,6 +2978,30 @@
          DADOS
          ----------------------------------------- */
 
+      case "roll-attribute":
+
+        rollAttribute(
+          target.dataset
+            .attribute ||
+          target.dataset
+            .attributeCard
+        );
+
+        return;
+
+
+      case "remove-die":
+
+        removeDie(
+          target.dataset
+            .attribute ||
+          target.dataset
+            .attributeCard
+        );
+
+        return;
+
+
       case "assign-die": {
 
         const selectedAttribute =
@@ -3169,6 +3215,8 @@
     selectAttribute,
 
     assignDie,
+
+    removeDie,
 
     rollAttribute,
 
