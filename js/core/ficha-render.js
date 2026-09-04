@@ -2178,24 +2178,18 @@
       normalize(id) ===
       normalize(selectedId);
 
-
     const tags =
-      Array.isArray(
-        classData.tags
-      )
+      Array.isArray(classData.tags)
         ? classData.tags
         : [];
-
 
     const image =
       classData.image ||
       classData.imageUrl ||
       "";
 
-
     return `
       <div class="class-option-content">
-
         ${
           image
             ? `
@@ -2212,13 +2206,14 @@
             : ""
         }
 
-        <div class="class-option-content">
-
+        <div class="class-option-body">
           <div class="class-icon-large">
-            ${escapeHTML(
-              classData.icon || ""
-            )}
+            ${escapeHTML(classData.icon || "")}
           </div>
+
+          <span class="eyebrow">
+            ${escapeHTML(classData.role || "CLASSE")}
+          </span>
 
           <h3>
             ${escapeHTML(
@@ -2240,14 +2235,7 @@
             tags.length
               ? `
                 <div class="class-option-tags">
-                  ${tags
-                    .map(
-                      tag =>
-                        `<span>${escapeHTML(
-                          tag
-                        )}</span>`
-                    )
-                    .join("")}
+                  ${tags.map(tag => `<span>${escapeHTML(tag)}</span>`).join("")}
                 </div>
               `
               : ""
@@ -2256,14 +2244,10 @@
           <button
             type="button"
             class="primary-button class-select-button ${
-              selected
-                ? "is-selected"
-                : ""
+              selected ? "is-selected" : ""
             }"
             data-action="select-class"
-            data-class-id="${escapeHTML(
-              id
-            )}"
+            data-class-id="${escapeHTML(id)}"
           >
             ${
               selected
@@ -2271,9 +2255,7 @@
                 : "Selecionar classe"
             }
           </button>
-
         </div>
-
       </div>
     `;
   }
@@ -2503,10 +2485,8 @@
         attribute.id
       );
 
-
     return `
-      <button
-        type="button"
+      <article
         class="attribute-card"
         data-action="select-attribute"
         data-attribute="${escapeHTML(
@@ -2515,52 +2495,82 @@
         aria-pressed="false"
       >
 
-        <span class="attribute-name">
-          ${escapeHTML(
-            attribute.name
-          )}
-        </span>
+        <div class="attribute-card-header">
 
-        <span class="attribute-abbr">
-          ${escapeHTML(
-            attribute.short
-          )}
-        </span>
+          <div class="attribute-heading">
 
-        <span class="attribute-value">
-          ${escapeHTML(
-            value
-          )}
-        </span>
+            <span
+              class="attribute-short attribute-abbr"
+              data-attribute-short
+            >
+              ${escapeHTML(
+                attribute.short
+              )}
+            </span>
 
-        ${
-          die
-            ? `
-              <span class="attribute-die">
-                ${escapeHTML(
-                  die.label
-                )}
-              </span>
-            `
-            : ""
-        }
+            <span
+              class="attribute-label attribute-name"
+              data-attribute-name
+            >
+              ${escapeHTML(
+                attribute.name
+              )}
+            </span>
 
-        ${
-          result !== ""
-            ? `
-              <span class="attribute-result">
-                ${escapeHTML(
-                  result
-                )}
-              </span>
-            `
-            : ""
-        }
+          </div>
 
-      </button>
+          <div
+            class="attribute-result"
+            data-attribute-result
+          >
+            ${result === "" ? "—" : escapeHTML(result)}
+          </div>
+
+        </div>
+
+        <div class="attribute-card-middle">
+
+          <strong
+            class="attribute-value"
+            data-attribute-value
+          >
+            ${value || "—"}
+          </strong>
+
+          <div
+            class="attribute-die-slot attribute-die"
+            data-attribute-die
+          >
+            ${die ? escapeHTML(die.label) : "Nenhum dado"}
+          </div>
+
+        </div>
+
+        <div class="attribute-card-actions">
+
+          <button
+            type="button"
+            class="attribute-roll-button"
+            data-action="roll-attribute"
+            data-attribute="${escapeHTML(attribute.id)}"
+          >
+            Rolar
+          </button>
+
+          <button
+            type="button"
+            class="attribute-remove-button"
+            data-action="remove-die"
+            data-attribute="${escapeHTML(attribute.id)}"
+          >
+            Remover
+          </button>
+
+        </div>
+
+      </article>
     `;
   }
-
 
   function updateAttributeCard(
     card,
@@ -2664,7 +2674,8 @@
       $(
         "[data-attribute-graph]"
       ) ||
-      $("#attributeGraph");
+      $("#attributeGraph") ||
+      $("[data-attributes-chart]");
 
 
     if (!graph) {
