@@ -794,6 +794,19 @@
     };
 
 
+    /* Nunca confie em completedSteps antigos do localStorage. */
+    const derived = next.completedSteps.slice();
+    derived[0] = Boolean(text(next.name) && text(next.gender));
+    derived[1] = Boolean(text(next.race)) && (
+      normalize(next.race) !== "animalha" ||
+      Boolean(text(next.animalhaCategory) && text(next.animalha))
+    );
+    derived[2] = number(next.appearance?.height, 0) > 0;
+    derived[3] = Boolean(text(next.class));
+    derived[4] = ATTRIBUTES.every(a => Boolean(next.assignedDice?.[a.id]));
+    derived[5] = Boolean(text(next.primaryPower));
+    next.completedSteps = derived;
+
     next.skills = {
       ...defaults.skills,
       ...(
@@ -1478,71 +1491,21 @@
 
 
   const RACE_APPEARANCE_DEFAULTS = Object.freeze({
-    humano: {
-      skinTone: "medio",
-      hairColor: "castanho",
-      eyeColor: "castanho"
-    },
-
-    elfo: {
-      skinTone: "claro",
-      hairColor: "loiro",
-      eyeColor: "verde"
-    },
-
-    anao: {
-      skinTone: "medio",
-      hairColor: "castanho",
-      eyeColor: "castanho"
-    },
-
-    orc: {
-      skinTone: "verde",
-      hairColor: "preto",
-      eyeColor: "vermelho"
-    },
-
-    troll: {
-      skinTone: "verde",
-      hairColor: "preto",
-      eyeColor: "amarelo"
-    },
-
-    vampiro: {
-      skinTone: "muito_palido",
-      hairColor: "preto",
-      eyeColor: "vermelho"
-    },
-
-    neraliano: {
-      skinTone: "azulado",
-      hairColor: "azul",
-      eyeColor: "azul"
-    },
-
-    povo_aquatico: {
-      skinTone: "azulado",
-      hairColor: "azul",
-      eyeColor: "azul"
-    },
-
-    fada: {
-      skinTone: "claro",
-      hairColor: "branco",
-      eyeColor: "dourado"
-    },
-
-    aureano: {
-      skinTone: "claro",
-      hairColor: "branco",
-      eyeColor: "azul"
-    },
-
-    povo_nuvens: {
-      skinTone: "claro",
-      hairColor: "branco",
-      eyeColor: "azul"
-    }
+    humano: { skinTone: "bege", hairColor: "castanho", eyeColor: "castanho" },
+    elfo: { skinTone: "marfim", hairColor: "loiro", eyeColor: "verde" },
+    anao: { skinTone: "bege_quente", hairColor: "castanho", eyeColor: "castanho" },
+    orc: { skinTone: "verde", hairColor: "preto", eyeColor: "vermelho" },
+    centauro: { skinTone: "bege_quente", hairColor: "castanho", eyeColor: "castanho" },
+    vampiro: { skinTone: "muito_palido", hairColor: "preto", eyeColor: "vermelho" },
+    duende: { skinTone: "bege", hairColor: "castanho", eyeColor: "castanho" },
+    fada: { skinTone: "marfim", hairColor: "branco", eyeColor: "dourado" },
+    povo_aquatico: { skinTone: "azul_oceanico", hairColor: "azul", eyeColor: "azul" },
+    povo_nuvens: { skinTone: "porcelana_fria", hairColor: "branco", eyeColor: "azul" },
+    povo_natureza: { skinTone: "oliva", hairColor: "castanho", eyeColor: "verde" },
+    neraliano: { skinTone: "azul_oceanico", hairColor: "azul", eyeColor: "azul" },
+    aureano: { skinTone: "marfim", hairColor: "branco", eyeColor: "azul" },
+    colosso: { skinTone: "cinza_azulado", hairColor: "preto", eyeColor: "amarelo" },
+    troll: { skinTone: "verde", hairColor: "preto", eyeColor: "amarelo" }
   });
 
   function applyRaceAppearanceDefaults(
@@ -1754,6 +1717,35 @@
   }
 
 
+  const ANIMALHA_APPEARANCE_DEFAULTS = Object.freeze({
+    gato: "cinza",
+    pantera: "preto",
+    tigre: "laranja_natural",
+    leao: "dourado",
+    lobo: "cinza",
+    raposa: "laranja",
+    urso: "castanho",
+    falcao: "castanho",
+    aguia: "castanho",
+    coruja: "cinza",
+    cobra: "verde",
+    crocodilo: "verde_oliva",
+    tubarao: "cinza_azulado",
+    foca: "cinza"
+  });
+
+  function getAnimalhaAppearanceKey(animalId) {
+    return normalize(animalId);
+  }
+
+  function applyAnimalhaAppearanceDefault(animalId) {
+    const key = getAnimalhaAppearanceKey(animalId);
+    const value = ANIMALHA_APPEARANCE_DEFAULTS[key];
+    if (!value) return;
+    state.appearance.skinTone = value;
+    state.completedSteps[2] = false;
+  }
+
   function selectAnimalhaAnimal(
     animal
   ) {
@@ -1767,6 +1759,9 @@
     state.animalha =
       text(animal);
 
+    applyAnimalhaAppearanceDefault(
+      state.animalha
+    );
 
     state.completedSteps[1] =
       true;
@@ -3257,6 +3252,33 @@
       /* -----------------------------------------
          APARÊNCIA
          ----------------------------------------- */
+
+      case "toggle-skin-tone-picker": {
+        const card =
+          target.closest(".appearance-field-card");
+        const options =
+          card?.querySelector(".skin-tone-options");
+        const trigger =
+          card?.querySelector(".skin-tone-trigger");
+
+        if (options && trigger) {
+          const willOpen = options.hidden;
+          options.hidden = !willOpen;
+          trigger.setAttribute(
+            "aria-expanded",
+            willOpen ? "true" : "false"
+          );
+          card.classList.toggle("is-open", willOpen);
+        }
+        return;
+      }
+
+      case "select-skin-tone":
+        setAppearance(
+          "skinTone",
+          target.dataset.skinTone
+        );
+        return;
 
       case "remove-avatar":
         removeAvatar();
