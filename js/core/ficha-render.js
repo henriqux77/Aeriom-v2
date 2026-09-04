@@ -1220,10 +1220,32 @@
       $("#raceCard");
 
     if (raceCard) {
+      const hasRace =
+        Boolean(race);
+
       raceCard.dataset.raceId =
         race?.id ||
         race?.name ||
         "";
+
+      // O CSS oculta o card de raça por padrão.
+      // O renderer precisa abrir o card ativo,
+      // assim como já faz com as classes.
+      raceCard.hidden =
+        !hasRace;
+
+      raceCard.classList.toggle(
+        "is-active",
+        hasRace
+      );
+
+      // Blindagem contra CSS antigo/cacheado:
+      // o card precisa ficar visível sempre que
+      // existir uma raça para exibir.
+      raceCard.style.display =
+        hasRace
+          ? "flex"
+          : "none";
     }
 
 
