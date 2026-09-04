@@ -4359,3 +4359,154 @@ select:focus-visible {
     gap: 6px;
   }
 }
+
+
+/* =========================================================
+   AERION — SELETOR VISUAL DE TOM
+   ========================================================= */
+
+.appearance-native-select {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+.skin-tone-picker {
+  position: relative;
+  display: grid;
+  gap: 8px;
+}
+
+.skin-tone-trigger {
+  display: grid;
+  grid-template-columns: 40px minmax(0,1fr) 24px;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  min-height: 62px;
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: 15px;
+  background: linear-gradient(145deg, rgba(255,255,255,.025), rgba(255,255,255,.008));
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+}
+
+.skin-tone-trigger:hover,
+.skin-tone-picker.is-open .skin-tone-trigger {
+  border-color: var(--border-active);
+  background: rgba(216,180,90,.055);
+}
+
+.skin-tone-swatch {
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  border-radius: 11px;
+  border: 1px solid rgba(255,255,255,.18);
+  background: var(--tone-color, #777);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.18), 0 4px 13px rgba(0,0,0,.17);
+}
+
+.skin-tone-trigger-copy,
+.skin-tone-option-copy {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+}
+
+.skin-tone-trigger-copy strong,
+.skin-tone-option-copy strong {
+  color: var(--text-soft);
+  font-size: 10px;
+}
+
+.skin-tone-trigger-copy span {
+  overflow: hidden;
+  color: var(--gold-light);
+  font-size: 13px;
+  font-weight: 750;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.skin-tone-chevron {
+  color: var(--muted);
+  font-size: 19px;
+  text-align: center;
+  transition: transform .18s ease;
+}
+
+.skin-tone-picker.is-open .skin-tone-chevron {
+  transform: rotate(180deg);
+}
+
+.skin-tone-options {
+  display: grid;
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  gap: 8px;
+  padding: 4px;
+}
+
+.skin-tone-option {
+  display: grid;
+  grid-template-columns: 38px minmax(0,1fr) 18px;
+  align-items: center;
+  gap: 9px;
+  min-height: 70px;
+  padding: 9px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: rgba(255,255,255,.012);
+  color: var(--text-soft);
+  cursor: pointer;
+  text-align: left;
+  transition: transform .16s ease, border-color .16s ease, background .16s ease, box-shadow .16s ease;
+}
+
+.skin-tone-option:hover,
+.skin-tone-option.is-selected {
+  transform: translateY(-1px);
+  border-color: var(--border-active);
+  background: rgba(216,180,90,.065);
+  box-shadow: 0 8px 22px rgba(0,0,0,.12);
+}
+
+.skin-tone-option-copy small {
+  color: var(--muted);
+  font-size: 7px;
+  line-height: 1.4;
+}
+
+.skin-tone-check {
+  color: var(--gold-light);
+  font-size: 13px;
+  opacity: 0;
+}
+
+.skin-tone-option.is-selected .skin-tone-check {
+  opacity: 1;
+}
+
+@media (max-width: 520px) {
+  .skin-tone-options {
+    grid-template-columns: 1fr;
+  }
+
+  .skin-tone-option {
+    min-height: 64px;
+  }
+}
+
+@media (max-width: 699px) {
+  .skin-tone-trigger {
+    min-height: 58px;
+  }
+
+  .skin-tone-option {
+    min-height: 66px;
+  }
+}
