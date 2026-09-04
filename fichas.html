@@ -34,12 +34,12 @@
 
   <link
     rel="stylesheet"
-    href="./css/ficha.css?v=20260904-ficha-race-2"
+    href="./css/ficha.css"
   >
 
   <link
     rel="stylesheet"
-    href="./css/personagem-render.css?v=20260904-ficha-race-2"
+    href="./css/personagem-render.css"
   >
 
 
@@ -64,22 +64,22 @@
 
 
   <script
-    src="./js/core/personagem-assets.js?v=20260904-ficha-race-2"
+    src="./js/core/personagem-assets.js"
     defer
   ></script>
 
   <script
-    src="./js/core/ficha.js?v=20260904-ficha-race-2"
+    src="./js/core/ficha.js"
     defer
   ></script>
 
   <script
-    src="./js/core/personagem-render.js?v=20260904-ficha-race-2"
+    src="./js/core/personagem-render.js"
     defer
   ></script>
 
   <script
-    src="./js/core/ficha-render.js?v=20260904-ficha-race-2"
+    src="./js/core/ficha-render.js"
     defer
   ></script>
 
@@ -869,6 +869,7 @@
           id="raceConfirmation"
           class="selection-confirmation"
           aria-live="polite"
+          hidden
         >
         </div>
 
@@ -1904,6 +1905,7 @@
           id="classConfirmation"
           class="selection-confirmation"
           aria-live="polite"
+          hidden
         >
         </div>
 
@@ -3110,6 +3112,107 @@
 
         <div class="power-panel">
 
+          <div class="power-roll-card">
+
+            <div class="power-roll-heading">
+              <div>
+                <span class="eyebrow">
+                  SORTEIO
+                </span>
+
+                <h3>
+                  Role 1D100
+                </h3>
+
+                <p>
+                  1–25 Fogo · 26–50 Ar · 51–75 Terra · 76–100 Água.
+                </p>
+              </div>
+
+              <strong
+                class="power-roll-result"
+                data-power-roll-result
+              >
+                —
+              </strong>
+            </div>
+
+            <button
+              type="button"
+              class="primary-button power-roll-button"
+              data-action="roll-power"
+            >
+              Sortear poder
+            </button>
+
+          </div>
+
+
+          <div class="power-uncommon-card">
+
+            <span class="eyebrow">
+              PODERES INCOMUNS
+            </span>
+
+            <p class="power-help">
+              Você também pode escolher diretamente um poder incomum.
+            </p>
+
+            <div
+              class="power-choice-grid"
+              data-uncommon-power-list
+            >
+
+              <button
+                type="button"
+                class="power-choice"
+                data-action="select-uncommon-power"
+                data-power="Gelo"
+              >
+                Gelo
+              </button>
+
+              <button
+                type="button"
+                class="power-choice"
+                data-action="select-uncommon-power"
+                data-power="Magnetismo"
+              >
+                Magnetismo
+              </button>
+
+              <button
+                type="button"
+                class="power-choice"
+                data-action="select-uncommon-power"
+                data-power="Vegetação"
+              >
+                Vegetação
+              </button>
+
+              <button
+                type="button"
+                class="power-choice"
+                data-action="select-uncommon-power"
+                data-power="Tecnologia"
+              >
+                Tecnologia
+              </button>
+
+              <button
+                type="button"
+                class="power-choice"
+                data-action="select-uncommon-power"
+                data-power="Gravidade"
+              >
+                Gravidade
+              </button>
+
+            </div>
+
+          </div>
+
+
           <label class="field">
 
             <span class="field-label">
@@ -3121,7 +3224,7 @@
               type="text"
               data-power="primaryPower"
               maxlength="120"
-              placeholder="Ex.: Manipulação de fogo"
+              placeholder="Escolha acima ou escreva outro poder..."
             >
 
           </label>
