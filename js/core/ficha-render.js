@@ -699,7 +699,25 @@
       origin:
         currentState?.origin ||
         currentState?.characterOrigin ||
-        ""
+        "",
+
+      personality:
+        currentState?.personality || "",
+
+      objective:
+        currentState?.objective || "",
+
+      fear:
+        currentState?.fear || "",
+
+      importantBond:
+        currentState?.importantBond || "",
+
+      history:
+        currentState?.history || "",
+
+      region:
+        currentState?.region || ""
     };
 
     /*
@@ -796,6 +814,33 @@
             element.value =
               text(value);
           } else {
+            element.textContent =
+              text(value) || "—";
+          }
+        }
+      );
+
+
+    $$("[data-concept-field], [data-identity-field]")
+      .forEach(
+        element => {
+          const field =
+            element.dataset.conceptField ||
+            element.dataset.identityField;
+
+          const value =
+            values[field] ?? "";
+
+          if (
+            "value" in element &&
+            document.activeElement !==
+              element
+          ) {
+            element.value =
+              text(value);
+          } else if (
+            !("value" in element)
+          ) {
             element.textContent =
               text(value) || "—";
           }
@@ -2866,15 +2911,17 @@
     currentState
   ) {
     $$(
-      "[data-power]"
+      "[data-power], [data-power-field]"
     ).forEach(
       element => {
 
         const key =
-          element.dataset.power;
+          element.dataset.power ||
+          element.dataset.powerField;
 
         const value =
           currentState?.power?.[key] ??
+          currentState?.[key] ??
           currentState?.power ??
           "";
 
@@ -3009,12 +3056,13 @@
       {};
 
     $$(
-      "[data-skill]"
+      "[data-skill], [data-skill-value]"
     ).forEach(
       element => {
 
         const key =
-          element.dataset.skill;
+          element.dataset.skill ||
+          element.dataset.skillId;
 
         const value =
           skills[key] ?? "";
