@@ -3966,3 +3966,246 @@ select:focus-visible {
 }
 
 
+
+/* =========================================================
+   FIXES — RAÇA / ANIMALHA / APARÊNCIA / PODER / REVISÃO
+   ========================================================= */
+
+#raceConfirmation[hidden],
+#classConfirmation[hidden] {
+  display: none !important;
+}
+
+.animalha-selection[hidden] {
+  display: none !important;
+}
+
+.animalha-selection.is-visible {
+  display: block;
+}
+
+.animalha-category-grid {
+  margin-top: 14px;
+}
+
+.animalha-category,
+.animalha-animal {
+  position: relative;
+  display: grid;
+  gap: 6px;
+  min-height: 80px;
+  padding: 13px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: rgba(255,255,255,.014);
+  color: var(--text-soft);
+  cursor: pointer;
+  text-align: left;
+}
+
+.animalha-category:hover,
+.animalha-category.is-selected,
+.animalha-category.active,
+.animalha-animal:hover,
+.animalha-animal.is-selected,
+.animalha-animal.active {
+  border-color: var(--border-active);
+  background: rgba(216,180,90,.065);
+  color: var(--gold-light);
+}
+
+.animalha-category-art {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: .12;
+  background: radial-gradient(circle at 50% 35%, rgba(216,180,90,.4), transparent 58%);
+}
+
+.animalha-category strong,
+.animalha-animal strong {
+  position: relative;
+  z-index: 1;
+  font-size: 11px;
+}
+
+.animalha-category small,
+.animalha-animal small {
+  position: relative;
+  z-index: 1;
+  color: var(--muted);
+  font-size: 8px;
+  line-height: 1.45;
+}
+
+.animalha-variation-area {
+  display: grid;
+  gap: 9px;
+}
+
+.animalha-selected-info {
+  display: grid;
+  gap: 3px;
+}
+
+.appearance-height-range {
+  width: 28px;
+  height: 230px;
+  margin: 0 auto;
+  writing-mode: vertical-lr;
+  direction: rtl;
+  accent-color: var(--gold-light);
+}
+
+.height-range-track {
+  width: 42px;
+  min-height: 240px;
+}
+
+.power-roll-card,
+.power-uncommon-card {
+  padding: 15px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: rgba(255,255,255,.012);
+}
+
+.power-roll-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.power-roll-heading h3 {
+  margin: 6px 0 5px;
+  color: var(--text);
+  font-size: 17px;
+}
+
+.power-roll-heading p,
+.power-help {
+  margin: 0;
+  color: var(--muted);
+  font-size: 9px;
+  line-height: 1.55;
+}
+
+.power-roll-result {
+  min-width: 72px;
+  color: var(--gold-light);
+  font-family: Georgia, serif;
+  font-size: 17px;
+  text-align: right;
+}
+
+.power-roll-button {
+  width: 100%;
+  margin-top: 12px;
+}
+
+.power-uncommon-card {
+  margin-top: 12px;
+}
+
+.power-choice-grid {
+  display: grid;
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  gap: 8px;
+  margin-top: 11px;
+}
+
+.power-choice {
+  min-height: 42px;
+  padding: 9px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: rgba(255,255,255,.014);
+  color: var(--text-soft);
+  cursor: pointer;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.power-choice:hover,
+.power-choice.is-selected {
+  border-color: var(--border-active);
+  background: rgba(216,180,90,.075);
+  color: var(--gold-light);
+}
+
+.review-grid {
+  grid-template-columns: 1fr;
+}
+
+.review-card h3 {
+  margin: 8px 0 10px;
+  color: var(--text);
+  font-family: Georgia, serif;
+  font-size: 20px;
+  font-weight: 500;
+}
+
+.review-card p {
+  margin: 6px 0;
+  color: var(--muted);
+  font-size: 9px;
+  line-height: 1.55;
+}
+
+.review-card p strong {
+  color: var(--text-soft);
+}
+
+.review-attributes {
+  display: grid;
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  gap: 7px;
+  margin-top: 10px;
+}
+
+.review-attributes span {
+  padding: 8px;
+  border: 1px solid var(--white-border);
+  border-radius: 9px;
+  color: var(--muted);
+  font-size: 8px;
+}
+
+.review-attributes b {
+  color: var(--gold-light);
+}
+
+@media (min-width: 700px) {
+  .power-choice-grid {
+    grid-template-columns: repeat(5,minmax(0,1fr));
+  }
+
+  .review-grid {
+    grid-template-columns: repeat(2,minmax(0,1fr));
+  }
+
+  .review-card:first-child,
+  .review-card:nth-child(2) {
+    grid-column: span 2;
+  }
+}
+
+@media (max-width: 699px) {
+  .vertical-height-control {
+    grid-template-columns: 38px minmax(0,1fr) 38px;
+  }
+
+  .appearance-height-range {
+    height: 210px;
+  }
+
+  .height-range-track {
+    min-height: 220px;
+  }
+
+  .power-choice-grid {
+    grid-template-columns: repeat(2,minmax(0,1fr));
+  }
+}
