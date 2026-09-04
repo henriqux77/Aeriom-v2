@@ -67,9 +67,557 @@
 
   <link
     rel="stylesheet"
-    href="./css/campanha.css"
+    href="./css/campanha.css?v=20260904-02"
   >
 
+
+
+<style id="aeriom-mesa-enhancements">
+/* ============================================================
+   AERIOM MESA — melhorias 2026-09-04
+   Dados compactos, mapas interativos, linha do tempo e mapa mental.
+   ============================================================ */
+
+.aeriom-enhance-hidden{display:none!important}
+
+.dice-history-section{
+  margin-top:16px;
+  padding:14px;
+  border:1px solid rgba(255,255,255,.06);
+  border-radius:18px;
+  background:rgba(255,255,255,.012);
+}
+
+.aeriom-dice-history-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:10px;
+}
+
+.aeriom-dice-history-actions{
+  display:flex;
+  align-items:center;
+  gap:7px;
+}
+
+.aeriom-mini-button{
+  min-height:36px;
+  padding:0 11px;
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:10px;
+  background:rgba(255,255,255,.02);
+  color:rgba(255,255,255,.72);
+  cursor:pointer;
+  font-size:9px;
+  font-weight:800;
+}
+
+.aeriom-mini-button--danger{
+  border-color:rgba(170,100,100,.24);
+  color:#d7a2a2;
+}
+
+.aeriom-dice-history{
+  max-height:280px;
+  overflow:auto;
+  overscroll-behavior:contain;
+  scrollbar-width:thin;
+}
+
+.aeriom-dice-history.is-collapsed{display:none}
+
+.aeriom-dice-history-placeholder{
+  padding:18px 12px;
+  color:rgba(255,255,255,.42);
+  font-size:10px;
+  text-align:center;
+}
+
+.aeriom-dice-history-item{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:10px;
+  align-items:center;
+  padding:11px 12px;
+  border-top:1px solid rgba(255,255,255,.05);
+}
+
+.aeriom-dice-history-item:first-child{border-top:0}
+
+.aeriom-dice-history-item__label{
+  display:grid;
+  gap:4px;
+  min-width:0;
+}
+
+.aeriom-dice-history-item__label strong{
+  font-family:Cinzel,serif;
+  color:rgba(255,255,255,.8);
+  font-size:11px;
+}
+
+.aeriom-dice-history-item__label span{
+  color:rgba(255,255,255,.42);
+  font-size:8px;
+  line-height:1.4;
+}
+
+.aeriom-dice-history-item__value{
+  color:#e6c66f;
+  font-family:Cinzel,serif;
+  font-size:21px;
+}
+
+.aeriom-map-shell{
+  display:grid;
+  gap:14px;
+}
+
+.aeriom-map-toolbar{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:8px;
+}
+
+.aeriom-map-list{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:12px;
+}
+
+.aeriom-map-card{
+  display:grid;
+  overflow:hidden;
+  border:1px solid rgba(255,255,255,.07);
+  border-radius:16px;
+  background:rgba(255,255,255,.012);
+  cursor:pointer;
+  transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease;
+}
+
+.aeriom-map-card:hover{
+  transform:translateY(-2px);
+  border-color:rgba(216,182,95,.24);
+  box-shadow:0 15px 35px rgba(0,0,0,.18);
+}
+
+.aeriom-map-card__preview{
+  aspect-ratio:16/9;
+  display:grid;
+  place-items:center;
+  overflow:hidden;
+  background:
+    radial-gradient(circle at center,rgba(216,182,95,.07),transparent 55%),
+    rgba(255,255,255,.02);
+}
+
+.aeriom-map-card__preview img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+
+.aeriom-map-card__body{
+  display:grid;
+  gap:5px;
+  padding:12px;
+}
+
+.aeriom-map-card__body strong{
+  color:rgba(255,255,255,.86);
+  font-family:Cinzel,serif;
+  font-size:14px;
+}
+
+.aeriom-map-card__body span{
+  color:rgba(255,255,255,.42);
+  font-size:8px;
+}
+
+.aeriom-map-viewer{
+  display:grid;
+  gap:10px;
+}
+
+.aeriom-map-viewer__top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+
+.aeriom-map-viewer__tools{
+  display:flex;
+  flex-wrap:wrap;
+  gap:7px;
+}
+
+.aeriom-map-stage{
+  position:relative;
+  min-height:62vh;
+  overflow:hidden;
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:18px;
+  background:#080706;
+  touch-action:none;
+}
+
+.aeriom-map-canvas{
+  position:absolute;
+  inset:0;
+  transform-origin:center;
+  cursor:grab;
+}
+
+.aeriom-map-canvas.is-dragging{cursor:grabbing}
+
+.aeriom-map-image{
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:100%;
+  max-width:none;
+  transform:translate(-50%,-50%);
+  user-select:none;
+  -webkit-user-drag:none;
+  pointer-events:none;
+}
+
+.aeriom-map-pin{
+  position:absolute;
+  width:34px;
+  height:34px;
+  margin:-17px 0 0 -17px;
+  display:grid;
+  place-items:center;
+  border:1px solid rgba(230,198,111,.65);
+  border-radius:50%;
+  background:rgba(12,10,7,.88);
+  color:#e6c66f;
+  box-shadow:0 9px 22px rgba(0,0,0,.3);
+  cursor:pointer;
+  transform:translate(-0%,-0%);
+  font-size:14px;
+}
+
+.aeriom-map-pin span{
+  position:absolute;
+  left:50%;
+  top:calc(100% + 5px);
+  transform:translateX(-50%);
+  white-space:nowrap;
+  max-width:150px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  color:rgba(255,255,255,.78);
+  font-size:8px;
+  text-shadow:0 2px 8px #000;
+}
+
+.aeriom-map-pin[data-hidden="true"]{opacity:.55;border-style:dashed}
+
+.aeriom-map-empty{
+  padding:32px 18px;
+  border:1px dashed rgba(255,255,255,.08);
+  border-radius:16px;
+  color:rgba(255,255,255,.42);
+  text-align:center;
+}
+
+.aeriom-map-modal,
+.aeriom-knowledge-modal{
+  position:fixed;
+  inset:0;
+  z-index:1000;
+  display:none;
+  align-items:flex-end;
+  justify-content:center;
+  padding:12px;
+  background:rgba(0,0,0,.62);
+  backdrop-filter:blur(10px);
+}
+
+.aeriom-map-modal.is-open,
+.aeriom-knowledge-modal.is-open{display:flex}
+
+.aeriom-modal-card{
+  width:min(760px,100%);
+  max-height:min(90vh,760px);
+  overflow:auto;
+  border:1px solid rgba(216,182,95,.18);
+  border-radius:22px 22px 14px 14px;
+  background:
+    radial-gradient(circle at 88% 0%,rgba(216,182,95,.055),transparent 28%),
+    #0d0c0a;
+  box-shadow:0 35px 90px rgba(0,0,0,.45);
+}
+
+.aeriom-modal-card__head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
+  padding:18px;
+  border-bottom:1px solid rgba(255,255,255,.06);
+}
+
+.aeriom-modal-card__head h3{
+  margin:2px 0 0;
+  font-family:Cinzel,serif;
+}
+
+.aeriom-modal-card__body{
+  display:grid;
+  gap:12px;
+  padding:18px;
+}
+
+.aeriom-modal-field{
+  display:grid;
+  gap:6px;
+}
+
+.aeriom-modal-field span{
+  color:rgba(255,255,255,.48);
+  font-size:8px;
+  font-weight:800;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+}
+
+.aeriom-modal-field input,
+.aeriom-modal-field textarea,
+.aeriom-modal-field select{
+  min-height:44px;
+  padding:10px 12px;
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:11px;
+  background:rgba(255,255,255,.02);
+  color:rgba(255,255,255,.86);
+  outline:none;
+}
+
+.aeriom-modal-field textarea{min-height:110px;resize:vertical}
+
+.aeriom-modal-actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  justify-content:flex-end;
+  padding-top:5px;
+}
+
+.aeriom-map-entry{
+  display:grid;
+  gap:12px;
+}
+
+.aeriom-map-entry__image{
+  width:100%;
+  max-height:300px;
+  object-fit:cover;
+  border-radius:14px;
+}
+
+.aeriom-map-entry__section{
+  display:grid;
+  gap:6px;
+  padding:12px;
+  border:1px solid rgba(255,255,255,.06);
+  border-radius:13px;
+  background:rgba(255,255,255,.012);
+}
+
+.aeriom-map-entry__section strong{
+  color:#e6c66f;
+  font-size:9px;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+}
+
+.aeriom-map-entry__section p{
+  margin:0;
+  color:rgba(255,255,255,.63);
+  line-height:1.55;
+  white-space:pre-wrap;
+}
+
+.aeriom-timeline-toolbar{
+  display:flex;
+  flex-wrap:wrap;
+  gap:7px;
+  margin-bottom:12px;
+}
+
+.aeriom-timeline-filter{
+  min-height:38px;
+  padding:0 11px;
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:999px;
+  background:rgba(255,255,255,.02);
+  color:rgba(255,255,255,.58);
+  cursor:pointer;
+  font-size:8px;
+  font-weight:800;
+}
+
+.aeriom-timeline-filter.is-active{
+  border-color:rgba(216,182,95,.34);
+  background:rgba(216,182,95,.07);
+  color:#e6c66f;
+}
+
+.aeriom-timeline-feed{
+  display:grid;
+  gap:8px;
+}
+
+.aeriom-timeline-item{
+  position:relative;
+  display:grid;
+  grid-template-columns:28px minmax(0,1fr);
+  gap:10px;
+  padding:12px;
+  border:1px solid rgba(255,255,255,.06);
+  border-radius:14px;
+  background:rgba(255,255,255,.012);
+}
+
+.aeriom-timeline-item__dot{
+  width:28px;
+  height:28px;
+  display:grid;
+  place-items:center;
+  border:1px solid rgba(216,182,95,.16);
+  border-radius:50%;
+  color:#e6c66f;
+  background:rgba(216,182,95,.05);
+  font-size:11px;
+}
+
+.aeriom-timeline-item__content{
+  display:grid;
+  gap:5px;
+}
+
+.aeriom-timeline-item__content strong{
+  color:rgba(255,255,255,.84);
+  font-family:Cinzel,serif;
+  font-size:12px;
+}
+
+.aeriom-timeline-item__content span{
+  color:rgba(255,255,255,.43);
+  font-size:8px;
+}
+
+.aeriom-timeline-item__content p{
+  margin:0;
+  color:rgba(255,255,255,.58);
+  font-size:10px;
+  line-height:1.5;
+}
+
+.aeriom-knowledge-wrap{
+  display:grid;
+  gap:12px;
+  margin-top:22px;
+}
+
+.aeriom-knowledge-board{
+  position:relative;
+  min-height:480px;
+  overflow:hidden;
+  border:1px solid rgba(255,255,255,.07);
+  border-radius:18px;
+  background:
+    radial-gradient(circle at 10% 20%,rgba(216,182,95,.045),transparent 22%),
+    radial-gradient(circle at 78% 70%,rgba(216,182,95,.03),transparent 25%),
+    linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px),
+    #090806;
+  background-size:auto,auto,24px 24px,24px 24px,auto;
+}
+
+.aeriom-knowledge-svg{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  pointer-events:none;
+}
+
+.aeriom-knowledge-node{
+  position:absolute;
+  width:150px;
+  min-height:80px;
+  padding:11px;
+  border:1px solid rgba(216,182,95,.22);
+  border-radius:13px;
+  background:rgba(17,15,11,.94);
+  box-shadow:0 14px 28px rgba(0,0,0,.25);
+  cursor:grab;
+  touch-action:none;
+}
+
+.aeriom-knowledge-node.is-dragging{cursor:grabbing}
+
+.aeriom-knowledge-node strong{
+  display:block;
+  margin-bottom:5px;
+  color:rgba(255,255,255,.84);
+  font-family:Cinzel,serif;
+  font-size:11px;
+}
+
+.aeriom-knowledge-node span{
+  color:rgba(255,255,255,.4);
+  font-size:7px;
+  text-transform:uppercase;
+  letter-spacing:.12em;
+}
+
+.aeriom-knowledge-node p{
+  margin:7px 0 0;
+  color:rgba(255,255,255,.5);
+  font-size:8px;
+  line-height:1.4;
+}
+
+.aeriom-knowledge-scope{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  align-items:center;
+}
+
+.aeriom-knowledge-scope span{
+  color:rgba(255,255,255,.42);
+  font-size:8px;
+}
+
+@media (max-width: 760px){
+  .aeriom-map-list{grid-template-columns:1fr 1fr}
+  .aeriom-map-stage{min-height:55vh}
+  .aeriom-modal-card{border-radius:20px 20px 12px 12px}
+  .aeriom-knowledge-board{min-height:430px}
+}
+
+@media (max-width: 520px){
+  .dice-history-section{padding:11px}
+  .aeriom-dice-history{max-height:225px}
+  .aeriom-map-list{grid-template-columns:1fr}
+  .aeriom-map-card__body{padding:11px}
+  .aeriom-map-stage{min-height:52vh;border-radius:15px}
+  .aeriom-map-pin{width:30px;height:30px;margin:-15px 0 0 -15px}
+  .aeriom-timeline-item{grid-template-columns:26px minmax(0,1fr);gap:8px}
+  .aeriom-timeline-item__dot{width:26px;height:26px}
+  .aeriom-knowledge-node{width:130px}
+}
+</style>
 
 </head>
 
@@ -2386,13 +2934,1498 @@
 
 <script
   type="module"
-  src="./js/core/testes.js?v=20260904-01"
+  src="./js/core/testes.js?v=20260904-02"
 ></script>
 <script
   type="module"
   src="./js/core/convite.js"
 ></script>
 
+
+
+<script type="module">
+/* ============================================================
+   AERIOM MESA — pacote de melhorias
+   ============================================================ */
+
+(() => {
+  "use strict";
+
+  const APP = {
+    supabase: null,
+    campaignId: null,
+    user: null,
+    membership: null,
+    map: null,
+    maps: [],
+    pins: [],
+    timeline: [],
+    knowledge: [],
+    edges: [],
+    realtime: [],
+    initialized: false,
+    mapZoom: 1,
+    mapPanX: 0,
+    mapPanY: 0,
+    dragging: false,
+    dragStartX: 0,
+    dragStartY: 0,
+    panStartX: 0,
+    panStartY: 0,
+    mapMode: false,
+    selectedMapPin: null
+  };
+
+  const $ = (id) => document.getElementById(id);
+  const esc = (value) => String(value ?? "")
+    .replace(/[&<>"']/g, (c) => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+    }[c]));
+
+  function context() {
+    try {
+      return window.AERIOM_CAMPAIGN?.getContext?.() || null;
+    } catch { return null; }
+  }
+
+  async function syncContext() {
+    const c = context();
+    APP.supabase = c?.supabase || APP.supabase;
+    APP.campaignId = c?.campaignId || c?.campaign?.id || APP.campaignId;
+    APP.user = c?.user || APP.user;
+
+    if (APP.supabase && !APP.user) {
+      try {
+        const { data } = await APP.supabase.auth.getUser();
+        APP.user = data?.user || null;
+      } catch {}
+    }
+
+    if (APP.supabase && APP.campaignId && APP.user) {
+      try {
+        const { data } = await APP.supabase
+          .from("campaign_members")
+          .select("role")
+          .eq("campaign_id", APP.campaignId)
+          .eq("user_id", APP.user.id)
+          .maybeSingle();
+        APP.membership = data || APP.membership;
+      } catch {}
+    }
+    return Boolean(APP.supabase && APP.campaignId);
+  }
+
+  function isMaster() {
+    return String(APP.membership?.role || context()?.membership?.role || "").toLowerCase() === "master";
+  }
+
+  function toast(message, type = "info") {
+    const region = $("aeriom-toast-region");
+    if (!region) return;
+    const el = document.createElement("div");
+    el.className = "aeriom-toast";
+    el.dataset.type = type;
+    el.textContent = message;
+    region.appendChild(el);
+    setTimeout(() => el.remove(), 3200);
+  }
+
+  function campaignProfile() {
+    const c = context();
+    return c?.campaign || {};
+  }
+
+  /* ----------------------------------------------------------
+     DADOS — histórico compacto e limpeza imediata
+     ---------------------------------------------------------- */
+
+  async function clearDiceHistory() {
+    await syncContext();
+    if (!APP.supabase || !APP.campaignId) {
+      toast("Campanha ainda não carregada.", "error");
+      return;
+    }
+    if (!isMaster()) {
+      toast("Somente o Mestre pode limpar o histórico.", "error");
+      return;
+    }
+
+    const button = document.querySelector("[data-aeriom-clear-dice-history]");
+    if (button) button.disabled = true;
+
+    try {
+      const { error } = await APP.supabase
+        .from("dice_rolls")
+        .delete()
+        .eq("campaign_id", APP.campaignId);
+
+      if (error) throw error;
+
+      const history = $("dice-history");
+      if (history) {
+        history.innerHTML = `
+          <div class="aeriom-dice-history-placeholder">
+            O histórico foi limpo.
+          </div>`;
+      }
+
+      toast("Histórico de rolagens limpo.", "success");
+    } catch (error) {
+      console.error("[AERION][DICE] clear history", error);
+      toast(error?.message || "Não foi possível limpar o histórico.", "error");
+    } finally {
+      if (button) button.disabled = false;
+    }
+  }
+
+  function enhanceDiceHistory() {
+    const section = document.querySelector(".dice-history-section");
+    if (!section || section.dataset.enhanced === "true") return;
+    section.dataset.enhanced = "true";
+
+    const heading = section.querySelector(".campaign-section__heading");
+    const history = $("dice-history");
+    if (!heading || !history) return;
+
+    const actions = document.createElement("div");
+    actions.className = "aeriom-dice-history-actions";
+    actions.innerHTML = `
+      <button type="button" class="aeriom-mini-button"
+        data-aeriom-toggle-dice-history>Recolher</button>
+      <button type="button" class="aeriom-mini-button aeriom-mini-button--danger"
+        data-aeriom-clear-dice-history>Limpar</button>`;
+    heading.appendChild(actions);
+
+    history.classList.add("aeriom-dice-history");
+
+    actions.querySelector("[data-aeriom-toggle-dice-history]")
+      .addEventListener("click", (event) => {
+        const collapsed = history.classList.toggle("is-collapsed");
+        event.currentTarget.textContent = collapsed ? "Abrir" : "Recolher";
+      });
+
+    actions.querySelector("[data-aeriom-clear-dice-history]")
+      .addEventListener("click", clearDiceHistory);
+
+    syncContext().then(() => {
+      actions.querySelector("[data-aeriom-clear-dice-history]").hidden = !isMaster();
+    });
+  }
+
+  /* ----------------------------------------------------------
+     MAPAS
+     ---------------------------------------------------------- */
+
+  function mapIcon(type) {
+    return ({
+      location:"📍", npc:"👤", enemy:"⚔", treasure:"💰",
+      event:"❗", clue:"🔎", city:"🏰", camp:"⛺", custom:"✦"
+    })[type] || "📍";
+  }
+
+  async function signedAsset(path) {
+    if (!path || !APP.supabase) return "";
+    try {
+      const { data } = await APP.supabase
+        .storage.from("map-assets")
+        .createSignedUrl(path, 3600);
+      return data?.signedUrl || "";
+    } catch {
+      return "";
+    }
+  }
+
+  async function loadMaps() {
+    await syncContext();
+    if (!APP.supabase || !APP.campaignId) return;
+
+    const { data, error } = await APP.supabase
+      .from("maps")
+      .select("*")
+      .eq("campaign_id", APP.campaignId)
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+
+    APP.maps = [];
+    for (const row of (data || [])) {
+      APP.maps.push({
+        ...row,
+        imageUrl: await signedAsset(row.image_path)
+      });
+    }
+  }
+
+  function buildMapsPanel() {
+    const panel = $("campaign-panel-maps");
+    const createButton = $("campaign-create-map-button");
+    if (!panel) return;
+
+    if (createButton) {
+      createButton.hidden = !isMaster();
+      createButton.textContent = "Novo mapa";
+    }
+
+    let shell = $("aeriom-map-shell");
+    if (!shell) {
+      shell = document.createElement("div");
+      shell.id = "aeriom-map-shell";
+      shell.className = "aeriom-map-shell";
+      const grid = $("campaign-maps-grid");
+      if (grid) grid.replaceWith(shell);
+      else panel.appendChild(shell);
+    }
+
+    renderMapsPanel();
+  }
+
+  function renderMapsPanel() {
+    const shell = $("aeriom-map-shell");
+    if (!shell) return;
+
+    if (APP.map) {
+      renderMapViewer();
+      return;
+    }
+
+    shell.innerHTML = `
+      <div class="aeriom-map-toolbar">
+        ${isMaster() ? `<button class="campaign-button campaign-button--primary" type="button"
+          data-aeriom-new-map>Novo mapa</button>` : ""}
+        <span class="aeriom-knowledge-scope">Mapas compartilhados pela mesa.</span>
+      </div>
+      <div class="aeriom-map-list" id="aeriom-map-list"></div>`;
+
+    const list = $("aeriom-map-list");
+
+    if (!APP.maps.length) {
+      list.innerHTML = `
+        <div class="aeriom-map-empty">
+          ${isMaster()
+            ? "Nenhum mapa ainda. Crie o primeiro para começar a construir o mundo."
+            : "O Mestre ainda não compartilhou nenhum mapa."}
+        </div>`;
+    } else {
+      APP.maps.forEach((map) => {
+        const card = document.createElement("article");
+        card.className = "aeriom-map-card";
+        card.innerHTML = `
+          <div class="aeriom-map-card__preview">
+            ${map.imageUrl
+              ? `<img src="${esc(map.imageUrl)}" alt="">`
+              : `<span>🗺</span>`}
+          </div>
+          <div class="aeriom-map-card__body">
+            <strong>${esc(map.title)}</strong>
+            <span>${isMaster() ? "Mestre e jogadores" : "Mapa compartilhado"}</span>
+          </div>`;
+        card.addEventListener("click", () => openMap(map.id));
+        list.appendChild(card);
+      });
+    }
+
+    shell.querySelector("[data-aeriom-new-map]")
+      ?.addEventListener("click", () => openMapEditor());
+  }
+
+  async function createMapFromFile(title, file) {
+    if (!isMaster()) throw new Error("Somente o Mestre pode criar mapas.");
+    if (!file) throw new Error("Escolha uma imagem.");
+
+    const mapId = crypto.randomUUID();
+    const extension = (file.name.split(".").pop() || "png").toLowerCase();
+    const path = `${APP.campaignId}/maps/${mapId}.${extension}`;
+
+    const { error: uploadError } = await APP.supabase
+      .storage.from("map-assets")
+      .upload(path, file, {
+        upsert: false,
+        contentType: file.type || "image/png"
+      });
+
+    if (uploadError) throw uploadError;
+
+    const { data, error } = await APP.supabase
+      .from("maps")
+      .insert({
+        id: mapId,
+        campaign_id: APP.campaignId,
+        title: title.trim(),
+        image_path: path,
+        created_by: APP.user.id
+      })
+      .select("*")
+      .single();
+
+    if (error) {
+      await APP.supabase.storage.from("map-assets").remove([path]);
+      throw error;
+    }
+
+    APP.maps.unshift({ ...data, imageUrl: await signedAsset(path) });
+    return data;
+  }
+
+  function openMapEditor() {
+    const modal = ensureModal("aeriom-map-modal");
+    modal.innerHTML = `
+      <div class="aeriom-modal-card">
+        <header class="aeriom-modal-card__head">
+          <div>
+            <p class="campaign-panel__eyebrow">Mestre</p>
+            <h3>Novo mapa</h3>
+          </div>
+          <button class="campaign-icon-button" type="button" data-modal-close>×</button>
+        </header>
+        <form class="aeriom-modal-card__body" data-map-create-form>
+          <label class="aeriom-modal-field">
+            <span>Nome do mapa</span>
+            <input name="title" required maxlength="180" placeholder="Ex.: Reino de Aster">
+          </label>
+          <label class="aeriom-modal-field">
+            <span>Imagem do mapa</span>
+            <input name="image" type="file" accept="image/*" required>
+          </label>
+          <div class="aeriom-modal-actions">
+            <button class="campaign-button campaign-button--secondary" type="button" data-modal-close>Cancelar</button>
+            <button class="campaign-button campaign-button--primary" type="submit">Criar mapa</button>
+          </div>
+        </form>
+      </div>`;
+
+    modal.classList.add("is-open");
+    modal.querySelectorAll("[data-modal-close]").forEach((b) =>
+      b.addEventListener("click", () => modal.classList.remove("is-open")));
+
+    modal.querySelector("[data-map-create-form]").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const form = event.currentTarget;
+      const button = form.querySelector("button[type=submit]");
+      button.disabled = true;
+
+      try {
+        await syncContext();
+        const file = form.image.files[0];
+        await createMapFromFile(form.title.value, file);
+        modal.classList.remove("is-open");
+        renderMapsPanel();
+        toast("Mapa criado.", "success");
+      } catch (error) {
+        toast(error?.message || "Não foi possível criar o mapa.", "error");
+      } finally {
+        button.disabled = false;
+      }
+    });
+  }
+
+  async function openMap(mapId) {
+    APP.map = APP.maps.find((m) => String(m.id) === String(mapId)) || null;
+    if (!APP.map) return;
+
+    APP.mapZoom = 1;
+    APP.mapPanX = 0;
+    APP.mapPanY = 0;
+    APP.mapMode = false;
+
+    await loadPins();
+    renderMapViewer();
+  }
+
+  async function loadPins() {
+    if (!APP.map || !APP.supabase) return;
+
+    const { data, error } = await APP.supabase
+      .from("map_pins")
+      .select("*")
+      .eq("map_id", APP.map.id)
+      .order("created_at", { ascending: true });
+
+    if (error) throw error;
+
+    APP.pins = (data || []).filter((pin) =>
+      isMaster() ? true : !pin.is_hidden
+    );
+  }
+
+  function renderMapViewer() {
+    const shell = $("aeriom-map-shell");
+    if (!shell || !APP.map) return;
+
+    shell.innerHTML = `
+      <div class="aeriom-map-viewer__top">
+        <div>
+          <p class="campaign-panel__eyebrow">Mapa</p>
+          <h2>${esc(APP.map.title)}</h2>
+        </div>
+        <button class="aeriom-mini-button" type="button" data-aeriom-close-map>← Voltar</button>
+      </div>
+
+      <div class="aeriom-map-viewer__tools">
+        ${isMaster() ? `
+          <button class="aeriom-mini-button" type="button" data-aeriom-add-pin>＋ Marcador</button>
+          <button class="aeriom-mini-button" type="button" data-aeriom-edit-map>Editar mapa</button>` : ""}
+        <button class="aeriom-mini-button" type="button" data-aeriom-zoom-out>−</button>
+        <button class="aeriom-mini-button" type="button" data-aeriom-zoom-reset>100%</button>
+        <button class="aeriom-mini-button" type="button" data-aeriom-zoom-in>＋</button>
+      </div>
+
+      <div class="aeriom-map-stage" id="aeriom-map-stage">
+        <div class="aeriom-map-canvas" id="aeriom-map-canvas">
+          ${APP.map.imageUrl
+            ? `<img class="aeriom-map-image" src="${esc(APP.map.imageUrl)}" alt="${esc(APP.map.title)}">`
+            : `<div class="aeriom-map-empty">Imagem do mapa indisponível.</div>`}
+          <div id="aeriom-map-pins"></div>
+        </div>
+      </div>`;
+
+    renderMapPins();
+    bindMapStage();
+
+    shell.querySelector("[data-aeriom-close-map]")
+      ?.addEventListener("click", () => {
+        APP.map = null;
+        APP.pins = [];
+        renderMapsPanel();
+      });
+
+    shell.querySelector("[data-aeriom-add-pin]")
+      ?.addEventListener("click", () => {
+        APP.mapMode = true;
+        toast("Toque no ponto do mapa onde o marcador deve ficar.", "info");
+      });
+
+    shell.querySelector("[data-aeriom-edit-map]")
+      ?.addEventListener("click", openMapEditorForCurrent);
+
+    shell.querySelector("[data-aeriom-zoom-out]")
+      ?.addEventListener("click", () => setMapZoom(APP.mapZoom - .15));
+    shell.querySelector("[data-aeriom-zoom-in]")
+      ?.addEventListener("click", () => setMapZoom(APP.mapZoom + .15));
+    shell.querySelector("[data-aeriom-zoom-reset]")
+      ?.addEventListener("click", () => {
+        setMapZoom(1);
+        APP.mapPanX = APP.mapPanY = 0;
+        applyMapTransform();
+      });
+  }
+
+  function renderMapPins() {
+    const root = $("aeriom-map-pins");
+    const stage = $("aeriom-map-stage");
+    if (!root || !stage) return;
+    root.innerHTML = "";
+
+    APP.pins.forEach((pin) => {
+      const el = document.createElement("button");
+      el.type = "button";
+      el.className = "aeriom-map-pin";
+      el.style.left = `${Number(pin.pos_x)}%`;
+      el.style.top = `${Number(pin.pos_y)}%`;
+      el.dataset.hidden = String(Boolean(pin.is_hidden));
+      el.innerHTML = `${mapIcon(pin.marker_type)}<span>${esc(pin.title)}</span>`;
+      el.addEventListener("click", (event) => {
+        event.stopPropagation();
+        openPin(pin);
+      });
+      root.appendChild(el);
+    });
+  }
+
+  function bindMapStage() {
+    const stage = $("aeriom-map-stage");
+    if (!stage) return;
+
+    stage.addEventListener("pointerdown", (event) => {
+      if (APP.mapMode && isMaster()) {
+        event.preventDefault();
+        const rect = stage.getBoundingClientRect();
+        const x = Math.min(100, Math.max(0,
+          ((event.clientX - rect.left) / rect.width) * 100));
+        const y = Math.min(100, Math.max(0,
+          ((event.clientY - rect.top) / rect.height) * 100));
+        APP.mapMode = false;
+        openPinEditor(null, x, y);
+        return;
+      }
+
+      APP.dragging = true;
+      APP.dragStartX = event.clientX;
+      APP.dragStartY = event.clientY;
+      APP.panStartX = APP.mapPanX;
+      APP.panStartY = APP.mapPanY;
+      stage.setPointerCapture(event.pointerId);
+      $("aeriom-map-canvas")?.classList.add("is-dragging");
+    });
+
+    stage.addEventListener("pointermove", (event) => {
+      if (!APP.dragging) return;
+      APP.mapPanX = APP.panStartX + event.clientX - APP.dragStartX;
+      APP.mapPanY = APP.panStartY + event.clientY - APP.dragStartY;
+      applyMapTransform();
+    });
+
+    const end = () => {
+      APP.dragging = false;
+      $("aeriom-map-canvas")?.classList.remove("is-dragging");
+    };
+    stage.addEventListener("pointerup", end);
+    stage.addEventListener("pointercancel", end);
+
+    stage.addEventListener("wheel", (event) => {
+      event.preventDefault();
+      setMapZoom(APP.mapZoom + (event.deltaY > 0 ? -.08 : .08));
+    }, { passive:false });
+
+    applyMapTransform();
+  }
+
+  function setMapZoom(value) {
+    APP.mapZoom = Math.min(3, Math.max(.55, value));
+    applyMapTransform();
+    const reset = document.querySelector("[data-aeriom-zoom-reset]");
+    if (reset) reset.textContent = `${Math.round(APP.mapZoom * 100)}%`;
+  }
+
+  function applyMapTransform() {
+    const canvas = $("aeriom-map-canvas");
+    if (!canvas) return;
+    canvas.style.transform =
+      `translate(${APP.mapPanX}px,${APP.mapPanY}px) scale(${APP.mapZoom})`;
+  }
+
+  async function openPin(pin) {
+    await syncContext();
+    const metadata = pin.metadata || {};
+    const imageUrl = metadata.image_path ? await signedAsset(metadata.image_path) : "";
+
+    const modal = ensureModal("aeriom-map-modal");
+    modal.innerHTML = `
+      <div class="aeriom-modal-card">
+        <header class="aeriom-modal-card__head">
+          <div>
+            <p class="campaign-panel__eyebrow">${esc(pin.marker_type || "local")}</p>
+            <h3>${mapIcon(pin.marker_type)} ${esc(pin.title)}</h3>
+          </div>
+          <button class="campaign-icon-button" type="button" data-modal-close>×</button>
+        </header>
+        <div class="aeriom-modal-card__body">
+          <div class="aeriom-map-entry">
+            ${imageUrl ? `<img class="aeriom-map-entry__image" src="${esc(imageUrl)}" alt="">` : ""}
+            ${metadata.description || pin.description
+              ? `<section class="aeriom-map-entry__section"><strong>Descrição</strong><p>${esc(metadata.description || pin.description)}</p></section>` : ""}
+            ${metadata.npcs
+              ? `<section class="aeriom-map-entry__section"><strong>NPCs importantes</strong><p>${esc(metadata.npcs)}</p></section>` : ""}
+            ${metadata.locations
+              ? `<section class="aeriom-map-entry__section"><strong>Locais</strong><p>${esc(metadata.locations)}</p></section>` : ""}
+            ${metadata.clues
+              ? `<section class="aeriom-map-entry__section"><strong>Pistas</strong><p>${esc(metadata.clues)}</p></section>` : ""}
+            ${metadata.notes
+              ? `<section class="aeriom-map-entry__section"><strong>Notas</strong><p>${esc(metadata.notes)}</p></section>` : ""}
+          </div>
+          ${isMaster() ? `
+            <div class="aeriom-modal-actions">
+              <button class="campaign-button campaign-button--secondary" type="button" data-edit-pin>Editar</button>
+              <button class="campaign-button campaign-button--secondary" type="button" data-toggle-pin>
+                ${pin.is_hidden ? "Revelar aos jogadores" : "Ocultar dos jogadores"}
+              </button>
+              <button class="aeriom-mini-button aeriom-mini-button--danger" type="button" data-delete-pin>Excluir</button>
+            </div>` : ""}
+        </div>
+      </div>`;
+
+    modal.classList.add("is-open");
+    modal.querySelectorAll("[data-modal-close]").forEach((b) =>
+      b.addEventListener("click", () => modal.classList.remove("is-open")));
+
+    modal.querySelector("[data-edit-pin]")
+      ?.addEventListener("click", () => openPinEditor(pin));
+
+    modal.querySelector("[data-toggle-pin]")
+      ?.addEventListener("click", async () => {
+        try {
+          await APP.supabase.from("map_pins")
+            .update({ is_hidden: !pin.is_hidden })
+            .eq("id", pin.id);
+          modal.classList.remove("is-open");
+          await loadPins();
+          renderMapViewer();
+        } catch (error) {
+          toast(error?.message || "Não foi possível alterar a visibilidade.", "error");
+        }
+      });
+
+    modal.querySelector("[data-delete-pin]")
+      ?.addEventListener("click", async () => {
+        if (!confirm("Excluir este marcador?")) return;
+        try {
+          await APP.supabase.from("map_pins").delete().eq("id", pin.id);
+          modal.classList.remove("is-open");
+          await loadPins();
+          renderMapViewer();
+          toast("Marcador excluído.", "success");
+        } catch (error) {
+          toast(error?.message || "Não foi possível excluir.", "error");
+        }
+      });
+  }
+
+  function openPinEditor(pin = null, x = null, y = null) {
+    const modal = ensureModal("aeriom-map-modal");
+    const metadata = pin?.metadata || {};
+
+    modal.innerHTML = `
+      <div class="aeriom-modal-card">
+        <header class="aeriom-modal-card__head">
+          <div>
+            <p class="campaign-panel__eyebrow">Marcador</p>
+            <h3>${pin ? "Editar localização" : "Novo marcador"}</h3>
+          </div>
+          <button class="campaign-icon-button" type="button" data-modal-close>×</button>
+        </header>
+        <form class="aeriom-modal-card__body" data-pin-form>
+          <label class="aeriom-modal-field">
+            <span>Nome</span>
+            <input name="title" required maxlength="180" value="${esc(pin?.title || "")}" placeholder="Ex.: Vila de Arvend">
+          </label>
+          <label class="aeriom-modal-field">
+            <span>Tipo</span>
+            <select name="marker_type">
+              ${[
+                ["location","Local"],["npc","NPC"],["enemy","Inimigo"],["treasure","Tesouro"],
+                ["event","Evento"],["clue","Pista"],["city","Cidade"],["camp","Acampamento"],["custom","Personalizado"]
+              ].map(([v,l]) => `<option value="${v}" ${pin?.marker_type===v ? "selected":""}>${l}</option>`).join("")}
+            </select>
+          </label>
+          <label class="aeriom-modal-field">
+            <span>Descrição</span>
+            <textarea name="description" maxlength="5000" placeholder="O que os jogadores podem saber sobre este lugar?">${esc(metadata.description || pin?.description || "")}</textarea>
+          </label>
+          <label class="aeriom-modal-field">
+            <span>NPCs importantes</span>
+            <textarea name="npcs" maxlength="5000" placeholder="Nome e pequena descrição">${esc(metadata.npcs || "")}</textarea>
+          </label>
+          <label class="aeriom-modal-field">
+            <span>Locais de interesse</span>
+            <textarea name="locations" maxlength="5000" placeholder="Taverna, templo, mercado...">${esc(metadata.locations || "")}</textarea>
+          </label>
+          <label class="aeriom-modal-field">
+            <span>Pistas</span>
+            <textarea name="clues" maxlength="5000" placeholder="Pistas descobertas aqui">${esc(metadata.clues || "")}</textarea>
+          </label>
+          <label class="aeriom-modal-field">
+            <span>Notas do Mestre</span>
+            <textarea name="notes" maxlength="5000" placeholder="Informações secretas ou de preparação">${esc(metadata.notes || "")}</textarea>
+          </label>
+          <label class="aeriom-modal-field">
+            <span>Imagem opcional</span>
+            <input name="image" type="file" accept="image/*">
+          </label>
+          <label class="aeriom-modal-field">
+            <span>Visibilidade</span>
+            <select name="hidden">
+              <option value="false">Visível aos jogadores</option>
+              <option value="true" ${pin?.is_hidden ? "selected":""}>Somente Mestre</option>
+            </select>
+          </label>
+          <div class="aeriom-modal-actions">
+            <button class="campaign-button campaign-button--secondary" type="button" data-modal-close>Cancelar</button>
+            <button class="campaign-button campaign-button--primary" type="submit">${pin ? "Salvar" : "Criar marcador"}</button>
+          </div>
+        </form>
+      </div>`;
+
+    modal.classList.add("is-open");
+    modal.querySelectorAll("[data-modal-close]").forEach((b) =>
+      b.addEventListener("click", () => modal.classList.remove("is-open")));
+
+    modal.querySelector("[data-pin-form]").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const form = event.currentTarget;
+      const submit = form.querySelector("button[type=submit]");
+      submit.disabled = true;
+
+      try {
+        await syncContext();
+        const file = form.image.files[0];
+        let imagePath = metadata.image_path || null;
+
+        if (file) {
+          const pinId = pin?.id || crypto.randomUUID();
+          const extension = (file.name.split(".").pop() || "png").toLowerCase();
+          imagePath = `${APP.campaignId}/pins/${pinId}-${Date.now()}.${extension}`;
+
+          const { error: uploadError } = await APP.supabase
+            .storage.from("map-assets")
+            .upload(imagePath, file, {
+              upsert: false,
+              contentType: file.type || "image/png"
+            });
+          if (uploadError) throw uploadError;
+        }
+
+        const payload = {
+          ...(pin ? {} : { id: crypto.randomUUID() }),
+          campaign_id: APP.campaignId,
+          map_id: APP.map.id,
+          title: form.title.value.trim(),
+          description: form.description.value.trim() || null,
+          marker_type: form.marker_type.value,
+          pos_x: Number(pin?.pos_x ?? x ?? 50),
+          pos_y: Number(pin?.pos_y ?? y ?? 50),
+          is_hidden: form.hidden.value === "true",
+          created_by: APP.user.id,
+          metadata: {
+            ...metadata,
+            description: form.description.value.trim(),
+            npcs: form.npcs.value.trim(),
+            locations: form.locations.value.trim(),
+            clues: form.clues.value.trim(),
+            notes: form.notes.value.trim(),
+            image_path: imagePath
+          }
+        };
+
+        if (pin) {
+          const { error } = await APP.supabase
+            .from("map_pins")
+            .update(payload)
+            .eq("id", pin.id);
+          if (error) throw error;
+        } else {
+          const { error } = await APP.supabase
+            .from("map_pins")
+            .insert(payload);
+          if (error) throw error;
+        }
+
+        modal.classList.remove("is-open");
+        await loadPins();
+        renderMapViewer();
+        toast(pin ? "Marcador atualizado." : "Marcador criado.", "success");
+      } catch (error) {
+        console.error("[AERION][MAP] pin", error);
+        toast(error?.message || "Não foi possível salvar o marcador.", "error");
+      } finally {
+        submit.disabled = false;
+      }
+    });
+  }
+
+  function openMapEditorForCurrent() {
+    if (!APP.map) return;
+    const modal = ensureModal("aeriom-map-modal");
+    modal.innerHTML = `
+      <div class="aeriom-modal-card">
+        <header class="aeriom-modal-card__head">
+          <div><p class="campaign-panel__eyebrow">Mapa</p><h3>Editar mapa</h3></div>
+          <button class="campaign-icon-button" type="button" data-modal-close>×</button>
+        </header>
+        <form class="aeriom-modal-card__body" data-map-edit-form>
+          <label class="aeriom-modal-field">
+            <span>Nome</span>
+            <input name="title" value="${esc(APP.map.title)}" maxlength="180" required>
+          </label>
+          <label class="aeriom-modal-field">
+            <span>Trocar imagem</span>
+            <input name="image" type="file" accept="image/*">
+          </label>
+          <div class="aeriom-modal-actions">
+            <button class="campaign-button campaign-button--secondary" type="button" data-modal-close>Cancelar</button>
+            <button class="campaign-button campaign-button--primary" type="submit">Salvar</button>
+          </div>
+        </form>
+      </div>`;
+    modal.classList.add("is-open");
+    modal.querySelectorAll("[data-modal-close]").forEach((b) =>
+      b.addEventListener("click", () => modal.classList.remove("is-open")));
+
+    modal.querySelector("[data-map-edit-form]").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const form = event.currentTarget;
+      try {
+        let path = APP.map.image_path;
+        const file = form.image.files[0];
+        if (file) {
+          const extension = (file.name.split(".").pop() || "png").toLowerCase();
+          path = `${APP.campaignId}/maps/${APP.map.id}-${Date.now()}.${extension}`;
+          const { error: uploadError } = await APP.supabase.storage.from("map-assets")
+            .upload(path, file, { upsert:false, contentType:file.type || "image/png" });
+          if (uploadError) throw uploadError;
+        }
+
+        const { error } = await APP.supabase.from("maps").update({
+          title: form.title.value.trim(),
+          image_path: path
+        }).eq("id", APP.map.id);
+
+        if (error) throw error;
+
+        APP.map = { ...APP.map, title:form.title.value.trim(), image_path:path, imageUrl:await signedAsset(path) };
+        modal.classList.remove("is-open");
+        renderMapViewer();
+        toast("Mapa atualizado.", "success");
+      } catch (error) {
+        toast(error?.message || "Não foi possível editar o mapa.", "error");
+      }
+    });
+  }
+
+  /* ----------------------------------------------------------
+     TIMELINE + MAPA MENTAL
+     ---------------------------------------------------------- */
+
+  async function loadTimeline() {
+    await syncContext();
+    if (!APP.supabase || !APP.campaignId) return;
+
+    const [{ data: events, error: eventError }, { data: rolls, error: rollError }] = await Promise.all([
+      APP.supabase.from("timeline_events")
+        .select("*")
+        .eq("campaign_id", APP.campaignId)
+        .order("created_at", { ascending: false })
+        .limit(120),
+      APP.supabase.from("dice_rolls")
+        .select("*")
+        .eq("campaign_id", APP.campaignId)
+        .order("created_at", { ascending: false })
+        .limit(120)
+    ]);
+
+    if (eventError) throw eventError;
+    if (rollError) throw rollError;
+
+    const fromRolls = (rolls || []).map((r) => ({
+      id:`roll-${r.id}`,
+      event_type:"roll",
+      title:`Rolagem ${r.die_type ? `D${r.die_type}` : "de dado"}`,
+      description:`Resultado: ${r.total_result}${r.modifier ? ` (${r.modifier > 0 ? "+" : ""}${r.modifier})` : ""}${r.context ? ` · ${r.context}` : ""}`,
+      created_at:r.created_at,
+      character_id:r.character_id,
+      metadata:{source:"dice"}
+    }));
+
+    APP.timeline = [...(events || []), ...fromRolls]
+      .sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
+  }
+
+  function timelineIcon(type) {
+    return ({
+      roll:"🎲", combat:"⚔", secret_revealed:"🔓", pin_revealed:"📍",
+      publication:"📜", action:"✦", system:"◈"
+    })[type] || "◈";
+  }
+
+  function renderTimelinePanel() {
+    const panel = $("campaign-panel-timeline");
+    if (!panel) return;
+
+    panel.innerHTML = `
+      <div class="campaign-panel__heading">
+        <div>
+          <p class="campaign-panel__eyebrow">Memória da mesa</p>
+          <h1 id="campaign-timeline-title">Histórico &amp; Mapa mental</h1>
+          <p>O que aconteceu, o que foi descoberto e como as informações se conectam.</p>
+        </div>
+      </div>
+
+      <div class="aeriom-timeline-toolbar">
+        <button class="aeriom-timeline-filter is-active" data-timeline-filter="all">Tudo</button>
+        <button class="aeriom-timeline-filter" data-timeline-filter="roll">🎲 Rolagens</button>
+        <button class="aeriom-timeline-filter" data-timeline-filter="action">✦ Ações</button>
+        ${isMaster() ? `<button class="aeriom-timeline-filter" data-aeriom-log-event>＋ Registrar evento</button>` : ""}
+      </div>
+
+      <div class="aeriom-timeline-feed" id="aeriom-timeline-feed"></div>
+
+      <section class="aeriom-knowledge-wrap">
+        <div class="campaign-section__heading">
+          <div>
+            <p class="campaign-section__eyebrow">Conhecimento</p>
+            <h2>Mapa mental</h2>
+          </div>
+          <div class="aeriom-map-toolbar">
+            <span class="aeriom-knowledge-scope"><span>Privado: ${isMaster() ? "Mestre" : "jogador"}</span></span>
+            <button class="aeriom-mini-button" type="button" data-aeriom-add-node>＋ Nó</button>
+          </div>
+        </div>
+        <div class="aeriom-knowledge-board" id="aeriom-knowledge-board">
+          <svg class="aeriom-knowledge-svg" id="aeriom-knowledge-svg" aria-hidden="true"></svg>
+          <div id="aeriom-knowledge-nodes"></div>
+        </div>
+      </section>
+    `;
+
+    renderTimelineFeed("all");
+    loadKnowledge().then(renderKnowledgeBoard).catch((error) =>
+      console.error("[AERION][KNOWLEDGE]", error));
+
+    panel.querySelectorAll("[data-timeline-filter]").forEach((button) =>
+      button.addEventListener("click", () => {
+        panel.querySelectorAll("[data-timeline-filter]").forEach((b)=>b.classList.remove("is-active"));
+        button.classList.add("is-active");
+        renderTimelineFeed(button.dataset.timelineFilter);
+      }));
+
+    panel.querySelector("[data-aeriom-log-event]")
+      ?.addEventListener("click", openEventEditor);
+
+    panel.querySelector("[data-aeriom-add-node]")
+      ?.addEventListener("click", () => openKnowledgeEditor());
+  }
+
+  function renderTimelineFeed(filter) {
+    const root = $("aeriom-timeline-feed");
+    if (!root) return;
+
+    const list = filter === "all"
+      ? APP.timeline
+      : APP.timeline.filter((item) => item.event_type === filter);
+
+    if (!list.length) {
+      root.innerHTML = `<div class="aeriom-map-empty">Nenhum registro ainda.</div>`;
+      return;
+    }
+
+    root.innerHTML = list.map((item) => `
+      <article class="aeriom-timeline-item">
+        <div class="aeriom-timeline-item__dot">${timelineIcon(item.event_type)}</div>
+        <div class="aeriom-timeline-item__content">
+          <strong>${esc(item.title)}</strong>
+          <span>${new Date(item.created_at).toLocaleString("pt-BR")}</span>
+          ${item.description ? `<p>${esc(item.description)}</p>` : ""}
+        </div>
+      </article>
+    `).join("");
+  }
+
+  async function loadKnowledge() {
+    await syncContext();
+    if (!APP.supabase || !APP.campaignId) return;
+
+    const [{ data: nodes, error: nodeError }, { data: edges, error: edgeError }] = await Promise.all([
+      APP.supabase.from("knowledge_nodes").select("*")
+        .eq("campaign_id", APP.campaignId)
+        .order("updated_at", { ascending: false }),
+      APP.supabase.from("knowledge_edges").select("*")
+        .eq("campaign_id", APP.campaignId)
+        .order("created_at", { ascending: true })
+    ]);
+
+    if (nodeError) throw nodeError;
+    if (edgeError) throw edgeError;
+    APP.knowledge = nodes || [];
+    APP.edges = edges || [];
+  }
+
+  function renderKnowledgeBoard() {
+    const root = $("aeriom-knowledge-nodes");
+    const svg = $("aeriom-knowledge-svg");
+    if (!root || !svg) return;
+
+    root.innerHTML = "";
+    svg.innerHTML = "";
+
+    const board = $("aeriom-knowledge-board");
+    const width = board.clientWidth || 640;
+    const height = board.clientHeight || 480;
+    svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+
+    const byId = new Map(APP.knowledge.map((node)=>[String(node.id),node]));
+
+    APP.edges.forEach((edge) => {
+      const a = byId.get(String(edge.from_node_id));
+      const b = byId.get(String(edge.to_node_id));
+      if (!a || !b) return;
+
+      const line = document.createElementNS("http://www.w3.org/2000/svg","line");
+      line.setAttribute("x1", String((Number(a.pos_x)/100)*width + 75));
+      line.setAttribute("y1", String((Number(a.pos_y)/100)*height + 40));
+      line.setAttribute("x2", String((Number(b.pos_x)/100)*width + 75));
+      line.setAttribute("y2", String((Number(b.pos_y)/100)*height + 40));
+      line.setAttribute("stroke","rgba(216,182,95,.28)");
+      line.setAttribute("stroke-width","1.5");
+      svg.appendChild(line);
+    });
+
+    APP.knowledge.forEach((node) => {
+      const el = document.createElement("article");
+      el.className = "aeriom-knowledge-node";
+      el.style.left = `${Number(node.pos_x)}%`;
+      el.style.top = `${Number(node.pos_y)}%`;
+      el.innerHTML = `
+        <span>${esc(node.node_type)}${node.visibility === "private" ? " · privado" : ""}</span>
+        <strong>${esc(node.title)}</strong>
+        ${node.content ? `<p>${esc(node.content).slice(0,140)}</p>` : ""}`;
+      bindKnowledgeDrag(el, node);
+      el.addEventListener("dblclick", () => openKnowledgeEditor(node));
+      root.appendChild(el);
+    });
+  }
+
+  function bindKnowledgeDrag(el, node) {
+    let moving = false;
+    let startX = 0, startY = 0, startLeft = 0, startTop = 0;
+    const board = $("aeriom-knowledge-board");
+
+    el.addEventListener("pointerdown", (event) => {
+      moving = true;
+      el.classList.add("is-dragging");
+      el.setPointerCapture(event.pointerId);
+      startX = event.clientX;
+      startY = event.clientY;
+      startLeft = Number(node.pos_x);
+      startTop = Number(node.pos_y);
+    });
+
+    el.addEventListener("pointermove", (event) => {
+      if (!moving) return;
+      const rect = board.getBoundingClientRect();
+      const dx = ((event.clientX - startX) / rect.width) * 100;
+      const dy = ((event.clientY - startY) / rect.height) * 100;
+      node.pos_x = Math.min(90, Math.max(0, startLeft + dx));
+      node.pos_y = Math.min(90, Math.max(0, startTop + dy));
+      el.style.left = `${node.pos_x}%`;
+      el.style.top = `${node.pos_y}%`;
+      renderKnowledgeEdgesOnly();
+    });
+
+    const finish = async () => {
+      if (!moving) return;
+      moving = false;
+      el.classList.remove("is-dragging");
+      try {
+        if (node.created_by === APP.user?.id || isMaster()) {
+          await APP.supabase.from("knowledge_nodes")
+            .update({ pos_x: node.pos_x, pos_y: node.pos_y, updated_at: new Date().toISOString() })
+            .eq("id", node.id);
+        }
+      } catch (error) {
+        console.warn("[AERION][KNOWLEDGE] position", error);
+      }
+    };
+
+    el.addEventListener("pointerup", finish);
+    el.addEventListener("pointercancel", finish);
+  }
+
+  function renderKnowledgeEdgesOnly() {
+    const svg = $("aeriom-knowledge-svg");
+    const board = $("aeriom-knowledge-board");
+    if (!svg || !board) return;
+
+    svg.innerHTML = "";
+    const width = board.clientWidth || 640;
+    const height = board.clientHeight || 480;
+    const byId = new Map(APP.knowledge.map((node)=>[String(node.id),node]));
+
+    APP.edges.forEach((edge) => {
+      const a = byId.get(String(edge.from_node_id));
+      const b = byId.get(String(edge.to_node_id));
+      if (!a || !b) return;
+      const line = document.createElementNS("http://www.w3.org/2000/svg","line");
+      line.setAttribute("x1", String((Number(a.pos_x)/100)*width + 75));
+      line.setAttribute("y1", String((Number(a.pos_y)/100)*height + 40));
+      line.setAttribute("x2", String((Number(b.pos_x)/100)*width + 75));
+      line.setAttribute("y2", String((Number(b.pos_y)/100)*height + 40));
+      line.setAttribute("stroke","rgba(216,182,95,.28)");
+      line.setAttribute("stroke-width","1.5");
+      svg.appendChild(line);
+    });
+  }
+
+  function openKnowledgeEditor(node = null) {
+    const modal = ensureModal("aeriom-knowledge-modal");
+    modal.innerHTML = `
+      <div class="aeriom-modal-card">
+        <header class="aeriom-modal-card__head">
+          <div><p class="campaign-panel__eyebrow">Mapa mental</p><h3>${node ? "Editar nó" : "Novo nó"}</h3></div>
+          <button class="campaign-icon-button" type="button" data-modal-close>×</button>
+        </header>
+        <form class="aeriom-modal-card__body" data-knowledge-form>
+          <label class="aeriom-modal-field">
+            <span>Título</span>
+            <input name="title" required maxlength="180" value="${esc(node?.title || "")}" placeholder="Ex.: Ordem Negra">
+          </label>
+          <label class="aeriom-modal-field">
+            <span>Tipo</span>
+            <select name="node_type">
+              ${["note","npc","location","clue","quest","item","faction","event"].map((v)=>
+                `<option value="${v}" ${node?.node_type===v ? "selected":""}>${v}</option>`).join("")}
+            </select>
+          </label>
+          <label class="aeriom-modal-field">
+            <span>Informação</span>
+            <textarea name="content" maxlength="5000" placeholder="O que esta informação significa?">${esc(node?.content || "")}</textarea>
+          </label>
+          <label class="aeriom-modal-field">
+            <span>Visibilidade</span>
+            <select name="visibility">
+              <option value="public" ${node?.visibility==="public" ? "selected":""}>Público</option>
+              ${isMaster() ? `<option value="master" ${node?.visibility==="master" ? "selected":""}>Somente Mestre</option>` : ""}
+              <option value="private" ${node?.visibility==="private" ? "selected":""}>Privado</option>
+            </select>
+          </label>
+          <div class="aeriom-modal-actions">
+            ${node ? `<button class="aeriom-mini-button aeriom-mini-button--danger" type="button" data-delete-node>Excluir</button>` : ""}
+            <button class="campaign-button campaign-button--secondary" type="button" data-modal-close>Cancelar</button>
+            <button class="campaign-button campaign-button--primary" type="submit">Salvar</button>
+          </div>
+        </form>
+      </div>`;
+    modal.classList.add("is-open");
+
+    modal.querySelectorAll("[data-modal-close]").forEach((b) =>
+      b.addEventListener("click", () => modal.classList.remove("is-open")));
+
+    modal.querySelector("[data-delete-node]")?.addEventListener("click", async () => {
+      try {
+        await APP.supabase.from("knowledge_nodes").delete().eq("id", node.id);
+        modal.classList.remove("is-open");
+        await loadKnowledge();
+        renderKnowledgeBoard();
+        toast("Nó excluído.", "success");
+      } catch (error) {
+        toast(error?.message || "Não foi possível excluir.", "error");
+      }
+    });
+
+    modal.querySelector("[data-knowledge-form]").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const form = event.currentTarget;
+
+      try {
+        const payload = {
+          campaign_id: APP.campaignId,
+          created_by: node?.created_by || APP.user.id,
+          owner_id: form.visibility.value === "private" ? APP.user.id : null,
+          visibility: form.visibility.value,
+          node_type: form.node_type.value,
+          title: form.title.value.trim(),
+          content: form.content.value.trim() || null,
+          pos_x: node?.pos_x ?? 10 + Math.random()*45,
+          pos_y: node?.pos_y ?? 10 + Math.random()*45,
+          linked_pin_id: node?.linked_pin_id || null,
+          metadata: node?.metadata || {}
+        };
+
+        if (node) {
+          const { error } = await APP.supabase.from("knowledge_nodes")
+            .update({ ...payload, updated_at:new Date().toISOString() })
+            .eq("id", node.id);
+          if (error) throw error;
+        } else {
+          const { error } = await APP.supabase.from("knowledge_nodes")
+            .insert(payload);
+          if (error) throw error;
+        }
+
+        modal.classList.remove("is-open");
+        await loadKnowledge();
+        renderKnowledgeBoard();
+        toast(node ? "Nó atualizado." : "Nó criado.", "success");
+      } catch (error) {
+        toast(error?.message || "Não foi possível salvar.", "error");
+      }
+    });
+  }
+
+  async function openEventEditor() {
+    const modal = ensureModal("aeriom-knowledge-modal");
+    modal.innerHTML = `
+      <div class="aeriom-modal-card">
+        <header class="aeriom-modal-card__head">
+          <div><p class="campaign-panel__eyebrow">Linha do tempo</p><h3>Registrar acontecimento</h3></div>
+          <button class="campaign-icon-button" type="button" data-modal-close>×</button>
+        </header>
+        <form class="aeriom-modal-card__body" data-event-form>
+          <label class="aeriom-modal-field"><span>Título</span><input name="title" required maxlength="180"></label>
+          <label class="aeriom-modal-field"><span>Descrição</span><textarea name="description" maxlength="5000"></textarea></label>
+          <label class="aeriom-modal-field">
+            <span>Tipo</span>
+            <select name="event_type">
+              <option value="action">Ação</option>
+              <option value="system">Sistema</option>
+              <option value="publication">Publicação</option>
+              <option value="combat">Combate</option>
+            </select>
+          </label>
+          <div class="aeriom-modal-actions">
+            <button class="campaign-button campaign-button--secondary" type="button" data-modal-close>Cancelar</button>
+            <button class="campaign-button campaign-button--primary" type="submit">Registrar</button>
+          </div>
+        </form>
+      </div>`;
+    modal.classList.add("is-open");
+    modal.querySelectorAll("[data-modal-close]").forEach((b)=>
+      b.addEventListener("click",()=>modal.classList.remove("is-open")));
+
+    modal.querySelector("[data-event-form]").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const form = event.currentTarget;
+      try {
+        const { error } = await APP.supabase.from("timeline_events").insert({
+          campaign_id:APP.campaignId,
+          actor_id:APP.user.id,
+          event_type:form.event_type.value,
+          title:form.title.value.trim(),
+          description:form.description.value.trim() || null,
+          metadata:{source:"manual"}
+        });
+        if (error) throw error;
+        modal.classList.remove("is-open");
+        await loadTimeline();
+        renderTimelineFeed("all");
+        toast("Acontecimento registrado.", "success");
+      } catch(error) {
+        toast(error?.message || "Não foi possível registrar.", "error");
+      }
+    });
+  }
+
+  /* ----------------------------------------------------------
+     CONVITES — override robusto do fluxo quebrado
+     ---------------------------------------------------------- */
+
+  function ensureInviteModalContent() {
+    const modal = $("campaign-invite-modal");
+    if (!modal) return null;
+    return modal;
+  }
+
+  async function generateInviteFixed(event = null) {
+    await syncContext();
+    const modal = ensureInviteModalContent();
+    if (!modal || !APP.supabase || !APP.campaignId) {
+      toast("A campanha ainda não foi carregada.", "error");
+      return;
+    }
+
+    if (!isMaster()) {
+      showInviteError("Somente o Mestre da campanha pode gerar convites.");
+      return;
+    }
+
+    try {
+      const { data: authData, error: authError } = await APP.supabase.auth.getUser();
+      if (authError) throw authError;
+      const userId = authData?.user?.id;
+      if (!userId) throw new Error("Sua sessão expirou. Faça login novamente.");
+
+      const { data: membership, error: memberError } = await APP.supabase
+        .from("campaign_members")
+        .select("role")
+        .eq("campaign_id", APP.campaignId)
+        .eq("user_id", userId)
+        .maybeSingle();
+      if (memberError) throw memberError;
+      if (String(membership?.role || "").toLowerCase() !== "master") {
+        throw new Error("Somente o Mestre da campanha pode gerar convites.");
+      }
+
+      const { data, error } = await APP.supabase.rpc("generate_campaign_invite", {
+        p_campaign_id: APP.campaignId,
+        p_max_uses: 1
+      });
+      if (error) throw error;
+
+      const row = Array.isArray(data) ? data[0] : data;
+      const code = row?.invite_code || row?.code;
+      const expiresAt = row?.expires_at;
+
+      if (!code) throw new Error("O Supabase não retornou o código do convite.");
+
+      const url = new URL("./entrar.html", window.location.href);
+      url.searchParams.set("code", code);
+      const link = url.href;
+
+      const codeEl = $("campaign-invite-code");
+      const linkEl = $("campaign-invite-link");
+      const expirationEl = $("campaign-invite-expiration");
+      const qr = $("campaign-invite-qr");
+
+      if (codeEl) codeEl.textContent = code;
+      if (linkEl) linkEl.value = link;
+      if (expirationEl) expirationEl.textContent =
+        expiresAt ? `Válido até ${new Date(expiresAt).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}` : "Válido por 5 minutos";
+
+      if (qr) {
+        qr.innerHTML = "";
+        if (window.QRCode?.toCanvas) {
+          const canvas = document.createElement("canvas");
+          qr.appendChild(canvas);
+          await window.QRCode.toCanvas(canvas, link, {
+            width: 240,
+            margin: 1,
+            color: { dark:"#e6c66f", light:"#0d0c0a" }
+          });
+        } else {
+          const image = document.createElement("img");
+          image.width = 240;
+          image.height = 240;
+          image.alt = "QR Code do convite";
+          image.src = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(link)}`;
+          qr.appendChild(image);
+        }
+      }
+
+      modal.hidden = false;
+      modal.setAttribute("aria-hidden","false");
+    } catch (error) {
+      console.error("[AERION][INVITE]", error);
+      showInviteError(error?.message || "Não foi possível gerar o convite.");
+    }
+  }
+
+  function showInviteError(message) {
+    const codeEl = $("campaign-invite-code");
+    const linkEl = $("campaign-invite-link");
+    const expirationEl = $("campaign-invite-expiration");
+    const qr = $("campaign-invite-qr");
+
+    if (codeEl) codeEl.textContent = "ERRO";
+    if (linkEl) linkEl.value = "";
+    if (expirationEl) expirationEl.textContent = message;
+    if (qr) qr.innerHTML = "";
+  }
+
+  function installInviteOverride() {
+    window.addEventListener("aeriom:campaigninvite", (event) => {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      const modal = $("campaign-invite-modal");
+      if (modal) {
+        modal.hidden = false;
+        modal.setAttribute("aria-hidden","false");
+      }
+      generateInviteFixed(event).catch((error) => showInviteError(error?.message || "Erro."));
+    }, true);
+
+    $("campaign-invite-sidebar-button")?.addEventListener("click", (event) => {
+      event.preventDefault();
+      generateInviteFixed().catch((error) => showInviteError(error?.message || "Erro."));
+    }, true);
+  }
+
+  /* ----------------------------------------------------------
+     MODAIS / CICLO DE VIDA
+     ---------------------------------------------------------- */
+
+  function ensureModal(id) {
+    let modal = $(id);
+    if (modal) return modal;
+    modal = document.createElement("div");
+    modal.id = id;
+    modal.className = id.includes("knowledge")
+      ? "aeriom-knowledge-modal"
+      : "aeriom-map-modal";
+    document.body.appendChild(modal);
+    return modal;
+  }
+
+  async function refreshAll() {
+    await syncContext();
+    enhanceDiceHistory();
+    buildMapsPanel();
+    await Promise.allSettled([loadMaps(), loadTimeline()]);
+    buildMapsPanel();
+
+    const timelinePanel = $("campaign-panel-timeline");
+    if (timelinePanel) renderTimelinePanel();
+  }
+
+  function hookCampaignTabs() {
+    document.querySelectorAll("[data-campaign-tab]").forEach((button) => {
+      button.addEventListener("click", async () => {
+        const tab = button.dataset.campaignTab;
+        if (tab === "maps") {
+          try {
+            await loadMaps();
+            buildMapsPanel();
+          } catch (error) {
+            toast(error?.message || "Não foi possível carregar os mapas.", "error");
+          }
+        }
+        if (tab === "timeline") {
+          try {
+            await loadTimeline();
+            renderTimelinePanel();
+          } catch (error) {
+            toast(error?.message || "Não foi possível carregar o histórico.", "error");
+          }
+        }
+      });
+    });
+  }
+
+  function setupRealtime() {
+    if (!APP.supabase || !APP.campaignId) return;
+    APP.realtime.forEach((channel) => APP.supabase.removeChannel(channel));
+    APP.realtime = [];
+
+    const timelineChannel = APP.supabase
+      .channel(`aeriom-timeline-${APP.campaignId}`)
+      .on("postgres_changes", {
+        event:"*",
+        schema:"public",
+        table:"timeline_events",
+        filter:`campaign_id=eq.${APP.campaignId}`
+      }, async () => {
+        await loadTimeline();
+        if ($("campaign-panel-timeline")?.classList.contains("is-active")) renderTimelineFeed("all");
+      })
+      .on("postgres_changes", {
+        event:"*",
+        schema:"public",
+        table:"dice_rolls",
+        filter:`campaign_id=eq.${APP.campaignId}`
+      }, async () => {
+        await loadTimeline();
+        if ($("campaign-panel-timeline")?.classList.contains("is-active")) renderTimelineFeed("all");
+      })
+      .subscribe();
+
+    APP.realtime.push(timelineChannel);
+
+    const mapChannel = APP.supabase
+      .channel(`aeriom-maps-${APP.campaignId}`)
+      .on("postgres_changes", {
+        event:"*",
+        schema:"public",
+        table:"maps",
+        filter:`campaign_id=eq.${APP.campaignId}`
+      }, async () => {
+        await loadMaps();
+        if ($("campaign-panel-maps")?.classList.contains("is-active")) buildMapsPanel();
+      })
+      .subscribe();
+
+    APP.realtime.push(mapChannel);
+  }
+
+  async function boot() {
+    if (APP.initialized) return;
+
+    let ready = false;
+    for (let i=0; i<40; i++) {
+      if (await syncContext()) { ready = true; break; }
+      await new Promise((resolve)=>setTimeout(resolve, 350));
+    }
+    if (!ready) return;
+
+    APP.initialized = true;
+    hookCampaignTabs();
+    installInviteOverride();
+    setupRealtime();
+    await refreshAll();
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", boot, {once:true});
+  } else {
+    boot();
+  }
+})();
+</script>
 
 </body>
 
