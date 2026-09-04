@@ -1027,10 +1027,6 @@ async function validateCharacterOwnership(
         characterId
       )
       .eq(
-        "user_id",
-        state.user.id
-      )
-      .eq(
         "campaign_id",
         state.campaignId
       )
@@ -1050,9 +1046,29 @@ async function validateCharacterOwnership(
   ) {
 
     throw new Error(
-      "O personagem selecionado não pertence a você nesta campanha."
+      "O personagem selecionado não pertence a esta campanha."
     );
 
+  }
+
+
+  /*
+   * Jogadores só podem usar seus próprios
+   * personagens. O Mestre pode usar qualquer
+   * personagem presente na campanha.
+   */
+  if (
+    !isMaster() &&
+    String(
+      data.user_id
+    ) !==
+      String(
+        state.user.id
+      )
+  ) {
+    throw new Error(
+      "O personagem selecionado não pertence a você."
+    );
   }
 
 
