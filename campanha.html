@@ -673,6 +673,72 @@
 }
 </style>
 
+
+<style id="aeriom-mobile-actions-fix">
+.campaign-mobile-actions{
+  position:fixed;
+  top:70px;
+  right:12px;
+  z-index:1200;
+  width:min(280px,calc(100vw - 24px));
+  padding:10px;
+  border:1px solid rgba(216,182,95,.18);
+  border-radius:16px;
+  background:rgba(13,12,10,.97);
+  box-shadow:0 25px 60px rgba(0,0,0,.48);
+  backdrop-filter:blur(14px);
+}
+.campaign-mobile-actions::before{
+  content:"";
+  position:absolute;
+  top:-6px;
+  right:20px;
+  width:12px;height:12px;
+  background:#0d0c0a;
+  border-left:1px solid rgba(216,182,95,.18);
+  border-top:1px solid rgba(216,182,95,.18);
+  transform:rotate(45deg);
+}
+.campaign-mobile-action{
+  width:100%;
+  min-height:46px;
+  display:flex!important;
+  align-items:center;
+  gap:10px;
+  padding:0 12px;
+  border:1px solid rgba(255,255,255,.06);
+  border-radius:12px;
+  background:rgba(255,255,255,.015);
+  color:rgba(255,255,255,.78);
+  font-size:10px;
+  font-weight:800;
+}
+.campaign-mobile-action + .campaign-mobile-action{margin-top:7px}
+.campaign-mobile-action:hover{border-color:rgba(216,182,95,.18)}
+</style>
+
+
+<style id="aeriom-invite-status-fix">
+#campaign-invite-code{
+  min-height:1em;
+}
+#campaign-invite-qr:empty::before{
+  content:"Gerando QR Code…";
+  display:grid;
+  place-items:center;
+  min-height:220px;
+  color:rgba(255,255,255,.4);
+  font-size:10px;
+}
+#campaign-invite-qr img{
+  display:block;
+  width:min(240px,100%);
+  height:auto;
+  margin:0 auto;
+  border-radius:12px;
+}
+</style>
+
 </head>
 
 
@@ -3507,7 +3573,8 @@
       <div class="aeriom-map-viewer__tools">
         ${isMaster() ? `
           <button class="aeriom-mini-button" type="button" data-aeriom-add-pin>＋ Marcador</button>
-          <button class="aeriom-mini-button" type="button" data-aeriom-edit-map>Editar mapa</button>` : ""}
+          <button class="aeriom-mini-button" type="button" data-aeriom-edit-map>Editar mapa</button>
+          <button class="aeriom-mini-button aeriom-mini-button--danger" type="button" data-aeriom-delete-map>Excluir mapa</button>` : ""}
         <button class="aeriom-mini-button" type="button" data-aeriom-zoom-out>−</button>
         <button class="aeriom-mini-button" type="button" data-aeriom-zoom-reset>100%</button>
         <button class="aeriom-mini-button" type="button" data-aeriom-zoom-in>＋</button>
@@ -3540,6 +3607,9 @@
 
     shell.querySelector("[data-aeriom-edit-map]")
       ?.addEventListener("click", openMapEditorForCurrent);
+
+    shell.querySelector("[data-aeriom-delete-map]")
+      ?.addEventListener("click", deleteCurrentMap);
 
     shell.querySelector("[data-aeriom-zoom-out]")
       ?.addEventListener("click", () => setMapZoom(APP.mapZoom - .15));
@@ -3853,6 +3923,64 @@
         submit.disabled = false;
       }
     });
+  }
+
+
+  async function deleteCurrentMap() {
+    if (!APP.map || !isMaster()) return;
+
+    const map = APP.map;
+    const confirmed = window.confirm(
+      `Excluir o mapa "${map.title}"?\n\nTodos os marcadores deste mapa também serão excluídos. Essa ação não pode ser desfeita.`
+    );
+    if (!confirmed) return;
+
+    try {
+      await syncContext();
+
+      /* Removemos imagens anexadas aos pins antes do DELETE.
+         A FK map_id já faz CASCADE nos registros dos pins. */
+      const { data: pins, error: pinsError } = await APP.supabase
+        .from("map_pins")
+        .select("metadata")
+        .eq("map_id", map.id);
+
+      if (pinsError) throw pinsError;
+
+      const pinPaths = (pins || [])
+        .map((pin) => pin?.metadata?.image_path)
+        .filter(Boolean);
+
+      if (pinPaths.length) {
+        await APP.supabase.storage
+          .from("map-assets")
+          .remove(pinPaths);
+      }
+
+      const mapPath = map.image_path || null;
+
+      const { error: mapError } = await APP.supabase
+        .from("maps")
+        .delete()
+        .eq("id", map.id);
+
+      if (mapError) throw mapError;
+
+      if (mapPath) {
+        await APP.supabase.storage
+          .from("map-assets")
+          .remove([mapPath]);
+      }
+
+      APP.map = null;
+      APP.pins = [];
+      await loadMaps();
+      renderMapsPanel();
+      toast("Mapa excluído com segurança.", "success");
+    } catch (error) {
+      console.error("[AERION][MAP] delete", error);
+      toast(error?.message || "Não foi possível excluir o mapa.", "error");
+    }
   }
 
   function openMapEditorForCurrent() {
@@ -4326,6 +4454,44 @@
     });
   }
 
+
+  /* ----------------------------------------------------------
+     MENU DE TRÊS PONTOS
+     ---------------------------------------------------------- */
+  function setupMobileActionsMenu() {
+    const button = $("campaign-mobile-actions-button");
+    const menu = $("campaign-mobile-actions");
+    if (!button || !menu || button.dataset.aeriomBound) return;
+
+    button.dataset.aeriomBound = "true";
+
+    const close = () => {
+      menu.hidden = true;
+      button.setAttribute("aria-expanded", "false");
+    };
+
+    button.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      menu.hidden = !menu.hidden;
+      button.setAttribute("aria-expanded", String(!menu.hidden));
+    });
+
+    menu.addEventListener("click", (event) => {
+      const action = event.target.closest("[data-campaign-tab], #campaign-mobile-invite-button, #campaign-mobile-logout-button");
+      if (action) close();
+    });
+
+    document.addEventListener("click", (event) => {
+      if (menu.hidden) return;
+      if (!menu.contains(event.target) && event.target !== button) close();
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") close();
+    });
+  }
+
   /* ----------------------------------------------------------
      CONVITES — override robusto do fluxo quebrado
      ---------------------------------------------------------- */
@@ -4551,6 +4717,7 @@
     APP.initialized = true;
     hookCampaignTabs();
     installDiceHistoryFix();
+    setupMobileActionsMenu();
     installInviteOverride();
     setupRealtime();
     await refreshAll();
