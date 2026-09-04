@@ -256,6 +256,106 @@
 
 
   /* =======================================================
+     PODERES
+     ======================================================= */
+
+  const MAIN_ELEMENTAL_POWERS = Object.freeze([
+    "Fogo",
+    "Ar",
+    "Terra",
+    "Água"
+  ]);
+
+  const UNCOMMON_POWERS = Object.freeze([
+    "Gelo",
+    "Magnetismo",
+    "Vegetação",
+    "Tecnologia",
+    "Gravidade"
+  ]);
+
+  function rollPowerD100() {
+    const roll =
+      Math.floor(
+        Math.random() * 100
+      ) + 1;
+
+    const index =
+      Math.min(
+        3,
+        Math.floor((roll - 1) / 25)
+      );
+
+    const power =
+      MAIN_ELEMENTAL_POWERS[index];
+
+    state.powerRoll = roll;
+    state.powerMode = "d100";
+    state.primaryPower = power;
+    state.completedSteps[5] = true;
+
+    commit(
+      "aerion:power:selected"
+    );
+
+    emit(
+      "aerion:toast",
+      {
+        message:
+          `D100: ${roll} — Poder sorteado: ${power}.`,
+        type: "success"
+      }
+    );
+
+    return {
+      roll,
+      power
+    };
+  }
+
+  function selectUncommonPower(power) {
+    const selected =
+      text(power);
+
+    if (
+      !UNCOMMON_POWERS.includes(
+        selected
+      )
+    ) {
+      warn(
+        "Poder incomum inválido."
+      );
+
+      return false;
+    }
+
+    state.primaryPower =
+      selected;
+
+    state.powerRoll = null;
+    state.powerMode =
+      "uncommon";
+    state.completedSteps[5] =
+      true;
+
+    commit(
+      "aerion:power:selected"
+    );
+
+    emit(
+      "aerion:toast",
+      {
+        message:
+          `${selected} escolhido como poder principal.`,
+        type: "success"
+      }
+    );
+
+    return true;
+  }
+
+
+  /* =======================================================
      PERÍCIAS
      ======================================================= */
 
@@ -923,6 +1023,7 @@
       "animalha"
     ) {
       if (
+        !state.animalhaCategory ||
         !state.animalha
       ) {
         warn(
@@ -1023,6 +1124,26 @@
   }
 
 
+  function validatePower() {
+    if (
+      !text(state.primaryPower)
+    ) {
+      warn(
+        "Escolha ou sorteie um poder antes de continuar."
+      );
+
+      return false;
+    }
+
+    state.completedSteps[5] =
+      true;
+
+    saveState();
+
+    return true;
+  }
+
+
   function validateCurrentStep() {
 
     switch (
@@ -1045,6 +1166,9 @@
 
       case "attributes":
         return validateAttributes();
+
+      case "power":
+        return validatePower();
 
       default:
         state.completedSteps[
@@ -1306,6 +1430,108 @@
   }
 
 
+  const RACE_APPEARANCE_DEFAULTS = Object.freeze({
+    humano: {
+      skinTone: "medio",
+      hairColor: "castanho",
+      eyeColor: "castanho"
+    },
+
+    elfo: {
+      skinTone: "claro",
+      hairColor: "loiro",
+      eyeColor: "verde"
+    },
+
+    anao: {
+      skinTone: "medio",
+      hairColor: "castanho",
+      eyeColor: "castanho"
+    },
+
+    orc: {
+      skinTone: "verde",
+      hairColor: "preto",
+      eyeColor: "vermelho"
+    },
+
+    troll: {
+      skinTone: "verde",
+      hairColor: "preto",
+      eyeColor: "amarelo"
+    },
+
+    vampiro: {
+      skinTone: "muito_palido",
+      hairColor: "preto",
+      eyeColor: "vermelho"
+    },
+
+    neraliano: {
+      skinTone: "azulado",
+      hairColor: "azul",
+      eyeColor: "azul"
+    },
+
+    povo_aquatico: {
+      skinTone: "azulado",
+      hairColor: "azul",
+      eyeColor: "azul"
+    },
+
+    fada: {
+      skinTone: "claro",
+      hairColor: "branco",
+      eyeColor: "dourado"
+    },
+
+    aureano: {
+      skinTone: "claro",
+      hairColor: "branco",
+      eyeColor: "azul"
+    },
+
+    povo_nuvens: {
+      skinTone: "claro",
+      hairColor: "branco",
+      eyeColor: "azul"
+    }
+  });
+
+  function applyRaceAppearanceDefaults(
+    race
+  ) {
+    const key =
+      normalize(
+        race?.id ||
+        race?.key ||
+        race?.name
+      );
+
+    const defaults =
+      RACE_APPEARANCE_DEFAULTS[key];
+
+    if (!defaults) {
+      return;
+    }
+
+    Object.entries(
+      defaults
+    ).forEach(
+      ([field, value]) => {
+        if (
+          !text(
+            state.appearance?.[field]
+          )
+        ) {
+          state.appearance[field] =
+            value;
+        }
+      }
+    );
+  }
+
+
   function selectCurrentRace() {
     const races =
       getRaces();
@@ -1338,12 +1564,26 @@
     }
 
 
+    const previousRace =
+      normalize(
+        state.race
+      );
+
     state.race =
       race.id ||
       race.key ||
       race.slug ||
       race.name ||
       "";
+
+    if (
+      previousRace !==
+      normalize(state.race)
+    ) {
+      applyRaceAppearanceDefaults(
+        race
+      );
+    }
 
 
     /*
@@ -2200,11 +2440,26 @@
       return false;
     }
 
-
-    state[field] =
+    const nextValue =
       text(value);
 
-    commit();
+    state[field] =
+      nextValue;
+
+    if (
+      field ===
+      "primaryPower"
+    ) {
+      state.powerMode =
+        "manual";
+      state.powerRoll = null;
+      state.completedSteps[5] =
+        Boolean(nextValue);
+    }
+
+    commit(
+      "aerion:power:update"
+    );
 
     return true;
   }
@@ -2933,6 +3188,23 @@
 
 
       /* -----------------------------------------
+         PODER
+         ----------------------------------------- */
+
+      case "roll-power":
+        rollPowerD100();
+        return;
+
+
+      case "select-uncommon-power":
+        selectUncommonPower(
+          target.dataset
+            .power
+        );
+        return;
+
+
+      /* -----------------------------------------
          CLASSE
          ----------------------------------------- */
 
@@ -3227,6 +3499,10 @@
     setIdentity,
 
     setPower,
+
+    rollPowerD100,
+
+    selectUncommonPower,
 
     setMana,
 
