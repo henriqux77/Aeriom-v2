@@ -70,7 +70,7 @@ function log(
 ) {
 
   const prefix =
-    "[AERIOM][INVITE]";
+    "[AERION][INVITE]";
 
 
   if (
@@ -193,19 +193,27 @@ function getCampaignContext() {
 }
 
 
-function getCampaignId() {
+function getCampaignId(
+  event = null
+) {
 
-  const context =
-    getCampaignContext();
-
+  /*
+   * O evento disparado pela Mesa contém o campaignId
+   * atual. Ele é a fonte mais confiável no instante
+   * em que o modal é aberto.
+   */
 
   return (
     clean(
-      context?.campaignId
+      event?.detail?.campaignId
     ) ||
 
     clean(
-      context?.campaign?.id
+      getCampaignContext()?.campaignId
+    ) ||
+
+    clean(
+      getCampaignContext()?.campaign?.id
     )
   );
 
@@ -440,6 +448,7 @@ function closeModal() {
     "true"
   );
 
+
 }
 
 
@@ -664,45 +673,13 @@ function normalizeInviteResponse(
    GERAR CONVITE
    ============================================================ */
 
-async function generateInvite() {
+async function generateInvite(
+  event = null
+) {
 
   if (
     state.generating
   ) {
-
-    return null;
-
-  }
-
-
-  if (
-    !isMaster()
-  ) {
-
-    showToast(
-      "Somente o Mestre pode gerar convites.",
-      "error"
-    );
-
-
-    return null;
-
-  }
-
-
-  const campaignId =
-    getCampaignId();
-
-
-  if (
-    !campaignId
-  ) {
-
-    showToast(
-      "A campanha ainda não foi carregada.",
-      "error"
-    );
-
 
     return null;
 
@@ -714,6 +691,28 @@ async function generateInvite() {
 
 
   try {
+
+    /*
+     * O contexto da Mesa pode chegar junto do evento.
+     * Isso evita depender de um membership antigo na memória.
+     */
+
+    const campaignId =
+      getCampaignId(
+        event
+      );
+
+
+    if (
+      !campaignId
+    ) {
+
+      throw new Error(
+        "A campanha ainda não foi carregada."
+      );
+
+    }
+
 
     const supabase =
       await getClient();
@@ -732,11 +731,110 @@ async function generateInvite() {
     }
 
 
+    /*
+     * Confirma no banco o papel do usuário atual.
+     * A autorização definitiva continua sendo do banco/RPC.
+     */
+
+    const {
+      data:
+        authData,
+      error:
+        authError
+    } =
+      await supabase.auth.getUser();
+
+
+    if (
+      authError
+    ) {
+
+      throw authError;
+
+    }
+
+
+    const userId =
+      authData?.user?.id;
+
+
+    if (
+      !userId
+    ) {
+
+      const error =
+        new Error(
+          "not_authenticated"
+        );
+
+      error.code =
+        "42501";
+
+      throw error;
+
+    }
+
+
+    const {
+      data:
+        membership,
+      error:
+        membershipError
+    } =
+      await supabase
+        .from(
+          "campaign_members"
+        )
+        .select(
+          "role"
+        )
+        .eq(
+          "campaign_id",
+          campaignId
+        )
+        .eq(
+          "user_id",
+          userId
+        )
+        .maybeSingle();
+
+
+    if (
+      membershipError
+    ) {
+
+      throw membershipError;
+
+    }
+
+
+    if (
+      String(
+        membership?.role ||
+        ""
+      ).toLowerCase() !==
+      "master"
+    ) {
+
+      const error =
+        new Error(
+          "master_required"
+        );
+
+      error.code =
+        "42501";
+
+      throw error;
+
+    }
+
+
     log(
       "info",
       "Solicitando novo convite.",
       {
-        campaignId
+        campaignId,
+        userId
       }
     );
 
@@ -1683,7 +1781,9 @@ async function shareInvite() {
    ABRIR CONVITE
    ============================================================ */
 
-async function openInvite() {
+async function openInvite(
+  event = null
+) {
 
   if (
     !openModal()
@@ -1697,7 +1797,9 @@ async function openInvite() {
   clearInviteDisplay();
 
 
-  await generateInvite();
+  await generateInvite(
+    event
+  );
 
 }
 
@@ -1805,6 +1907,9 @@ function bindEvents() {
 
   /*
    * Evento disparado pelo campanha.js.
+   *
+   * O objeto Event é repassado para openInvite(),
+   * que por sua vez repassa o campaignId para generateInvite().
    */
 
   window.addEventListener(
@@ -1856,7 +1961,7 @@ function bindEvents() {
 
 function exposeAPI() {
 
-  window.AERIOM_INVITE =
+  window.AERION_INVITE =
     Object.freeze({
 
       open:
