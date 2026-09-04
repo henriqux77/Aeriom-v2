@@ -1,0 +1,317 @@
+
+/* AERIOM — interface de testes */
+.aeriom-tests-panel {
+  margin-top: 28px;
+  padding: 20px;
+  border: 1px solid rgba(216,182,95,.14);
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at 85% 0%, rgba(216,182,95,.055), transparent 28%),
+    rgba(255,255,255,.012);
+}
+
+.aeriom-tests-panel__header,
+.aeriom-tests-requests__header {
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:16px;
+}
+
+.aeriom-tests-panel__eyebrow {
+  margin:0 0 5px;
+  color:rgba(216,182,95,.78);
+  font-size:9px;
+  font-weight:800;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+}
+
+.aeriom-tests-panel h2,
+.aeriom-tests-panel h3 {
+  margin:0;
+}
+
+.aeriom-tests-panel__header p:last-child {
+  max-width:650px;
+  margin:7px 0 0;
+  color:rgba(255,255,255,.55);
+  font-size:11px;
+  line-height:1.55;
+}
+
+.aeriom-tests-role-badge {
+  min-width:76px;
+  padding:7px 10px;
+  border:1px solid rgba(216,182,95,.16);
+  border-radius:999px;
+  text-align:center;
+  color:rgba(255,255,255,.65);
+  font-size:8px;
+  font-weight:800;
+  text-transform:uppercase;
+}
+
+.aeriom-tests-grid {
+  display:grid;
+  grid-template-columns:minmax(0,1.3fr) minmax(240px,.7fr);
+  gap:14px;
+  margin-top:16px;
+}
+
+.aeriom-tests-form,
+.aeriom-tests-result,
+.aeriom-tests-requests {
+  padding:16px;
+  border:1px solid rgba(255,255,255,.07);
+  border-radius:16px;
+  background:rgba(255,255,255,.01);
+}
+
+.aeriom-tests-form {
+  display:grid;
+  gap:12px;
+}
+
+.aeriom-tests-form label,
+.aeriom-tests-field {
+  display:grid;
+  gap:6px;
+}
+
+.aeriom-tests-form label,
+.aeriom-tests-field span {
+  color:rgba(255,255,255,.55);
+  font-size:9px;
+  font-weight:800;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+}
+
+.aeriom-tests-form select,
+.aeriom-tests-form input {
+  min-height:45px;
+  padding:0 12px;
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:11px;
+  background:rgba(255,255,255,.025);
+  color:inherit;
+  outline:none;
+}
+
+.aeriom-tests-form select:focus,
+.aeriom-tests-form input:focus {
+  border-color:rgba(216,182,95,.36);
+  box-shadow:0 0 0 3px rgba(216,182,95,.05);
+}
+
+.aeriom-tests-attributes {
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:7px;
+}
+
+.aeriom-test-attribute {
+  min-height:42px;
+  padding:8px 6px;
+  border:1px solid rgba(255,255,255,.07);
+  border-radius:10px;
+  background:rgba(255,255,255,.015);
+  color:rgba(255,255,255,.62);
+  cursor:pointer;
+  font-size:9px;
+  font-weight:800;
+}
+
+.aeriom-test-attribute.is-active {
+  border-color:rgba(216,182,95,.42);
+  background:rgba(216,182,95,.08);
+  color:#e6c66f;
+}
+
+.aeriom-tests-primary,
+.aeriom-tests-secondary {
+  min-height:48px;
+  border-radius:12px;
+  cursor:pointer;
+  font-weight:900;
+}
+
+.aeriom-tests-primary {
+  border:1px solid rgba(216,182,95,.42);
+  background:linear-gradient(135deg,#ddbe66,#a98235);
+  color:#171209;
+}
+
+.aeriom-tests-secondary {
+  border:1px solid rgba(255,255,255,.1);
+  background:rgba(255,255,255,.02);
+  color:rgba(255,255,255,.72);
+}
+
+.aeriom-tests-result {
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  min-height:100%;
+  text-align:center;
+}
+
+.aeriom-tests-result__eyebrow {
+  margin:0;
+  color:rgba(216,182,95,.72);
+  font-size:9px;
+  font-weight:800;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+}
+
+.aeriom-tests-result__empty {
+  display:grid;
+  gap:5px;
+  margin-top:26px;
+  color:rgba(255,255,255,.55);
+}
+
+.aeriom-tests-result__empty strong {
+  color:rgba(255,255,255,.82);
+  font-family:Cinzel,serif;
+  font-size:18px;
+}
+
+.aeriom-tests-result__value {
+  display:grid;
+  gap:7px;
+  margin-top:22px;
+}
+
+.aeriom-tests-result__value strong {
+  color:#e6c66f;
+  font-family:Cinzel,serif;
+  font-size:62px;
+  line-height:1;
+}
+
+.aeriom-tests-result__value span {
+  color:rgba(255,255,255,.7);
+  font-size:11px;
+}
+
+.aeriom-tests-result__value small {
+  max-width:220px;
+  color:rgba(255,255,255,.45);
+  line-height:1.5;
+}
+
+.aeriom-tests-requests {
+  margin-top:14px;
+}
+
+.aeriom-tests-requests__header {
+  align-items:center;
+  margin-bottom:12px;
+}
+
+.aeriom-tests-requests__header > span {
+  min-width:30px;
+  min-height:30px;
+  display:grid;
+  place-items:center;
+  border-radius:999px;
+  background:rgba(216,182,95,.08);
+  color:#e6c66f;
+  font-size:10px;
+  font-weight:900;
+}
+
+#aeriom-tests-requests-list {
+  display:grid;
+  gap:7px;
+}
+
+.aeriom-test-request,
+.aeriom-tests-empty {
+  display:grid;
+  gap:5px;
+  padding:12px;
+  border:1px solid rgba(255,255,255,.07);
+  border-radius:12px;
+  background:rgba(255,255,255,.01);
+}
+
+.aeriom-test-request[data-status="rolled"] {
+  border-color:rgba(145,191,124,.16);
+}
+
+.aeriom-test-request > strong {
+  color:rgba(255,255,255,.82);
+  font-family:Cinzel,serif;
+  font-size:13px;
+}
+
+.aeriom-test-request > span {
+  color:rgba(255,255,255,.45);
+  font-size:9px;
+  line-height:1.4;
+}
+
+.aeriom-test-request__actions {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  margin-top:4px;
+}
+
+.aeriom-test-request__actions button {
+  min-height:38px;
+  padding:0 12px;
+  border:1px solid rgba(216,182,95,.3);
+  border-radius:9px;
+  background:rgba(216,182,95,.07);
+  color:#e6c66f;
+  cursor:pointer;
+  font-size:9px;
+  font-weight:800;
+}
+
+.aeriom-test-request__actions span,
+.aeriom-test-request__result {
+  color:rgba(145,191,124,.84);
+  font-size:9px;
+  font-weight:800;
+}
+
+.aeriom-tests-error {
+  margin:0;
+  padding:9px 11px;
+  border:1px solid rgba(200,120,120,.2);
+  border-radius:9px;
+  background:rgba(200,120,120,.04);
+  color:#e0a5a5;
+  font-size:10px;
+}
+
+@media (max-width: 700px) {
+  .aeriom-tests-panel {
+    padding:14px;
+    border-radius:16px;
+  }
+
+  .aeriom-tests-grid {
+    grid-template-columns:1fr;
+  }
+
+  .aeriom-tests-attributes {
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+
+  .aeriom-tests-result {
+    min-height:220px;
+  }
+
+  .aeriom-tests-result__value strong {
+    font-size:52px;
+  }
+}
