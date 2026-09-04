@@ -619,6 +619,60 @@
 }
 </style>
 
+
+
+
+
+<style id="aeriom-mobile-dice-fix">
+.dice-history-section{
+  margin-top:14px;
+  padding:12px;
+  border-radius:16px;
+}
+.dice-history-section .campaign-section__heading{
+  align-items:center;
+  gap:8px;
+}
+.dice-history-section .campaign-section__heading h2{
+  margin:0;
+  font-size:clamp(25px,7vw,40px);
+  line-height:.98;
+}
+.dice-history-section .campaign-section__heading > div:first-child{
+  min-width:0;
+}
+.dice-history__clear{
+  min-height:38px!important;
+  padding:0 10px!important;
+  border-radius:10px!important;
+  margin-left:0!important;
+  font-size:8px!important;
+}
+.aeriom-dice-history-actions{
+  display:flex;
+  align-items:center;
+  gap:7px;
+}
+.aeriom-mini-button{
+  min-height:38px;
+  padding:0 10px;
+  border-radius:10px;
+}
+.aeriom-dice-history{
+  max-height:180px!important;
+  overflow:auto;
+  overscroll-behavior:contain;
+}
+.aeriom-dice-history-item{
+  padding:9px 10px!important;
+}
+@media (max-width:520px){
+  .dice-history-section .campaign-section__heading{
+    flex-wrap:wrap;
+  }
+}
+</style>
+
 </head>
 
 
@@ -3039,45 +3093,6 @@
      DADOS — histórico compacto e limpeza imediata
      ---------------------------------------------------------- */
 
-  async function clearDiceHistory() {
-    await syncContext();
-    if (!APP.supabase || !APP.campaignId) {
-      toast("Campanha ainda não carregada.", "error");
-      return;
-    }
-    if (!isMaster()) {
-      toast("Somente o Mestre pode limpar o histórico.", "error");
-      return;
-    }
-
-    const button = document.querySelector("[data-aeriom-clear-dice-history]");
-    if (button) button.disabled = true;
-
-    try {
-      const { error } = await APP.supabase
-        .from("dice_rolls")
-        .delete()
-        .eq("campaign_id", APP.campaignId);
-
-      if (error) throw error;
-
-      const history = $("dice-history");
-      if (history) {
-        history.innerHTML = `
-          <div class="aeriom-dice-history-placeholder">
-            O histórico foi limpo.
-          </div>`;
-      }
-
-      toast("Histórico de rolagens limpo.", "success");
-    } catch (error) {
-      console.error("[AERION][DICE] clear history", error);
-      toast(error?.message || "Não foi possível limpar o histórico.", "error");
-    } finally {
-      if (button) button.disabled = false;
-    }
-  }
-
   function enhanceDiceHistory() {
     const section = document.querySelector(".dice-history-section");
     if (!section || section.dataset.enhanced === "true") return;
@@ -3091,9 +3106,7 @@
     actions.className = "aeriom-dice-history-actions";
     actions.innerHTML = `
       <button type="button" class="aeriom-mini-button"
-        data-aeriom-toggle-dice-history>Recolher</button>
-      <button type="button" class="aeriom-mini-button aeriom-mini-button--danger"
-        data-aeriom-clear-dice-history>Limpar</button>`;
+        data-aeriom-toggle-dice-history>Recolher</button>`;
     heading.appendChild(actions);
 
     history.classList.add("aeriom-dice-history");
@@ -3104,12 +3117,138 @@
         event.currentTarget.textContent = collapsed ? "Abrir" : "Recolher";
       });
 
-    actions.querySelector("[data-aeriom-clear-dice-history]")
-      .addEventListener("click", clearDiceHistory);
+  }
 
-    syncContext().then(() => {
-      actions.querySelector("[data-aeriom-clear-dice-history]").hidden = !isMaster();
-    });
+
+  /* ----------------------------------------------------------
+     LIMPEZA DO HISTÓRICO — usa RPC seguro do Supabase
+     ---------------------------------------------------------- */
+
+  function installDiceHistoryFix() {
+    document.addEventListener("click", async (event) => {
+      const button = event.target.closest("#dice-history-clear");
+      if (!button) return;
+
+      event.preventDefault();
+      event.stopImmediatePropagation();
+
+      await syncContext();
+      if (!APP.supabase || !APP.campaignId) {
+        toast("A campanha ainda não foi carregada.", "error");
+        return;
+      }
+
+      if (!isMaster()) {
+        toast("Somente o Mestre pode limpar o histórico.", "error");
+        return;
+      }
+
+      if (!window.confirm("Limpar todo o histórico de rolagens desta campanha?")) return;
+
+      button.disabled = true;
+      const oldText = button.textContent;
+      button.textContent = "Limpando...";
+
+      try {
+        const { data, error } = await APP.supabase.rpc(
+          "clear_campaign_dice_history",
+          { p_campaign_id: APP.campaignId }
+        );
+        if (error) throw error;
+
+        const history = $("dice-history");
+        if (history) {
+          history.innerHTML = `
+            <div class="aeriom-dice-history-placeholder">
+              Histórico limpo${Number.isFinite(Number(data)) ? ` · ${Number(data)} rolagem(ns) removida(s)` : ""}.
+            </div>`;
+        }
+
+        window.dispatchEvent(new CustomEvent("aeriom:dice:historyclear", {
+          detail: { campaignId: APP.campaignId, count: Number(data) || 0 }
+        }));
+
+        toast("Histórico de rolagens limpo.", "success");
+      } catch (error) {
+        console.error("[AERION][DICE] secure clear", error);
+        toast(error?.message || "Não foi possível limpar o histórico.", "error");
+      } finally {
+        button.disabled = false;
+        button.textContent = oldText || "Limpar histórico";
+      }
+    }, true);
+  }
+
+
+  /* ----------------------------------------------------------
+     CORREÇÃO: limpar histórico com RPC seguro
+     ---------------------------------------------------------- */
+  function installDiceHistoryFix() {
+    document.addEventListener("click", async (event) => {
+      const button = event.target.closest("#dice-history-clear");
+      if (!button) return;
+
+      event.preventDefault();
+      event.stopImmediatePropagation();
+
+      await syncContext();
+
+      if (!APP.supabase || !APP.campaignId) {
+        toast("A campanha ainda não foi carregada.", "error");
+        return;
+      }
+
+      if (!isMaster()) {
+        toast("Somente o Mestre pode limpar o histórico.", "error");
+        return;
+      }
+
+      if (!window.confirm("Limpar todo o histórico de rolagens desta campanha?")) {
+        return;
+      }
+
+      button.disabled = true;
+      const originalText = button.textContent;
+      button.textContent = "Limpando...";
+
+      try {
+        const { data, error } = await APP.supabase.rpc(
+          "clear_campaign_dice_history",
+          { p_campaign_id: APP.campaignId }
+        );
+
+        if (error) throw error;
+
+        const history = $("dice-history");
+        if (history) {
+          history.innerHTML =
+            '<div class="aeriom-dice-history-placeholder">' +
+            'Histórico limpo' +
+            (Number.isFinite(Number(data))
+              ? ` · ${Number(data)} rolagem(ns) removida(s)`
+              : ".") +
+            '</div>';
+        }
+
+        window.dispatchEvent(new CustomEvent("aeriom:dice:historyclear", {
+          detail: {
+            campaignId: APP.campaignId,
+            count: Number(data) || 0
+          }
+        }));
+
+        toast("Histórico de rolagens limpo.", "success");
+      } catch (error) {
+        console.error("[AERION][DICE] secure clear", error);
+        toast(
+          error?.message || "Não foi possível limpar o histórico.",
+          "error"
+        );
+      } finally {
+        button.disabled = false;
+        button.textContent = originalText || "Limpar histórico";
+      }
+    }, true);
   }
 
   /* ----------------------------------------------------------
@@ -3164,6 +3303,16 @@
     if (createButton) {
       createButton.hidden = !isMaster();
       createButton.textContent = "Novo mapa";
+
+      if (!createButton.dataset.aeriomBound) {
+        const replacement = createButton.cloneNode(true);
+        createButton.replaceWith(replacement);
+        replacement.dataset.aeriomBound = "true";
+        replacement.addEventListener("click", (event) => {
+          event.preventDefault();
+          if (isMaster()) openMapEditor();
+        });
+      }
     }
 
     let shell = $("aeriom-map-shell");
@@ -3190,8 +3339,6 @@
 
     shell.innerHTML = `
       <div class="aeriom-map-toolbar">
-        ${isMaster() ? `<button class="campaign-button campaign-button--primary" type="button"
-          data-aeriom-new-map>Novo mapa</button>` : ""}
         <span class="aeriom-knowledge-scope">Mapas compartilhados pela mesa.</span>
       </div>
       <div class="aeriom-map-list" id="aeriom-map-list"></div>`;
@@ -3223,9 +3370,6 @@
         list.appendChild(card);
       });
     }
-
-    shell.querySelector("[data-aeriom-new-map]")
-      ?.addEventListener("click", () => openMapEditor());
   }
 
   async function createMapFromFile(title, file) {
@@ -4194,17 +4338,17 @@
 
   async function generateInviteFixed(event = null) {
     await syncContext();
+
+    const eventCampaignId = event?.detail?.campaignId;
+    if (eventCampaignId) {
+      APP.campaignId = String(eventCampaignId);
+    }
+
     const modal = ensureInviteModalContent();
     if (!modal || !APP.supabase || !APP.campaignId) {
       toast("A campanha ainda não foi carregada.", "error");
       return;
     }
-
-    if (!isMaster()) {
-      showInviteError("Somente o Mestre da campanha pode gerar convites.");
-      return;
-    }
-
     try {
       const { data: authData, error: authError } = await APP.supabase.auth.getUser();
       if (authError) throw authError;
@@ -4250,22 +4394,14 @@
 
       if (qr) {
         qr.innerHTML = "";
-        if (window.QRCode?.toCanvas) {
-          const canvas = document.createElement("canvas");
-          qr.appendChild(canvas);
-          await window.QRCode.toCanvas(canvas, link, {
-            width: 240,
-            margin: 1,
-            color: { dark:"#e6c66f", light:"#0d0c0a" }
-          });
-        } else {
-          const image = document.createElement("img");
-          image.width = 240;
-          image.height = 240;
-          image.alt = "QR Code do convite";
-          image.src = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(link)}`;
-          qr.appendChild(image);
-        }
+        const image = document.createElement("img");
+        image.width = 240;
+        image.height = 240;
+        image.alt = "QR Code do convite";
+        image.loading = "eager";
+        image.decoding = "async";
+        image.src = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(link)}`;
+        qr.appendChild(image);
       }
 
       modal.hidden = false;
@@ -4414,6 +4550,7 @@
 
     APP.initialized = true;
     hookCampaignTabs();
+    installDiceHistoryFix();
     installInviteOverride();
     setupRealtime();
     await refreshAll();
