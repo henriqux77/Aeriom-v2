@@ -587,16 +587,33 @@
         currentState
       );
 
+    const completed =
+      Array.isArray(
+        currentState?.completedSteps
+      )
+        ? currentState.completedSteps.filter(
+            Boolean
+          ).length
+        : 0;
+
     const percent =
-      Math.round(
-        (
-          current /
-          Math.max(
-            1,
-            TOTAL_STEPS - 1
-          )
-        ) * 100
-      );
+      current >= TOTAL_STEPS - 1
+        ? 100
+        : Math.round(
+            (
+              Math.max(
+                current,
+                Math.min(
+                  completed,
+                  TOTAL_STEPS - 1
+                )
+              ) /
+              Math.max(
+                1,
+                TOTAL_STEPS - 1
+              )
+            ) * 100
+          );
 
     const percentText =
       `${percent}%`;
@@ -1139,37 +1156,25 @@
     $$("[data-race-profile]")
       .forEach(
         element => {
-          const type =
-            element.dataset.raceProfile;
-
-          let value = "";
-
-          if (
-            type === "name"
-          ) {
-            value = name;
-          } else if (
-            type === "description"
-          ) {
-            value = description;
-          } else if (
-            type === "height-min"
-          ) {
-            value =
-              heightMin != null
-                ? `${heightMin} cm`
-                : "—";
-          } else if (
-            type === "height-max"
-          ) {
-            value =
-              heightMax != null
-                ? `${heightMax} cm`
-                : "—";
-          }
-
           element.textContent =
-            value || "—";
+            text(
+              race?.profile ||
+              race?.specialty ||
+              "—"
+            );
+        }
+      );
+
+    $$("[data-race-feature]")
+      .forEach(
+        element => {
+          element.textContent =
+            text(
+              race?.feature ||
+              race?.features?.[0] ||
+              race?.traits?.[0] ||
+              "—"
+            );
         }
       );
 
@@ -1238,14 +1243,6 @@
         "is-active",
         hasRace
       );
-
-      // Blindagem contra CSS antigo/cacheado:
-      // o card precisa ficar visível sempre que
-      // existir uma raça para exibir.
-      raceCard.style.display =
-        hasRace
-          ? "flex"
-          : "none";
     }
 
 
@@ -1460,19 +1457,43 @@
       return;
     }
 
+    const section =
+      $(
+        "[data-animalha-section]"
+      );
+
+    const isAnimalha =
+      normalize(
+        currentState?.race
+      ) === "animalha";
+
+    if (section) {
+      section.hidden =
+        !isAnimalha;
+
+      section.classList.toggle(
+        "is-visible",
+        isAnimalha
+      );
+    }
 
     const selectedCategory =
       normalize(
+        currentState?.animalhaCategory ||
         currentState?.animalha?.category ||
-        currentState?.animalhaCategory
+        ""
       );
 
     const selectedAnimal =
       normalize(
-        currentState?.animalha?.animal ||
-        currentState?.animalha?.variation ||
-        currentState?.animalhaAnimal ||
-        currentState?.animalhaVariation
+        typeof currentState?.animalha ===
+          "string"
+          ? currentState.animalha
+          : currentState?.animalha?.animal ||
+            currentState?.animalha?.variation ||
+            currentState?.animalhaAnimal ||
+            currentState?.animalhaVariation ||
+            ""
       );
 
 
@@ -1837,6 +1858,157 @@
     );
 
 
+    const APPEARANCE_PRESETS = {
+      humano: {
+        skinTone: [
+          ["claro", "Claro"],
+          ["medio", "Médio"],
+          ["escuro", "Escuro"]
+        ]
+      },
+
+      elfo: {
+        skinTone: [
+          ["claro", "Claro"],
+          ["medio", "Médio"],
+          ["oliva", "Oliva"]
+        ]
+      },
+
+      anao: {
+        skinTone: [
+          ["claro", "Claro"],
+          ["medio", "Médio"],
+          ["escuro", "Escuro"],
+          ["avermelhado", "Avermelhado"]
+        ]
+      },
+
+      orc: {
+        skinTone: [
+          ["verde_claro", "Verde claro"],
+          ["verde", "Verde"],
+          ["verde_escuro", "Verde escuro"],
+          ["oliva", "Oliva"]
+        ]
+      },
+
+      troll: {
+        skinTone: [
+          ["verde_claro", "Verde claro"],
+          ["verde", "Verde"],
+          ["verde_escuro", "Verde escuro"]
+        ],
+        eyeColor: [
+          ["amarelo", "Amarelo"],
+          ["vermelho", "Vermelho"],
+          ["castanho", "Castanho"],
+          ["preto", "Preto"]
+        ]
+      },
+
+      vampiro: {
+        skinTone: [
+          ["palido", "Pálido"],
+          ["muito_palido", "Muito pálido"],
+          ["acinzentado", "Acinzentado"]
+        ],
+        eyeColor: [
+          ["vermelho", "Vermelho"],
+          ["violeta", "Violeta"],
+          ["dourado", "Dourado"],
+          ["preto", "Preto"]
+        ]
+      },
+
+      neraliano: {
+        skinTone: [
+          ["azulado", "Azulado"],
+          ["esverdeado", "Esverdeado"],
+          ["medio", "Médio"]
+        ]
+      },
+
+      povo_aquatico: {
+        skinTone: [
+          ["azulado", "Azulado"],
+          ["esverdeado", "Esverdeado"],
+          ["medio", "Médio"]
+        ]
+      },
+
+      fada: {
+        skinTone: [
+          ["claro", "Claro"],
+          ["medio", "Médio"],
+          ["dourado", "Dourado"]
+        ]
+      }
+    };
+
+    const raceKey =
+      normalize(
+        race?.id ||
+        race?.key ||
+        currentState?.race ||
+        ""
+      );
+
+    const preset =
+      APPEARANCE_PRESETS[
+        raceKey
+      ] || {};
+
+    $$(
+      "[data-appearance-field]"
+    ).forEach(
+      select => {
+
+        const field =
+          select.dataset.appearanceField;
+
+        const options =
+          preset[field];
+
+        if (
+          !Array.isArray(options) ||
+          !options.length
+        ) {
+          return;
+        }
+
+        const currentValue =
+          text(
+            appearanceFields[field]
+          );
+
+        select.innerHTML =
+          options
+            .map(
+              ([value, label]) =>
+                `<option value="${escapeHTML(
+                  value
+                )}">${escapeHTML(
+                  label
+                )}</option>`
+            )
+            .join("") +
+          `<option value="personalizado">Personalizado</option>`;
+
+        const compatible =
+          options.some(
+            ([value]) =>
+              normalize(value) ===
+              normalize(currentValue)
+          );
+
+        select.value =
+          compatible
+            ? currentValue
+            : options[0][0];
+      }
+    );
+
     $$(
       "[data-appearance-custom]"
     ).forEach(
@@ -1860,6 +2032,33 @@
       }
     );
 
+    const powerRoll =
+      $(
+        "[data-power-roll-result]"
+      );
+
+    if (powerRoll) {
+      powerRoll.textContent =
+        currentState?.powerRoll != null
+          ? `D100: ${currentState.powerRoll}`
+          : "—";
+    }
+
+    $$(
+      ".power-choice"
+    ).forEach(
+      button => {
+        button.classList.toggle(
+          "is-selected",
+          normalize(
+            button.dataset.power
+          ) ===
+            normalize(
+              currentState?.primaryPower
+            )
+        );
+      }
+    );
 
     /*
       Emitimos para o personagem-render
@@ -3301,24 +3500,36 @@
     currentState
   ) {
 
+    const reviewGrid =
+      $(".review-grid");
+
+    if (!reviewGrid) {
+      return;
+    }
+
     const race =
       getRaceById(
         currentState?.race
       );
 
-    const animal =
-      currentState?.animalha?.animal ||
-      currentState?.animalha?.variation ||
-      currentState?.animalhaAnimal ||
+    const animalCategory =
+      currentState?.animalhaCategory ||
       "";
 
+    const animal =
+      typeof currentState?.animalha ===
+        "string"
+        ? currentState.animalha
+        : currentState?.animalha?.animal ||
+          currentState?.animalha?.variation ||
+          currentState?.animalhaAnimal ||
+          "";
 
     const classId =
-      currentState?.classId ||
       currentState?.class ||
+      currentState?.classId ||
       currentState?.characterClass ||
       "";
-
 
     const classData =
       getClasses().find(
@@ -3331,64 +3542,193 @@
           normalize(classId)
       );
 
+    const appearance =
+      currentState?.appearance ||
+      {};
 
-    const values = {
-      name:
-        currentState?.name ||
-        "",
+    const attributes =
+      ATTRIBUTES.map(
+        attribute => {
+          const dieId =
+            currentState?.assignedDice?.[
+              attribute.id
+            ] || "";
 
-      age:
-        currentState?.age ||
-        "",
+          const die =
+            getDieById(dieId);
 
-      gender:
-        currentState?.gender ||
-        "",
+          const result =
+            currentState?.diceResults?.[
+              dieId
+            ];
 
-      race:
-        race?.name ||
-        currentState?.race ||
-        "",
+          return {
+            ...attribute,
+            die:
+              die?.label ||
+              "—",
+            result:
+              result == null
+                ? "—"
+                : String(result)
+          };
+        }
+      );
 
-      animalha:
-        animal ||
-        "",
-
-      class:
-        classData?.name ||
-        classId ||
-        "",
-
-      height:
-        currentState?.appearance?.height ??
-        currentState?.height ??
-        "",
-
-      origin:
-        currentState?.origin ||
-        "",
-
-      description:
-        currentState?.description ||
-        ""
+    const SKILL_LABELS = {
+      acrobacia: "Acrobacia",
+      atletismo: "Atletismo",
+      furtividade: "Furtividade",
+      percepcao: "Percepção",
+      investigacao: "Investigação",
+      conhecimento: "Conhecimento",
+      medicina: "Medicina",
+      sobrevivencia: "Sobrevivência",
+      persuasao: "Persuasão",
+      intuicao: "Intuição",
+      enganacao: "Enganação",
+      tatica: "Tática",
+      oficio: "Ofício / Crafting",
+      controle_mana: "Controle de Mana"
     };
 
+    const skills =
+      Object.entries(
+        currentState?.skills || {}
+      ).filter(
+        ([, value]) =>
+          Number(value) !== 0
+      );
 
-    $$(
-      "[data-review]"
-    ).forEach(
-      element => {
+    const safe = value =>
+      escapeHTML(
+        text(value) || "—"
+      );
 
-        const key =
-          element.dataset.review;
+    reviewGrid.innerHTML = `
 
-        const value =
-          values[key] ?? "";
+      <article class="review-card">
+        <span class="eyebrow">IDENTIDADE</span>
+        <h3>${safe(currentState?.name)}</h3>
+        <p><strong>Idade:</strong> ${safe(currentState?.age)}</p>
+        <p><strong>Gênero:</strong> ${safe(currentState?.gender)}</p>
+        <p><strong>Origem:</strong> ${safe(currentState?.origin)}</p>
+        <p><strong>Descrição:</strong> ${safe(currentState?.description)}</p>
+      </article>
 
-        element.textContent =
-          text(value) || "—";
-      }
-    );
+      <article class="review-card">
+        <span class="eyebrow">CONCEITO</span>
+        <p><strong>Personalidade:</strong> ${safe(currentState?.personality)}</p>
+        <p><strong>Objetivo:</strong> ${safe(currentState?.objective)}</p>
+        <p><strong>Medo:</strong> ${safe(currentState?.fear)}</p>
+        <p><strong>Vínculo:</strong> ${safe(currentState?.importantBond)}</p>
+        <p><strong>História:</strong> ${safe(currentState?.history)}</p>
+        <p><strong>Região:</strong> ${safe(currentState?.region)}</p>
+      </article>
+
+      <article class="review-card">
+        <span class="eyebrow">RAÇA</span>
+        <h3>${safe(race?.name || currentState?.race)}</h3>
+        <p><strong>Habilidade:</strong> ${safe(race?.feature || race?.ability || race?.specialty)}</p>
+        <p><strong>Animalha:</strong> ${safe(
+          race?.id === "animalha"
+            ? `${animalCategory || "—"}${animal ? ` — ${animal}` : ""}`
+            : "—"
+        )}</p>
+        <p><strong>Altura:</strong> ${safe(appearance.height ? `${appearance.height} cm` : "")}</p>
+      </article>
+
+      <article class="review-card">
+        <span class="eyebrow">CLASSE</span>
+        <h3>${safe(classData?.name || classId)}</h3>
+        <p><strong>Controle de Mana:</strong> ${safe(
+          classData?.manaBonus != null
+            ? `+${classData.manaBonus}`
+            : ""
+        )}</p>
+      </article>
+
+      <article class="review-card">
+        <span class="eyebrow">APARÊNCIA</span>
+        <p><strong>Cabelo:</strong> ${safe(appearance.hairColor)}</p>
+        <p><strong>Olhos:</strong> ${safe(appearance.eyeColor)}</p>
+        <p><strong>Pele:</strong> ${safe(appearance.skinTone)}</p>
+        <p><strong>Tipo de cabelo:</strong> ${safe(appearance.hairType)}</p>
+        <p><strong>Características:</strong> ${safe(appearance.physicalFeatures)}</p>
+        <p><strong>Marcas/Cicatrizes:</strong> ${safe(appearance.scars)}</p>
+      </article>
+
+      <article class="review-card">
+        <span class="eyebrow">PODER & MANA</span>
+        <h3>${safe(currentState?.primaryPower)}</h3>
+        <p><strong>Sorteio:</strong> ${safe(
+          currentState?.powerRoll != null
+            ? `D100 = ${currentState.powerRoll}`
+            : currentState?.powerMode === "uncommon"
+              ? "Escolha incomum"
+              : "Escolha manual"
+        )}</p>
+        <p><strong>Poder paralelo:</strong> ${safe(currentState?.parallelPower)}</p>
+        <p><strong>Reserva:</strong> ${safe(
+          `${currentState?.mana?.current ?? 0} / ${currentState?.mana?.max ?? 0}`
+        )}</p>
+        <p><strong>Tipo de Mana:</strong> ${safe(currentState?.mana?.type)}</p>
+      </article>
+
+      <article class="review-card">
+        <span class="eyebrow">ATRIBUTOS</span>
+        <div class="review-attributes">
+          ${attributes
+            .map(
+              attribute =>
+                `<span>${escapeHTML(attribute.short)}:
+                  <b>${escapeHTML(
+                    `${attribute.die} / ${attribute.result}`
+                  )}</b>
+                </span>`
+            )
+            .join("")}
+        </div>
+      </article>
+
+      <article class="review-card">
+        <span class="eyebrow">PERÍCIAS</span>
+        ${
+          skills.length
+            ? skills
+                .map(
+                  ([id, value]) =>
+                    `<p><strong>${escapeHTML(
+                      SKILL_LABELS[id] ||
+                      id
+                    )}:</strong> ${escapeHTML(
+                      value
+                    )}</p>`
+                )
+                .join("")
+            : "<p>Nenhum bônus personalizado informado.</p>"
+        }
+      </article>
+
+      <article class="review-card">
+        <span class="eyebrow">TÉCNICAS & INVENTÁRIO</span>
+        <p><strong>Técnicas registradas:</strong> ${
+          Array.isArray(currentState?.techniques)
+            ? currentState.techniques.filter(Boolean).length
+            : 0
+        }</p>
+        <p><strong>Itens no inventário:</strong> ${
+          Array.isArray(currentState?.inventory)
+            ? currentState.inventory.filter(Boolean).length
+            : 0
+        }</p>
+        <p><strong>Imagem:</strong> ${
+          currentState?.avatar
+            ? "Adicionada"
+            : "Não adicionada"
+        }</p>
+      </article>
+    `;
   }
 
 
