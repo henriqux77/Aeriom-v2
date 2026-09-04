@@ -2910,6 +2910,68 @@ function closeMobileMenu() {
 
 
 /* ============================================================
+   ACTIONS
+   ============================================================ */
+
+async function handleCampaignAction(
+  action,
+  button
+) {
+  if (action === "roll") {
+    setActiveTab("dice");
+
+    const dice =
+      window.AERIOM_DICE;
+
+    if (
+      dice &&
+      typeof dice.roll === "function"
+    ) {
+      try {
+        await dice.roll();
+      } catch (error) {
+        log(
+          "warn",
+          "Falha na rolagem rápida.",
+          error
+        );
+      }
+    }
+
+    return;
+  }
+
+  if (action === "request-test") {
+    setActiveTab("dice");
+
+    const dice =
+      window.AERIOM_DICE;
+
+    const selectedCharacterId =
+      dice &&
+      typeof dice.getSelectedCharacterId === "function"
+        ? dice.getSelectedCharacterId()
+        : null;
+
+    if (!selectedCharacterId) {
+      showToast(
+        "Selecione primeiro o personagem que receberá o teste.",
+        "warn"
+      );
+    }
+
+    return;
+  }
+
+  log(
+    "warn",
+    `Ação desconhecida: ${action}`,
+    button
+  );
+}
+
+
+/* ============================================================
    BUTTONS
    ============================================================ */
 
@@ -2948,6 +3010,26 @@ function bindButtons() {
           }
         );
 
+      }
+    );
+
+
+  getElements(
+    "[data-campaign-action]"
+  )
+    .forEach(
+      button => {
+        button.addEventListener(
+          "click",
+          event => {
+            event.preventDefault();
+
+            handleCampaignAction(
+              button.dataset.campaignAction,
+              button
+            );
+          }
+        );
       }
     );
 
