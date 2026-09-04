@@ -4210,498 +4210,152 @@ select:focus-visible {
   }
 }
 
+
 /* =========================================================
-   AERION — EXPERIÊNCIA MOBILE / INTERFACE MAIS VIVA
+   FICHA — ALTURA AO LADO DO PERSONAGEM + DADOS COMO DADOS
    ========================================================= */
-
-:root {
-  --ui-radius: 16px;
-  --ui-radius-lg: 20px;
-  --ui-gap: 12px;
-  --ui-touch: 48px;
-}
-
-html {
-  scroll-behavior: smooth;
-  -webkit-text-size-adjust: 100%;
-}
-
-body {
-  overscroll-behavior-y: none;
-}
-
-button,
-a,
-input,
-textarea,
-select {
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
-}
-
-.ficha-app {
-  isolation: isolate;
-}
-
-/* Header mais compacto, com aparência de app. */
-.ficha-header {
-  box-shadow: 0 12px 34px rgba(0,0,0,.18);
-}
-
-.ficha-save-status {
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.025);
-}
-
-/* O progresso vira uma trilha de criação. */
-.progress-area {
-  position: sticky;
-  top: 68px;
-  z-index: 70;
-  padding-top: 12px;
-  padding-bottom: 8px;
-  background: linear-gradient(180deg, rgba(7,7,6,.96), rgba(7,7,6,.82), transparent);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-}
-
-.creation-steps {
-  scroll-snap-type: x proximity;
-  padding-inline: 2px;
-}
-
-.creation-step {
-  scroll-snap-align: center;
-  min-height: 36px;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.018);
-}
-
-.creation-step.is-complete,
-.creation-step.complete {
-  position: relative;
-}
-
-.creation-step.is-complete::after,
-.creation-step.complete::after {
-  content: "✓";
+.appearance-visual-column {
   display: grid;
-  width: 13px;
-  height: 13px;
-  place-items: center;
-  margin-left: -2px;
-  border-radius: 50%;
-  background: rgba(130,170,118,.16);
-  color: var(--success);
-  font-size: 7px;
-}
-
-/* Painel sem a sensação de um único retângulo enorme. */
-.creation-panel {
-  border-color: rgba(216,180,90,.10);
-  box-shadow:
-    0 18px 55px rgba(0,0,0,.22),
-    inset 0 1px 0 rgba(255,255,255,.018);
-}
-
-.creation-panel::after {
-  opacity: .7;
-}
-
-/* Cabeçalho de cada etapa mais curto e legível. */
-.section-heading {
-  display: grid;
-  gap: 6px;
-  margin-bottom: 19px;
-}
-
-.section-heading .eyebrow {
-  margin-bottom: 1px;
-}
-
-.section-heading p {
-  margin-top: 2px;
-}
-
-/* Campos como componentes, não apenas caixas de texto. */
-.form-stack,
-.identity-extra-grid,
-.appearance-details,
-.power-grid,
-.mana-grid,
-.skills-grid,
-.techniques-grid,
-.inventory-grid {
-  gap: 14px;
-}
-
-.field {
-  position: relative;
-  gap: 7px;
-}
-
-.field::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 30px;
-  width: 2px;
-  height: calc(100% - 34px);
-  border-radius: 2px;
-  background: linear-gradient(180deg, rgba(216,180,90,.26), transparent);
-  opacity: .55;
-  pointer-events: none;
-}
-
-.field-label {
-  position: relative;
-  z-index: 1;
-  padding-left: 7px;
-}
-
-.field input,
-.field select,
-.field textarea {
-  position: relative;
-  z-index: 1;
-  border-radius: var(--ui-radius);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.015);
-}
-
-.field textarea {
-  min-height: 104px;
-}
-
-.field input:focus,
-.field select:focus,
-.field textarea:focus {
-  border-color: var(--border-active);
-  background:
-    linear-gradient(180deg, rgba(216,180,90,.045), rgba(255,255,255,.012));
-}
-
-/* Identidade: cartão de retrato com destaque. */
-.character-image-card {
-  gap: 10px;
-}
-
-.image-preview {
-  min-height: 245px;
-  border-radius: var(--ui-radius-lg);
-  background:
-    radial-gradient(circle at 50% 30%, rgba(216,180,90,.10), transparent 46%),
-    linear-gradient(160deg, rgba(255,255,255,.018), rgba(0,0,0,.14)),
-    #0b0a09;
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.018),
-    0 16px 35px rgba(0,0,0,.18);
-}
-
-.image-actions .button {
-  flex: 1 1 150px;
-}
-
-/* Raça e classe: navegação mais fluida no toque. */
-.race-card-wrap,
-.class-card-wrap {
-  scroll-snap-type: x mandatory;
-}
-
-.race-card,
-.class-option {
-  scroll-snap-align: center;
-}
-
-.race-arrow,
-.class-arrow,
-.carousel-arrow {
-  min-width: var(--ui-touch);
-  min-height: var(--ui-touch);
-}
-
-.race-card {
-  box-shadow:
-    0 20px 55px rgba(0,0,0,.22),
-    inset 0 1px 0 rgba(255,255,255,.018);
-}
-
-.race-confirm-button,
-.class-select-button {
-  min-height: 52px;
-  border-radius: 15px;
-  background:
-    linear-gradient(180deg, rgba(216,180,90,.11), rgba(216,180,90,.055));
-  box-shadow: 0 12px 30px rgba(0,0,0,.16);
-}
-
-/* Animalha ganha duas camadas claras: família -> linhagem. */
-.animalha-selection {
-  border-color: rgba(216,180,90,.12);
-  background:
-    linear-gradient(145deg, rgba(216,180,90,.045), rgba(255,255,255,.006));
-}
-
-.animalha-category,
-.animalha-animal,
-.animalha-category-card {
-  min-height: 74px;
-  border-radius: 15px;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.015);
-}
-
-.animalha-category.is-selected,
-.animalha-category.active,
-.animalha-animal.is-selected,
-.animalha-animal.active,
-.animalha-category-card.is-selected,
-.animalha-category-card.selected {
-  border-color: var(--border-active);
-  background:
-    linear-gradient(145deg, rgba(216,180,90,.12), rgba(216,180,90,.035));
-}
-
-/* Aparência: controles viram painéis de personalização. */
-.appearance-field-card {
-  margin-top: 0;
-  padding: 13px;
-  border-radius: var(--ui-radius);
-  background:
-    linear-gradient(145deg, rgba(255,255,255,.018), rgba(255,255,255,.006));
-}
-
-.appearance-field-card + .appearance-field-card {
-  margin-top: 10px;
-}
-
-.appearance-details-heading {
-  padding: 3px 2px 4px;
-}
-
-.appearance-height-card {
-  border-radius: var(--ui-radius-lg);
-  background:
-    radial-gradient(circle at 90% 50%, rgba(216,180,90,.045), transparent 36%),
-    linear-gradient(145deg, rgba(255,255,255,.02), rgba(255,255,255,.006));
-}
-
-.vertical-height-control {
-  min-height: 245px;
-}
-
-/* Dados: cada dado parece uma peça física do sistema. */
-.dice-pool-section {
-  border-color: rgba(216,180,90,.13);
-  background:
-    radial-gradient(circle at 100% 0, rgba(216,180,90,.05), transparent 32%),
-    linear-gradient(145deg, rgba(255,255,255,.02), rgba(255,255,255,.006));
-}
-
-.die-card {
-  position: relative;
-  overflow: hidden;
-  min-height: 78px;
-}
-
-.die-card::after {
-  content: "";
-  position: absolute;
-  inset: auto -10% -45% -10%;
-  height: 60%;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(216,180,90,.08), transparent 70%);
-  pointer-events: none;
-}
-
-/* Atributos: valor e dado em uma leitura só. */
-.attribute-card {
-  overflow: hidden;
-}
-
-.attribute-card::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 3px;
-  background: linear-gradient(180deg, rgba(216,180,90,.38), transparent);
-  opacity: .65;
-}
-
-.attribute-roll-button,
-.attribute-remove-button {
-  min-height: 43px;
-}
-
-/* Gráficos e revisão: cartões leves, com destaque na informação. */
-.attributes-chart-section,
-.review-card {
-  background:
-    linear-gradient(145deg, rgba(255,255,255,.018), rgba(255,255,255,.005));
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.014);
-}
-
-.review-grid {
+  grid-template-columns: minmax(0, 1fr) 108px;
+  gap: 12px;
   align-items: stretch;
 }
 
-.review-card {
-  min-height: 0;
+.appearance-visual-column .appearance-render {
+  grid-column: 1;
+  min-width: 0;
 }
 
-.review-card h3 {
-  line-height: 1.15;
+.appearance-visual-column .appearance-height-card {
+  grid-column: 2;
+  grid-row: 1;
+  margin-top: 0;
+  min-width: 0;
 }
 
-/* Toast mais amigável e menos intrusivo. */
-.ficha-toast {
-  border-radius: 14px;
-  box-shadow:
-    0 18px 55px rgba(0,0,0,.38),
-    inset 0 1px 0 rgba(255,255,255,.02);
+.appearance-height-heading {
+  display: grid;
+  gap: 4px;
+  justify-items: center;
+  text-align: center;
 }
 
-/* Mobile: prioridade total para conforto do polegar. */
+.appearance-height-heading strong {
+  font-family: Georgia, serif;
+  font-size: 17px;
+}
+
+.appearance-height-heading small {
+  font-size: 7px;
+  line-height: 1.35;
+}
+
+.vertical-height-control {
+  min-height: 100%;
+  grid-template-columns: 1fr;
+  grid-template-rows: auto minmax(210px, 1fr) auto;
+  gap: 6px;
+}
+
+.height-range-track {
+  min-height: 210px;
+  min-width: 0;
+  display: grid;
+  place-items: center;
+}
+
+.appearance-height-range {
+  width: 30px;
+  height: 210px;
+  margin: auto;
+  writing-mode: vertical-lr;
+  direction: rtl;
+  accent-color: var(--gold-light);
+}
+
+.height-bound {
+  font-size: 7px;
+  text-align: center;
+}
+
+.attribute-dice-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.attribute-dice-summary-item {
+  display: grid;
+  gap: 4px;
+  min-height: 54px;
+  place-items: center;
+  padding: 8px 6px;
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  background: rgba(255,255,255,.012);
+}
+
+.attribute-dice-summary-item span {
+  color: var(--muted);
+  font-size: 7px;
+  font-weight: 800;
+}
+
+.attribute-dice-summary-item strong {
+  color: var(--gold-light);
+  font-family: Georgia, serif;
+  font-size: 13px;
+}
+
 @media (max-width: 699px) {
-  .progress-area {
-    top: 67px;
+  .appearance-visual-column {
+    grid-template-columns: minmax(0, 1fr) 84px;
+    gap: 8px;
   }
 
-  .creation-panel {
-    padding-inline: 12px;
+  .appearance-height-card {
+    padding: 10px 7px;
+    border-radius: 15px;
   }
 
-  .section-heading h2 {
-    max-width: 13ch;
-    font-size: clamp(27px, 8vw, 34px);
+  .appearance-height-heading strong {
+    font-size: 15px;
   }
 
-  .section-heading p {
-    max-width: 52ch;
-  }
-
-  .identity-extra-grid .field,
-  .appearance-field-card,
-  .review-card {
-    padding-left: 12px;
-    padding-right: 12px;
-  }
-
-  .image-preview {
-    min-height: 220px;
-  }
-
-  .race-card-wrap,
-  .class-card-wrap {
-    grid-template-columns: 42px minmax(0,1fr) 42px;
-    gap: 7px;
-  }
-
-  .race-arrow,
-  .class-arrow,
-  .carousel-arrow {
-    width: 42px;
-    height: 42px;
-  }
-
-  .race-art {
-    height: 220px;
-  }
-
-  .race-info {
-    padding: 0 15px 18px;
-  }
-
-  .class-option-content {
-    padding: 16px;
-  }
-
-  .animalha-categories,
-  .animalha-category-grid,
-  .animalha-animals {
-    grid-template-columns: repeat(2, minmax(0,1fr));
+  .appearance-height-heading small {
+    font-size: 6px;
   }
 
   .vertical-height-control {
-    min-height: 238px;
-    grid-template-columns: 34px minmax(62px,1fr) 34px;
+    grid-template-rows: auto minmax(190px, 1fr) auto;
   }
 
   .height-range-track {
-    min-height: 218px;
+    min-height: 190px;
   }
 
   .appearance-height-range {
-    width: 218px;
+    height: 190px;
   }
 
-  .dice-pool {
-    grid-template-columns: repeat(4, minmax(0,1fr));
-  }
-
-  .die-card {
-    min-height: 72px;
-  }
-
-  .creation-footer {
-    min-height: 74px;
-    padding-inline: 10px;
-    border-top-color: rgba(216,180,90,.10);
-  }
-
-  .creation-navigation-button {
-    min-height: 52px;
-    border-radius: 15px;
-  }
-}
-
-@media (max-width: 420px) {
-  .ficha-save-status {
-    max-width: 105px;
-  }
-
-  .ficha-save-status #saveStatusText {
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .progress-topline h2 {
-    font-size: 26px;
-  }
-
-  .creation-steps {
-    margin-inline: -4px;
-  }
-
-  .creation-step {
-    padding-inline: 9px;
-  }
-
-  .choice-grid-2,
-  .gender-options,
-  .animalha-categories,
-  .animalha-category-grid,
-  .animalha-animals {
-    grid-template-columns: 1fr;
-  }
-
-  .dice-pool {
-    grid-template-columns: repeat(2, minmax(0,1fr));
-  }
-
-  .attribute-card-actions {
+  .attribute-dice-summary {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 6px;
   }
+
+  .attribute-dice-summary-item {
+    min-height: 48px;
+    padding: 6px 4px;
+  }
+
+  .attribute-dice-summary-item strong {
+    font-size: 11px;
+  }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .creation-panel,
-  .field input,
-  .field textarea,
-  .field select,
-  .die-card,
-  .attribute-card,
-  .race-confirm-button,
-  .class-select-button {
-    animation: none !important;
-    transition: none !important;
+@media (max-width: 380px) {
+  .appearance-visual-column {
+    grid-template-columns: minmax(0, 1fr) 76px;
+    gap: 6px;
   }
 }
