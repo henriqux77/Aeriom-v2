@@ -139,61 +139,13 @@
       }
     });
 
-    renderHUD();
     renderBonuses();
   }
 
-  function ensureHUD() {
-    let hud = document.getElementById("aerion-derived-hud");
-    if (hud) return hud;
-
-    const progress =
-      document.querySelector(".progress-area");
-
-    const main =
-      document.querySelector(".ficha-main");
-
-    if (!progress || !main) return null;
-
-    hud = document.createElement("section");
-    hud.id = "aerion-derived-hud";
-    hud.className = "aerion-derived-hud";
-    hud.setAttribute("aria-label","Resumo do personagem");
-
-    progress.insertAdjacentElement("afterend",hud);
-    return hud;
-  }
 
   function renderHUD() {
-    const hud = ensureHUD();
-    const api = ficha();
-    if (!hud || !api?.getState) return;
-
-    const s = api.getState();
-    const d = getRules(s);
-
-    const modList = Object.entries(d.mods)
-      .map(([id,value]) => `${id} ${value > 0 ? "+" : ""}${value}`)
-      .join(" · ");
-
-    hud.innerHTML = `
-      <div class="derived-stat">
-        <span>HP</span>
-        <strong>${num(s.hp?.current,d.hp)}<small>/${d.hp}</small></strong>
-      </div>
-      <div class="derived-stat">
-        <span>DEF</span>
-        <strong>${d.defense}</strong>
-      </div>
-      <div class="derived-stat">
-        <span>MOV</span>
-        <strong>${d.movement}m</strong>
-      </div>
-      <div class="derived-bonus" title="${modList}">
-        <span>BÔNUS RACIAIS</span>
-        <strong>${modList || "—"}</strong>
-      </div>
-    `;
+    // HP/Defesa/Movimento não ficam expostos no topo de cada etapa.
+    document.getElementById("aerion-derived-hud")?.remove();
   }
 
   function renderBonuses() {
@@ -263,6 +215,136 @@
       box.hidden = false;
       box.removeAttribute("aria-hidden");
     }
+  }
+
+  function ensureFixStyles() {
+    if (document.getElementById("aerion-ficha-fix-css")) return;
+
+    const style = document.createElement("style");
+    style.id = "aerion-ficha-fix-css";
+    style.textContent = `
+      #raceConfirmation:empty {
+        display:none !important;
+        margin:0 !important;
+        padding:0 !important;
+        border:0 !important;
+        height:0 !important;
+        min-height:0 !important;
+      }
+
+      .aerion-ficha-finalize {
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:14px;
+        margin-top:16px;
+        padding:14px;
+        border:1px solid rgba(216,180,90,.18);
+        border-radius:14px;
+        background:rgba(216,180,90,.035);
+      }
+
+      .aerion-finalize-copy {
+        min-width:0;
+        display:grid;
+        gap:4px;
+      }
+
+      .aerion-finalize-copy strong {
+        color:var(--text);
+        font-size:14px;
+      }
+
+      .aerion-finalize-copy small {
+        color:var(--muted);
+        font-size:8px;
+        line-height:1.5;
+      }
+
+      @media(max-width:699px){
+        .aerion-ficha-finalize{
+          align-items:stretch;
+          flex-direction:column;
+        }
+
+        .aerion-ficha-finalize .button{
+          width:100%;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  function ensureFinalizeButton() {
+    const review = document.querySelector('[data-panel="review"]');
+    if (!review) return;
+
+    if (
+      document.getElementById("aerion-finalize-button") ||
+      document.getElementById("aerion-finalize-ficha-button")
+    ) {
+      return;
+    }
+
+    const box = document.createElement("div");
+    box.className = "aerion-ficha-finalize";
+    box.id = "aerion-finalize-box";
+    box.innerHTML = `
+      <div class="aerion-finalize-copy">
+        <span class="eyebrow">ÚLTIMO PASSO</span>
+        <strong>Salvar ficha</strong>
+        <small>Revise tudo e salve o personagem como uma ficha pronta.</small>
+      </div>
+
+      <button
+        type="button"
+        class="button button-primary"
+        id="aerion-finalize-button"
+      >
+        Salvar e finalizar
+      </button>
+    `;
+
+    review.appendChild(box);
+
+    document
+      .getElementById("aerion-finalize-button")
+      ?.addEventListener("click", () => {
+        const api =
+          window.AERIONFicha ||
+          window.AERION_FICHA;
+
+        const snapshot = api?.getState?.();
+        if (!snapshot) return;
+
+        const required = [0,1,2,3,4,5];
+        const ok = required.every(
+          (index) => snapshot.completedSteps?.[index] === true
+        );
+
+        if (!ok) {
+          window.dispatchEvent(new CustomEvent("aerion:toast", {
+            detail: {
+              message: "Complete as etapas obrigatórias antes de finalizar.",
+              type: "warning"
+            }
+          }));
+          return;
+        }
+
+        /*
+         * A API save() grava localmente e dispara "aerion:save".
+         * O módulo de biblioteca já escuta esse evento e envia ao Supabase.
+         */
+        api.save?.();
+
+        window.dispatchEvent(new CustomEvent("aerion:toast", {
+          detail: {
+            message: "Ficha salva e finalizada.",
+            type: "success"
+          }
+        }));
+      });
   }
 
   function fixPowerUI() {
@@ -352,6 +434,48 @@
       manaSection.setAttribute("aria-hidden","true");
     }
   }
+
+
+  function interceptRetiredManaNavigation() {
+    if (window.__AERION_RETIRED_MANA_NAV) return;
+    window.__AERION_RETIRED_MANA_NAV = true;
+
+    document.addEventListener("click", (event) => {
+      const target = event.target?.closest("[data-action]");
+      if (!target) return;
+
+      const action = target.dataset.action;
+      const api = window.AERIONFicha || window.AERION_FICHA;
+      const current = Number(api?.getState?.()?.currentStep);
+
+      if (!api?.goToStep || !Number.isFinite(current)) return;
+
+      if (action === "next-step" && current === 5) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+
+        /*
+         * O núcleo ainda possui o índice técnico 6 para Mana.
+         * Fazemos o avanço interno e imediatamente saltamos para Perícias.
+         * O painel Mana está oculto e não aparece para o usuário.
+         */
+        api.goToStep(6, false);
+        api.goToStep(7, false);
+
+        refresh();
+        return;
+      }
+
+      if (action === "previous-step" && current === 7) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+
+        api.goToStep(5, false);
+        refresh();
+      }
+    }, true);
+  }
+
 
   function fixSteps() {
     const stepButtons =
@@ -482,7 +606,7 @@
       }
 
       renderBonuses();
-      renderHUD();
+
     });
   }
 
@@ -490,7 +614,7 @@
     fixRaceConfirmation();
     fixPowerUI();
     fixSteps();
-    renderHUD();
+
     renderBonuses();
   }
 
