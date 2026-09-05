@@ -33,6 +33,7 @@ import { getSupabase } from "./supabase.js";
     characterId: null,
     currentCampaignId: null,
     saving: false,
+    finalizing: false,
     hooksInstalled: false,
     finalizeBridgeInstalled: false,
     booted: false
@@ -549,7 +550,12 @@ import { getSupabase } from "./supabase.js";
         event?.detail?.state ||
         window.AERIONFicha?.getState?.();
 
-      if (!snapshot || !isEditorMode() || !session.characterId) {
+      if (
+        !snapshot ||
+        !isEditorMode() ||
+        !session.characterId ||
+        session.finalizing
+      ) {
         return;
       }
 
@@ -904,6 +910,22 @@ import { getSupabase } from "./supabase.js";
 ;
   }
 
+  function bindFinalizeButtons() {
+    const api = window.AERIONFicha;
+    if (!api?.finalizeCharacter) return;
+
+    [
+      document.getElementById("aerion-finalize-bottom"),
+      document.getElementById("aerion-header-finalize")
+    ].forEach((button) => {
+      if (!button || button.dataset.finalizeBound === "1") return;
+      button.dataset.finalizeBound = "1";
+      button.addEventListener("click", () => {
+        api.finalizeCharacter();
+      });
+    });
+  }
+
   function addHeaderFinalizeButton() {
     if (document.getElementById("aerion-header-finalize")) return;
 
@@ -935,6 +957,9 @@ import { getSupabase } from "./supabase.js";
 
       if (!snapshot || !session.characterId) return;
 
+      session.finalizing = true;
+      clearTimeout(window.__AERIONCloudSaveTimer);
+
       try {
         await persist(snapshot, "completed");
         notify("Ficha finalizada.", "success");
@@ -945,6 +970,7 @@ import { getSupabase } from "./supabase.js";
           : "./minhas-fichas.html";
       } catch (error) {
         console.error("[AERION][FICHAS] Finalização:", error);
+        session.finalizing = false;
         notify(
           error?.message || "Não foi possível finalizar a ficha.",
           "error"
@@ -959,6 +985,7 @@ import { getSupabase } from "./supabase.js";
     installEditorHooks();
     installFinalizeBridge();
     addHeaderFinalizeButton();
+    bindFinalizeButtons();
 
     const p = params();
     const existingId = p.get("id");
