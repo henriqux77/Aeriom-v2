@@ -277,7 +277,7 @@ import { getSupabase } from "./supabase.js";
       session.cloudSaveTimer = setTimeout(() => {
         persist(snapshot).catch((error) => {
           console.error("[AERION][FICHAS] Autosave cloud falhou:", error);
-          showMessage(error?.message || "Não foi possível salvar a ficha na nuvem.", "error");
+          notify(error?.message || "Não foi possível salvar a ficha na nuvem.", "error");
         });
       }, 180);
     };
@@ -314,12 +314,9 @@ import { getSupabase } from "./supabase.js";
     url.searchParams.set("draft", session.characterId);
     window.history.replaceState({}, "", url);
 
-    showEditor();
-
     /*
      * RESET OBRIGATÓRIO:
      * toda ficha nova começa limpa.
-     * O autosave seguinte criará outro registro.
      */
     window.AERIONFicha.reset();
 
@@ -363,83 +360,6 @@ import { getSupabase } from "./supabase.js";
     if (data.creation_state && typeof data.creation_state === "object") {
       window.AERIONFicha.setState(data.creation_state);
     }
-  }
-
-  async function deleteCharacter(id) {
-    if (!id) return;
-
-    const confirmed = window.confirm(
-      "Excluir esta ficha?\n\nEssa ação remove a ficha da sua biblioteca. Não será possível desfazer."
-    );
-
-    if (!confirmed) return;
-
-    const { error } = await session.supabase
-      .from(CONFIG.table)
-      .delete()
-      .eq("id", id)
-      .eq("user_id", session.user.id);
-
-    if (error) throw error;
-
-    if (session.characterId === id) {
-      session.characterId = null;
-    }
-
-    notify("Ficha excluída.", "success");
-    await renderLibrary();
-  }
-
-  async function duplicateCharacter(id) {
-    const { data, error } = await session.supabase
-      .from(CONFIG.table)
-      .select("*")
-      .eq("id", id)
-      .eq("user_id", session.user.id)
-      .maybeSingle();
-
-    if (error) throw error;
-    if (!data) throw new Error("Ficha não encontrada.");
-
-    const newId = crypto.randomUUID();
-
-    const copy = {
-      ...data,
-      id: newId,
-      user_id: session.user.id,
-      campaign_id: null,
-      name: `${safeText(data.name) || "Ficha sem nome"} (Cópia)`,
-      status: "draft",
-      updated_at: new Date().toISOString()
-    };
-
-    delete copy.created_at;
-
-    const { error: insertError } = await session.supabase
-      .from(CONFIG.table)
-      .insert(copy);
-
-    if (insertError) throw insertError;
-
-    notify("Ficha duplicada.", "success");
-    await renderLibrary();
-  }
-
-  function bindFinalizeButtons() {
-    const api = window.AERIONFicha;
-    if (!api?.finalizeCharacter) return;
-
-    [
-      document.getElementById("aerion-finalize-bottom"),
-      document.getElementById("aerion-header-finalize")
-    ].forEach((button) => {
-      if (!button || button.dataset.finalizeBound === "1") return;
-
-      button.dataset.finalizeBound = "1";
-      button.addEventListener("click", () => {
-        api.finalizeCharacter();
-      });
-    });
   }
 
   function installCloudFlushHandlers() {
@@ -537,8 +457,6 @@ import { getSupabase } from "./supabase.js";
     if (!existingId) {
       await persist(window.AERIONFicha.getState(), "draft");
     }
-
-    addFinalizeButton();
   }
 
   async function init() {
