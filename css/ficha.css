@@ -56,3 +56,26 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
 @media(max-width:390px){
   .mobile-step-context{padding-left:2px;padding-right:2px}
 }
+
+/* ============================================================
+   FASE 4 — APARÊNCIA / IDADE
+   ============================================================ */
+
+.age-control{display:grid;gap:7px;margin-bottom:10px;padding:9px;border:1px solid var(--fx-line);border-radius:10px;background:rgba(255,255,255,.012)}
+.appearance-field-heading{display:flex;justify-content:space-between;align-items:end;gap:8px}
+.appearance-field-heading .label{color:var(--fx-text);font-size:7px;font-weight:800}
+.appearance-field-heading small{color:var(--fx-muted);font-size:5px;text-align:right}
+.age-input-wrap{display:flex!important;align-items:center;gap:7px!important}
+.age-input-wrap input{flex:1;min-width:0}
+.age-input-wrap span{color:var(--fx-muted);font-size:7px}
+.appearance-free-form{grid-column:1/-1}
+.free-form-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.free-form-grid label{display:grid;gap:4px;color:var(--fx-muted);font-size:6px}
+.free-form-grid textarea{min-height:58px;resize:vertical}
+.optional{color:var(--fx-muted);font-weight:400}
+
+@media(max-width:700px){
+  .appearance-free-form{grid-column:auto}
+  .free-form-grid{grid-template-columns:1fr}
+  .appearance-field-heading small{text-align:left}
+}
