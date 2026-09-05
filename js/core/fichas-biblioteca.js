@@ -453,7 +453,7 @@ import { getSupabase } from "./supabase.js";
       class_bonus:
         safeText(mana?.classBonus) ? String(mana.classBonus) : null,
 
-      personality: { text: safeText(snapshot?.personality) },
+      personality: safeText(snapshot?.personality) ? [safeText(snapshot.personality)] : [],
       backstory: safeText(snapshot?.history) || null,
       goals: safeText(snapshot?.objective)
         ? [safeText(snapshot.objective)]
@@ -503,6 +503,8 @@ import { getSupabase } from "./supabase.js";
   }
 
   async function persist(snapshot, forcedStatus = null) {
+    const saveText = document.getElementById("saveStatusText");
+    if (saveText) saveText.textContent = "Salvando…";
     if (
       !session.supabase ||
       !session.user ||
@@ -525,6 +527,9 @@ import { getSupabase } from "./supabase.js";
         .upsert(payload, { onConflict: "id" });
 
       if (error) throw error;
+
+      const saveTextDone = document.getElementById("saveStatusText");
+      if (saveTextDone) saveTextDone.textContent = "Salvo agora";
 
       window.dispatchEvent(
         new CustomEvent("aerion:fichas:cloudsaved", {
