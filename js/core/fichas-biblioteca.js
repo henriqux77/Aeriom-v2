@@ -22,7 +22,7 @@ import { getSupabase } from "./supabase.js";
    */
 
   const CONFIG = Object.freeze({
-    storageKey: "aerion:ficha:draft:v18",
+    storageKey: "aerion:ficha:draft:v40",
     editorPage: "./fichas.html",
     table: "characters"
   });
@@ -37,6 +37,7 @@ import { getSupabase } from "./supabase.js";
     hooksInstalled: false,
     finalizeBridgeInstalled: false,
     cloudFlushInstalled: false,
+    cloudSaveTimer: null,
     booted: false
   };
 
@@ -568,8 +569,8 @@ import { getSupabase } from "./supabase.js";
         return;
       }
 
-      clearTimeout(window.__AERIONCloudSaveTimer);
-      window.__AERIONCloudSaveTimer = setTimeout(() => {
+      clearTimeout(session.cloudSaveTimer);
+      session.cloudSaveTimer = setTimeout(() => {
         persist(snapshot).catch((error) => {
           console.error("[AERION][FICHAS] Autosave cloud falhou:", error);
           showMessage(error?.message || "Não foi possível salvar a ficha na nuvem.", "error");
@@ -1023,7 +1024,6 @@ import { getSupabase } from "./supabase.js";
     installEditorHooks();
     installCloudFlushHandlers();
     installFinalizeBridge();
-    addHeaderFinalizeButton();
     bindFinalizeButtons();
 
     const p = params();
