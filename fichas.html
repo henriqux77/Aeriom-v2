@@ -83,136 +83,6 @@
     defer
   ></script>
 
-  <!-- ======================================================
-       CORREÇÃO CRÍTICA: PODER -> PERÍCIAS
-       ====================================================== -->
-  <script>
-    (() => {
-      "use strict";
-
-      if (window.__AERION_POWER_NEXT_INLINE_FIX__) return;
-      window.__AERION_POWER_NEXT_INLINE_FIX__ = true;
-
-      const getFicha = () =>
-        window.AERIONFicha || window.AERION_FICHA || null;
-
-      const toast = (message, type = "warning") => {
-        window.dispatchEvent(
-          new CustomEvent("aerion:toast", {
-            detail: { message, type }
-          })
-        );
-      };
-
-      /*
-       * O núcleo mantém Mana como índice técnico 6, mas a interface
-       * mostra Poder + Mana como uma única etapa (6 visual).
-       * O goToStep() normal rejeita saltos > 1.
-       *
-       * Este handler é instalado aqui ANTES de regras-raciais.js,
-       * em capture, e resolve a transição diretamente no estado.
-       */
-      document.addEventListener("click", (event) => {
-        const target = event.target?.closest(
-          '[data-action="next-step"]'
-        );
-
-        if (!target) return;
-
-        const api = getFicha();
-        const state = api?.getState?.();
-
-        if (!api?.setState || !state) return;
-        if (Number(state.currentStep) !== 5) return;
-
-        event.preventDefault();
-        event.stopImmediatePropagation();
-
-        if (!String(state.primaryPower || "").trim()) {
-          toast(
-            "Escolha ou sorteie um poder antes de continuar.",
-            "warning"
-          );
-          return;
-        }
-
-        const completedSteps = [
-          ...(state.completedSteps || [])
-        ];
-
-        completedSteps[5] = true;
-        completedSteps[6] = true;
-
-        api.setState({
-          ...state,
-          currentStep: 7,
-          completedSteps
-        });
-
-        window.dispatchEvent(
-          new CustomEvent("aerion:ficha:update", {
-            detail: { state: api.getState?.() }
-          })
-        );
-      }, true);
-
-      /* Poder/Mana -> Perícias também precisa funcionar ao voltar. */
-      document.addEventListener("click", (event) => {
-        const target = event.target?.closest(
-          '[data-action="previous-step"]'
-        );
-
-        if (!target) return;
-
-        const api = getFicha();
-        const state = api?.getState?.();
-
-        if (!api?.setState || !state) return;
-        if (Number(state.currentStep) !== 7) return;
-
-        event.preventDefault();
-        event.stopImmediatePropagation();
-
-        api.setState({
-          ...state,
-          currentStep: 5
-        });
-
-        window.dispatchEvent(
-          new CustomEvent("aerion:ficha:update", {
-            detail: { state: api.getState?.() }
-          })
-        );
-      }, true);
-
-      /* Campos vazios não devem ocupar espaço visual. */
-      const collapseEmpty = () => {
-        ["raceConfirmation", "classConfirmation"].forEach((id) => {
-          const el = document.getElementById(id);
-          if (!el || el.textContent.trim()) return;
-          el.hidden = true;
-          el.setAttribute("aria-hidden", "true");
-          el.style.cssText +=
-            ";display:none!important;height:0!important;min-height:0!important;margin:0!important;padding:0!important;border:0!important;";
-        });
-      };
-
-      if (document.readyState === "loading") {
-        document.addEventListener(
-          "DOMContentLoaded",
-          collapseEmpty,
-          { once: true }
-        );
-      } else {
-        collapseEmpty();
-      }
-
-      new MutationObserver(collapseEmpty).observe(
-        document.documentElement,
-        { subtree: true, childList: true, characterData: true }
-      );
-    })();
-  </script>
 
   <script type="module" src="./js/core/regras-raciais.js?v=20260905-03"></script>
   <script type="module" src="./js/core/fichas-biblioteca.js?v=20260905-02"></script>
@@ -4212,6 +4082,16 @@
 
       </button>
 
+      <button
+        type="button"
+        class="creation-navigation-button finalize"
+        id="aerion-finalize-bottom"
+        hidden
+      >
+        <span>Finalizar ficha</span>
+        <span aria-hidden="true">✓</span>
+      </button>
+
     </footer>
 
 
@@ -4239,6 +4119,24 @@
     class="toast"
     hidden
   ></div>
+
+  <script id="__AERION_FINALIZE_BOTTOM_BRIDGE__">
+    (() => {
+      const bind = () => {
+        const button = document.getElementById("aerion-finalize-bottom");
+        if (!button || button.dataset.bound === "1") return;
+        button.dataset.bound = "1";
+        button.addEventListener("click", () => {
+          window.AERIONFicha?.finalizeCharacter?.();
+        });
+      };
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", bind, { once:true });
+      } else {
+        bind();
+      }
+    })();
+  </script>
 
 </body>
 
