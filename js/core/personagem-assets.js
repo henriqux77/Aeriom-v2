@@ -824,26 +824,16 @@
 
 
     /*
-     * Animalha: usa a imagem por gênero da linhagem-base.
-     * Raças normais: usa primeiro a imagem oficial default.
-     * As imagens por gênero adicionadas ao catálogo ficam
-     * apenas como fallback para raças que ainda não possuem
-     * uma imagem default própria.
+     * Animalha: usa a imagem-base por gênero.
+     * Raças normais: usam exclusivamente a imagem default.
+     * Isso impede que imagens destinadas às linhagens Animalha
+     * apareçam indevidamente no catálogo das raças normais.
      */
     if (race.id === "animalha") {
-      const selected = race.images?.[genderKey];
-      if (selected) return selected;
+      return race.images?.[genderKey] || race.images?.masculino || race.images?.feminino || "";
     }
 
-    const defaultImage = race.images?.default;
-    if (defaultImage) return defaultImage;
-
-    const selected = race.images?.[genderKey];
-    if (selected) return selected;
-
-    /*
-     * Depois tenta o outro gênero.
-     */
+    return race.images?.default || "";
     const fallback =
       genderKey ===
         "feminino"
