@@ -353,8 +353,6 @@ import { getSupabase } from "./supabase.js";
     url.searchParams.set("id", data.id);
     window.history.replaceState({}, "", url);
 
-    showEditor();
-
     window.AERIONFicha.reset();
 
     if (data.creation_state && typeof data.creation_state === "object") {
