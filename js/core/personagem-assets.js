@@ -754,8 +754,6 @@
       name: "Tubarão",
       category: "marinhos",
       lineage: "aquatico"
-    },
-
     }
   };
 
