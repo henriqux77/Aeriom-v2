@@ -140,3 +140,56 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
   .creation-navigation button{padding:0 12px}
   .nav-center{min-width:66px}
 }
+
+/* ============================================================
+   PATCH VISUAL — MOBILE CREATION
+   Mantém proporções consistentes sem aumentar um botão em
+   relação ao outro.
+   ============================================================ */
+@media(max-width:700px){
+  .creation-navigation{
+    position:sticky;
+    bottom:max(6px,env(safe-area-inset-bottom));
+    display:grid;
+    grid-template-columns:minmax(0,1fr) 70px minmax(0,1fr);
+    align-items:center;
+    gap:6px;
+    padding:6px;
+  }
+  .creation-navigation .nav-secondary,
+  .creation-navigation .nav-primary{
+    width:100%;
+    min-width:0;
+    min-height:42px;
+    height:42px;
+    padding:0 10px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    box-sizing:border-box;
+  }
+  .creation-navigation .nav-secondary{justify-self:stretch}
+  .creation-navigation .nav-primary{justify-self:stretch}
+  .nav-center{
+    min-width:70px;
+    width:70px;
+    display:grid;
+    justify-items:center;
+    line-height:1;
+  }
+  .nav-center small{max-width:65px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+}
+@media(max-width:390px){
+  .creation-navigation{
+    grid-template-columns:minmax(0,1fr) 60px minmax(0,1fr);
+    gap:5px;
+    padding:5px;
+  }
+  .creation-navigation .nav-secondary,
+  .creation-navigation .nav-primary{
+    min-height:42px;
+    height:42px;
+    padding:0 8px;
+  }
+  .nav-center{width:60px;min-width:60px}
+}
