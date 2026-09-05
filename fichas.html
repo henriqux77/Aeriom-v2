@@ -18,6 +18,10 @@
 <section class="ficha-shell">
 <aside class="progress-panel">
   <div class="progress-title"><div><span>CAMINHO</span><b><em data-current-step>1</em>/<em data-total-steps>10</em></b></div><strong id="progressPercent">10%</strong></div>
+  <div class="mobile-step-context" aria-live="polite">
+    <div><span>ETAPA <b data-current-step>1</b> DE <b data-total-steps>10</b></span><strong data-current-step-title>Identidade</strong></div>
+    <small data-current-step-description>Defina quem é o seu aventureiro.</small>
+  </div>
   <div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="10"><i id="progressBar"></i></div>
   <nav id="creationSteps" class="creation-steps" aria-label="Etapas">
     <button type="button" class="creation-step is-active" data-step="0"><span>01</span><b>Identidade</b></button>
@@ -33,7 +37,19 @@
   </nav>
 </aside>
 <section class="ficha-editor">
-<div class="character-strip"><div class="preview-avatar"><span id="preview-initial">A</span><img id="preview-image" alt="" hidden></div><div class="preview-copy"><span>AVENTUREIRO</span><h2 id="preview-name">Sem nome</h2><p id="preview-subtitle">Comece definindo identidade, raça e classe.</p></div><div class="preview-stats"><div><span>HP</span><b id="preview-hp">10</b></div><div><span>DEF</span><b id="preview-defense">10</b></div><div><span>MANA</span><b id="preview-mana">0</b></div></div></div>
+<div class="character-strip">
+  <div class="preview-avatar"><span id="preview-initial">A</span><img id="preview-image" alt="" hidden></div>
+  <div class="preview-copy">
+    <span id="preview-eyebrow">AVENTUREIRO</span>
+    <h2 id="preview-name">Sem nome</h2>
+    <p id="preview-subtitle">Comece definindo identidade, raça e classe.</p>
+  </div>
+  <div class="preview-stats">
+    <div><span>HP</span><b id="preview-hp">10</b></div>
+    <div><span>DEF</span><b id="preview-defense">10</b></div>
+    <div><span>MANA</span><b id="preview-mana">0</b></div>
+  </div>
+</div>
 <div class="creation-content">
 <section class="creation-panel is-active" data-panel="identity">
 <div class="heading"><div class="eyebrow">01 · IDENTIDADE</div><h2>Quem está entrando na história?</h2><p>Crie a base do personagem. O rascunho é salvo automaticamente.</p></div>
@@ -72,6 +88,7 @@
 </section>
 <section class="creation-panel" data-panel="attributes" hidden>
 <div class="heading"><div class="eyebrow">05 · ATRIBUTOS</div><h2>Distribua seus dados</h2><p>Não role agora. A ficha recebe dados; a rolagem acontece durante os testes.</p></div>
+<div class="rule-callout"><strong>Seu atributo é um dado, não um valor fixo.</strong><span>Ex.: FOR = D12 significa que um teste de Força rola 1D12.</span></div>
 <div class="dice-banner"><div><span>CONJUNTO</span><div id="dice-pool" class="dice-pool"></div></div><div class="dice-banner-copy"><strong>D4 · D6 · D6 · D8 · D10 · D12 · D20 · D20</strong><small>Os dois D20 podem representar suas maiores especialidades.</small></div></div>
 <div id="attribute-grid" class="attribute-grid"></div><div id="attributes-status" class="status-line"></div>
 </section>
@@ -86,6 +103,7 @@
 </section>
 <section class="creation-panel" data-panel="skills" hidden>
 <div class="heading"><div class="eyebrow">07 · PERÍCIAS</div><h2>Onde você é treinado?</h2><p>O dado vem do atributo relacionado. O treinamento acrescenta bônus sem trocar o dado.</p></div>
+<div class="rule-callout"><strong>Teste de perícia = dado do atributo + bônus.</strong><span>Ex.: AGI D12 + Pontaria +2 → 1D12 + 2.</span></div>
 <div class="skills-overview"><div><span>PERÍCIAS</span><strong>14</strong></div><div><span>TREINADAS</span><strong id="skills-trained-count">0</strong></div><div><span>REGRA</span><strong>Dado + bônus</strong></div></div>
 <div id="skills-grid" class="skills-grid"></div>
 </section>
