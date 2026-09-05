@@ -362,6 +362,23 @@ import { getSupabase } from "./supabase.js";
     }
   }
 
+  function bindFinalizeButtons() {
+    const api = window.AERIONFicha;
+    if (!api?.finalizeCharacter) return;
+
+    [
+      document.getElementById("aerion-finalize-bottom"),
+      document.getElementById("aerion-header-finalize")
+    ].forEach((button) => {
+      if (!button || button.dataset.finalizeBound === "1") return;
+
+      button.dataset.finalizeBound = "1";
+      button.addEventListener("click", () => {
+        api.finalizeCharacter();
+      });
+    });
+  }
+
   function installCloudFlushHandlers() {
     if (session.cloudFlushInstalled) return;
     session.cloudFlushInstalled = true;
@@ -448,8 +465,6 @@ import { getSupabase } from "./supabase.js";
       window.AERIONFicha.reset();
     }
 
-    showEditor();
-
     /*
      * Toda ficha nova nasce no Supabase como rascunho imediatamente.
      * O autosave posterior continua atualizando o mesmo UUID.
@@ -464,7 +479,8 @@ import { getSupabase } from "./supabase.js";
     session.booted = true;
 
     try {
-      await initClient();\n
+      await initClient();
+
       if (!isEditorMode()) {
         window.location.replace("./minhas-fichas.html");
         return;
@@ -473,22 +489,8 @@ import { getSupabase } from "./supabase.js";
       await startEditor();
     } catch (error) {
       console.error("[AERION][FICHAS]", error);
-
-      /*
-       * Nunca esconder o editor por causa da biblioteca.
-       * Esse é o guard principal que evita repetir o bug atual.
-       */
-      const main = document.querySelector(".ficha-main");
-      if (main) {
-        main.hidden = false;
-        main.style.removeProperty("display");
-      }
-
-      const root = $("ficha-library");
-      if (root) root.hidden = true;
-
-      showMessage(
-        error?.message || "Não foi possível carregar suas fichas.",
+      notify(
+        error?.message || "Não foi possível carregar o editor de ficha.",
         "error"
       );
     }
