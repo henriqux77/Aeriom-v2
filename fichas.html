@@ -83,6 +83,230 @@
     defer
   ></script>
 
+  <script type="module" src="./js/core/regras-raciais.js?v=20260905-02"></script>
+  <script type="module" src="./js/core/fichas-biblioteca.js?v=20260905-02"></script>
+
+
+<style id="ficha-library-styles">
+.ficha-library{
+  min-height:100dvh;
+  padding:18px max(18px,4vw) 42px;
+  background:
+    radial-gradient(circle at 80% 0%,rgba(216,182,95,.055),transparent 30%),
+    #090807;
+  color:inherit;
+}
+.ficha-library__header{
+  max-width:1100px;
+  margin:0 auto 22px;
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr) auto;
+  align-items:center;
+  gap:16px;
+}
+.ficha-library__heading{min-width:0}
+.ficha-library__eyebrow{
+  display:block;
+  color:rgba(216,182,95,.75);
+  font-size:9px;
+  font-weight:800;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+}
+.ficha-library__heading h1{
+  margin:5px 0;
+  font-family:Cinzel,serif;
+  font-size:clamp(28px,7vw,46px);
+  line-height:1;
+}
+.ficha-library__heading p{
+  margin:0;
+  color:rgba(255,255,255,.47);
+  font-size:11px;
+}
+.ficha-library__create{
+  min-height:46px;
+  padding:0 15px;
+  border:1px solid rgba(216,182,95,.30);
+  border-radius:12px;
+  background:rgba(216,182,95,.07);
+  color:#e6c66f;
+  cursor:pointer;
+  font-weight:900;
+}
+.ficha-library__message{
+  max-width:1100px;
+  margin:0 auto 15px;
+  padding:10px 12px;
+  border:1px solid rgba(216,182,95,.12);
+  border-radius:11px;
+  background:rgba(216,182,95,.04);
+  color:rgba(255,255,255,.67);
+  font-size:10px;
+}
+.ficha-library__list{
+  max-width:1100px;
+  margin:0 auto;
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:13px;
+}
+.ficha-library__loading,
+.ficha-library__empty{
+  grid-column:1/-1;
+  padding:36px 18px;
+  border:1px dashed rgba(255,255,255,.08);
+  border-radius:18px;
+  color:rgba(255,255,255,.43);
+  text-align:center;
+}
+.ficha-card{
+  display:grid;
+  grid-template-columns:72px minmax(0,1fr);
+  gap:12px;
+  padding:13px;
+  border:1px solid rgba(255,255,255,.07);
+  border-radius:17px;
+  background:rgba(255,255,255,.012);
+}
+.ficha-card__avatar{
+  width:72px;
+  height:72px;
+  display:grid;
+  place-items:center;
+  overflow:hidden;
+  border:1px solid rgba(216,182,95,.12);
+  border-radius:13px;
+  background:rgba(255,255,255,.025);
+  color:#e6c66f;
+  font-family:Cinzel,serif;
+  font-size:22px;
+}
+.ficha-card__avatar img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+.ficha-card__body{
+  min-width:0;
+  display:grid;
+  gap:5px;
+}
+.ficha-card__status{
+  justify-self:start;
+  padding:4px 7px;
+  border-radius:999px;
+  background:rgba(216,182,95,.07);
+  color:#e6c66f;
+  font-size:7px;
+  font-weight:900;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+}
+.ficha-card__status.is-complete{
+  background:rgba(115,169,121,.09);
+  color:#9bc39e;
+}
+.ficha-card__title{
+  margin:0;
+  color:rgba(255,255,255,.88);
+  font-family:Cinzel,serif;
+  font-size:15px;
+}
+.ficha-card__meta{
+  color:rgba(255,255,255,.43);
+  font-size:9px;
+  line-height:1.45;
+}
+.ficha-card__actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  margin-top:5px;
+}
+.ficha-card__action{
+  min-height:34px;
+  padding:0 9px;
+  border:1px solid rgba(255,255,255,.07);
+  border-radius:9px;
+  background:rgba(255,255,255,.018);
+  color:rgba(255,255,255,.66);
+  cursor:pointer;
+  font-size:8px;
+  font-weight:800;
+}
+.ficha-card__action--primary{
+  border-color:rgba(216,182,95,.26);
+  color:#e6c66f;
+}
+.ficha-card__action--danger{
+  color:#d99a9a;
+  border-color:rgba(200,100,100,.16);
+}
+.ficha-finalize{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  margin:18px 0;
+  padding:12px;
+  border:1px solid rgba(216,182,95,.12);
+  border-radius:14px;
+  background:rgba(216,182,95,.025);
+}
+.ficha-finalize p{
+  flex:1;
+  margin:0;
+  color:rgba(255,255,255,.48);
+  font-size:9px;
+  line-height:1.45;
+}
+.ficha-derived-card{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:8px;
+  margin:18px 0;
+  padding:10px;
+  border:1px solid rgba(216,182,95,.11);
+  border-radius:15px;
+  background:rgba(216,182,95,.025);
+}
+.ficha-derived-stat{
+  min-height:62px;
+  display:grid;
+  place-items:center;
+  align-content:center;
+  gap:3px;
+  border:1px solid rgba(255,255,255,.05);
+  border-radius:11px;
+  background:rgba(255,255,255,.012);
+  text-align:center;
+}
+.ficha-derived-stat span{
+  color:rgba(255,255,255,.42);
+  font-size:7px;
+  font-weight:800;
+  letter-spacing:.10em;
+  text-transform:uppercase;
+}
+.ficha-derived-stat strong{
+  color:#e6c66f;
+  font-family:Cinzel,serif;
+  font-size:18px;
+}
+@media(max-width:800px){
+  .ficha-library__list{grid-template-columns:1fr}
+  .ficha-library__header{
+    grid-template-columns:auto minmax(0,1fr);
+    align-items:start;
+  }
+  .ficha-library__create{
+    grid-column:1/-1;
+    width:100%;
+  }
+  .ficha-derived-card{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+</style>
+
 </head>
 
 
@@ -869,7 +1093,6 @@
           id="raceConfirmation"
           class="selection-confirmation"
           aria-live="polite"
-          hidden
         >
         </div>
 
@@ -1905,7 +2128,6 @@
           id="classConfirmation"
           class="selection-confirmation"
           aria-live="polite"
-          hidden
         >
         </div>
 
@@ -3112,107 +3334,6 @@
 
         <div class="power-panel">
 
-          <div class="power-roll-card">
-
-            <div class="power-roll-heading">
-              <div>
-                <span class="eyebrow">
-                  SORTEIO
-                </span>
-
-                <h3>
-                  Role 1D100
-                </h3>
-
-                <p>
-                  1–25 Fogo · 26–50 Ar · 51–75 Terra · 76–100 Água.
-                </p>
-              </div>
-
-              <strong
-                class="power-roll-result"
-                data-power-roll-result
-              >
-                —
-              </strong>
-            </div>
-
-            <button
-              type="button"
-              class="primary-button power-roll-button"
-              data-action="roll-power"
-            >
-              Sortear poder
-            </button>
-
-          </div>
-
-
-          <div class="power-uncommon-card">
-
-            <span class="eyebrow">
-              PODERES INCOMUNS
-            </span>
-
-            <p class="power-help">
-              Você também pode escolher diretamente um poder incomum.
-            </p>
-
-            <div
-              class="power-choice-grid"
-              data-uncommon-power-list
-            >
-
-              <button
-                type="button"
-                class="power-choice"
-                data-action="select-uncommon-power"
-                data-power="Gelo"
-              >
-                Gelo
-              </button>
-
-              <button
-                type="button"
-                class="power-choice"
-                data-action="select-uncommon-power"
-                data-power="Magnetismo"
-              >
-                Magnetismo
-              </button>
-
-              <button
-                type="button"
-                class="power-choice"
-                data-action="select-uncommon-power"
-                data-power="Vegetação"
-              >
-                Vegetação
-              </button>
-
-              <button
-                type="button"
-                class="power-choice"
-                data-action="select-uncommon-power"
-                data-power="Tecnologia"
-              >
-                Tecnologia
-              </button>
-
-              <button
-                type="button"
-                class="power-choice"
-                data-action="select-uncommon-power"
-                data-power="Gravidade"
-              >
-                Gravidade
-              </button>
-
-            </div>
-
-          </div>
-
-
           <label class="field">
 
             <span class="field-label">
@@ -3224,7 +3345,7 @@
               type="text"
               data-power="primaryPower"
               maxlength="120"
-              placeholder="Escolha acima ou escreva outro poder..."
+              placeholder="Ex.: Manipulação de fogo"
             >
 
           </label>
