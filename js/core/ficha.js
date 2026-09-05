@@ -46,7 +46,7 @@
     currentStep:0,completedSteps:Array(10).fill(false),finalized:false,saved:false,
     name:'',age:'',gender:'',origin:'',description:'',personality:'',objective:'',fear:'',importantBond:'',history:'',region:'',
     race:'',animalha:'',animalhaCategory:'',class:'',
-    appearance:{height:170,skinTone:'',skinHex:'',hairColor:'Preto',eyeColor:'Castanhos'},
+    appearance:{height:170,skinTone:'',skinHex:'',hairColor:'Preto',eyeColor:'Castanhos',description:'',scars:'',customDetails:''},
     assignedDice:{},primaryPower:'',parallelPower:'',powerRoll:null,powerMode:'',customPowerDescription:'',
     mana:{current:0,max:0},skills:{},techniques:[],inventory:[],equipment:[],conditions:[],hp:{current:10,max:10},defense:10,movement:9,
     derivedStats:{hpMax:10,defense:10,movement:9,size:'Médio',racialModifiers:{},abilities:[],resistances:[],senses:[]}
@@ -55,6 +55,9 @@
   function characterStorageKey(id){return STORAGE_PREFIX+String(id||'unassigned');}
   function currentCharacterId(){var p=new URLSearchParams(window.location.search);return p.get('id')||p.get('draft')||'unassigned';}
   function storageKey(){return characterStorageKey(currentCharacterId());}
+  function normalizeGender(value){var v=txt(value).toLowerCase();return v==='feminino'?'Feminino':v==='masculino'?'Masculino':'';}
+  function getAgeRange(){var a=window.AERIONPersonagemAssets;if(!a||typeof a.getAgeRange!=='function')return{min:1,max:999};return a.getAgeRange(state.race,state.animalha);}
+  function validAge(){var n=num(state.age,-1),r=getAgeRange();return n>=r.min&&n<=r.max;}
   function calculateDerived(){
     var racial=window.AERION_RACIAL_RULES && window.AERION_RACIAL_RULES.calculate ? window.AERION_RACIAL_RULES.calculate(state) : null;
     if(racial){
@@ -68,7 +71,7 @@
   function computeCompletion(){
     state.completedSteps[0]=!!(txt(state.name)&&txt(state.gender));
     state.completedSteps[1]=!!txt(state.race)&&(txt(state.race).toLowerCase()!=='animalha'||!!(txt(state.animalhaCategory)&&txt(state.animalha)));
-    state.completedSteps[2]=num(state.appearance.height)>0; state.completedSteps[3]=!!txt(state.class);
+    state.completedSteps[2]=num(state.appearance.height)>0&&validAge(); state.completedSteps[3]=!!txt(state.class);
     state.completedSteps[4]=ATTRIBUTES.every(function(a){return !!state.assignedDice[a.id];}); state.completedSteps[5]=!!txt(state.primaryPower);
     state.completedSteps[6]=true;state.completedSteps[7]=true;state.completedSteps[8]=true;state.completedSteps[9]=state.completedSteps.slice(0,6).every(Boolean);
   }
@@ -76,13 +79,13 @@
   function commit(ev){calculateDerived();computeCompletion();state.saved=false;saveLocal(false);emit(ev||'aerion:ficha:update',{state:clone(state)});renderRequest();}
   function renderRequest(){emit('aerion:ficha:render',{state:clone(state)});}
   function reset(){state=DEFAULT();calculateDerived();computeCompletion();localStorage.removeItem(storageKey());saveLocal(true);renderRequest();}
-  function load(){try{var raw=localStorage.getItem(storageKey());if(raw){var saved=JSON.parse(raw),d=DEFAULT();state=Object.assign(d,saved,{appearance:Object.assign({},d.appearance,saved.appearance||{}),mana:Object.assign({},d.mana,saved.mana||{}),hp:Object.assign({},d.hp,saved.hp||{}),derivedStats:Object.assign({},d.derivedStats,saved.derivedStats||{})});}}catch(e){state=DEFAULT();}calculateDerived();computeCompletion();}
-  function setState(partial){state=Object.assign({},state,clone(partial),{appearance:Object.assign({},state.appearance,partial.appearance||{}),mana:Object.assign({},state.mana,partial.mana||{}),hp:Object.assign({},state.hp,partial.hp||{}),derivedStats:Object.assign({},state.derivedStats,partial.derivedStats||{})});calculateDerived();computeCompletion();saveLocal(false);renderRequest();}
+  function load(){try{var raw=localStorage.getItem(storageKey());if(raw){var saved=JSON.parse(raw),d=DEFAULT();state=Object.assign(d,saved,{gender:normalizeGender(saved.gender),appearance:Object.assign({},d.appearance,saved.appearance||{}),mana:Object.assign({},d.mana,saved.mana||{}),hp:Object.assign({},d.hp,saved.hp||{}),derivedStats:Object.assign({},d.derivedStats,saved.derivedStats||{})});}}catch(e){state=DEFAULT();}calculateDerived();computeCompletion();}
+  function setState(partial){state=Object.assign({},state,clone(partial),{gender:normalizeGender(partial.gender),appearance:Object.assign({},state.appearance,partial.appearance||{}),mana:Object.assign({},state.mana,partial.mana||{}),hp:Object.assign({},state.hp,partial.hp||{}),derivedStats:Object.assign({},state.derivedStats,partial.derivedStats||{})});calculateDerived();computeCompletion();saveLocal(false);renderRequest();}
   function selectRace(v){state.race=txt(v);state.animalha='';state.animalhaCategory='';var a=window.AERIONPersonagemAssets;var h=a&&a.getRaceHeight?a.getRaceHeight(state.race):null;if(h)state.appearance.height=Math.round((num(h.min,150)+num(h.max,200))/2);commit('aerion:race:selected');}
   function selectAnimalCategory(v){state.animalhaCategory=txt(v);state.animalha='';commit('aerion:animalha:category');}
   function selectAnimal(v){state.animalha=txt(v);commit('aerion:animalha:selected');}
   function selectClass(v){var k=CLASSES[txt(v)];if(!k)return false;state.class=k.id;state.mana.max=k.mana;state.mana.current=k.mana;commit('aerion:class:selected');return true;}
-  function selectGender(v){state.gender=txt(v);commit('aerion:gender:selected');}
+  function selectGender(v){var g=normalizeGender(v);if(!g)return false;state.gender=g;commit('aerion:gender:selected');return true;}
   function assignDie(a,d){if(!ATTRIBUTES.some(function(x){return x.id===a;})||!DICE.some(function(x){return x.id===d;}))return false;Object.keys(state.assignedDice).forEach(function(k){if(k!==a&&state.assignedDice[k]===d)delete state.assignedDice[k];});state.assignedDice[a]=d;commit('aerion:attributes:update');return true;}
   function removeDie(a){delete state.assignedDice[a];commit('aerion:attributes:update');}
   function rollPower(){var r=Math.floor(Math.random()*100)+1,p=r<=25?'Fogo':r<=50?'Terra':r<=75?'Água':'Ar';state.powerRoll=r;state.primaryPower=p;state.powerMode='d100';state.customPowerDescription='';commit('aerion:power:selected');toast('D100: '+r+' — '+p+'.','success');return{roll:r,power:p};}
@@ -98,7 +101,7 @@
   function addItem(){state.inventory.push({id:crypto.randomUUID(),name:'',quantity:1,slots:1,weight:1});commit('aerion:inventory:add');}
   function updateItem(id,k,v){var i=state.inventory.find(function(x){return x.id===id;});if(!i)return;i[k]=['quantity','slots','weight'].includes(k)?Math.max(k==='quantity'?1:0,num(v)):txt(v);commit('aerion:inventory:update');}
   function removeItem(id){state.inventory=state.inventory.filter(function(x){return x.id!==id;});commit('aerion:inventory:remove');}
-  function validateStep(i){computeCompletion();if(i===0&&!state.completedSteps[0]){toast('Preencha nome e gênero antes de continuar.','warning');$('#characterName')&&$('#characterName').focus();return false;}if(i===1&&!state.completedSteps[1]){toast('Escolha a raça e, para Animalha, categoria e variação.','warning');return false;}if(i===2&&!state.completedSteps[2]){toast('Defina a altura.','warning');return false;}if(i===3&&!state.completedSteps[3]){toast('Escolha uma classe.','warning');return false;}if(i===4&&!state.completedSteps[4]){toast('Distribua os 7 dados nos atributos.','warning');return false;}if(i===5&&!state.completedSteps[5]){toast('Escolha ou sorteie um poder.','warning');return false;}return true;}
+  function validateStep(i){computeCompletion();if(i===0&&!state.completedSteps[0]){toast('Preencha nome e gênero antes de continuar.','warning');$('#characterName')&&$('#characterName').focus();return false;}if(i===1&&!state.completedSteps[1]){toast('Escolha a raça e, para Animalha, categoria e variação.','warning');return false;}if(i===2&&!state.completedSteps[2]){var r=getAgeRange();if(!validAge())toast('Defina uma idade entre '+r.min+' e '+r.max+' anos para esta raça/linhagem.','warning');else toast('Defina a altura.','warning');return false;}if(i===3&&!state.completedSteps[3]){toast('Escolha uma classe.','warning');return false;}if(i===4&&!state.completedSteps[4]){toast('Distribua os 7 dados nos atributos.','warning');return false;}if(i===5&&!state.completedSteps[5]){toast('Escolha ou sorteie um poder.','warning');return false;}return true;}
   function goToStep(target,validate){var t=Math.max(0,Math.min(9,num(target,0)));if(t===state.currentStep){renderRequest();return true;}if(t>state.currentStep&&(validate!==false)&&!validateStep(state.currentStep))return false;if(t>state.currentStep+1)return false;state.currentStep=t;saveLocal(false);emit('aerion:ficha:step',{currentStep:t});renderRequest();window.scrollTo({top:0,behavior:'smooth'});return true;}
   function next(){if(state.currentStep===9)return finalizeCharacter();return goToStep(state.currentStep+1,true);}
   function previous(){if(state.currentStep<=0)return false;state.currentStep--;saveLocal(false);emit('aerion:ficha:step',{currentStep:state.currentStep});renderRequest();window.scrollTo({top:0,behavior:'smooth'});return true;}
