@@ -113,8 +113,6 @@ import { getSupabase } from "./supabase.js";
       `;
       return;
     }
-
-    data.forEach(row => grid.appendChild(card(row)));
   }
 
   async function remove(id) {
@@ -177,6 +175,22 @@ import { getSupabase } from "./supabase.js";
 
       bind();
       await load();
+
+      supabase
+        .channel("aerion-minhas-fichas-" + user.id)
+        .on(
+          "postgres_changes",
+          {
+            event: "*",
+            schema: "public",
+            table: "characters",
+            filter: "user_id=eq." + user.id
+          },
+          () => load().catch(error => {
+            console.error("[AERION][MINHAS FICHAS][REALTIME]", error);
+          })
+        )
+        .subscribe();
     } catch (error) {
       console.error("[AERION][MINHAS FICHAS]",error);
       $("mf-grid").innerHTML = `
