@@ -8,6 +8,7 @@ import { getSupabase } from "./supabase.js";
   let user = null;
 
   const $ = (id) => document.getElementById(id);
+  let allRows = [];
 
   function esc(value) {
     return String(value ?? "").replace(/[&<>"']/g, (c) => ({
@@ -54,6 +55,38 @@ import { getSupabase } from "./supabase.js";
     return el;
   }
 
+  function renderRows() {
+    const filter = $("mf-filter")?.value || "all";
+    const rows = filter === "all"
+      ? allRows
+      : allRows.filter(row =>
+          filter === "completed"
+            ? row.status === "completed"
+            : row.status !== "completed"
+        );
+
+    const grid = $("mf-grid");
+    grid.replaceChildren();
+
+    const count = $("mf-count");
+    if (count) {
+      count.textContent =
+        `${rows.length} ${rows.length === 1 ? "ficha" : "fichas"}`;
+    }
+
+    if (!rows.length) {
+      grid.innerHTML = `
+        <div class="mf-empty">
+          <strong>Nenhuma ficha neste filtro.</strong><br>
+          Ajuste o filtro ou crie uma nova ficha.
+        </div>
+      `;
+      return;
+    }
+
+    rows.forEach(row => grid.appendChild(card(row)));
+  }
+
   async function load() {
     const grid = $("mf-grid");
     grid.innerHTML = '<div class="mf-loading">Carregando suas fichas…</div>';
@@ -68,9 +101,10 @@ import { getSupabase } from "./supabase.js";
 
     if (error) throw error;
 
-    grid.replaceChildren();
+    allRows = data || [];
+    renderRows();
 
-    if (!data?.length) {
+    if (!allRows.length) {
       grid.innerHTML = `
         <div class="mf-empty">
           <strong>Seu grimório ainda está vazio.</strong><br>
@@ -98,6 +132,8 @@ import { getSupabase } from "./supabase.js";
   }
 
   function bind() {
+    $("mf-filter")?.addEventListener("change", renderRows);
+
     $("mf-new").addEventListener("click", () => {
       window.location.href = "./fichas.html?new=1";
     });
