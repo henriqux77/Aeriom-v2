@@ -889,80 +889,6 @@ import { getSupabase } from "./supabase.js";
     });
   }
 
-  function addFinalizeButton() {
-    if (
-      document.querySelector("#aerion-finalize-bottom") ||
-      document.querySelector("#aerion-finalize-ficha")
-    ) return;
-
-    const review =
-      document.querySelector('[data-panel="review"]') ||
-      document.querySelector(".review-panel");
-
-    if (!review) return;
-
-    const box = document.createElement("div");
-    box.className = "aerion-ficha-finalize";
-    box.id = "aerion-finalize-ficha";
-    box.innerHTML = `
-      <p>
-        O salvamento automático mantém a ficha como <strong>Incompleta</strong>.
-        Quando tudo estiver revisado, finalize para marcá-la como pronta.
-      </p>
-      <button
-        type="button"
-        class="primary-button"
-        id="aerion-finalize-ficha-button"
-      >
-        Finalizar ficha
-      </button>
-    `;
-
-    review.prepend(box);
-
-    $("aerion-finalize-ficha-button")?.addEventListener("click", () => {
-      window.AERIONFicha?.finalizeCharacter?.();
-    });
-;
-  }
-
-  function bindFinalizeButtons() {
-    const api = window.AERIONFicha;
-    if (!api?.finalizeCharacter) return;
-
-    [
-      document.getElementById("aerion-finalize-bottom"),
-      document.getElementById("aerion-header-finalize")
-    ].forEach((button) => {
-      if (!button || button.dataset.finalizeBound === "1") return;
-      button.dataset.finalizeBound = "1";
-      button.addEventListener("click", () => {
-        api.finalizeCharacter();
-      });
-    });
-  }
-
-  function addHeaderFinalizeButton() {
-    if (document.getElementById("aerion-header-finalize")) return;
-
-    const header = document.querySelector(".ficha-header");
-    const saveStatus = document.getElementById("saveStatus");
-    if (!header || !saveStatus) return;
-
-    const button = document.createElement("button");
-    button.type = "button";
-    button.id = "aerion-header-finalize";
-    button.className = "ficha-header-finalize";
-    button.hidden = true;
-    button.textContent = "Finalizar";
-
-    button.addEventListener("click", () => {
-      window.AERIONFicha?.finalizeCharacter?.();
-    });
-
-    saveStatus.insertAdjacentElement("afterend", button);
-  }
-
   function installCloudFlushHandlers() {
     if (session.cloudFlushInstalled) return;
     session.cloudFlushInstalled = true;
@@ -994,7 +920,7 @@ import { getSupabase } from "./supabase.js";
       if (!snapshot || !session.characterId) return;
 
       session.finalizing = true;
-      clearTimeout(window.__AERIONCloudSaveTimer);
+      clearTimeout(session.cloudSaveTimer);
 
       try {
         const finalized = await persist(snapshot, "completed");
