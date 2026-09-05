@@ -464,6 +464,16 @@ import { getSupabase } from "./supabase.js";
       draftId ||
       crypto.randomUUID();
 
+    session.status = existingId ? session.status : "draft";
+
+    if (!existingId && !draftId) {
+      const url = new URL(window.location.href);
+      url.search = "";
+      url.searchParams.set("new", "1");
+      url.searchParams.set("draft", session.characterId);
+      window.history.replaceState({}, "", url);
+    }
+
     if (existingId) {
       await openExisting(existingId);
       return;
