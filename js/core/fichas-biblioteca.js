@@ -36,6 +36,7 @@ import { getSupabase } from "./supabase.js";
     finalizing: false,
     hooksInstalled: false,
     finalizeBridgeInstalled: false,
+    cloudFlushInstalled: false,
     booted: false
   };
 
@@ -508,10 +509,13 @@ import { getSupabase } from "./supabase.js";
     if (
       !session.supabase ||
       !session.user ||
-      !session.characterId ||
-      session.saving
+      !session.characterId
     ) {
       return false;
+    }
+
+    while (session.saving) {
+      await new Promise((resolve) => setTimeout(resolve, 50));
     }
 
     session.saving = true;
@@ -550,7 +554,7 @@ import { getSupabase } from "./supabase.js";
     if (session.hooksInstalled) return;
     session.hooksInstalled = true;
 
-    window.addEventListener("aerion:save", (event) => {
+    const scheduleCloudSave = (event) => {
       const snapshot =
         event?.detail?.state ||
         window.AERIONFicha?.getState?.();
@@ -570,6 +574,12 @@ import { getSupabase } from "./supabase.js";
           console.error("[AERION][FICHAS] Autosave cloud falhou:", error);
           showMessage(error?.message || "Não foi possível salvar a ficha na nuvem.", "error");
         });
+      }, 180);
+    };
+
+    window.addEventListener("aerion:ficha:update", scheduleCloudSave);
+    window.addEventListener("aerion:save", scheduleCloudSave);
+
       }, 150);
     });
   }
@@ -955,6 +965,26 @@ import { getSupabase } from "./supabase.js";
     saveStatus.insertAdjacentElement("afterend", button);
   }
 
+  function installCloudFlushHandlers() {
+    if (session.cloudFlushInstalled) return;
+    session.cloudFlushInstalled = true;
+
+    const flush = () => {
+      if (!isEditorMode() || session.finalizing || !session.characterId) return;
+      const snapshot = window.AERIONFicha?.getState?.();
+      if (snapshot) {
+        persist(snapshot).catch((error) =>
+          console.error("[AERION][FICHAS] Flush:", error)
+        );
+      }
+    };
+
+    window.addEventListener("pagehide", flush);
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "hidden") flush();
+    });
+  }
+
   function installFinalizeBridge() {
     if (session.finalizeBridgeInstalled) return;
     session.finalizeBridgeInstalled = true;
@@ -969,7 +999,10 @@ import { getSupabase } from "./supabase.js";
       clearTimeout(window.__AERIONCloudSaveTimer);
 
       try {
-        await persist(snapshot, "completed");
+        const finalized = await persist(snapshot, "completed");
+        if (!finalized) {
+          throw new Error("A ficha não pôde ser gravada como pronta.");
+        }
         notify("Ficha finalizada.", "success");
 
         const url = new URL(window.location.href);
@@ -991,6 +1024,7 @@ import { getSupabase } from "./supabase.js";
     await waitForFichaApi();
 
     installEditorHooks();
+    installCloudFlushHandlers();
     installFinalizeBridge();
     addHeaderFinalizeButton();
     bindFinalizeButtons();
