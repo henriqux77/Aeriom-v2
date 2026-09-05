@@ -756,11 +756,6 @@
       lineage: "aquatico"
     },
 
-    foca: {
-      id: "foca",
-      name: "Foca",
-      category: "marinhos",
-      lineage: "aquatico"
     }
   };
 
