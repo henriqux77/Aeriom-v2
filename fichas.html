@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#090807">
 <title>AERION — Criar ficha</title>
 <link rel="stylesheet" href="./css/aeriom.css">
-<link rel="stylesheet" href="./css/ficha.css?v=20260905-phase2">
+<link rel="stylesheet" href="./css/ficha.css?v=20260905-phase5">
 </head>
 <body class="aeriom-page aeriom-page--character">
 <main class="ficha-app" id="ficha-app">
@@ -78,7 +78,9 @@
 <section class="creation-panel" data-panel="appearance" hidden>
 <div class="heading"><div class="eyebrow">03 · APARÊNCIA</div><h2>Refine a aparência</h2><p>A altura respeita os limites da raça. O tom de pele é escolhido visualmente.</p></div>
 <div class="appearance-layout"><div class="appearance-character"><div class="appearance-art"><img id="appearance-image" alt="Prévia" hidden><span id="appearance-placeholder">Escolha uma raça</span></div><strong id="appearance-race-label">Sem raça definida</strong><span id="appearance-size-label">—</span></div>
-<div class="appearance-controls"><div class="height-control">
+<div class="appearance-controls">
+<div class="height-control"><small>MAIOR</small><input id="height-range" type="range" data-appearance="height" min="90" max="320" value="170" orient="vertical" aria-label="Altura"><div class="height-readout"><strong><b id="height-value">170</b> cm</strong><span><small id="height-min-label">—</small>–<small id="height-max-label">—</small></span></div></div>
+<div class="appearance-side">
 <div class="age-control">
   <div class="appearance-field-heading">
     <span class="label">Idade</span>
@@ -88,8 +90,8 @@
     <input id="character-age" data-field="age" type="number" min="1" max="9999" inputmode="numeric" placeholder="Idade">
     <span>anos</span>
   </label>
-</div><small>MAIOR</small><input id="height-range" type="range" data-appearance="height" min="90" max="320" value="170" orient="vertical" aria-label="Altura"><div class="height-readout"><strong><b id="height-value">170</b> cm</strong><span><small id="height-min-label">—</small>–<small id="height-max-label">—</small></span></div></div>
-<div class="appearance-options"><div class="appearance-option"><span class="label">Tom de pele</span><button id="skin-picker-button" type="button" class="picker" aria-expanded="false"><i id="skin-swatch"></i><span id="skin-value">Escolher</span><b>⌄</b></button><div id="skin-picker" class="popover" hidden></div></div><div class="appearance-option"><span class="label">Cabelo</span><div id="hair-grid" class="mini-grid"></div></div><div class="appearance-option"><span class="label">Olhos</span><div id="eyes-grid" class="mini-grid"></div></div><div class="appearance-option appearance-free-form"><span class="label">Personalização livre</span><div class="free-form-grid"><label>Descrição da aparência<textarea data-appearance="description" rows="3" maxlength="900" placeholder="Traços, roupas, detalhes físicos ou qualquer outra característica."></textarea></label><label>Cicatrizes <span class="optional">(opcional)</span><textarea data-appearance="scars" rows="2" maxlength="600" placeholder="Cicatrizes, marcas, tatuagens, queimaduras…"></textarea></label><label>Outros detalhes <span class="optional">(opcional)</span><textarea data-appearance="customDetails" rows="2" maxlength="900" placeholder="Algo que não aparece nas opções prontas? Escreva aqui."></textarea></label></div></div></div></div></div></div>
+</div>
+<div class="appearance-options"><div class="appearance-option"><span class="label">Tom de pele</span><button id="skin-picker-button" type="button" class="picker" aria-expanded="false"><i id="skin-swatch"></i><span id="skin-value">Escolher</span><b>⌄</b></button><div id="skin-picker" class="popover" hidden></div></div><div class="appearance-option"><span class="label">Cabelo</span><div id="hair-grid" class="mini-grid"></div></div><div class="appearance-option"><span class="label">Olhos</span><div id="eyes-grid" class="mini-grid"></div></div><div class="appearance-option appearance-free-form"><span class="label">Personalização livre</span><div class="free-form-grid"><label>Descrição da aparência<textarea data-appearance="description" rows="3" maxlength="900" placeholder="Traços, roupas, detalhes físicos ou qualquer outra característica."></textarea></label><label>Cicatrizes <span class="optional">(opcional)</span><textarea data-appearance="scars" rows="2" maxlength="600" placeholder="Cicatrizes, marcas, tatuagens, queimaduras…"></textarea></label><label>Outros detalhes <span class="optional">(opcional)</span><textarea data-appearance="customDetails" rows="2" maxlength="900" placeholder="Algo que não aparece nas opções prontas? Escreva aqui."></textarea></label></div></div></div></div></div>
 </section>
 <section class="creation-panel" data-panel="class" hidden>
 <div class="heading"><div class="eyebrow">04 · CLASSE</div><h2>Como você joga?</h2><p>A classe define Mana, carga e estilo de jogo. Itens e bônus específicos entram conforme as regras forem fechadas.</p></div><div id="class-grid" class="class-grid"></div>
@@ -129,14 +131,14 @@
 <div class="finalize-zone"><div><span>ÚLTIMO PASSO</span><h3>Tornar ficha pronta</h3><p>Ao finalizar, a mesma ficha passa a ser <strong>Pronta</strong> e pode entrar em uma campanha.</p></div><button id="aerion-finalize-bottom" class="finalize-primary" type="button" data-action="finalize">Finalizar ficha <b>✓</b></button></div>
 </section>
 </div>
-<footer class="creation-navigation"><button type="button" data-action="previous-step" class="nav-secondary">← <span>Voltar</span></button><div class="nav-center"><b data-current-step>1</b><span>/</span><b data-total-steps>10</b><small data-current-step-title>Identidade</small></div><button type="button" data-action="next-step" class="nav-primary"><span>Próximo</span> →</button></footer>
+<footer class="creation-navigation"><button type="button" data-action="previous-step" class="nav-secondary" aria-label="Voltar uma etapa">← <span>Voltar</span></button><div class="nav-center"><b data-current-step>1</b><span>/</span><b data-total-steps>10</b><small data-current-step-title>Identidade</small></div><button type="button" data-action="next-step" class="nav-primary" aria-label="Avançar para a próxima etapa"><span>Próximo</span> →</button></footer>
 </section></section></main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
 <script type="module" src="./js/core/main.js"></script>
-<script src="./js/core/personagem-assets.js?v=20260905-phase4" defer></script>
+<script src="./js/core/personagem-assets.js?v=20260905-phase5" defer></script>
 <script src="./js/core/personagem-render.js" defer></script>
-<script src="./js/core/ficha.js?v=20260905-phase4" defer></script>
-<script src="./js/core/ficha-render.js?v=20260905-phase4" defer></script>
+<script src="./js/core/ficha.js?v=20260905-phase5" defer></script>
+<script src="./js/core/ficha-render.js?v=20260905-phase5" defer></script>
 <script type="module" src="./js/core/regras-raciais.js?v=20260905-phase2"></script>
 <script type="module" src="./js/core/fichas-biblioteca.js?v=20260905-phase2"></script>
 </body></html>
