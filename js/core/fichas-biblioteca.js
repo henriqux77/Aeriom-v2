@@ -31,8 +31,10 @@ import { getSupabase } from "./supabase.js";
     supabase: null,
     user: null,
     characterId: null,
+    currentCampaignId: null,
     saving: false,
     hooksInstalled: false,
+    finalizeBridgeInstalled: false,
     booted: false
   };
 
@@ -432,7 +434,7 @@ import { getSupabase } from "./supabase.js";
     return {
       id: session.characterId,
       user_id: session.user.id,
-      campaign_id: null,
+      campaign_id: session.currentCampaignId ?? null,
 
       name: safeText(snapshot?.name) || "Ficha sem nome",
       age: safeText(snapshot?.age) ? number(snapshot.age) : null,
@@ -452,9 +454,15 @@ import { getSupabase } from "./supabase.js";
 
       personality: { text: safeText(snapshot?.personality) },
       backstory: safeText(snapshot?.history) || null,
-      goals: { text: safeText(snapshot?.objective) },
-      fears: { text: safeText(snapshot?.fear) },
-      important_bonds: { text: safeText(snapshot?.importantBond) },
+      goals: safeText(snapshot?.objective)
+        ? [safeText(snapshot.objective)]
+        : [],
+      fears: safeText(snapshot?.fear)
+        ? [safeText(snapshot.fear)]
+        : [],
+      important_bonds: safeText(snapshot?.importantBond)
+        ? [safeText(snapshot.importantBond)]
+        : [],
 
       hp_current: Math.max(0, number(hp.current, 10)),
       hp_max: Math.max(1, number(hp.max, 10)),
@@ -471,7 +479,7 @@ import { getSupabase } from "./supabase.js";
       equipment: arrayOrEmpty(snapshot?.equipment),
       conditions: arrayOrEmpty(snapshot?.conditions),
 
-      avatar_path: null,
+      avatar_path: safeText(snapshot?.avatar) || null,
 
       size_category: safeText(derived?.sizeCategory) || "Médio",
       natural_profile: safeText(derived?.naturalProfile) || null,
@@ -507,8 +515,7 @@ import { getSupabase } from "./supabase.js";
 
     try {
       const status =
-        forcedStatus ||
-        (requiredComplete(snapshot) ? "completed" : "draft");
+        forcedStatus || "draft";
 
       const payload = buildPayload(snapshot, status);
 
@@ -618,6 +625,7 @@ import { getSupabase } from "./supabase.js";
     if (!data) throw new Error("Ficha não encontrada.");
 
     session.characterId = data.id;
+    session.currentCampaignId = data.campaign_id || null;
     clearLocalDraft();
 
     const url = new URL(window.location.href);
@@ -890,25 +898,54 @@ import { getSupabase } from "./supabase.js";
 
     review.prepend(box);
 
-    $("aerion-finalize-ficha-button")?.addEventListener("click", async () => {
-      await waitForFichaApi();
+    $("aerion-finalize-ficha-button")?.addEventListener("click", () => {
+      window.AERIONFicha?.finalizeCharacter?.();
+    });
+;
+  }
 
-      const snapshot = window.AERIONFicha.getState();
+  function addHeaderFinalizeButton() {
+    if (document.getElementById("aerion-header-finalize")) return;
 
-      if (!requiredComplete(snapshot)) {
-        showMessage(
-          "Complete Identidade, Raça, Aparência, Classe, Atributos e Poder antes de finalizar."
-        );
-        notify("A ficha ainda está incompleta.", "warning");
-        return;
-      }
+    const header = document.querySelector(".ficha-header");
+    const saveStatus = document.getElementById("saveStatus");
+    if (!header || !saveStatus) return;
+
+    const button = document.createElement("button");
+    button.type = "button";
+    button.id = "aerion-header-finalize";
+    button.className = "ficha-header-finalize";
+    button.hidden = true;
+    button.textContent = "Finalizar";
+
+    button.addEventListener("click", () => {
+      window.AERIONFicha?.finalizeCharacter?.();
+    });
+
+    saveStatus.insertAdjacentElement("afterend", button);
+  }
+
+  function installFinalizeBridge() {
+    if (session.finalizeBridgeInstalled) return;
+    session.finalizeBridgeInstalled = true;
+
+    window.addEventListener("aerion:ficha:finalize", async (event) => {
+      const snapshot = event?.detail?.state ||
+        window.AERIONFicha?.getState?.();
+
+      if (!snapshot || !session.characterId) return;
 
       try {
         await persist(snapshot, "completed");
         notify("Ficha finalizada.", "success");
+
+        const url = new URL(window.location.href);
+        window.location.href = url.pathname.includes("fichas.html")
+          ? "./minhas-fichas.html"
+          : "./minhas-fichas.html";
       } catch (error) {
         console.error("[AERION][FICHAS] Finalização:", error);
-        showMessage(
+        notify(
           error?.message || "Não foi possível finalizar a ficha.",
           "error"
         );
@@ -920,6 +957,8 @@ import { getSupabase } from "./supabase.js";
     await waitForFichaApi();
 
     installEditorHooks();
+    installFinalizeBridge();
+    addHeaderFinalizeButton();
 
     const p = params();
     const existingId = p.get("id");
