@@ -240,7 +240,7 @@ import { getSupabase } from "./supabase.js";
       if (error) throw error;
 
       const saveTextDone = document.getElementById("saveStatusText");
-      if (saveTextDone) saveTextDone.textContent = "Salvo agora";
+      if (saveTextDone) saveTextDone.textContent = "Salvo na nuvem";
 
       window.dispatchEvent(
         new CustomEvent("aerion:fichas:cloudsaved", {
