@@ -34,7 +34,7 @@
     {name:'Vegetação',description:'Manipulação de plantas e matéria vegetal.'},{name:'Tecnologia',description:'Afinidade com mecanismos e artefatos tecnológicos.'},
     {name:'Gravidade',description:'Alteração localizada de peso e atração.'}
   ];
-  const STORAGE = 'aerion:ficha:draft:v40';
+  const STORAGE_PREFIX = 'aerion:ficha:draft:v40:';
   const $ = function(s,r){return (r||document).querySelector(s);};
   const $$ = function(s,r){return Array.from((r||document).querySelectorAll(s));};
   const txt = function(v){return String(v == null ? '' : v).trim();};
@@ -52,6 +52,9 @@
     derivedStats:{hpMax:10,defense:10,movement:9,size:'Médio',racialModifiers:{},abilities:[],resistances:[],senses:[]}
   };};
   let state=DEFAULT(), timer=null, ready=false;
+  function characterStorageKey(id){return STORAGE_PREFIX+String(id||'unassigned');}
+  function currentCharacterId(){var p=new URLSearchParams(window.location.search);return p.get('id')||p.get('draft')||'unassigned';}
+  function storageKey(){return characterStorageKey(currentCharacterId());}
   function calculateDerived(){
     var racial=window.AERION_RACIAL_RULES && window.AERION_RACIAL_RULES.calculate ? window.AERION_RACIAL_RULES.calculate(state) : null;
     if(racial){
@@ -69,11 +72,11 @@
     state.completedSteps[4]=ATTRIBUTES.every(function(a){return !!state.assignedDice[a.id];}); state.completedSteps[5]=!!txt(state.primaryPower);
     state.completedSteps[6]=true;state.completedSteps[7]=true;state.completedSteps[8]=true;state.completedSteps[9]=state.completedSteps.slice(0,6).every(Boolean);
   }
-  function saveLocal(immediate){clearTimeout(timer);var run=function(){try{state.saved=true;localStorage.setItem(STORAGE,JSON.stringify(state));emit('aerion:save',{state:clone(state)});var e=$('#saveStatusText');if(e)e.textContent='Salvo agora';}catch(e){var x=$('#saveStatusText');if(x)x.textContent='Erro ao salvar';}};var s=$('#saveStatusText');if(s)s.textContent='Salvando…';if(immediate)run();else timer=setTimeout(run,350);}
+  function saveLocal(immediate){clearTimeout(timer);var run=function(){try{state.saved=true;localStorage.setItem(storageKey(),JSON.stringify(state));emit('aerion:save',{state:clone(state)});var e=$('#saveStatusText');if(e)e.textContent='Salvo agora';}catch(e){var x=$('#saveStatusText');if(x)x.textContent='Erro ao salvar';}};var s=$('#saveStatusText');if(s)s.textContent='Salvando…';if(immediate)run();else timer=setTimeout(run,350);}
   function commit(ev){calculateDerived();computeCompletion();state.saved=false;saveLocal(false);emit(ev||'aerion:ficha:update',{state:clone(state)});renderRequest();}
   function renderRequest(){emit('aerion:ficha:render',{state:clone(state)});}
-  function reset(){state=DEFAULT();calculateDerived();computeCompletion();localStorage.removeItem(STORAGE);saveLocal(true);renderRequest();}
-  function load(){try{var raw=localStorage.getItem(STORAGE);if(raw){var saved=JSON.parse(raw),d=DEFAULT();state=Object.assign(d,saved,{appearance:Object.assign({},d.appearance,saved.appearance||{}),mana:Object.assign({},d.mana,saved.mana||{}),hp:Object.assign({},d.hp,saved.hp||{}),derivedStats:Object.assign({},d.derivedStats,saved.derivedStats||{})});}}catch(e){state=DEFAULT();}calculateDerived();computeCompletion();}
+  function reset(){state=DEFAULT();calculateDerived();computeCompletion();localStorage.removeItem(storageKey());saveLocal(true);renderRequest();}
+  function load(){try{var raw=localStorage.getItem(storageKey());if(raw){var saved=JSON.parse(raw),d=DEFAULT();state=Object.assign(d,saved,{appearance:Object.assign({},d.appearance,saved.appearance||{}),mana:Object.assign({},d.mana,saved.mana||{}),hp:Object.assign({},d.hp,saved.hp||{}),derivedStats:Object.assign({},d.derivedStats,saved.derivedStats||{})});}}catch(e){state=DEFAULT();}calculateDerived();computeCompletion();}
   function setState(partial){state=Object.assign({},state,clone(partial),{appearance:Object.assign({},state.appearance,partial.appearance||{}),mana:Object.assign({},state.mana,partial.mana||{}),hp:Object.assign({},state.hp,partial.hp||{}),derivedStats:Object.assign({},state.derivedStats,partial.derivedStats||{})});calculateDerived();computeCompletion();saveLocal(false);renderRequest();}
   function selectRace(v){state.race=txt(v);state.animalha='';state.animalhaCategory='';var a=window.AERIONPersonagemAssets;var h=a&&a.getRaceHeight?a.getRaceHeight(state.race):null;if(h)state.appearance.height=Math.round((num(h.min,150)+num(h.max,200))/2);commit('aerion:race:selected');}
   function selectAnimalCategory(v){state.animalhaCategory=txt(v);state.animalha='';commit('aerion:animalha:category');}
