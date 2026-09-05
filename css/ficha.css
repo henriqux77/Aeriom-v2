@@ -4582,3 +4582,47 @@ select:focus-visible {
     font-size:14px;
   }
 }
+
+
+/* =========================================================
+   AERION — GLOW UP v1
+   ========================================================= */
+:root{
+  --ficha-glow: rgba(216,182,95,.18);
+  --ficha-card-bg: rgba(255,255,255,.018);
+}
+.ficha-main .ficha-panel,
+.ficha-main .ficha-card,
+.ficha-main .selection-card,
+.ficha-main .attribute-card,
+.ficha-main .skill-card,
+.ficha-main .technique-card,
+.ficha-main .inventory-card{
+  transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease,background .18s ease;
+}
+.ficha-main .ficha-panel:hover,
+.ficha-main .selection-card:hover,
+.ficha-main .attribute-card:hover,
+.ficha-main .skill-card:hover,
+.ficha-main .technique-card:hover,
+.ficha-main .inventory-card:hover{
+  border-color:rgba(216,182,95,.16);
+  box-shadow:0 12px 34px rgba(0,0,0,.16);
+}
+.ficha-main button,
+.ficha-main [role="button"]{
+  -webkit-tap-highlight-color:transparent;
+}
+.ficha-main button:focus-visible,
+.ficha-main [role="button"]:focus-visible,
+.ficha-main input:focus-visible,
+.ficha-main select:focus-visible,
+.ficha-main textarea:focus-visible{
+  outline:2px solid rgba(216,182,95,.56);
+  outline-offset:2px;
+}
+@media(max-width:700px){
+  .ficha-main{padding-bottom:calc(80px + env(safe-area-inset-bottom));}
+  .ficha-main .ficha-panel,
+  .ficha-main .ficha-card{border-radius:16px;}
+}
