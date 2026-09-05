@@ -739,6 +739,16 @@
 }
 </style>
 
+<style id="aeriom-dice-history-toolbar-fix">
+    .aeriom-dice-history-actions{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+    .aeriom-dice-history-actions .aeriom-mini-button{min-height:34px;padding:0 10px;border-radius:9px}
+    .dice-history-section .dice-history-actions > * + *{display:none}
+    .dice-history-section .aeriom-dice-history{max-height:360px;overflow:auto}
+    @media(max-width:699px){
+      .dice-history-section .aeriom-dice-history{max-height:290px}
+      .aeriom-dice-history-actions{width:100%;margin-top:6px}
+    }
+  </style>
 </head>
 
 
@@ -3249,73 +3259,6 @@
   /* ----------------------------------------------------------
      CORREÇÃO: limpar histórico com RPC seguro
      ---------------------------------------------------------- */
-  function installDiceHistoryFix() {
-    document.addEventListener("click", async (event) => {
-      const button = event.target.closest("#dice-history-clear");
-      if (!button) return;
-
-      event.preventDefault();
-      event.stopImmediatePropagation();
-
-      await syncContext();
-
-      if (!APP.supabase || !APP.campaignId) {
-        toast("A campanha ainda não foi carregada.", "error");
-        return;
-      }
-
-      if (!isMaster()) {
-        toast("Somente o Mestre pode limpar o histórico.", "error");
-        return;
-      }
-
-      if (!window.confirm("Limpar todo o histórico de rolagens desta campanha?")) {
-        return;
-      }
-
-      button.disabled = true;
-      const originalText = button.textContent;
-      button.textContent = "Limpando...";
-
-      try {
-        const { data, error } = await APP.supabase.rpc(
-          "clear_campaign_dice_history",
-          { p_campaign_id: APP.campaignId }
-        );
-
-        if (error) throw error;
-
-        const history = $("dice-history");
-        if (history) {
-          history.innerHTML =
-            '<div class="aeriom-dice-history-placeholder">' +
-            'Histórico limpo' +
-            (Number.isFinite(Number(data))
-              ? ` · ${Number(data)} rolagem(ns) removida(s)`
-              : ".") +
-            '</div>';
-        }
-
-        window.dispatchEvent(new CustomEvent("aeriom:dice:historyclear", {
-          detail: {
-            campaignId: APP.campaignId,
-            count: Number(data) || 0
-          }
-        }));
-
-        toast("Histórico de rolagens limpo.", "success");
-      } catch (error) {
-        console.error("[AERION][DICE] secure clear", error);
-        toast(
-          error?.message || "Não foi possível limpar o histórico.",
-          "error"
-        );
-      } finally {
-        button.disabled = false;
-        button.textContent = originalText || "Limpar histórico";
-      }
-    }, true);
-  }
 
   /* ----------------------------------------------------------
      MAPAS
@@ -4731,6 +4674,7 @@
 })();
 </script>
 
+<script type="module" src="./js/core/campanha-fichas.js?v=20260905-01"></script>
 </body>
 
 </html>
