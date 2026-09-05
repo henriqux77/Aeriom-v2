@@ -52,7 +52,7 @@ const AERIOM_APP = Object.freeze({
         "campanha.html",
 
       characters:
-        "fichas.html",
+        "minhas-fichas.html",
 
       character:
         "ficha.html"
