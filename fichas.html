@@ -4058,7 +4058,7 @@
         <span
           data-total-steps
         >
-          11
+          10
         </span>
 
       </div>
@@ -4120,23 +4120,6 @@
     hidden
   ></div>
 
-  <script id="__AERION_FINALIZE_BOTTOM_BRIDGE__">
-    (() => {
-      const bind = () => {
-        const button = document.getElementById("aerion-finalize-bottom");
-        if (!button || button.dataset.bound === "1") return;
-        button.dataset.bound = "1";
-        button.addEventListener("click", () => {
-          window.AERIONFicha?.finalizeCharacter?.();
-        });
-      };
-      if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", bind, { once:true });
-      } else {
-        bind();
-      }
-    })();
-  </script>
 
 </body>
 
