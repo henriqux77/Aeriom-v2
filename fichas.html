@@ -1,149 +1,24 @@
 <!doctype html>
 <html lang="pt-BR">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#0a0908">
-<title>AERION — Criar ficha</title>
-<link rel="stylesheet" href="css/aeriom.css">
-<link rel="stylesheet" href="css/ficha.css?v=20260905-glow3">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#090807"><title>AERION — Criar ficha</title>
+<link rel="stylesheet" href="css/aeriom.css"><link rel="stylesheet" href="css/ficha.css?v=20260905-rebuild2">
 </head>
-<body class="aeriom-page aeriom-page--character">
-<main class="ficha-app" id="ficha-app">
-<header class="ficha-topbar">
-  <div class="ficha-brand-block">
-    <a href="./minhas-fichas.html" class="ficha-back" aria-label="Voltar">←</a>
-    <div><span class="ficha-eyebrow">AERION · FICHA</span><h1>Forje seu aventureiro</h1></div>
-  </div>
-  <div class="ficha-top-actions">
-    <div id="saveStatus" class="ficha-save-status" aria-live="polite"><span class="save-dot"></span><span id="saveStatusText">Pronto</span></div>
-    <button type="button" id="aerion-header-finalize" class="ficha-header-finalize" hidden>Finalizar</button>
-  </div>
-</header>
-
-<section class="ficha-shell">
-<aside class="ficha-progress" aria-label="Progresso">
-  <div class="progress-head"><div><span class="ficha-eyebrow">CAMINHO</span><strong><span data-current-step>1</span>/<span data-total-steps>10</span></strong></div><span id="progressPercent">0%</span></div>
-  <div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="progressBar"></span></div>
-  <nav id="creationSteps" class="creation-steps" aria-label="Etapas">
-    <button type="button" class="creation-step is-active" data-step="0"><span>01</span><b>Identidade</b></button>
-    <button type="button" class="creation-step" data-step="1"><span>02</span><b>Raça</b></button>
-    <button type="button" class="creation-step" data-step="2"><span>03</span><b>Aparência</b></button>
-    <button type="button" class="creation-step" data-step="3"><span>04</span><b>Classe</b></button>
-    <button type="button" class="creation-step" data-step="4"><span>05</span><b>Atributos</b></button>
-    <button type="button" class="creation-step" data-step="5"><span>06</span><b>Poder & Mana</b></button>
-    <button type="button" class="creation-step" data-step="6"><span>07</span><b>Perícias</b></button>
-    <button type="button" class="creation-step" data-step="7"><span>08</span><b>Técnicas</b></button>
-    <button type="button" class="creation-step" data-step="8"><span>09</span><b>Inventário</b></button>
-    <button type="button" class="creation-step" data-step="9"><span>10</span><b>Revisão</b></button>
-  </nav>
-</aside>
-
-<section class="ficha-editor">
-  <div class="ficha-preview">
-    <div class="preview-avatar"><span id="preview-initial">A</span><img id="preview-image" alt="" hidden></div>
-    <div class="preview-copy"><span class="ficha-eyebrow">AVENTUREIRO</span><h2 id="preview-name">Sem nome</h2><p id="preview-subtitle">Escolha raça e classe para começar.</p></div>
-    <div class="preview-stats"><div><span>HP</span><strong id="preview-hp">10</strong></div><div><span>DEF</span><strong id="preview-defense">10</strong></div><div><span>MANA</span><strong id="preview-mana">0</strong></div></div>
-  </div>
-
-  <div class="creation-content">
-    <section class="creation-panel" data-panel="identity">
-      <div class="section-heading"><span class="ficha-eyebrow">01 · IDENTIDADE</span><h2>Quem está entrando na história?</h2><p>Defina as informações que dão rosto ao personagem.</p></div>
-      <div class="form-grid">
-        <label class="field"><span class="field-label">Nome</span><input id="characterName" type="text" maxlength="80" data-field="name" placeholder="Ex.: Eryndor"></label>
-        <label class="field"><span class="field-label">Idade</span><input type="number" min="0" max="999" inputmode="numeric" data-field="age" placeholder="Ex.: 27"></label>
-        <div class="field field--full"><span class="field-label">Gênero</span><div class="choice-grid choice-grid--3">
-          <button type="button" class="choice-card" data-field-choice="gender" data-value="Masculino"><strong>Masculino</strong></button>
-          <button type="button" class="choice-card" data-field-choice="gender" data-value="Feminino"><strong>Feminino</strong></button>
-          <button type="button" class="choice-card" data-field-choice="gender" data-value="Outro"><strong>Outro</strong></button>
-        </div></div>
-        <label class="field field--full"><span class="field-label">Origem</span><input type="text" maxlength="120" data-field="origin" placeholder="De onde seu personagem veio?"></label>
-        <label class="field field--full"><span class="field-label">Descrição breve</span><textarea rows="4" maxlength="700" data-field="description" placeholder="Como ele se apresenta ao mundo?"></textarea></label>
-      </div>
-    </section>
-
-    <section class="creation-panel" data-panel="race" hidden>
-      <div class="section-heading"><span class="ficha-eyebrow">02 · RAÇA</span><h2>Escolha seu povo</h2><p>A raça define o corpo, sentidos e características naturais.</p></div>
-      <div class="selection-toolbar"><input id="race-search" class="compact-search" type="search" placeholder="Buscar raça…"><span id="race-count" class="selection-count"></span></div>
-      <div id="race-grid" class="card-grid card-grid--races"></div>
-      <div id="animalha-block" class="animalha-block" hidden><div class="subheading"><span class="ficha-eyebrow">LINHAGEM ANIMALHA</span><h3>Escolha uma categoria</h3></div><div id="animalha-category-grid" class="card-grid"></div><div id="animalha-variation-wrap" class="animalha-variation-wrap" hidden><div class="subheading"><h3 id="animalha-variation-title">Variações</h3></div><div id="animalha-variation-grid" class="card-grid card-grid--small"></div></div></div>
-      <div id="race-info" class="context-card" hidden></div>
-    </section>
-
-    <section class="creation-panel" data-panel="appearance" hidden>
-      <div class="section-heading"><span class="ficha-eyebrow">03 · APARÊNCIA</span><h2>Refine a aparência</h2><p>Altura respeita os limites da raça; cores usam opções compactas.</p></div>
-      <div class="appearance-layout">
-        <div class="appearance-character-card"><div class="appearance-art"><img id="appearance-image" alt="" hidden></div><div class="appearance-quick"><span id="appearance-race-label">Escolha uma raça</span><strong id="appearance-size-label">—</strong></div></div>
-        <div class="appearance-controls">
-          <div class="height-control"><div class="height-labels"><span id="height-min-label">—</span><strong><span id="height-value">—</span> cm</strong><span id="height-max-label">—</span></div><input id="height-range" data-appearance="height" type="range" min="90" max="320" value="170" orient="vertical" aria-label="Altura"></div>
-          <div class="appearance-swatches">
-            <div class="field"><span class="field-label">Tom de pele</span><button type="button" class="swatch-field" id="skin-picker-button" aria-expanded="false"><span id="skin-swatch" class="swatch"></span><span id="skin-value">Escolher</span><span class="chevron">⌄</span></button><div class="swatch-popover" id="skin-picker" hidden></div></div>
-            <div class="field"><span class="field-label">Cabelo</span><div id="hair-grid" class="mini-choice-grid"></div></div>
-            <div class="field"><span class="field-label">Olhos</span><div id="eyes-grid" class="mini-choice-grid"></div></div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="creation-panel" data-panel="class" hidden>
-      <div class="section-heading"><span class="ficha-eyebrow">04 · CLASSE</span><h2>Como você joga?</h2><p>A classe define identidade, Mana e recursos próprios.</p></div>
-      <div id="class-grid" class="card-grid card-grid--classes"></div><div id="class-info" class="context-card" hidden></div>
-    </section>
-
-    <section class="creation-panel" data-panel="attributes" hidden>
-      <div class="section-heading"><span class="ficha-eyebrow">05 · ATRIBUTOS</span><h2>Distribua seus dados</h2><p>O atributo recebe um dado. A rolagem acontece durante o jogo, não na criação.</p></div>
-      <div class="dice-pool-bar"><div><span class="field-label">Dados disponíveis</span><div id="dice-pool" class="dice-pool"></div></div><div class="dice-pool-tip"><strong>Dois D20</strong><span>Use os dois D20 nos maiores focos do personagem.</span></div></div>
-      <div id="attribute-grid" class="attribute-grid"></div><div id="attributes-status" class="inline-status" aria-live="polite"></div>
-    </section>
-
-    <section class="creation-panel" data-panel="power" hidden>
-      <div class="section-heading"><span class="ficha-eyebrow">06 · PODER & MANA</span><h2>Escolha sua afinidade</h2><p>Sorteie, escolha um poder incomum ou escreva seu próprio poder.</p></div>
-      <div class="power-layout">
-        <article class="power-roll-card"><div class="power-card-top"><div><span class="ficha-eyebrow">DESTINO ELEMENTAL</span><h3>Girar D100</h3><p>01–25 Fogo · 26–50 Terra · 51–75 Água · 76–100 Ar.</p></div><div class="d100-result" id="power-roll-result">—</div></div><button type="button" class="big-action" data-action="roll-power">Girar D100</button></article>
-        <article class="power-choice-card"><div class="subheading"><span class="ficha-eyebrow">PODER INCOMUM</span><h3>Escolha diretamente</h3></div><div id="uncommon-powers" class="choice-grid choice-grid--2"></div></article>
-        <article class="power-custom-card"><div class="subheading"><span class="ficha-eyebrow">OUTRO PODER</span><h3>Criação própria</h3></div><label class="field"><span class="field-label">Nome</span><input type="text" maxlength="120" data-power="customPower" placeholder="Ex.: Tecelagem de sombras"></label><label class="field"><span class="field-label">Descrição</span><textarea rows="3" maxlength="1200" data-power="customDescription" placeholder="Explique a ideia do poder."></textarea></label></article>
-        <article class="mana-card"><div class="mana-orb"><span id="mana-value">0</span></div><div><span class="ficha-eyebrow">RESERVA</span><h3>Mana</h3><p id="mana-class-label">Escolha uma classe para ver sua reserva.</p></div></article>
-      </div><div id="power-summary" class="context-card" hidden></div>
-    </section>
-
-    <section class="creation-panel" data-panel="skills" hidden>
-      <div class="section-heading"><span class="ficha-eyebrow">07 · PERÍCIAS</span><h2>Escolha onde você é treinado</h2><p>O dado vem do atributo relacionado; o treinamento adiciona bônus.</p></div>
-      <div class="skills-legend"><span><i class="skill-dot"></i> Dado = atributo</span><span><i class="skill-dot skill-dot--accent"></i> Treinada = bônus</span></div>
-      <div id="skills-grid" class="skills-grid"></div>
-    </section>
-
-    <section class="creation-panel" data-panel="techniques" hidden>
-      <div class="section-heading"><span class="ficha-eyebrow">08 · TÉCNICAS</span><h2>Dê forma ao seu estilo</h2><p>Níveis 1–5 e XP são acompanhados aqui.</p></div>
-      <div id="techniques-list" class="techniques-list"></div><button type="button" id="add-technique" class="secondary-action">+ Adicionar técnica</button>
-    </section>
-
-    <section class="creation-panel" data-panel="inventory" hidden>
-      <div class="section-heading"><span class="ficha-eyebrow">09 · INVENTÁRIO</span><h2>Prepare sua carga</h2><p>Slots + Peso, com capacidade definida pela classe.</p></div>
-      <div class="inventory-summary"><div><span>Slots</span><strong id="slots-used">0</strong><small>/ <b id="slots-max">—</b></small></div><div><span>Peso</span><strong id="weight-used">0</strong><small>kg / <b id="weight-max">—</b></small></div><div><span>Estado</span><strong id="encumbrance-state">Normal</strong></div></div>
-      <div id="inventory-list" class="inventory-list"></div><button type="button" id="add-item" class="secondary-action">+ Adicionar item</button>
-    </section>
-
-    <section class="creation-panel" data-panel="review" hidden>
-      <div class="section-heading"><span class="ficha-eyebrow">10 · REVISÃO</span><h2>Revise seu personagem</h2><p>Confira tudo antes de tornar a ficha pronta.</p></div>
-      <div id="review-grid" class="review-grid"></div>
-      <div class="finalize-zone"><div><span class="ficha-eyebrow">ÚLTIMO PASSO</span><h3>Pronto para entrar na aventura?</h3><p>Ao finalizar, a ficha passa a ser uma ficha pronta e pode entrar em uma campanha.</p></div><button type="button" id="aerion-finalize-bottom" class="finalize-primary" data-action="finalize">Finalizar ficha <span aria-hidden="true">✓</span></button></div>
-    </section>
-  </div>
-
-  <div class="creation-navigation">
-    <button type="button" class="creation-navigation-button" data-action="previous-step">← <span>Voltar</span></button>
-    <div class="creation-navigation-status"><strong data-current-step>1</strong><span>/</span><span data-total-steps>10</span><small data-current-step-title>Identidade</small></div>
-    <button type="button" class="creation-navigation-button next" data-action="next-step"><span>Próximo</span> →</button>
-  </div>
-</section>
-</section>
-</main>
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
-<script type="module" src="./js/core/main.js"></script>
-<script src="./js/core/personagem-assets.js" defer></script>
-<script src="./js/core/ficha.js" defer></script>
-<script src="./js/core/ficha-render.js" defer></script>
-<script type="module" src="./js/core/regras-raciais.js?v=20260905-glow3"></script>
-<script type="module" src="./js/core/fichas-biblioteca.js?v=20260905-glow3"></script>
+<body class="aeriom-page aeriom-page--character"><main class="ficha-app" id="ficha-app">
+<header class="ficha-topbar"><a class="back" href="./minhas-fichas.html">←</a><div class="brand"><span>AERION · FICHA</span><h1>Forje seu aventureiro</h1></div><div id="saveStatus" class="save"><i></i><span id="saveStatusText">Pronto</span></div><button id="aerion-header-finalize" class="header-finalize" hidden>Finalizar</button></header>
+<section class="ficha-shell"><aside class="progress-panel"><div class="progress-title"><div><span>CAMINHO</span><b><em data-current-step>1</em>/<em data-total-steps>10</em></b></div><strong id="progressPercent">0%</strong></div><div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="progressBar"></i></div><nav id="creationSteps" aria-label="Etapas"><button class="creation-step is-active" data-step="0"><span>01</span><b>Identidade</b></button><button class="creation-step" data-step="1"><span>02</span><b>Raça</b></button><button class="creation-step" data-step="2"><span>03</span><b>Aparência</b></button><button class="creation-step" data-step="3"><span>04</span><b>Classe</b></button><button class="creation-step" data-step="4"><span>05</span><b>Atributos</b></button><button class="creation-step" data-step="5"><span>06</span><b>Poder & Mana</b></button><button class="creation-step" data-step="6"><span>07</span><b>Perícias</b></button><button class="creation-step" data-step="7"><span>08</span><b>Técnicas</b></button><button class="creation-step" data-step="8"><span>09</span><b>Inventário</b></button><button class="creation-step" data-step="9"><span>10</span><b>Revisão</b></button></nav></aside>
+<section class="ficha-editor"><div class="character-strip"><div class="preview-avatar"><span id="preview-initial">A</span><img id="preview-image" alt="" hidden></div><div class="preview-copy"><span>AVENTUREIRO</span><h2 id="preview-name">Sem nome</h2><p id="preview-subtitle">Escolha raça e classe para começar.</p></div><div class="preview-stats"><div><span>HP</span><b id="preview-hp">10</b></div><div><span>DEF</span><b id="preview-defense">10</b></div><div><span>MANA</span><b id="preview-mana">0</b></div></div></div>
+<div class="creation-content">
+<section class="creation-panel" data-panel="identity"><div class="heading"><span>01 · IDENTIDADE</span><h2>Quem está entrando na história?</h2><p>Defina o rosto e a origem do personagem.</p></div><div class="form-grid"><label>Nome<input id="characterName" data-field="name" maxlength="80" placeholder="Ex.: Eryndor"></label><label>Idade<input type="number" min="0" max="999" inputmode="numeric" data-field="age" placeholder="27"></label><div class="full"><span class="label">Gênero</span><div class="choice-grid three"><button type="button" data-field-choice="gender" data-value="Masculino">Masculino</button><button type="button" data-field-choice="gender" data-value="Feminino">Feminino</button><button type="button" data-field-choice="gender" data-value="Outro">Outro</button></div></div><label class="full">Origem<input data-field="origin" maxlength="120" placeholder="De onde veio?"></label><label class="full">Descrição<textarea rows="3" maxlength="700" data-field="description" placeholder="Como ele se apresenta ao mundo?"></textarea></label></div></section>
+<section class="creation-panel" data-panel="race" hidden><div class="heading"><span>02 · RAÇA</span><h2>Escolha seu povo</h2><p>O corpo, os sentidos e os traços naturais começam aqui.</p></div><div class="toolbar"><input id="race-search" type="search" placeholder="Buscar raça…"><span id="race-count"></span></div><div id="race-grid" class="card-grid races"></div><div id="animalha-block" class="context-block" hidden><div class="subheading"><span>LINHAGEM ANIMALHA</span><h3>Categoria</h3></div><div id="animalha-category-grid" class="card-grid"></div><div id="animalha-variation-wrap" hidden><div class="subheading"><h3>Animal</h3></div><div id="animalha-variation-grid" class="card-grid small"></div></div></div><div id="race-info" class="context-card" hidden></div></section>
+<section class="creation-panel" data-panel="appearance" hidden><div class="heading"><span>03 · APARÊNCIA</span><h2>Refine a aparência</h2><p>A imagem acompanha a raça; a altura respeita seus limites.</p></div><div class="appearance-layout"><div class="appearance-character"><div class="appearance-art"><img id="appearance-image" alt="" hidden></div><strong id="appearance-race-label">Escolha uma raça</strong><span id="appearance-size-label">—</span></div><div class="appearance-controls"><div class="height-control"><div><small id="height-max-label">—</small><strong><b id="height-value">—</b> cm</strong><small id="height-min-label">—</small></div><input id="height-range" type="range" data-appearance="height" min="90" max="320" value="170" orient="vertical" aria-label="Altura"></div><div class="appearance-options"><div><span class="label">Tom de pele</span><button id="skin-picker-button" type="button" class="picker"><i id="skin-swatch"></i><span id="skin-value">Escolher</span>⌄</button><div id="skin-picker" class="popover" hidden></div></div><div><span class="label">Cabelo</span><div id="hair-grid" class="mini-grid"></div></div><div><span class="label">Olhos</span><div id="eyes-grid" class="mini-grid"></div></div></div></div></div></section>
+<section class="creation-panel" data-panel="class" hidden><div class="heading"><span>04 · CLASSE</span><h2>Como você joga?</h2><p>A classe define sua identidade de combate e sua reserva de Mana.</p></div><div id="class-grid" class="class-grid"></div></section>
+<section class="creation-panel" data-panel="attributes" hidden><div class="heading"><span>05 · ATRIBUTOS</span><h2>Distribua seus dados</h2><p>Não role agora: atribua cada dado. A rolagem acontece durante os testes.</p></div><div class="dice-banner"><div><span>SEU CONJUNTO</span><div id="dice-pool"></div></div><strong>D4×1 · D6×2 · D8×1 · D10×1 · D12×1 · D20×2</strong></div><div id="attribute-grid" class="attribute-grid"></div><div id="attributes-status" class="status-line"></div></section>
+<section class="creation-panel" data-panel="power" hidden><div class="heading"><span>06 · PODER & MANA</span><h2>Escolha sua afinidade</h2><p>Sorteie o poder elemental, escolha um incomum ou crie o seu.</p></div><div class="power-grid"><article class="power-roll"><div><span>DESTINO ELEMENTAL</span><h3>D100</h3><p>01–25 Fogo · 26–50 Terra · 51–75 Água · 76–100 Ar.</p></div><strong id="power-roll-result">—</strong><button type="button" data-action="roll-power">Girar D100</button></article><article><span>PODER INCOMUM</span><h3>Escolha diretamente</h3><div id="uncommon-powers" class="choice-grid two"></div></article><article><span>OUTRO PODER</span><h3>Criação própria</h3><label>Nome<input data-power="customPower" maxlength="120" placeholder="Nome do poder"></label><label>Descrição<textarea data-power="customDescription" rows="3" maxlength="1200" placeholder="Explique a ideia do poder."></textarea></label></article><article class="mana-card"><div class="mana-orb"><b id="mana-value">0</b></div><div><span>RESERVA</span><h3>Mana</h3><p id="mana-class-label">Escolha uma classe.</p></div></article></div><div id="power-summary" class="context-card" hidden></div></section>
+<section class="creation-panel" data-panel="skills" hidden><div class="heading"><span>07 · PERÍCIAS</span><h2>Onde você é treinado?</h2><p>O dado-base vem do atributo relacionado; o treinamento é separado.</p></div><div id="skills-grid" class="skills-grid"></div></section>
+<section class="creation-panel" data-panel="techniques" hidden><div class="heading"><span>08 · TÉCNICAS</span><h2>Dê forma ao seu estilo</h2><p>Registre técnicas e acompanhe nível e XP.</p></div><div id="techniques-list"></div><button class="secondary-action" type="button" data-action="add-technique">＋ Adicionar técnica</button></section>
+<section class="creation-panel" data-panel="inventory" hidden><div class="heading"><span>09 · INVENTÁRIO</span><h2>Prepare sua carga</h2><p>Slots e peso ficam visíveis sem ocupar a tela inteira.</p></div><div class="inventory-summary"><div><span>Slots</span><b id="slots-used">0</b>/<strong id="slots-max">—</strong></div><div><span>Peso</span><b id="weight-used">0</b>/<strong id="weight-max">—</strong></div><div><span>Estado</span><b id="encumbrance-state">Normal</b></div></div><div id="inventory-list"></div><button class="secondary-action" type="button" data-action="add-item">＋ Adicionar item</button></section>
+<section class="creation-panel" data-panel="review" hidden><div class="heading"><span>10 · REVISÃO</span><h2>Pronto para a aventura?</h2><p>Confira o essencial e finalize quando estiver satisfeito.</p></div><div id="review-grid" class="review-grid"></div><div class="finalize-zone"><div><span>ÚLTIMO PASSO</span><h3>Tornar ficha pronta</h3><p>Isso salva o estado final e libera a ficha para entrar em uma campanha.</p></div><button id="aerion-finalize-bottom" class="finalize-primary" type="button" data-action="finalize">Finalizar ficha ✓</button></div></section>
+</div><footer class="creation-navigation"><button type="button" data-action="previous-step">← <span>Voltar</span></button><div><b data-current-step>1</b><span>/</span><b data-total-steps>10</b><small data-current-step-title>Identidade</small></div><button type="button" data-action="next-step"><span>Próximo</span> →</button></footer></section></section></main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script><script type="module" src="./js/core/main.js"></script><script src="./js/core/personagem-assets.js" defer></script><script src="./js/core/personagem-render.js" defer></script><script src="./js/core/ficha.js" defer></script><script src="./js/core/ficha-render.js" defer></script><script type="module" src="./js/core/regras-raciais.js?v=20260905-rebuild"></script><script type="module" src="./js/core/fichas-biblioteca.js?v=20260905-rebuild"></script>
 </body></html>
