@@ -882,7 +882,10 @@ import { getSupabase } from "./supabase.js";
   }
 
   function addFinalizeButton() {
-    if (document.querySelector("#aerion-finalize-ficha")) return;
+    if (
+      document.querySelector("#aerion-finalize-bottom") ||
+      document.querySelector("#aerion-finalize-ficha")
+    ) return;
 
     const review =
       document.querySelector('[data-panel="review"]') ||
@@ -1016,6 +1019,15 @@ import { getSupabase } from "./supabase.js";
     }
 
     showEditor();
+
+    /*
+     * Toda ficha nova nasce no Supabase como rascunho imediatamente.
+     * O autosave posterior continua atualizando o mesmo UUID.
+     */
+    if (!existingId) {
+      await persist(window.AERIONFicha.getState(), "draft");
+    }
+
     addFinalizeButton();
   }
 
