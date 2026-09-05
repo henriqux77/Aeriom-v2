@@ -32,6 +32,7 @@ import { getSupabase } from "./supabase.js";
     user: null,
     characterId: null,
     currentCampaignId: null,
+    status: "draft",
     saving: false,
     finalizing: false,
     hooksInstalled: false,
@@ -226,8 +227,7 @@ import { getSupabase } from "./supabase.js";
     session.saving = true;
 
     try {
-      const status =
-        forcedStatus || "draft";
+      const status = forcedStatus || session.status || "draft";
 
       const payload = buildPayload(snapshot, status);
 
@@ -306,6 +306,7 @@ import { getSupabase } from "./supabase.js";
     await waitForFichaApi();
 
     session.characterId = crypto.randomUUID();
+    session.status = "draft";
     clearLocalDraft();
 
     const url = new URL(window.location.href);
@@ -346,6 +347,7 @@ import { getSupabase } from "./supabase.js";
 
     session.characterId = data.id;
     session.currentCampaignId = data.campaign_id || null;
+    session.status = data.status === "completed" ? "completed" : "draft";
     clearLocalDraft();
 
     const url = new URL(window.location.href);
@@ -415,6 +417,7 @@ import { getSupabase } from "./supabase.js";
         if (!finalized) {
           throw new Error("A ficha não pôde ser gravada como pronta.");
         }
+        session.status = "completed";
         notify("Ficha finalizada.", "success");
 
         const url = new URL(window.location.href);
@@ -468,6 +471,7 @@ import { getSupabase } from "./supabase.js";
      * O autosave posterior continua atualizando o mesmo UUID.
      */
     if (!existingId) {
+      session.status = "draft";
       await persist(window.AERIONFicha.getState(), "draft");
     }
   }
