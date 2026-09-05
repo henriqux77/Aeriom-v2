@@ -18,6 +18,13 @@
     body{margin:0;background:var(--a-bg);color:#fff;font-family:Arial,sans-serif}
     .mf-page{min-height:100dvh;padding:22px 16px 42px;max-width:1100px;margin:0 auto}
     .mf-head{display:flex;align-items:end;justify-content:space-between;gap:18px;margin-bottom:24px}
+    .mf-hero{position:relative;overflow:hidden;padding:18px;border:1px solid var(--a-border);border-radius:20px;background:radial-gradient(circle at 100% 0,rgba(223,191,103,.11),transparent 34%),linear-gradient(135deg,#15120f,#0d0c0b);margin-bottom:14px}
+    .mf-hero::after{content:"";position:absolute;width:140px;height:140px;right:-55px;top:-65px;border-radius:50%;border:1px solid rgba(223,191,103,.11)}
+    .mf-hero strong{font:500 22px Georgia,serif;display:block;margin-bottom:5px}
+    .mf-hero span{display:block;color:var(--a-muted);font-size:10px;line-height:1.55;max-width:620px}
+    .mf-toolbar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:12px 0 8px}
+    .mf-count{color:var(--a-muted);font-size:9px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+    .mf-filter{min-height:38px;border:1px solid var(--a-border);border-radius:10px;background:#11100e;color:#eee;padding:0 10px}
     .mf-head h1{font-family:Georgia,serif;font-weight:500;font-size:clamp(36px,8vw,62px);margin:6px 0}
     .mf-head p{margin:0;color:var(--a-muted);font-size:13px}
     .mf-eyebrow{color:var(--a-gold);font-size:10px;font-weight:800;letter-spacing:.18em}
@@ -61,10 +68,25 @@
         <button id="mf-new" class="mf-btn primary" type="button">+ Criar nova ficha</button>
       </div>
     </header>
+    <section class="mf-hero">
+      <strong>Seu arquivo de aventureiros</strong>
+      <span>Rascunhos ficam aqui automaticamente. Quando a ficha estiver pronta, ela passa a aparecer como <b style="color:var(--a-gold)">Pronta</b> e poderá entrar em uma campanha.</span>
+    </section>
+    <div class="mf-toolbar">
+      <span id="mf-count" class="mf-count">0 fichas</span>
+      <label>
+        <span style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)">Filtrar fichas</span>
+        <select id="mf-filter" class="mf-filter">
+          <option value="all">Todas</option>
+          <option value="draft">Incompletas</option>
+          <option value="completed">Prontas</option>
+        </select>
+      </label>
+    </div>
     <section id="mf-grid" class="mf-grid" aria-live="polite">
       <div class="mf-loading">Carregando suas fichas…</div>
     </section>
   </main>
-  <script type="module" src="./js/core/minhas-fichas.js?v=20260905-01"></script>
+  <script type="module" src="./js/core/minhas-fichas.js?v=20260905-02"></script>
 </body>
 </html>
