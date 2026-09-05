@@ -91,6 +91,11 @@
         max: 200
       },
 
+      lifespan: {
+        min: 16,
+        max: 90
+      },
+
       images: {
         default:
           "https://i.ibb.co/CsQZXrJ4/file-00000000a044820e93e20f441ff9aa42.png",
@@ -120,6 +125,11 @@
       height: {
         min: 155,
         max: 205
+      },
+
+      lifespan: {
+        min: 18,
+        max: 500
       },
 
       images: {
@@ -153,6 +163,11 @@
         max: 155
       },
 
+      lifespan: {
+        min: 20,
+        max: 250
+      },
+
       images: {
         default:
           "https://i.ibb.co/xq1F8q9C/file-0000000000ec820e8d67352e841e84ea.png",
@@ -182,6 +197,11 @@
       height: {
         min: 175,
         max: 225
+      },
+
+      lifespan: {
+        min: 14,
+        max: 75
       },
 
       images: {
@@ -215,6 +235,11 @@
         max: 230
       },
 
+      lifespan: {
+        min: 16,
+        max: 100
+      },
+
       images: {
         default:
           "https://i.ibb.co/Xxk02q3j/file-0000000001c0820e8c250521f3ebaa36.png",
@@ -244,6 +269,11 @@
       height: {
         min: 150,
         max: 200
+      },
+
+      lifespan: {
+        min: 18,
+        max: 500
       },
 
       images: {
@@ -277,6 +307,11 @@
         max: 145
       },
 
+      lifespan: {
+        min: 12,
+        max: 120
+      },
+
       images: {
         default:
           "https://i.ibb.co/dJGGF020/file-00000000b558820eb554e4ed4e4c1d8e.png",
@@ -306,6 +341,11 @@
       height: {
         min: 90,
         max: 140
+      },
+
+      lifespan: {
+        min: 10,
+        max: 300
       },
 
       images: {
@@ -339,6 +379,11 @@
         max: 205
       },
 
+      lifespan: {
+        min: 16,
+        max: 120
+      },
+
       images: {
         default:
           "https://i.ibb.co/21YMb2Ck/file-000000005990820e8e187f0c1f1d3ea0.png",
@@ -368,6 +413,11 @@
       height: {
         min: 145,
         max: 200
+      },
+
+      lifespan: {
+        min: 16,
+        max: 150
       },
 
       images: {
@@ -403,6 +453,11 @@
         max: 220
       },
 
+      lifespan: {
+        min: 1,
+        max: 100
+      },
+
       images: {
         masculino:
           "https://i.ibb.co/fVfFL5ds/file-00000000b344820e9e39f31e92678a13.png",
@@ -433,6 +488,11 @@
       height: {
         min: 140,
         max: 205
+      },
+
+      lifespan: {
+        min: 15,
+        max: 180
       },
 
       images: {
@@ -466,6 +526,11 @@
         max: 205
       },
 
+      lifespan: {
+        min: 16,
+        max: 130
+      },
+
       images: {
         default:
           "https://i.ibb.co/GQ7kbMGW/file-00000000d2f0820e811464dec04fd349.png",
@@ -495,6 +560,11 @@
       height: {
         min: 150,
         max: 205
+      },
+
+      lifespan: {
+        min: 18,
+        max: 220
       },
 
       images: {
@@ -539,6 +609,11 @@
         max: 320
       },
 
+      lifespan: {
+        min: 20,
+        max: 180
+      },
+
       images: {
         default:
           "https://i.ibb.co/rGKgrxqj/file-000000008d3c820eb66807cb6d182dd1.png",
@@ -571,6 +646,11 @@
       height: {
         min: 200,
         max: 280
+      },
+
+      lifespan: {
+        min: 15,
+        max: 120
       },
 
       images: {
@@ -670,84 +750,132 @@
       name: "Gato",
       category: "terrestres",
       lineage: "felino"
-    },
+
+      lifespan: {
+        min: 15,
+        max: 22
+      },    },
 
     pantera: {
       id: "pantera",
       name: "Pantera",
       category: "terrestres",
       lineage: "felino"
-    },
+
+      lifespan: {
+        min: 12,
+        max: 18
+      },    },
 
     tigre: {
       id: "tigre",
       name: "Tigre",
       category: "terrestres",
       lineage: "felino"
-    },
+
+      lifespan: {
+        min: 10,
+        max: 18
+      },    },
 
     leao: {
       id: "leao",
       name: "Leão",
       category: "terrestres",
       lineage: "felino"
-    },
+
+      lifespan: {
+        min: 15,
+        max: 22
+      },    },
 
     lobo: {
       id: "lobo",
       name: "Lobo",
       category: "terrestres",
       lineage: "canino"
-    },
+
+      lifespan: {
+        min: 8,
+        max: 15
+      },    },
 
     raposa: {
       id: "raposa",
       name: "Raposa",
       category: "terrestres",
       lineage: "canino"
-    },
+
+      lifespan: {
+        min: 8,
+        max: 14
+      },    },
 
     urso: {
       id: "urso",
       name: "Urso",
       category: "grandes",
       lineage: "ursino"
-    },
+
+      lifespan: {
+        min: 20,
+        max: 35
+      },    },
 
     falcao: {
       id: "falcao",
       name: "Falcão",
       category: "voadores",
       lineage: "ave"
-    },
+
+      lifespan: {
+        min: 12,
+        max: 25
+      },    },
 
     aguia: {
       id: "aguia",
       name: "Águia",
       category: "voadores",
       lineage: "ave"
-    },
+
+      lifespan: {
+        min: 20,
+        max: 35
+      },    },
 
     coruja: {
       id: "coruja",
       name: "Coruja",
       category: "voadores",
       lineage: "ave"
-    },
+
+      lifespan: {
+        min: 10,
+        max: 25
+      },    },
 
     cobra: {
       id: "cobra",
       name: "Cobra",
       category: "reptilianos",
       lineage: "reptil"
-    },
+
+      lifespan: {
+        min: 10,
+        max: 30
+      },    },
 
     crocodilo: {
       id: "crocodilo",
       name: "Crocodilo",
       category: "marinhos",
       lineage: "reptil"
-    },
+
+      lifespan: {
+        min: 50,
+        max: 80
+      },    },
 
     tubarao: {
       id: "tubarao",
@@ -821,24 +949,22 @@
 
 
     /*
-     * Primeiro gênero solicitado.
+     * Animalha: usa a imagem por gênero da linhagem-base.
+     * Raças normais: usa primeiro a imagem oficial default.
+     * As imagens por gênero adicionadas ao catálogo ficam
+     * apenas como fallback para raças que ainda não possuem
+     * uma imagem default própria.
      */
-    const selected =
-      race.images?.[
-        genderKey
-      ];
-
-    if (selected) {
-      return selected;
+    if (race.id === "animalha") {
+      const selected = race.images?.[genderKey];
+      if (selected) return selected;
     }
 
-    const defaultImage =
-      race.images?.default;
+    const defaultImage = race.images?.default;
+    if (defaultImage) return defaultImage;
 
-    if (defaultImage) {
-      return defaultImage;
-    }
-
+    const selected = race.images?.[genderKey];
+    if (selected) return selected;
 
     /*
      * Depois tenta o outro gênero.
@@ -885,6 +1011,40 @@
         Number(
           race.height?.max
         ) || 200
+    };
+  }
+
+
+  /* =========================================================
+     FAIXA DE IDADE / VIDA
+     ========================================================= */
+
+  function getAgeRange(
+    raceId,
+    animalhaId = ""
+  ) {
+    const race = getRace(raceId);
+
+    if (race?.id === "animalha") {
+      const animal = getAnimalha(animalhaId);
+      if (animal?.lifespan) {
+        return {
+          min: Number(animal.lifespan.min) || 1,
+          max: Number(animal.lifespan.max) || 100
+        };
+      }
+    }
+
+    if (race?.lifespan) {
+      return {
+        min: Number(race.lifespan.min) || 1,
+        max: Number(race.lifespan.max) || 100
+      };
+    }
+
+    return {
+      min: 1,
+      max: 100
     };
   }
 
@@ -1103,3 +1263,7 @@
   );
 
 })();
+      lifespan: {
+        min: 20,
+        max: 70
+      },
