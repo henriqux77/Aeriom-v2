@@ -1846,7 +1846,6 @@
     cobra: "verde",
     crocodilo: "verde_oliva",
     tubarao: "cinza_azulado",
-    foca: "cinza"
   });
 
   function getAnimalhaAppearanceKey(animalId) {
