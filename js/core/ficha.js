@@ -72,7 +72,7 @@
     state.completedSteps[4]=ATTRIBUTES.every(function(a){return !!state.assignedDice[a.id];}); state.completedSteps[5]=!!txt(state.primaryPower);
     state.completedSteps[6]=true;state.completedSteps[7]=true;state.completedSteps[8]=true;state.completedSteps[9]=state.completedSteps.slice(0,6).every(Boolean);
   }
-  function saveLocal(immediate){clearTimeout(timer);var run=function(){try{state.saved=true;localStorage.setItem(storageKey(),JSON.stringify(state));emit('aerion:save',{state:clone(state)});var e=$('#saveStatusText');if(e)e.textContent='Salvo agora';}catch(e){var x=$('#saveStatusText');if(x)x.textContent='Erro ao salvar';}};var s=$('#saveStatusText');if(s)s.textContent='Salvando…';if(immediate)run();else timer=setTimeout(run,350);}
+  function saveLocal(immediate){clearTimeout(timer);var run=function(){try{state.saved=true;localStorage.setItem(storageKey(),JSON.stringify(state));emit('aerion:save',{state:clone(state)});var e=$('#saveStatusText');if(e)e.textContent='Rascunho local';}catch(e){var x=$('#saveStatusText');if(x)x.textContent='Erro ao salvar';}};var s=$('#saveStatusText');if(s)s.textContent='Salvando…';if(immediate)run();else timer=setTimeout(run,350);}
   function commit(ev){calculateDerived();computeCompletion();state.saved=false;saveLocal(false);emit(ev||'aerion:ficha:update',{state:clone(state)});renderRequest();}
   function renderRequest(){emit('aerion:ficha:render',{state:clone(state)});}
   function reset(){state=DEFAULT();calculateDerived();computeCompletion();localStorage.removeItem(storageKey());saveLocal(true);renderRequest();}
