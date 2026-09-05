@@ -1299,6 +1299,8 @@
       }
     );
 
+    updateNavigationUI();
+
     window.scrollTo({
       top: 0,
       behavior: "smooth"
@@ -1309,6 +1311,36 @@
 
 
   function nextStep() {
+    /*
+     * Poder + Mana é uma única etapa visual.
+     * O índice técnico 6 (Mana) continua legado para não quebrar
+     * estados antigos, mas jamais deve aparecer como uma etapa do usuário.
+     */
+    if (state.currentStep === 5) {
+      if (!validateCurrentStep()) {
+        return false;
+      }
+
+      state.completedSteps[6] = true;
+      state.currentStep = 7;
+      state.saved = false;
+
+      saveState();
+
+      emit("aerion:ficha:update", {
+        state: clone(state)
+      });
+
+      updateNavigationUI();
+
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+      });
+
+      return true;
+    }
+
     return goToStep(
       state.currentStep + 1,
       true
@@ -1323,10 +1355,93 @@
       return false;
     }
 
+    if (state.currentStep === 7) {
+      state.currentStep = 5;
+      state.saved = false;
+
+      saveState();
+
+      emit("aerion:ficha:update", {
+        state: clone(state)
+      });
+
+      updateNavigationUI();
+
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+      });
+
+      return true;
+    }
+
     return goToStep(
       state.currentStep - 1,
       false
     );
+  }
+
+
+  function updateNavigationUI() {
+    const current = Number(state.currentStep);
+    const review = current === 10;
+
+    const next = document.querySelector(
+      '[data-action="next-step"]'
+    );
+
+    const finalButton = document.getElementById(
+      "aerion-finalize-bottom"
+    );
+
+    const headerFinalize = document.getElementById(
+      "aerion-header-finalize"
+    );
+
+    if (next) {
+      next.hidden = review;
+      next.disabled = review;
+    }
+
+    if (finalButton) {
+      finalButton.hidden = !review;
+    }
+
+    if (headerFinalize) {
+      headerFinalize.hidden = !review;
+    }
+  }
+
+
+  function finalizeCharacter() {
+    const required = [0, 1, 2, 3, 4, 5];
+
+    const complete = required.every(
+      index => state.completedSteps?.[index] === true
+    );
+
+    if (!complete) {
+      warn(
+        "Complete Identidade, Raça, Aparência, Classe, Atributos e Poder antes de finalizar."
+      );
+
+      return false;
+    }
+
+    state.completedSteps[10] = true;
+    state.saved = false;
+
+    saveState(true);
+
+    emit("aerion:ficha:finalize", {
+      state: clone(state)
+    });
+
+    emit("aerion:ficha:update", {
+      state: clone(state)
+    });
+
+    return true;
   }
 
 
@@ -3518,6 +3633,7 @@
       }
     );
 
+    updateNavigationUI();
 
     window.addEventListener(
       "beforeunload",
@@ -3560,7 +3676,13 @@
               clone(state)
           }
         );
+
+        updateNavigationUI();
       },
+
+    finalizeCharacter,
+
+    updateNavigationUI,
 
     nextStep,
 
