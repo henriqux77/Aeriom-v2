@@ -2088,3 +2088,12 @@ transition-duration:
 
 }
 }
+
+/* =========================================================
+   AERION — GLOW UP GLOBAL
+   ========================================================= */
+:root{
+  --aeriom-focus:rgba(216,182,95,.58);
+}
+button,a,input,select,textarea{transition:color .18s ease,background-color .18s ease,border-color .18s ease,box-shadow .18s ease,transform .18s ease;}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--aeriom-focus);outline-offset:2px;}
