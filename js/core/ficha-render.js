@@ -1,5 +1,6 @@
 (() => {
   'use strict';
+  const RENDER_VERSION='phase5-fix-nav-2';
   const $=(s,r)=> (r||document).querySelector(s);
   const $$=(s,r)=> Array.from((r||document).querySelectorAll(s));
   const txt=v=>String(v==null?'':v).trim();
