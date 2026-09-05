@@ -39,6 +39,8 @@ import { getSupabase } from "./supabase.js";
     finalizeBridgeInstalled: false,
     cloudFlushInstalled: false,
     cloudSaveTimer: null,
+    pendingSnapshot: null,
+    saveChain: Promise.resolve(),
     booted: false
   };
 
@@ -255,37 +257,49 @@ import { getSupabase } from "./supabase.js";
     }
   }
 
+  function scheduleCloudFlush(snapshot, immediate = false) {
+    if (!snapshot || !isEditorMode() || !session.characterId || session.finalizing) return;
+
+    session.pendingSnapshot = snapshot;
+    clearTimeout(session.cloudSaveTimer);
+
+    const flush = () => {
+      const pending = session.pendingSnapshot;
+      session.pendingSnapshot = null;
+      if (!pending) return;
+
+      session.saveChain = session.saveChain
+        .catch(() => {})
+        .then(() => persist(pending))
+        .catch((error) => {
+          console.error("[AERION][FICHAS] Autosave cloud falhou:", error);
+          notify(error?.message || "Não foi possível salvar a ficha na nuvem.", "error");
+        })
+        .finally(() => {
+          if (session.pendingSnapshot && !session.finalizing) {
+            scheduleCloudFlush(session.pendingSnapshot, false);
+          }
+        });
+    };
+
+    if (immediate) flush();
+    else session.cloudSaveTimer = setTimeout(flush, 220);
+  }
+
   function installEditorHooks() {
     if (session.hooksInstalled) return;
     session.hooksInstalled = true;
 
-    const scheduleCloudSave = (event) => {
-      const snapshot =
-        event?.detail?.state ||
-        window.AERIONFicha?.getState?.();
-
-      if (
-        !snapshot ||
-        !isEditorMode() ||
-        !session.characterId ||
-        session.finalizing
-      ) {
-        return;
-      }
-
-      clearTimeout(session.cloudSaveTimer);
-      session.cloudSaveTimer = setTimeout(() => {
-        persist(snapshot).catch((error) => {
-          console.error("[AERION][FICHAS] Autosave cloud falhou:", error);
-          notify(error?.message || "Não foi possível salvar a ficha na nuvem.", "error");
-        });
-      }, 180);
+    const onUpdate = (event) => {
+      scheduleCloudFlush(
+        event?.detail?.state || window.AERIONFicha?.getState?.(),
+        false
+      );
     };
 
-    window.addEventListener("aerion:ficha:update", scheduleCloudSave);
-    window.addEventListener("aerion:save", scheduleCloudSave);
+    window.addEventListener("aerion:ficha:update", onUpdate);
+    window.addEventListener("aerion:save", onUpdate);
   }
-
   async function waitForFichaApi() {
     for (let attempt = 0; attempt < 100; attempt += 1) {
       if (
@@ -385,12 +399,11 @@ import { getSupabase } from "./supabase.js";
 
     const flush = () => {
       if (!isEditorMode() || session.finalizing || !session.characterId) return;
+
       const snapshot = window.AERIONFicha?.getState?.();
-      if (snapshot) {
-        persist(snapshot).catch((error) =>
-          console.error("[AERION][FICHAS] Flush:", error)
-        );
-      }
+      if (!snapshot) return;
+
+      scheduleCloudFlush(snapshot, true);
     };
 
     window.addEventListener("pagehide", flush);
@@ -398,7 +411,6 @@ import { getSupabase } from "./supabase.js";
       if (document.visibilityState === "hidden") flush();
     });
   }
-
   function installFinalizeBridge() {
     if (session.finalizeBridgeInstalled) return;
     session.finalizeBridgeInstalled = true;
