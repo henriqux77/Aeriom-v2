@@ -50,8 +50,7 @@
     coruja:{hp:-1,def:1,movement:11,mods:{percepcao:1},profile:"Caçador noturno",senses:["Visão noturna","Audição aguçada"],abilities:["Olhar Noturno"]},
     cobra:{hp:0,def:0,movement:8,mods:{precisao:1},profile:"Predador sinuoso",senses:["Percepção térmica","Vibrações"],abilities:["Sentido Térmico"]},
     crocodilo:{hp:2,def:2,movement:7,water:10,mods:{vigor:1},profile:"Caçador anfíbio",senses:["Vibrações na água"],abilities:["Couro Resistente"]},
-    tubarao:{hp:2,def:1,movement:7,water:12,mods:{percepcao:1},profile:"Predador aquático",senses:["Percepção de sangue na água","Vibrações"],abilities:["Caça Aquática"]},
-    foca:{hp:1,def:1,movement:8,water:11,mods:{vigor:1},profile:"Nadador resistente",senses:["Audição aguçada na água"],abilities:["Adaptação ao Frio"]}
+    tubarao:{hp:2,def:1,movement:7,water:12,mods:{percepcao:1},profile:"Predador aquático",senses:["Percepção de sangue na água","Vibrações"],abilities:["Caça Aquática"]}
   };
 
   const skillToAttribute = {
