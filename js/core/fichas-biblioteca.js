@@ -579,9 +579,6 @@ import { getSupabase } from "./supabase.js";
 
     window.addEventListener("aerion:ficha:update", scheduleCloudSave);
     window.addEventListener("aerion:save", scheduleCloudSave);
-
-      }, 150);
-    });
   }
 
   async function waitForFichaApi() {
