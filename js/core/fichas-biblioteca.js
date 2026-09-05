@@ -135,6 +135,15 @@ import { getSupabase } from "./supabase.js";
     return Array.isArray(value) ? clone(value, []) : [];
   }
 
+  function normalizeSizeCategory(value) {
+    const v = safeText(value).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    if (v === "pequeno") return "pequeno";
+    if (v === "grande") return "grande";
+    if (v === "colossal") return "colossal";
+    if (v === "medio" || v === "médio") return "medio";
+    return "medio";
+  }
+
   function buildPayload(snapshot, status) {
     const derived = objectOrEmpty(snapshot?.derivedStats);
     const hp = objectOrEmpty(snapshot?.hp);
@@ -191,7 +200,7 @@ import { getSupabase } from "./supabase.js";
 
       avatar_path: safeText(snapshot?.avatar) || null,
 
-      size_category: safeText(derived?.sizeCategory) || "Médio",
+      size_category: normalizeSizeCategory(derived?.sizeCategory || derived?.size || "medio"),
       natural_profile: safeText(derived?.naturalProfile) || null,
       racial_modifiers: objectOrEmpty(derived?.racialModifiers),
       movement_profile: {
