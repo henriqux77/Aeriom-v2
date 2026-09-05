@@ -839,6 +839,13 @@
       return selected;
     }
 
+    const defaultImage =
+      race.images?.default;
+
+    if (defaultImage) {
+      return defaultImage;
+    }
+
 
     /*
      * Depois tenta o outro gênero.
