@@ -24,8 +24,39 @@
     'Confira o personagem antes de torná-lo uma ficha pronta.'
   ];
   function imageFor(s){var a=assets();if(!a)return '';if(txt(s.race).toLowerCase()==='animalha'&&s.animalha){var an=a.getAnimalha&&a.getAnimalha(s.animalha);return an&&an.images&&(an.images.default||an.images.masculino||an.images.feminino)||'';}return a.getRaceImage&&a.getRaceImage(s.race,s.gender)||'';}
-  function renderProgress(s){var i=Math.max(0,Math.min(9,Number(s.currentStep)||0)),p=Math.round((i+1)*10);$$('[data-current-step]').forEach(e=>e.textContent=i+1);$$('[data-total-steps]').forEach(e=>e.textContent='10');$('[data-current-step-title]').forEach(e=>e.textContent=titles[i]);
-    $('[data-current-step-description]').forEach(e=>e.textContent=descriptions[i]);var b=$('#progressBar');if(b)b.style.width=p+'%';var tr=$('.progress-track');if(tr)tr.setAttribute('aria-valuenow',p);var pe=$('#progressPercent');if(pe)pe.textContent=p+'%';$('.creation-step').forEach(e=>{var n=Number(e.dataset.step),complete=!!s.completedSteps?.[n];e.classList.toggle('is-active',n===i);e.classList.toggle('is-complete',complete);e.setAttribute('aria-current',n===i?'step':'false');e.setAttribute('aria-label',(n+1)+'. '+titles[n]+(complete?' — concluída':''));e.setAttribute('aria-disabled',n>i+1&&!complete?'true':'false');});var panels=$$('[data-panel]');panels.forEach(e=>{var id=['identity','race','appearance','class','attributes','power','skills','techniques','inventory','review'][i];e.hidden=e.dataset.panel!==id;e.classList.toggle('is-active',e.dataset.panel===id);});var next=$('[data-action="next-step"]'),prev=$('[data-action="previous-step"]');if(next){next.hidden=i===9;next.disabled=i===9;}if(prev)prev.disabled=i===0;var fb=$('#aerion-finalize-bottom');if(fb)fb.hidden=i!==9;var hf=$('#aerion-header-finalize');if(hf)hf.hidden=i!==9;}
+  function renderProgress(s){
+    var i=Math.max(0,Math.min(9,Number(s.currentStep)||0));
+    var p=Math.round((i+1)*10);
+    $$('[data-current-step]').forEach(function(e){e.textContent=i+1;});
+    $$('[data-total-steps]').forEach(function(e){e.textContent='10';});
+    $$('[data-current-step-title]').forEach(function(e){e.textContent=titles[i];});
+    $$('[data-current-step-description]').forEach(function(e){e.textContent=descriptions[i];});
+
+    var b=$('#progressBar');if(b)b.style.width=p+'%';
+    var tr=$('.progress-track');if(tr)tr.setAttribute('aria-valuenow',p);
+    var pe=$('#progressPercent');if(pe)pe.textContent=p+'%';
+
+    $$('.creation-step').forEach(function(e){
+      var n=Number(e.dataset.step),complete=!!s.completedSteps?.[n];
+      e.classList.toggle('is-active',n===i);
+      e.classList.toggle('is-complete',complete);
+      e.setAttribute('aria-current',n===i?'step':'false');
+      e.setAttribute('aria-label',(n+1)+'. '+titles[n]+(complete?' — concluída':''));
+      e.setAttribute('aria-disabled',n>i+1&&!complete?'true':'false');
+    });
+
+    $$('[data-panel]').forEach(function(e){
+      var id=['identity','race','appearance','class','attributes','power','skills','techniques','inventory','review'][i];
+      e.hidden=e.dataset.panel!==id;
+      e.classList.toggle('is-active',e.dataset.panel===id);
+    });
+
+    var next=$('[data-action="next-step"]'),prev=$('[data-action="previous-step"]');
+    if(next){next.hidden=i===9;next.disabled=i===9;}
+    if(prev)prev.disabled=i===0;
+    var fb=$('#aerion-finalize-bottom');if(fb)fb.hidden=i!==9;
+    var hf=$('#aerion-header-finalize');if(hf)hf.hidden=i!==9;
+  }
   function renderPreview(s){var name=txt(s.name)||'Sem nome',a=assets(),race=a?.getRace?.(s.race),animal=a?.getAnimalha?.(s.animalha),klass=api()?.getClasses?.()?.[s.class];$('#preview-name').textContent=name;$('#preview-initial').textContent=name.slice(0,1).toUpperCase();$('#preview-subtitle').textContent=[race?.name||s.race,animal?'Animalha '+(animal.name||s.animalha):'',klass?.name||''].filter(Boolean).join(' · ')||'Comece definindo identidade, raça e classe.';$('#preview-hp').textContent=String(Number(s.hp?.current||10));$('#preview-defense').textContent=String(Number(s.defense||10));$('#preview-mana').textContent=String(Number(s.mana?.current||0))+'/'+String(Number(s.mana?.max||0));var img=$('#preview-image'),u=imageFor(s);if(u){img.src=u;img.hidden=false;}else img.hidden=true;}
   function renderIdentity(s){var map=[['[data-field="name"]',s.name],['[data-field="origin"]',s.origin],['[data-field="description"]',s.description],['[data-concept-field="personality"]',s.personality],['[data-concept-field="objective"]',s.objective],['[data-concept-field="fear"]',s.fear],['[data-concept-field="importantBond"]',s.importantBond],['[data-concept-field="history"]',s.history],['[data-concept-field="region"]',s.region]];map.forEach(x=>{var e=$(x[0]);if(e&&document.activeElement!==e)e.value=x[1]??'';});$$('[data-field-choice="gender"]').forEach(e=>e.classList.toggle('is-selected',e.dataset.value===s.gender));}
   function renderRaces(s){var a=assets(),grid=$('#race-grid');if(!a||!grid)return;var q=txt($('#race-search')?.value).toLowerCase(),races=(a.races||[]).filter(r=>!q||txt(r.name).toLowerCase().includes(q)||txt(r.description).toLowerCase().includes(q));$('#race-count').textContent=races.length+' opções';grid.replaceChildren();races.forEach(r=>{var b=document.createElement('button');b.type='button';b.className='race-card'+(r.id===s.race?' is-selected':'');b.dataset.raceId=r.id;var u=a.getRaceImage?.(r.id,s.gender)||'';b.innerHTML='<div class="race-art">'+(u?'<img src="'+esc(u)+'" alt="">':'<span>'+esc(txt(r.name).slice(0,1))+'</span>')+'</div><div><strong>'+esc(r.name)+'</strong><small>'+esc(r.description||r.profile||'')+'</small></div><i class="check">✓</i>';grid.appendChild(b);});var block=$('#animalha-block'),isAnimal=txt(s.race).toLowerCase()==='animalha';if(block)block.hidden=!isAnimal;if(isAnimal)renderAnimalha(s);var info=$('#race-info'),race=a.getRace?.(s.race);if(info&&race&&!isAnimal){info.hidden=false;info.innerHTML='<div><span>ESCOLHIDA</span><h3>'+esc(race.name)+'</h3><p>'+esc(race.description||race.profile||'')+'</p></div>';}else if(info)info.hidden=true;}
