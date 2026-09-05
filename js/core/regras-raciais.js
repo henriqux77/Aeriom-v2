@@ -365,46 +365,6 @@
   }
 
 
-  function interceptRetiredManaNavigation() {
-    if (window.__AERION_RETIRED_MANA_NAV) return;
-    window.__AERION_RETIRED_MANA_NAV = true;
-
-    document.addEventListener("click", (event) => {
-      const target = event.target?.closest("[data-action]");
-      if (!target) return;
-
-      const action = target.dataset.action;
-      const api = window.AERIONFicha || window.AERION_FICHA;
-      const current = Number(api?.getState?.()?.currentStep);
-
-      if (!api?.goToStep || !Number.isFinite(current)) return;
-
-      if (action === "next-step" && current === 5) {
-        event.preventDefault();
-        event.stopImmediatePropagation();
-
-        /*
-         * O núcleo ainda possui o índice técnico 6 para Mana.
-         * Fazemos o avanço interno e imediatamente saltamos para Perícias.
-         * O painel Mana está oculto e não aparece para o usuário.
-         */
-        api.goToStep(6, false);
-        api.goToStep(7, false);
-
-        refresh();
-        return;
-      }
-
-      if (action === "previous-step" && current === 7) {
-        event.preventDefault();
-        event.stopImmediatePropagation();
-
-        api.goToStep(5, false);
-        refresh();
-      }
-    }, true);
-  }
-
 
   function fixSteps() {
     const stepButtons =
