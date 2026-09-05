@@ -425,6 +425,23 @@ import { getSupabase } from "./supabase.js";
     await renderLibrary();
   }
 
+  function bindFinalizeButtons() {
+    const api = window.AERIONFicha;
+    if (!api?.finalizeCharacter) return;
+
+    [
+      document.getElementById("aerion-finalize-bottom"),
+      document.getElementById("aerion-header-finalize")
+    ].forEach((button) => {
+      if (!button || button.dataset.finalizeBound === "1") return;
+
+      button.dataset.finalizeBound = "1";
+      button.addEventListener("click", () => {
+        api.finalizeCharacter();
+      });
+    });
+  }
+
   function installCloudFlushHandlers() {
     if (session.cloudFlushInstalled) return;
     session.cloudFlushInstalled = true;
