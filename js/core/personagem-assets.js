@@ -745,144 +745,19 @@
 
   const ANIMALHA_ANIMALS = {
 
-    gato: {
-      id: "gato",
-      name: "Gato",
-      category: "terrestres",
-      lineage: "felino"
-
-      lifespan: {
-        min: 15,
-        max: 22
-      },    },
-
-    pantera: {
-      id: "pantera",
-      name: "Pantera",
-      category: "terrestres",
-      lineage: "felino"
-
-      lifespan: {
-        min: 12,
-        max: 18
-      },    },
-
-    tigre: {
-      id: "tigre",
-      name: "Tigre",
-      category: "terrestres",
-      lineage: "felino"
-
-      lifespan: {
-        min: 10,
-        max: 18
-      },    },
-
-    leao: {
-      id: "leao",
-      name: "Leão",
-      category: "terrestres",
-      lineage: "felino"
-
-      lifespan: {
-        min: 15,
-        max: 22
-      },    },
-
-    lobo: {
-      id: "lobo",
-      name: "Lobo",
-      category: "terrestres",
-      lineage: "canino"
-
-      lifespan: {
-        min: 8,
-        max: 15
-      },    },
-
-    raposa: {
-      id: "raposa",
-      name: "Raposa",
-      category: "terrestres",
-      lineage: "canino"
-
-      lifespan: {
-        min: 8,
-        max: 14
-      },    },
-
-    urso: {
-      id: "urso",
-      name: "Urso",
-      category: "grandes",
-      lineage: "ursino"
-
-      lifespan: {
-        min: 20,
-        max: 35
-      },    },
-
-    falcao: {
-      id: "falcao",
-      name: "Falcão",
-      category: "voadores",
-      lineage: "ave"
-
-      lifespan: {
-        min: 12,
-        max: 25
-      },    },
-
-    aguia: {
-      id: "aguia",
-      name: "Águia",
-      category: "voadores",
-      lineage: "ave"
-
-      lifespan: {
-        min: 20,
-        max: 35
-      },    },
-
-    coruja: {
-      id: "coruja",
-      name: "Coruja",
-      category: "voadores",
-      lineage: "ave"
-
-      lifespan: {
-        min: 10,
-        max: 25
-      },    },
-
-    cobra: {
-      id: "cobra",
-      name: "Cobra",
-      category: "reptilianos",
-      lineage: "reptil"
-
-      lifespan: {
-        min: 10,
-        max: 30
-      },    },
-
-    crocodilo: {
-      id: "crocodilo",
-      name: "Crocodilo",
-      category: "marinhos",
-      lineage: "reptil"
-
-      lifespan: {
-        min: 50,
-        max: 80
-      },    },
-
-    tubarao: {
-      id: "tubarao",
-      name: "Tubarão",
-      category: "marinhos",
-      lineage: "aquatico"
-    }
+    gato: { id:"gato", name:"Gato", category:"terrestres", lineage:"felino", lifespan:{min:15,max:22} },
+    pantera: { id:"pantera", name:"Pantera", category:"terrestres", lineage:"felino", lifespan:{min:12,max:18} },
+    tigre: { id:"tigre", name:"Tigre", category:"terrestres", lineage:"felino", lifespan:{min:10,max:18} },
+    leao: { id:"leao", name:"Leão", category:"terrestres", lineage:"felino", lifespan:{min:15,max:22} },
+    lobo: { id:"lobo", name:"Lobo", category:"terrestres", lineage:"canino", lifespan:{min:8,max:15} },
+    raposa: { id:"raposa", name:"Raposa", category:"terrestres", lineage:"canino", lifespan:{min:8,max:14} },
+    urso: { id:"urso", name:"Urso", category:"grandes", lineage:"ursino", lifespan:{min:20,max:35} },
+    falcao: { id:"falcao", name:"Falcão", category:"voadores", lineage:"ave", lifespan:{min:12,max:25} },
+    aguia: { id:"aguia", name:"Águia", category:"voadores", lineage:"ave", lifespan:{min:20,max:35} },
+    coruja: { id:"coruja", name:"Coruja", category:"voadores", lineage:"ave", lifespan:{min:10,max:25} },
+    cobra: { id:"cobra", name:"Cobra", category:"reptilianos", lineage:"reptil", lifespan:{min:10,max:30} },
+    crocodilo: { id:"crocodilo", name:"Crocodilo", category:"marinhos", lineage:"reptil", lifespan:{min:50,max:80} },
+    tubarao: { id:"tubarao", name:"Tubarão", category:"marinhos", lineage:"aquatico", lifespan:{min:20,max:70} }
   };
 
 
@@ -1182,6 +1057,8 @@
 
     getRaceHeight,
 
+    getAgeRange,
+
     getAnimalhaCategory,
 
     getAnimalhaAnimals,
@@ -1263,7 +1140,3 @@
   );
 
 })();
-      lifespan: {
-        min: 20,
-        max: 70
-      },
