@@ -4510,3 +4510,75 @@ select:focus-visible {
     min-height: 66px;
   }
 }
+
+
+/* =========================================================
+   AERION — GLOW UP CONSOLIDADO
+   ========================================================= */
+
+.ficha-header-finalize{
+  min-height:40px;
+  padding:0 13px;
+  border:1px solid rgba(216,180,90,.32);
+  border-radius:12px;
+  background:rgba(216,180,90,.08);
+  color:var(--gold-light);
+  font-size:9px;
+  font-weight:900;
+  cursor:pointer;
+}
+.ficha-header-finalize:hover{
+  background:rgba(216,180,90,.14);
+  border-color:var(--border-active);
+}
+.ficha-header-finalize[hidden]{
+  display:none !important;
+}
+
+.creation-navigation-button.finalize{
+  grid-column:span 2;
+  width:100%;
+  min-height:58px;
+  border-color:rgba(216,180,90,.44);
+  background:
+    radial-gradient(circle at 30% 0%,rgba(255,255,255,.13),transparent 34%),
+    linear-gradient(135deg,rgba(216,180,90,.98),rgba(216,180,90,.76));
+  color:#17130d;
+  font-size:13px;
+  font-weight:950;
+  box-shadow:0 12px 28px rgba(0,0,0,.18);
+}
+.creation-navigation-button.finalize:hover{
+  transform:translateY(-1px);
+  box-shadow:0 16px 32px rgba(0,0,0,.24);
+}
+.creation-navigation-button.finalize[hidden]{
+  display:none !important;
+}
+
+.aerion-ficha-finalize{
+  margin:24px 0 6px;
+  padding:18px;
+  border:1px solid rgba(216,180,90,.18);
+  border-radius:18px;
+  background:
+    radial-gradient(circle at 90% 0%,rgba(216,180,90,.08),transparent 38%),
+    rgba(255,255,255,.012);
+}
+.aerion-ficha-finalize button{
+  min-height:48px;
+}
+
+@media(max-width:699px){
+  .ficha-header-finalize{
+    min-width:0;
+    padding:0 9px;
+    font-size:8px;
+  }
+  .creation-navigation-button.finalize{
+    grid-column:1/-1;
+    min-height:62px;
+    border-radius:15px;
+    font-size:14px;
+  }
+}
