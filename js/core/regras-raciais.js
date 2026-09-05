@@ -275,77 +275,6 @@
     document.head.appendChild(style);
   }
 
-  function ensureFinalizeButton() {
-    const review = document.querySelector('[data-panel="review"]');
-    if (!review) return;
-
-    if (
-      document.getElementById("aerion-finalize-button") ||
-      document.getElementById("aerion-finalize-ficha-button")
-    ) {
-      return;
-    }
-
-    const box = document.createElement("div");
-    box.className = "aerion-ficha-finalize";
-    box.id = "aerion-finalize-box";
-    box.innerHTML = `
-      <div class="aerion-finalize-copy">
-        <span class="eyebrow">ÚLTIMO PASSO</span>
-        <strong>Salvar ficha</strong>
-        <small>Revise tudo e salve o personagem como uma ficha pronta.</small>
-      </div>
-
-      <button
-        type="button"
-        class="button button-primary"
-        id="aerion-finalize-button"
-      >
-        Salvar e finalizar
-      </button>
-    `;
-
-    review.appendChild(box);
-
-    document
-      .getElementById("aerion-finalize-button")
-      ?.addEventListener("click", () => {
-        const api =
-          window.AERIONFicha ||
-          window.AERION_FICHA;
-
-        const snapshot = api?.getState?.();
-        if (!snapshot) return;
-
-        const required = [0,1,2,3,4,5];
-        const ok = required.every(
-          (index) => snapshot.completedSteps?.[index] === true
-        );
-
-        if (!ok) {
-          window.dispatchEvent(new CustomEvent("aerion:toast", {
-            detail: {
-              message: "Complete as etapas obrigatórias antes de finalizar.",
-              type: "warning"
-            }
-          }));
-          return;
-        }
-
-        /*
-         * A API save() grava localmente e dispara "aerion:save".
-         * O módulo de biblioteca já escuta esse evento e envia ao Supabase.
-         */
-        api.save?.();
-
-        window.dispatchEvent(new CustomEvent("aerion:toast", {
-          detail: {
-            message: "Ficha salva e finalizada.",
-            type: "success"
-          }
-        }));
-      });
-  }
 
   function fixPowerUI() {
     const panel = document.querySelector('[data-panel="power"]');
@@ -550,29 +479,6 @@
     track?.setAttribute("aria-valuenow",String(Math.max(0,p)));
   }
 
-  function interceptNavigation() {
-    if (window.__AERION_10STEP_NAV) return;
-    window.__AERION_10STEP_NAV = true;
-
-    document.addEventListener("click",(event) => {
-      const target = event.target?.closest("[data-action]");
-      if (!target) return;
-
-      const action = target.dataset.action;
-      const api = ficha();
-      const core = num(api?.getState?.()?.currentStep,0);
-
-      if (action === "next-step" && core === 5) {
-        event.preventDefault();
-        event.stopImmediatePropagation();
-        api?.goToStep?.(7,true);
-      } else if (action === "previous-step" && core === 7) {
-        event.preventDefault();
-        event.stopImmediatePropagation();
-        api?.goToStep?.(5,false);
-      }
-    },true);
-  }
 
   function installCustomPower() {
     if (window.__AERION_CUSTOM_POWER) return;
@@ -637,7 +543,6 @@
       return;
     }
 
-    interceptNavigation();
     installCustomPower();
 
     refresh();
