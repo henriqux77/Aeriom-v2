@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>AERION — Ficha</title>
+  <style>
+    :root{--gold:#dfbf67;--bg:#090807;--card:#11100f;--border:rgba(255,255,255,.08);--muted:rgba(255,255,255,.5)}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:#fff;font-family:Arial,sans-serif}
+    .viewer{max-width:1050px;margin:auto;padding:20px 16px 42px}.top{display:flex;justify-content:space-between;gap:14px;align-items:center;margin-bottom:22px}.top h1{font:500 clamp(34px,8vw,58px) Georgia,serif;margin:4px 0}.eyebrow{color:var(--gold);font-size:9px;font-weight:900;letter-spacing:.16em}.actions{display:flex;gap:8px;flex-wrap:wrap}.btn{min-height:44px;padding:0 14px;border-radius:12px;border:1px solid var(--border);background:#11100e;color:#eee;font-weight:800}.btn.primary{background:var(--gold);color:#17130b;border-color:var(--gold)}
+    .hero{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(280px,.85fr);gap:14px}.card{padding:16px;border:1px solid var(--border);border-radius:18px;background:linear-gradient(135deg,#141210,#0e0d0c)}.hero-image{min-height:360px;display:grid;place-items:center;overflow:hidden}.hero-image img{max-width:100%;max-height:560px;object-fit:contain}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}.stat{padding:12px;border:1px solid var(--border);border-radius:12px;text-align:center}.stat span{display:block;color:var(--muted);font-size:8px;font-weight:900;letter-spacing:.12em}.stat strong{display:block;margin-top:4px;color:var(--gold);font:500 23px Georgia,serif}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:14px}.row{padding:9px 0;border-bottom:1px solid rgba(255,255,255,.06)}.row:last-child{border:0}.row span{color:var(--muted);font-size:9px}.row strong{display:block;margin-top:3px;font-size:14px;font-weight:700}.tag-list{display:flex;flex-wrap:wrap;gap:6px}.tag{padding:5px 8px;border-radius:999px;border:1px solid rgba(223,191,103,.16);color:var(--gold);font-size:8px}
+    .full{grid-column:1/-1}@media(max-width:760px){.top{align-items:stretch;flex-direction:column}.actions .btn{flex:1}.hero,.grid{grid-template-columns:1fr}.hero-image{min-height:280px}.stats{grid-template-columns:repeat(3,1fr)}}
+  </style>
+</head>
+<body>
+<main class="viewer">
+  <header class="top">
+    <div><span class="eyebrow">AERIOM · VISUALIZAÇÃO</span><h1 id="name">Ficha</h1><div id="meta" style="color:var(--muted)">Carregando…</div></div>
+    <div class="actions">
+      <a class="btn" href="./minhas-fichas.html">← Minhas Fichas</a>
+      <button id="edit" class="btn primary" type="button">Editar</button>
+    </div>
+  </header>
+  <section class="hero">
+    <article class="card hero-image"><img id="avatar" alt="" hidden></article>
+    <article class="card">
+      <span class="eyebrow">COMBATE</span>
+      <div class="stats">
+        <div class="stat"><span>HP</span><strong id="hp">—</strong></div>
+        <div class="stat"><span>DEFESA</span><strong id="def">—</strong></div>
+        <div class="stat"><span>MOV.</span><strong id="move">—</strong></div>
+      </div>
+      <div class="row"><span>Raça</span><strong id="race">—</strong></div>
+      <div class="row"><span>Classe</span><strong id="class">—</strong></div>
+      <div class="row"><span>Poder</span><strong id="power">—</strong></div>
+      <div class="row"><span>Poder paralelo</span><strong id="parallel">—</strong></div>
+      <div class="row"><span>Mana</span><strong id="mana">—</strong></div>
+    </article>
+  </section>
+  <section class="grid">
+    <article class="card"><span class="eyebrow">IDENTIDADE</span><div class="row"><span>Gênero</span><strong id="gender">—</strong></div><div class="row"><span>Origem</span><strong id="origin">—</strong></div><div class="row"><span>Região</span><strong id="region">—</strong></div><div class="row"><span>Descrição</span><strong id="description">—</strong></div></article>
+    <article class="card"><span class="eyebrow">APARÊNCIA</span><div class="row"><span>Altura</span><strong id="height">—</strong></div><div class="row"><span>Pele</span><strong id="skin">—</strong></div><div class="row"><span>Cabelo</span><strong id="hair">—</strong></div><div class="row"><span>Olhos</span><strong id="eyes">—</strong></div></article>
+    <article class="card"><span class="eyebrow">CARACTERÍSTICAS RACIAIS</span><div id="raceTags" class="tag-list"></div><div class="row"><span>Habilidade</span><strong id="ability">—</strong></div><div class="row"><span>Resistências</span><strong id="res">—</strong></div><div class="row"><span>Sentidos</span><strong id="senses">—</strong></div></article>
+    <article class="card"><span class="eyebrow">CONCEITO</span><div class="row"><span>Personalidade</span><strong id="personality">—</strong></div><div class="row"><span>Objetivo</span><strong id="objective">—</strong></div><div class="row"><span>Medo</span><strong id="fear">—</strong></div><div class="row"><span>Vínculo</span><strong id="bond">—</strong></div></article>
+  </section>
+  <section id="error" style="display:none;margin-top:14px;padding:14px;border:1px solid rgba(225,166,162,.18);border-radius:14px;color:#e1a6a2"></section>
+</main>
+<script type="module">
+import { getSupabase } from "./js/core/supabase.js";
+const $=id=>document.getElementById(id);
+const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"})[c]);
+(async()=>{
+  try{
+    const supabase=await getSupabase();
+    const {data:auth,error:authError}=await supabase.auth.getUser();
+    if(authError) throw authError;
+    if(!auth?.user){location.href="./index.html";return;}
+    const id=new URLSearchParams(location.search).get("id");
+    if(!id) throw new Error("Ficha não informada.");
+    const {data,rowError}=await supabase.from("characters").select("*").eq("id",id).eq("user_id",auth.user.id).maybeSingle();
+    if(rowError) throw rowError;
+    if(!data) throw new Error("Ficha não encontrada.");
+    const row=data,s=row.creation_state||{},d=s.derivedStats||{};
+    $("name").textContent=row.name||"Ficha sem nome";
+    $("meta").textContent=[row.race,row.class,row.power].filter(Boolean).join(" · ")||"Aventureiro";
+    $("hp").textContent=`${row.hp_current??10}/${row.hp_max??10}`;
+    $("def").textContent=row.defense??10;
+    $("move").textContent=`${row.movement??9}m`;
+    $("race").textContent=row.race||"—";$("class").textContent=row.class||"—";
+    $("power").textContent=row.power||"—";$("parallel").textContent=s.parallelPower||"—";
+    $("mana").textContent=`${row.mana_current??0}/${row.mana_max??0}`;
+    $("gender").textContent=row.gender||"—";$("origin").textContent=row.origin||"—";
+    $("region").textContent=s.region||"—";$("description").textContent=s.description||"—";
+    $("height").textContent=s.appearance?.height?`${s.appearance.height} cm`:"—";
+    $("skin").textContent=s.appearance?.skinTone||"—";$("hair").textContent=s.appearance?.hairColor||"—";$("eyes").textContent=s.appearance?.eyeColor||"—";
+    $("ability").textContent=row.racial_ability||d.racialAbility||"—";
+    $("res").textContent=(row.resistances||d.resistances||[]).join(", ")||"—";
+    $("senses").textContent=(row.senses||d.senses||[]).join(", ")||"—";
+    $("personality").textContent=s.personality||"—";$("objective").textContent=s.objective||"—";$("fear").textContent=s.fear||"—";$("bond").textContent=s.importantBond||"—";
+    const mods=row.racial_modifiers||d.racialModifiers||{};
+    $("raceTags").innerHTML=Object.entries(mods).map(([k,v])=>`<span class="tag">${esc(k)} ${v>0?"+":""}${esc(v)}</span>`).join("")||'<span class="tag">Sem modificadores</span>';
+    if(s.avatar){
+      $("avatar").src=s.avatar;$("avatar").hidden=false;
+    }
+    $("edit").onclick=()=>{location.href=`./fichas.html?id=${encodeURIComponent(row.id)}`};
+  }catch(e){
+    $("error").style.display="block";$("error").textContent=e?.message||"Não foi possível abrir a ficha.";
+  }
+})();
+</script>
+</body>
+</html>
