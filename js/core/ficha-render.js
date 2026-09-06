@@ -71,8 +71,14 @@
 
     var rr=a?.getRaceHeight?.(s.race)||{min:90,max:320},range=$('#height-range');
     range.min=rr.min;range.max=rr.max;
-    range.value=Math.min(Math.max(Number(s.appearance?.height||rr.min),Number(rr.min)),Number(rr.max));
+    range.value=Math.min(Math.max(Number(s.appearance?.height||Math.round((rr.min+rr.max)/2)),Number(rr.min)),Number(rr.max));
     $('#height-value').textContent=range.value;
+    if(img && !img.hidden){
+      var ratio=(Number(range.value)-Number(rr.min))/Math.max(1,Number(rr.max)-Number(rr.min));
+      var scale=0.78+(ratio*0.44);
+      img.style.setProperty('transform','scale('+scale.toFixed(3)+')');
+      img.style.setProperty('--appearance-height-scale',scale.toFixed(3));
+    }
     $('#height-min-label').textContent=rr.min;
     $('#height-max-label').textContent=rr.max;
 
