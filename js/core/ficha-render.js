@@ -23,7 +23,7 @@
     'Monte sua carga e acompanhe slots e peso.',
     'Confira o personagem antes de torná-lo uma ficha pronta.'
   ];
-  function imageFor(s){var a=assets();if(!a)return '';if(txt(s.race).toLowerCase()==='animalha'&&s.animalha){var an=a.getAnimalha&&a.getAnimalha(s.animalha);return an&&an.images&&(an.images.default||an.images.masculino||an.images.feminino)||'';}return a.getRaceImage&&a.getRaceImage(s.race,s.gender)||'';}
+  function imageFor(s){var a=assets();if(!a)return '';if(txt(s.race).toLowerCase()==='animalha'&&s.animalha){return a.getAnimalhaImage?.(s.animalha,s.gender)||'';}return a.getRaceImage&&a.getRaceImage(s.race,s.gender)||'';}
   function renderProgress(s){
     var i=Math.max(0,Math.min(9,Number(s.currentStep)||0));
     var p=Math.round((i+1)*10);
