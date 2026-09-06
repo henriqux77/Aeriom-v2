@@ -2930,3 +2930,46 @@
 @media(prefers-reduced-motion:reduce){
   .campaign-quick-action,.campaign-member-card{transition:none!important}
 }
+
+/* Avatar final: nunca escapar do círculo */
+.campaign-user__avatar{
+  position:relative!important;
+  overflow:hidden!important;
+  isolation:isolate;
+  border-radius:50%!important;
+}
+.campaign-user__avatar img{
+  position:absolute!important;
+  inset:0!important;
+  display:block!important;
+  width:100%!important;
+  height:100%!important;
+  min-width:0!important;
+  min-height:0!important;
+  max-width:none!important;
+  max-height:none!important;
+  object-fit:cover!important;
+  object-position:center!important;
+  border-radius:50%!important;
+  z-index:0;
+}
+.campaign-user__avatar::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  border:1px solid rgba(213,183,101,.20);
+  border-radius:50%;
+  pointer-events:none;
+  z-index:2;
+}
+.campaign-member-card__avatar{
+  overflow:hidden!important;
+}
+.campaign-member-card__avatar img{
+  display:block!important;
+  width:100%!important;
+  height:100%!important;
+  object-fit:cover!important;
+  object-position:center!important;
+  border-radius:50%!important;
+}
