@@ -31,3 +31,30 @@ html,body{min-width:0;overflow-x:hidden}
   .book-card p,.book-rule span{font-size:8px;line-height:1.5}
   .book-rule{margin:9px 0;padding:10px 11px}
 }
+
+/* ============================================================
+   AERION V4 — LIVRO COMO MANUAL DE MESA
+   ============================================================ */
+body.aeriom-page--book{
+  background:
+    radial-gradient(circle at 80% 0,rgba(196,158,83,.055),transparent 32%),
+    radial-gradient(circle at 0 100%,rgba(74,46,36,.045),transparent 28%),
+    #080706;
+}
+.book-shell{max-width:1380px;padding-top:24px}
+.book-topbar{position:sticky;top:0;z-index:30;padding:12px 0 14px;background:linear-gradient(180deg,#080706 70%,transparent);backdrop-filter:blur(8px)}
+.book-topbar h1{letter-spacing:-.03em}
+.book-search-panel{grid-template-columns:minmax(0,1fr) minmax(300px,460px);padding:14px 15px;border-color:rgba(196,158,83,.12);box-shadow:0 16px 42px rgba(0,0,0,.16)}
+.book-layout{grid-template-columns:250px minmax(0,1fr);align-items:start}
+.book-index{box-shadow:0 14px 34px rgba(0,0,0,.14)}
+.book-content{min-height:620px;box-shadow:0 22px 60px rgba(0,0,0,.16)}
+.book-chapter h2{letter-spacing:-.025em}
+.book-card{transition:transform .16s ease,border-color .16s ease,background .16s ease}
+.book-card:hover{transform:translateY(-1px);border-color:rgba(196,158,83,.17);background:rgba(196,158,83,.022)}
+@media(max-width:800px){
+  .book-shell{padding:10px 8px 28px}
+  .book-topbar{padding:8px 0 11px}
+  .book-layout{gap:8px}
+  .book-index{top:6px}
+  .book-content{min-height:0}
+}
