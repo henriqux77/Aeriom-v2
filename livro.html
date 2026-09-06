@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>AERION — Livro do Sistema</title>
+<link rel="stylesheet" href="./css/aeriom.css">
+<link rel="stylesheet" href="./css/livro.css">
+</head>
+<body class="aeriom-page aeriom-page--book">
+<main class="book-shell">
+<header class="book-topbar">
+<a href="./campanhas.html" class="book-back" aria-label="Voltar para campanhas">←</a>
+<div><span class="book-eyebrow">AERION · LIVRO DO SISTEMA</span><h1>O Grimório de AERION</h1><p>Regras, fundamentos e procedimentos da mesa.</p></div>
+</header>
+<section class="book-search-panel">
+<div><span class="book-section-label">Pesquisa</span><h2>Encontre uma regra</h2><p>Pesquise pelo nome da seção ou por uma palavra dentro do conteúdo.</p></div>
+<label class="book-search"><span class="visually-hidden">Pesquisar no livro</span><input id="book-search" type="search" placeholder="Ex.: Mana, Pontaria, Inventário, iniciativa…"><kbd>⌕</kbd></label>
+<div id="book-search-status" class="book-search-status" aria-live="polite">Mostrando todas as seções.</div>
+</section>
+<div class="book-layout">
+<aside class="book-index"><div class="book-index__head"><span>ÍNDICE</span><b id="book-result-count">0</b></div><nav id="book-index-list" aria-label="Índice do livro"></nav></aside>
+<article class="book-content" id="book-content"></article>
+</div>
+</main>
+<script type="module" src="./js/core/livro.js?v=20260905-01"></script>
+</body>
+</html>
