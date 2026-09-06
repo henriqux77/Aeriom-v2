@@ -322,14 +322,47 @@ function setSidebarCollapsed(
 }
 
 
+function ensureMobileSidebarBackdrop() {
+  let backdrop = document.getElementById("aeriom-mobile-sidebar-backdrop");
+  if (backdrop) return backdrop;
+
+  backdrop = document.createElement("button");
+  backdrop.id = "aeriom-mobile-sidebar-backdrop";
+  backdrop.type = "button";
+  backdrop.setAttribute("aria-label", "Fechar menu");
+  backdrop.className = "aeriom-mobile-sidebar-backdrop";
+  document.body.appendChild(backdrop);
+  backdrop.addEventListener("click", closeMobileSidebar);
+  return backdrop;
+}
+
+function openMobileSidebar() {
+  const sidebar = getSidebar();
+  const backdrop = ensureMobileSidebarBackdrop();
+  if (!sidebar) return;
+  sidebar.classList.add("is-mobile-open");
+  backdrop.classList.add("is-open");
+  document.body.classList.add("aeriom-mobile-menu-open");
+  const toggle = getElement(MENU_CONFIG.selectors.sidebarToggle);
+  toggle?.setAttribute("aria-expanded", "true");
+}
+
+function closeMobileSidebar() {
+  const sidebar = getSidebar();
+  const backdrop = document.getElementById("aeriom-mobile-sidebar-backdrop");
+  sidebar?.classList.remove("is-mobile-open");
+  backdrop?.classList.remove("is-open");
+  document.body.classList.remove("aeriom-mobile-menu-open");
+  const toggle = getElement(MENU_CONFIG.selectors.sidebarToggle);
+  toggle?.setAttribute("aria-expanded", "false");
+}
+
 function toggleSidebar() {
-
-  if (
-    isMobile()
-  ) {
-
+  if (isMobile()) {
+    const sidebar = getSidebar();
+    if (sidebar?.classList.contains("is-mobile-open")) closeMobileSidebar();
+    else openMobileSidebar();
     return;
-
   }
 
 
@@ -1048,79 +1081,30 @@ function closeAllMenus() {
 function handleDocumentPointerDown(
   event
 ) {
+  const target = event.target;
+  if (!(target instanceof Node)) return;
 
-  const target =
-    event.target;
-
-
-  if (
-    !(target instanceof Node)
-  ) {
-
-    return;
-
+  if (userMenuOpen) {
+    const menu = getUserMenu();
+    const toggle = getUserMenuToggle();
+    if (!menu?.contains(target) && !toggle?.contains(target)) closeUserMenu();
   }
 
+  if (openExpandableMenu && !openExpandableMenu.contains(target)) {
+    closeExpandableMenu(openExpandableMenu);
+  }
 
-  if (
-    userMenuOpen
-  ) {
-
-    const menu =
-      getUserMenu();
-
-    const toggle =
-      getUserMenuToggle();
-
-
-    const insideMenu =
-      Boolean(
-        menu &&
-        menu.contains(
-          target
-        )
-      );
-
-
-    const insideToggle =
-      Boolean(
-        toggle &&
-        toggle.contains(
-          target
-        )
-      );
-
-
+  if (isMobile()) {
+    const sidebar = getSidebar();
+    const toggle = getElement(MENU_CONFIG.selectors.sidebarToggle);
     if (
-      !insideMenu &&
-      !insideToggle
+      sidebar?.classList.contains("is-mobile-open") &&
+      !sidebar.contains(target) &&
+      !toggle?.contains(target)
     ) {
-
-      closeUserMenu();
-
+      closeMobileSidebar();
     }
-
   }
-
-
-  if (
-    openExpandableMenu
-  ) {
-
-    if (
-      !openExpandableMenu.contains(
-        target
-      )
-    ) {
-
-      closeExpandableMenu(
-        openExpandableMenu
-      );
-
-    }
-
-  }
-
 }
 
 
@@ -1138,6 +1122,7 @@ function handleKeyDown(
   ) {
 
     closeAllMenus();
+    closeMobileSidebar();
 
     return;
 
