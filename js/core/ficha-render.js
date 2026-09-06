@@ -124,12 +124,19 @@
     renderSkin(s);renderMini('#hair-grid',HAIR,'hairColor','hair',s);renderMini('#eyes-grid',EYES,'eyeColor','eyes',s);
   }
   function renderSkin(s){
-    var p=$('#skin-picker'),button=$('#skin-picker-button'),animalId=s.animalha||'',isAnimalha=String(s.race||'').toLowerCase()==='animalha';
-    var options=isAnimalha?(COAT_PALETTES[animalId]||COAT_PALETTES.gato):SKIN;
+    var p=$('#skin-picker'),button=$('#skin-picker-button');
+    var isAnimalha=String(s.race||'').toLowerCase()==='animalha';
+    var animalId=String(s.animalha||'').toLowerCase();
+    var options=isAnimalha?(COAT_PALETTES[animalId]||[['Natural','#8c7b70','Pelagem natural']]):SKIN;
     var selectedKey=isAnimalha?(s.appearance?.coatTone||''):(s.appearance?.skinTone||'');
-    var sel=options.find(x=>x[0]===selectedKey);
-    $('#skin-value').textContent=sel?.[0]||'Escolher';
+    var sel=options.find(function(x){return x[0]===selectedKey;});
+    $('#skin-value').textContent=sel?.[0]||(isAnimalha?'Escolher pelagem':'Escolher');
     $('#skin-swatch').style.background=sel?.[1]||'transparent';
+    if(button){
+      var label=button.querySelector('span');
+      if(label)label.textContent=sel?.[0]||(isAnimalha?'Escolher pelagem':'Escolher');
+      button.setAttribute('aria-describedby','skin-picker-help');
+    }
     p.replaceChildren();
     options.forEach(function(x){
       var b=document.createElement('button');
@@ -140,7 +147,6 @@
       b.innerHTML='<i style="background:'+x[1]+'"></i><span><strong>'+esc(x[0])+'</strong><small>'+esc(x[2])+'</small></span>'+(sel?.[0]===x[0]?'<b>✓</b>':'');
       p.appendChild(b);
     });
-    if(button)button.setAttribute('aria-describedby','skin-picker-help');
     var help=$('#skin-picker-help');
     if(!help){
       help=document.createElement('small');
