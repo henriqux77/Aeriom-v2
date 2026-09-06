@@ -406,3 +406,22 @@ body.aeriom-page--character{
   .appearance-stage .height-control input{height:205px;width:32px}
   .appearance-stage .height-control::before{top:30px;bottom:30px}
 }
+
+/* GÊNERO — dois botões reais, sempre clicáveis */
+.choice-grid.three{grid-template-columns:repeat(2,minmax(0,1fr))}
+.choice-grid[data-field-choice="gender"]{position:relative;z-index:5}
+.choice-grid[data-field-choice="gender"] button{
+  position:relative;
+  z-index:6;
+  pointer-events:auto;
+  touch-action:manipulation;
+}
+.choice-grid[data-field-choice="gender"] button.is-selected{
+  border-color:var(--fx-line-active);
+  background:var(--fx-gold-soft);
+  color:var(--fx-gold);
+  box-shadow:0 0 0 2px rgba(227,195,109,.05);
+}
+@media(max-width:390px){
+  .choice-grid.three{grid-template-columns:1fr 1fr}
+}
