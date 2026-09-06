@@ -2358,99 +2358,57 @@ function createMemberCard(
    ============================================================ */
 
 function renderCharacters() {
-
-  const container =
-    getElement(
-      "campaign-character-summary"
-    );
-
-
-  if (
-    !container
-  ) {
-
-    return;
-
-  }
-
-
-  if (
-    !state.presentCharacters.length
-  ) {
-
-    return;
-
-  }
-
+  const container = getElement("campaign-character-summary");
+  if (!container) return;
 
   container.replaceChildren();
 
+  if (!state.presentCharacters.length) {
+    const empty = document.createElement("div");
+    empty.className = "campaign-character-summary__empty";
+    empty.innerHTML = `
+      <span aria-hidden="true">♜</span>
+      <div><strong>Nenhum personagem presente.</strong><p>Adicione uma ficha finalizada à campanha para começar.</p></div>
+    `;
+    container.appendChild(empty);
+    return;
+  }
 
-  state.presentCharacters
-    .forEach(
-      entry => {
+  state.presentCharacters.forEach((entry) => {
+    const character = entry.character;
+    if (!character?.id) return;
 
-        const character =
-          entry.character;
+    const card = document.createElement("article");
+    card.className = "campaign-character-card";
 
+    const info = document.createElement("div");
+    info.className = "campaign-character-card__info";
 
-        const card =
-          document.createElement(
-            "article"
-          );
+    const name = document.createElement("strong");
+    name.textContent = character.name || "Personagem";
 
+    const meta = document.createElement("span");
+    meta.textContent = [character.race, character.class].filter(Boolean).join(" • ") || "Ficha";
 
-        card.className =
-          "campaign-character-card";
+    info.append(name, meta);
 
+    const actions = document.createElement("div");
+    actions.className = "campaign-character-card__actions";
 
-        const name =
-          document.createElement(
-            "strong"
-          );
+    const view = document.createElement("a");
+    view.className = "campaign-button campaign-button--secondary";
+    view.href = `./ficha.html?id=${encodeURIComponent(character.id)}`;
+    view.textContent = "Ver ficha";
 
+    const edit = document.createElement("a");
+    edit.className = "campaign-button campaign-button--secondary";
+    edit.href = `./fichas.html?id=${encodeURIComponent(character.id)}`;
+    edit.textContent = "Editar ficha";
 
-        name.textContent =
-          character.name;
-
-
-        const meta =
-          document.createElement(
-            "span"
-          );
-
-
-        const parts = [
-
-          character.race,
-
-          character.class
-
-        ]
-          .filter(
-            Boolean
-          );
-
-
-        meta.textContent =
-          parts.join(
-            " • "
-          );
-
-
-        card.append(
-          name,
-          meta
-        );
-
-
-        container.appendChild(
-          card
-        );
-
-      }
-    );
-
+    actions.append(view, edit);
+    card.append(info, actions);
+    container.appendChild(card);
+  });
 }
 
 
