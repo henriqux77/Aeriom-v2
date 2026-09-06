@@ -4,55 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <title>AERION — Minhas Fichas</title>
+  <link rel="stylesheet" href="./css/aeriom.css">
   <link rel="stylesheet" href="./css/campanhas.css">
-  <style>
-    :root{
-      --a-gold:#dfbf67;
-      --a-bg:#090807;
-      --a-card:#12100e;
-      --a-border:rgba(255,255,255,.08);
-      --a-muted:rgba(255,255,255,.48);
-    }
-    *{box-sizing:border-box}
-    body{margin:0;background:var(--a-bg);color:#fff;font-family:Arial,sans-serif}
-    .mf-page{min-height:100dvh;padding:22px 16px 42px;max-width:1100px;margin:0 auto}
-    .mf-head{display:flex;align-items:end;justify-content:space-between;gap:18px;margin-bottom:24px}
-    .mf-hero{position:relative;overflow:hidden;padding:18px;border:1px solid var(--a-border);border-radius:20px;background:radial-gradient(circle at 100% 0,rgba(223,191,103,.11),transparent 34%),linear-gradient(135deg,#15120f,#0d0c0b);margin-bottom:14px}
-    .mf-hero::after{content:"";position:absolute;width:140px;height:140px;right:-55px;top:-65px;border-radius:50%;border:1px solid rgba(223,191,103,.11)}
-    .mf-hero strong{font:500 22px Georgia,serif;display:block;margin-bottom:5px}
-    .mf-hero span{display:block;color:var(--a-muted);font-size:10px;line-height:1.55;max-width:620px}
-    .mf-toolbar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:12px 0 8px}
-    .mf-count{color:var(--a-muted);font-size:9px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
-    .mf-filter{min-height:38px;border:1px solid var(--a-border);border-radius:10px;background:#11100e;color:#eee;padding:0 10px}
-    .mf-head h1{font-family:Georgia,serif;font-weight:500;font-size:clamp(36px,8vw,62px);margin:6px 0}
-    .mf-head p{margin:0;color:var(--a-muted);font-size:13px}
-    .mf-eyebrow{color:var(--a-gold);font-size:10px;font-weight:800;letter-spacing:.18em}
-    .mf-actions{display:flex;gap:8px;flex-wrap:wrap}
-    .mf-btn{min-height:46px;padding:0 17px;border-radius:13px;border:1px solid var(--a-border);background:#11100e;color:#eee;font-weight:800;cursor:pointer}
-    .mf-btn.primary{background:var(--a-gold);color:#17130b;border-color:var(--a-gold)}
-    .mf-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
-    .mf-card{display:grid;grid-template-columns:78px minmax(0,1fr);gap:13px;padding:14px;border:1px solid var(--a-border);border-radius:18px;background:linear-gradient(135deg,#13110f,#0e0d0c)}
-    .mf-avatar{width:78px;height:78px;border:1px solid rgba(223,191,103,.22);border-radius:15px;display:grid;place-items:center;background:#191611;color:var(--a-gold);font-family:Georgia,serif;font-size:28px;overflow:hidden}
-    .mf-avatar img{width:100%;height:100%;object-fit:cover}
-    .mf-body{min-width:0}
-    .mf-status{display:inline-flex;padding:4px 8px;border-radius:999px;background:rgba(223,191,103,.08);color:var(--a-gold);font-size:8px;font-weight:900;letter-spacing:.1em;text-transform:uppercase}
-    .mf-status.complete{background:rgba(100,170,110,.1);color:#9bca9f}
-    .mf-title{margin:7px 0 3px;font-family:Georgia,serif;font-size:21px;font-weight:500}
-    .mf-meta{font-size:10px;color:var(--a-muted);line-height:1.5}
-    .mf-actions{margin-top:10px}
-    .mf-card button{min-height:34px;padding:0 10px}
-    .mf-empty,.mf-error{padding:42px 20px;border:1px dashed var(--a-border);border-radius:20px;text-align:center;color:var(--a-muted);line-height:1.7;grid-column:1/-1}
-    .mf-error{color:#e1a6a2;border-style:solid;border-color:rgba(225,166,162,.18)}
-    .mf-loading{grid-column:1/-1;color:var(--a-muted);padding:22px}
-    @media(max-width:720px){
-      .mf-head{align-items:stretch;flex-direction:column}
-      .mf-actions{width:100%}
-      .mf-actions .mf-btn{width:100%}
-      .mf-grid{grid-template-columns:1fr}
-      .mf-card{grid-template-columns:64px minmax(0,1fr)}
-      .mf-avatar{width:64px;height:64px}
-    }
-  </style>
+
 </head>
 <body>
   <main class="mf-page">
@@ -86,6 +40,6 @@
       <div class="mf-loading">Carregando suas fichas…</div>
     </section>
   </main>
-  <script type="module" src="./js/core/minhas-fichas.js?v=20260905-02"></script>
+  <script type="module" src="./js/core/minhas-fichas.js?v=20260905-03"></script>
 </body>
 </html>
