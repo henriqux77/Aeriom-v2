@@ -4255,6 +4255,27 @@ panel.querySelector("[data-aeriom-add-node]")
     });
   }
 
+
+  function bindKnowledgeDelegation() {
+    if (APP.knowledgeDelegationBound) return;
+    APP.knowledgeDelegationBound = true;
+
+    document.addEventListener("click", (event) => {
+      const add = event.target.closest?.("[data-aeriom-add-node]");
+      if (add) {
+        event.preventDefault();
+        event.stopPropagation();
+        openKnowledgeEditor();
+      }
+
+      const close = event.target.closest?.("#aeriom-knowledge-modal [data-modal-close]");
+      if (close) {
+        const modal = $("aeriom-knowledge-modal");
+        if (modal) modal.classList.remove("is-open");
+      }
+    });
+  }
+
   function openKnowledgeEditor(node = null) {
     const modal = ensureModal("aeriom-knowledge-modal");
     modal.innerHTML = `
@@ -4687,4 +4708,6 @@ panel.querySelector("[data-aeriom-add-node]")
 <script type="module" src="./js/core/campanha-fichas.js?v=20260905-01"></script>
 </body>
 
-</html>
+</html  bindKnowledgeDelegation();
+
+>
