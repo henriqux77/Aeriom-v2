@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>AERION — Perfil</title>
+<link rel="stylesheet" href="./css/aeriom.css">
+<link rel="stylesheet" href="./css/perfil.css">
+</head>
+<body class="aeriom-page aeriom-page--profile">
+<main class="profile-shell">
+<header class="profile-topbar">
+  <a class="profile-back" href="./campanhas.html" aria-label="Voltar para campanhas">←</a>
+  <div>
+    <span class="profile-eyebrow">AERION · CONTA</span>
+    <h1>Seu perfil</h1>
+    <p>Personalize como você aparece nas mesas e mantenha um contato seguro para recuperação.</p>
+  </div>
+</header>
+
+<section class="profile-layout">
+  <aside class="profile-preview">
+    <div class="profile-avatar-large" id="profile-avatar-large"><span>?</span></div>
+    <div class="profile-preview__name" id="profile-preview-name">Aventureiro</div>
+    <div class="profile-preview__email" id="profile-preview-email">Carregando…</div>
+    <div class="profile-preview__hint">Sua imagem é armazenada no espaço privado de avatares.</div>
+  </aside>
+
+  <div class="profile-form-area">
+    <form id="profile-form" class="profile-card" novalidate>
+      <div class="profile-card__head">
+        <div><span class="profile-section-label">Identidade</span><h2>Como você aparece</h2><p>Escolha o nome exibido nas áreas da aplicação.</p></div>
+      </div>
+
+      <div class="profile-fields">
+        <label class="profile-field">
+          <span>Nome de exibição</span>
+          <input id="profile-display-name" name="display_name" type="text" maxlength="80" autocomplete="nickname" placeholder="Ex.: Aeriom">
+          <small>Esse nome aparece em campanhas, convites e outros espaços da mesa.</small>
+        </label>
+
+        <div class="profile-field">
+          <span>Imagem de perfil</span>
+          <div class="profile-upload">
+            <input id="profile-avatar-file" type="file" accept="image/jpeg,image/png,image/webp,image/gif">
+            <label for="profile-avatar-file" class="profile-upload__drop">
+              <strong>Escolher imagem</strong>
+              <span>JPG, PNG, WEBP ou GIF · até 5 MB</span>
+            </label>
+          </div>
+          <small id="profile-avatar-status">Nenhuma nova imagem selecionada.</small>
+        </div>
+      </div>
+
+      <div class="profile-card__divider"></div>
+
+      <div class="profile-card__head">
+        <div><span class="profile-section-label">Recuperação</span><h2>Contato de recuperação</h2><p>Adicione um e-mail ou telefone para facilitar a recuperação da conta.</p></div>
+      </div>
+
+      <div class="profile-fields profile-fields--recovery">
+        <label class="profile-field">
+          <span>E-mail de recuperação</span>
+          <input id="profile-recovery-email" type="email" maxlength="254" autocomplete="email" inputmode="email" placeholder="seuemail@exemplo.com">
+        </label>
+        <label class="profile-field">
+          <span>Telefone de recuperação</span>
+          <input id="profile-recovery-phone" type="tel" maxlength="20" autocomplete="tel" inputmode="tel" placeholder="+55 (11) 99999-9999">
+        </label>
+      </div>
+      <div class="profile-recovery-note" role="note">
+        <strong>Privado.</strong> O contato de recuperação fica separado das informações públicas do perfil e só pode ser lido pelo próprio usuário.
+      </div>
+
+      <div id="profile-message" class="profile-message" aria-live="polite"></div>
+
+      <div class="profile-actions">
+        <button class="profile-btn profile-btn--secondary" type="button" id="profile-cancel">Cancelar</button>
+        <button class="profile-btn profile-btn--primary" type="submit" id="profile-save">Salvar alterações</button>
+      </div>
+    </form>
+  </div>
+</section>
+</main>
+<script type="module" src="./js/core/perfil.js?v=20260906-profile1"></script>
+</body>
+</html>
