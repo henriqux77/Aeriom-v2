@@ -4444,3 +4444,168 @@ textarea:focus-visible {
   .mf-head>.mf-actions{grid-template-columns:1fr}
   .mf-card{grid-template-columns:58px minmax(0,1fr)}
 }
+
+/* ============================================================
+   AERION V7 — PESQUISA E CARDS DE CAMPANHA
+   ============================================================ */
+.campaigns-toolbar{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:10px}
+.campaigns-search{position:relative;min-width:0}
+.campaigns-search input{
+  display:block;
+  width:100%!important;
+  min-width:0;
+  height:44px!important;
+  min-height:44px!important;
+  box-sizing:border-box;
+  border:1px solid rgba(196,158,83,.14)!important;
+  border-radius:12px!important;
+  background:rgba(12,11,9,.94)!important;
+  color:#eee7da!important;
+  -webkit-appearance:none;
+}
+.campaigns-search input::placeholder{color:rgba(255,255,255,.30)!important}
+.campaigns-filters{
+  display:flex;
+  gap:6px;
+  overflow-x:auto;
+  padding:0 1px 10px;
+  scrollbar-width:none;
+}
+.campaigns-filters::-webkit-scrollbar{display:none}
+.campaigns-filter{
+  flex:0 0 auto;
+  min-height:31px;
+  padding:0 10px;
+  border:1px solid rgba(196,158,83,.09);
+  border-radius:999px;
+  background:rgba(255,255,255,.015);
+  color:rgba(255,255,255,.44);
+  font-size:7px;
+  font-weight:800;
+  cursor:pointer;
+  transition:all .16s ease;
+}
+.campaigns-filter.is-active{
+  color:#171108;
+  border-color:#d5b765;
+  background:#d5b765;
+}
+.campaign-card{
+  display:grid!important;
+  grid-template-columns:110px minmax(0,1fr)!important;
+  min-height:178px!important;
+  overflow:hidden;
+}
+.campaign-card__cover{
+  min-height:178px!important;
+  height:100%;
+}
+.campaign-card__content{
+  min-width:0;
+  min-height:0;
+  display:flex!important;
+  flex-direction:column!important;
+  justify-content:flex-start!important;
+  padding:13px!important;
+  color:#eee7da!important;
+}
+.campaign-card__head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:7px;
+}
+.campaign-card__role{
+  color:#d5b765!important;
+  font-size:6px!important;
+}
+.campaign-card__updated{
+  color:rgba(255,255,255,.26);
+  font-size:6px;
+  white-space:nowrap;
+}
+.campaign-card__title{
+  display:block!important;
+  visibility:visible!important;
+  opacity:1!important;
+  margin:8px 0 4px!important;
+  color:#eee7da!important;
+  font:500 19px Cinzel,Georgia,serif!important;
+  line-height:1.08!important;
+}
+.campaign-card__description{
+  display:-webkit-box!important;
+  visibility:visible!important;
+  opacity:1!important;
+  color:rgba(255,255,255,.47)!important;
+  font-size:8px!important;
+  line-height:1.5!important;
+  -webkit-line-clamp:3;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+}
+.campaign-card__footer{
+  margin-top:auto!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:7px;
+}
+.campaign-card__details{
+  min-width:0;
+  color:rgba(255,255,255,.25);
+  font-size:6px;
+  line-height:1.35;
+}
+.campaign-card__open{
+  min-width:86px!important;
+  min-height:36px!important;
+  flex:0 0 auto;
+}
+@media(max-width:700px){
+  .campaigns-toolbar{
+    grid-template-columns:minmax(0,1fr) auto;
+    gap:6px;
+    align-items:center;
+  }
+  .campaigns-search input{
+    height:44px!important;
+    min-height:44px!important;
+    font-size:15px!important;
+  }
+  .campaigns-toolbar__meta{
+    height:44px;
+    justify-content:flex-end;
+  }
+  .campaigns-filters{padding-bottom:9px}
+  .campaign-card{
+    grid-template-columns:94px minmax(0,1fr)!important;
+    min-height:154px!important;
+    border-radius:15px!important;
+  }
+  .campaign-card__cover{min-height:154px!important}
+  .campaign-card__content{padding:11px!important}
+  .campaign-card__title{
+    margin-top:6px!important;
+    font-size:17px!important;
+  }
+  .campaign-card__description{
+    -webkit-line-clamp:2;
+    font-size:8px!important;
+  }
+  .campaign-card__updated{display:none}
+  .campaign-card__open{min-width:76px!important}
+}
+@media(max-width:420px){
+  .campaigns-toolbar{grid-template-columns:1fr}
+  .campaigns-toolbar__meta{height:24px;justify-content:space-between}
+  .campaigns-search input{font-size:16px!important}
+  .campaign-card{
+    grid-template-columns:78px minmax(0,1fr)!important;
+    min-height:138px!important;
+  }
+  .campaign-card__cover{min-height:138px!important}
+  .campaign-card__title{font-size:16px!important}
+  .campaign-card__footer{gap:5px}
+  .campaign-card__open{min-height:34px!important}
+}
