@@ -4087,7 +4087,11 @@
     panel.querySelector("[data-aeriom-log-event]")
       ?.addEventListener("click", openEventEditor);
 
-    panel.querySelector("[data-aeriom-add-node]")
+        panel.querySelector("[data-aeriom-focus-knowledge]")?.addEventListener("click", () => {
+      panel.querySelector(".aeriom-knowledge-wrap")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+
+panel.querySelector("[data-aeriom-add-node]")
       ?.addEventListener("click", () => openKnowledgeEditor());
   }
 
