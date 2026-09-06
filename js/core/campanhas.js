@@ -588,6 +588,13 @@ async function renderUser(
   const emailElement =
     $("campaigns-user-email");
 
+  const userBadge = $("campaigns-user-badge");
+  userBadge?.setAttribute("role","button");
+  userBadge?.setAttribute("tabindex","0");
+  userBadge?.setAttribute("aria-label","Abrir perfil");
+  userBadge?.addEventListener("click",()=>{ window.location.href="./perfil.html"; });
+  userBadge?.addEventListener("keydown",(event)=>{ if(event.key==="Enter"||event.key===" "){ event.preventDefault(); window.location.href="./perfil.html"; } });
+
   const avatarElement =
     $("campaigns-user-avatar");
 
