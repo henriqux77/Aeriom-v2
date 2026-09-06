@@ -294,7 +294,7 @@ async function performFreeRoll() {
   readContext();
   const dice = window.AERIOM_DICE;
   if (!dice?.roll) throw new Error("Motor de dados ainda não está pronto.");
-  const die = Number($("[data-free-die].is-active")?.dataset.freeDie || 20);
+  const die = Number($("[data-free-die].is-active")[0]?.dataset.freeDie || 20);
   const modifier = Number($("aeriom-free-modifier")?.value || 0);
   const context = safe($("aeriom-free-context")?.value);
   const roll = await dice.roll({
