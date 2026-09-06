@@ -35,7 +35,7 @@
      VERSÃO
      ========================================================= */
 
-  const VERSION = 4;
+  const VERSION = 5;
 
 
   /* =========================================================
@@ -350,13 +350,7 @@
 
       images: {
         default:
-          "https://i.ibb.co/1Ydtj7kR/file-00000000a078820ea7f4378c17213990.png",
-        masculino:
-          "https://i.ibb.co/kVKz2xjq/file-000000008c00820ebf7da3010a79bf7c.png",
-
-        feminino:
-          "https://i.ibb.co/jPysnZz1/file-00000000f014820e954413d3d309ae96.png"
-      }
+          "https://i.ibb.co/1Ydtj7kR/file-00000000a078820ea7f4378c17213990.png",}
     },
 
 
@@ -388,10 +382,10 @@
         default:
           "https://i.ibb.co/21YMb2Ck/file-000000005990820e8e187f0c1f1d3ea0.png",
         masculino:
-          "https://i.ibb.co/nsCyckYB/file-0000000089f0820e89d6953c4857240c.png",
+          "https://i.ibb.co/kVKz2xjq/file-000000008c00820ebf7da3010a79bf7c.png",
 
         feminino:
-          "https://i.ibb.co/SDQqHjSj/file-00000000779c820ea18c5cf3ce6529b7.png"
+          "https://i.ibb.co/jPysnZz1/file-00000000f014820e954413d3d309ae96.png"
       }
     },
 
@@ -424,10 +418,10 @@
         default:
           "https://i.ibb.co/ZRYMgWT0/file-000000003d40820ebd6f5085181f81a1.png",
         masculino:
-          "https://i.ibb.co/4gMPMqkp/file-00000000e4b0820eab531990258bbb09.png",
+          "https://i.ibb.co/SDQqHjSj/file-00000000779c820e18c5cf3ce6529b7.png",
 
         feminino:
-          "https://i.ibb.co/7d0b1Z65/file-000000001b7c820e8a317d79973c8733.png"
+          "https://i.ibb.co/nsCyckYB/file-0000000089f0820e89d6953c4857240c.png"
       },
 
       legacy: true
@@ -458,13 +452,7 @@
         max: 100
       },
 
-      images: {
-        masculino:
-          "https://i.ibb.co/fVfFL5ds/file-00000000b344820e9e39f31e92678a13.png",
-
-        feminino:
-          "https://i.ibb.co/zW6JnjPb/file-000000007a70820ea284e54236c00052.png"
-      },
+      images: {},
 
       lineage:
         "animalha"
@@ -497,13 +485,7 @@
 
       images: {
         default:
-          "https://i.ibb.co/jPZB1nFj/file-00000000c328820e829c7cb243630284.png",
-        masculino:
-          "https://i.ibb.co/23GdF2Py/file-000000001e48820ebbfa246147f05c6f.png",
-
-        feminino:
-          "https://i.ibb.co/gFFk7Kyv/file-00000000a170820eaf15f8650242c3c9.png"
-      }
+          "https://i.ibb.co/jPZB1nFj/file-00000000c328820e829c7cb243630284.png",}
     },
 
 
@@ -533,13 +515,7 @@
 
       images: {
         default:
-          "https://i.ibb.co/GQ7kbMGW/file-00000000d2f0820e811464dec04fd349.png",
-        masculino:
-          "https://i.ibb.co/CpkBqzkC/file-00000000dee8820eb4f157009c1ceb5b.png",
-
-        feminino:
-          "https://i.ibb.co/k2ND7Tbp/file-000000003cb0820e842b5d0997ee34f5.png"
-      }
+          "https://i.ibb.co/GQ7kbMGW/file-00000000d2f0820e811464dec04fd349.png",}
     },
 
 
@@ -616,10 +592,7 @@
 
       images: {
         default:
-          "https://i.ibb.co/rGKgrxqj/file-000000008d3c820eb66807cb6d182dd1.png",
-        masculino: "https://i.ibb.co/nsfrDpmy/file-000000003eb4820ebb3f101b2dc9f0f3.png",
-        feminino: "https://i.ibb.co/BVqsDV4Y/file-00000000639c820e85562494fed2f3d6.png"
-      },
+          "https://i.ibb.co/rGKgrxqj/file-000000008d3c820eb66807cb6d182dd1.png",},
 
       imagesPending: true
     },
@@ -669,6 +642,29 @@
   /* =========================================================
      CATEGORIAS DE ANIMALHA
      ========================================================= */
+
+  /*
+   * Novo lote de imagens de linhagens Animalha.
+   *
+   * O lote recebido nesta etapa contém somente FEMININO.
+   * A ordem segue a ordem fornecida junto com este pedido:
+   * Gato, Pantera, Tigre, Leão, Lobo, Raposa, Urso, Falcão.
+   * Os equivalentes masculinos permanecem pendentes.
+   */
+  const ANIMALHA_IMAGES = {
+    masculino: {},
+    feminino: {
+      gato: "https://i.ibb.co/7d0b1Z65/file-000000001b7c820e8a317d79973c8733.png",
+      pantera: "https://i.ibb.co/4gMPMqkp/file-00000000e4b0820eab531990258bbb09.png",
+      tigre: "https://i.ibb.co/zW6JnjPb/file-000000007a70820ea284e54236c00052.png",
+      leao: "https://i.ibb.co/fVfFL5ds/file-00000000b344820e9e39f31e92678a13.png",
+      lobo: "https://i.ibb.co/23GdF2Py/file-000000001e48820ebbfa246147f05c6f.png",
+      raposa: "https://i.ibb.co/gFFk7Kyv/file-00000000a170820eaf15f8650242c3c9.png",
+      urso: "https://i.ibb.co/k2ND7Tbp/file-000000003cb0820e842b5d0997ee34f5.png",
+      falcao: "https://i.ibb.co/CpkBqzkC/file-00000000dee8820eb4f157009c1ceb5b.png"
+    }
+  };
+
 
   const ANIMALHA_CATEGORIES = [
     {
@@ -793,57 +789,36 @@
     raceId,
     gender
   ) {
-    const race =
-      getRace(
-        raceId
-      );
+    const race = getRace(raceId);
+    if (!race) return "";
 
-    if (!race) {
-      return "";
-    }
-
-
-    const normalizedGender =
-      normalizeId(
-        gender
-      );
-
+    const normalizedGender = normalizeId(gender);
     const genderKey =
-      (
-        normalizedGender ===
-          "feminino" ||
-        normalizedGender ===
-          "feminina" ||
-        normalizedGender ===
-          "female" ||
-        normalizedGender ===
-          "f"
-      )
+      normalizedGender === "feminino" ||
+      normalizedGender === "feminina" ||
+      normalizedGender === "female" ||
+      normalizedGender === "f"
         ? "feminino"
         : "masculino";
 
+    if (race.id === "animalha") return "";
 
-    /*
-     * Animalha: usa a imagem-base por gênero.
-     * Raças normais: usam exclusivamente a imagem default.
-     * Isso impede que imagens destinadas às linhagens Animalha
-     * apareçam indevidamente no catálogo das raças normais.
-     */
-    if (race.id === "animalha") {
-      return race.images?.[genderKey] || race.images?.masculino || race.images?.feminino || "";
-    }
+    return race.images?.[genderKey] || race.images?.default || "";
+  }
 
-    return race.images?.default || "";
-    const fallback =
-      genderKey ===
-        "feminino"
-        ? race.images?.masculino
-        : race.images?.feminino;
+  function getAnimalhaImage(
+    animalId,
+    gender
+  ) {
+    const animal = getAnimalha(animalId);
+    if (!animal) return "";
 
-    return (
-      fallback ||
-      ""
-    );
+    const genderKey =
+      normalizeId(gender) === "feminino"
+        ? "feminino"
+        : "masculino";
+
+    return ANIMALHA_IMAGES?.[genderKey]?.[animal.id] || "";
   }
 
 
@@ -1044,6 +1019,8 @@
     getRace,
 
     getRaceImage,
+
+    getAnimalhaImage,
 
     getRaceHeight,
 
