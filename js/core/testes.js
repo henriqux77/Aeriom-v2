@@ -246,12 +246,12 @@ function setTestMode(mode) {
   } else {
     mode = target;
   }
-  $(".aeriom-tests-mode").forEach((button) => {
+  $$(".aeriom-tests-mode").forEach((button) => {
     const active = button.dataset.testMode === mode;
     button.classList.toggle("is-active", active);
     button.setAttribute("aria-selected", active ? "true" : "false");
   });
-  $(".aeriom-tests-mode-panel").forEach((panel) => {
+  $$(".aeriom-tests-mode-panel").forEach((panel) => {
     panel.hidden = panel.dataset.testModePanel !== mode;
   });
 }
@@ -294,7 +294,7 @@ async function performFreeRoll() {
   readContext();
   const dice = window.AERIOM_DICE;
   if (!dice?.roll) throw new Error("Motor de dados ainda não está pronto.");
-  const die = Number($("[data-free-die].is-active")[0]?.dataset.freeDie || 20);
+  const die = Number($$("[data-free-die].is-active")[0]?.dataset.freeDie || 20);
   const modifier = Number($("aeriom-free-modifier")?.value || 0);
   const context = safe($("aeriom-free-context")?.value);
   const roll = await dice.roll({
@@ -627,7 +627,7 @@ function bindEvents() {
     const button = event.target.closest("[data-free-die]");
     if (!button) return;
     const die = Number(button.dataset.freeDie);
-    $("[data-free-die]").forEach((item) => {
+    $$("[data-free-die]").forEach((item) => {
       const active = item === button;
       item.classList.toggle("is-active", active);
       item.setAttribute("aria-pressed", active ? "true" : "false");
