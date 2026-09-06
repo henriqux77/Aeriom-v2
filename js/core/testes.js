@@ -37,7 +37,7 @@ const TEST_CONFIG = Object.freeze({
     "Enganação",
     "Tática",
     "Ofício / Crafting",
-    "Controle de Mana"
+    "Pontaria"
   ]),
   allowedDice: Object.freeze([4, 6, 8, 10, 12, 20]),
   pendingExpiryMinutes: 10
