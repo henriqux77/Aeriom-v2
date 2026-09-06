@@ -2959,6 +2959,16 @@ function bindEvents() {
   );
 
 
+
+function closeCampaignsMobileMenu() {
+  const sidebar = $("campaigns-sidebar");
+  const button = $("campaigns-mobile-menu-button");
+  const backdrop = $("campaigns-mobile-menu-backdrop");
+  sidebar?.classList.remove("is-open");
+  backdrop?.classList.remove("is-open");
+  button?.setAttribute("aria-expanded","false");
+}
+
   $(
     "campaigns-mobile-menu-button"
   )?.addEventListener(
@@ -2998,6 +3008,12 @@ function bindEvents() {
     }
   );
 
+
+  $("campaigns-mobile-menu-backdrop")?.addEventListener("click", closeCampaignsMobileMenu);
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") closeCampaignsMobileMenu();
+  });
 
   $(
     "campaigns-logout-button"
