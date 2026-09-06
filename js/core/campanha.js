@@ -603,97 +603,52 @@ function getDisplayName(
   profile = state.profile
 ) {
 
-  if (
-    !user
-  ) {
-
+  if (!user) {
     return "Aventureiro";
-
   }
-
-
-  /*
-   * Discord primeiro.
-   */
-
-  const discord =
-    getDiscordName(
-      user
-    );
-
-
-  if (
-    discord
-  ) {
-
-    return discord;
-
-  }
-
-
-  const metadata =
-    object(
-      user.user_metadata
-    );
-
-
-  const authName =
-
-    text(
-      metadata.display_name
-    ) ||
-
-    text(
-      metadata.full_name
-    ) ||
-
-    text(
-      metadata.name
-    );
-
-
-  if (
-    authName
-  ) {
-
-    return authName;
-
-  }
-
 
   const profileName =
     text(
       profile?.display_name
     );
 
-
-  if (
-    profileName
-  ) {
-
+  if (profileName) {
     return profileName;
-
   }
 
+  const discord =
+    getDiscordName(
+      user
+    );
 
-  /*
-   * E-mail somente como último fallback.
-   */
+  if (discord) {
+    return discord;
+  }
+
+  const metadata =
+    object(
+      user.user_metadata
+    );
+
+  const authName =
+    text(metadata.display_name) ||
+    text(metadata.full_name) ||
+    text(metadata.name);
+
+  if (authName) {
+    return authName;
+  }
 
   const emailName =
     text(
       user.email
-        ?.split(
-          "@"
-        )[0]
+        ?.split("@")[0]
     );
-
 
   return (
     emailName ||
     "Aventureiro"
   );
-
 }
 
 
