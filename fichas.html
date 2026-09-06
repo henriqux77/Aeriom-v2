@@ -77,10 +77,28 @@
 </section>
 <section class="creation-panel" data-panel="appearance" hidden>
 <div class="heading"><div class="eyebrow">03 · APARÊNCIA</div><h2>Refine a aparência</h2><p>A altura respeita os limites da raça. O tom de pele é escolhido visualmente.</p></div>
-<div class="appearance-layout"><div class="appearance-character"><div class="appearance-art"><img id="appearance-image" alt="Prévia" hidden><span id="appearance-placeholder">Escolha uma raça</span></div><strong id="appearance-race-label">Sem raça definida</strong><span id="appearance-size-label">—</span></div>
-<div class="appearance-controls">
-<div class="height-control"><small>MAIOR</small><input id="height-range" type="range" data-appearance="height" min="90" max="320" value="170" orient="vertical" aria-label="Altura"><div class="height-readout"><strong><b id="height-value">170</b> cm</strong><span><small id="height-min-label">—</small>–<small id="height-max-label">—</small></span></div></div>
-<div class="appearance-side">
+<div class="appearance-layout">
+  <div class="appearance-stage">
+    <div class="appearance-character">
+      <div class="appearance-art">
+        <img id="appearance-image" alt="Prévia" hidden>
+        <span id="appearance-placeholder">Escolha uma raça</span>
+      </div>
+      <strong id="appearance-race-label">Sem raça definida</strong>
+      <span id="appearance-size-label">—</span>
+    </div>
+    <div class="height-control">
+      <small>MAIOR</small>
+      <input id="height-range" type="range" data-appearance="height" min="90" max="320" value="170" orient="vertical" aria-label="Altura do personagem">
+      <div class="height-readout">
+        <strong><b id="height-value">170</b> cm</strong>
+        <span><small id="height-min-label">—</small>–<small id="height-max-label">—</small></span>
+      </div>
+      <small>MENOR</small>
+    </div>
+  </div>
+  <div class="appearance-controls">
+  <div class="appearance-side">
 <div class="age-control">
   <div class="appearance-field-heading">
     <span class="label">Idade</span>
