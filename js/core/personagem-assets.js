@@ -157,11 +157,13 @@
       urso:"https://i.ibb.co/WW7dJLzV/file-00000000039c820eac63bd8ff75f96db.png"
     },
     feminino: {
-      tubarao:"https://i.ibb.co/2Yp1J01b/file-00000000510c820eb14e273763781ffd.png",
-      crocodilo:"https://i.ibb.co/t5M1BgJ/file-000000007c58820e8a4c084fb8542cae.png",
-      cobra:"https://i.ibb.co/chRQM94X/file-00000000e93c820e9e75478047b40f16.png",
-      coruja:"https://i.ibb.co/7xwq3YW4/file-0000000004cc820ea14f552665c417de.png",
-      aguia:"https://i.ibb.co/zhG5JGyp/file-000000008c0c820e8ad3b4bddcf5764c.png",
+      pantera:"https://i.ibb.co/4gMPMqkp/file-00000000e4b0820eab531990258bbb09.png",
+      tigre:"https://i.ibb.co/zW6JnjPb/file-000000007a70820ea284e54236c00052.png",
+      leao:"https://i.ibb.co/fVfFL5ds/file-00000000b344820e9e39f31e92678a13.png",
+      lobo:"https://i.ibb.co/MkTmcZxc/file-000000001e48820ebbfa246147f05c6f.png",
+      raposa:"https://i.ibb.co/gFFk7Kyv/file-00000000a170820eaf15f8650242c3c9.png",
+      gato:"https://i.ibb.co/7d0b1Z65/file-000000001b7c820e8a317d79973c8733.png",
+      falcao:"https://i.ibb.co/CpkBqzkC/file-00000000dee8820eb4f157009c1ceb5b.png",
       urso:"https://i.ibb.co/2Yp1J01b/file-00000000510c820eb14e273763781ffd.png"
     }
   };
