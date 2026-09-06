@@ -78,6 +78,8 @@ async function save(event){
   }
   const {error:profileError}=await supabase.from("profiles").update({display_name:name,avatar_path:avatarPath,updated_at:new Date().toISOString()}).eq("id",user.id);
   if(profileError)throw profileError;
+  const {error:metadataError}=await supabase.auth.updateUser({data:{display_name:name}});
+  if(metadataError)throw metadataError;
   const values={user_id:user.id,recovery_email:recoveryEmail||null,recovery_phone:recoveryPhone||null,updated_at:new Date().toISOString()};
   const {error:rcError}=await supabase.from("profile_recovery_contacts").upsert(values,{onConflict:"user_id"});
   if(rcError)throw rcError;
