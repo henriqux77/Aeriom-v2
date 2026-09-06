@@ -2154,7 +2154,7 @@ function renderCampaign() {
   if (hudMembers) hudMembers.textContent = String(state.members.length || 0);
 
   const hudEvents = getElement("campaign-hud-events");
-  if (hudEvents) hudEvents.textContent = "AO VIVO";
+  if (hudEvents) hudEvents.textContent = "Sessão";
 
   const hudStatus = getElement("campaign-table-session");
   if (hudStatus) {
