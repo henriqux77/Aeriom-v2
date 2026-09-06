@@ -181,7 +181,7 @@ function ensureTestsPanel() {
       <button type="button" class="aeriom-tests-mode" data-test-mode="request" role="tab" aria-selected="false">Pedir teste</button>
     </div>
 
-    <div class="aeriom-tests-workspace">
+    <div class="aeriom-tests-workspace" data-tests-workspace>
       <div class="aeriom-tests-form">
         <div class="aeriom-tests-mode-panel" data-test-mode-panel="roll">
           <div class="aeriom-tests-field">
@@ -583,6 +583,10 @@ function bindEvents() {
       if (!attribute) throw new Error("Escolha um atributo.");
       if ($("aeriom-test-character")) $("aeriom-test-character").value = characterId;
       setSelectedAttribute(attribute);
+      const skillField = $("aeriom-test-skill");
+      const contextField = $("aeriom-test-context");
+      if (skillField) skillField.value = $("aeriom-request-skill")?.value || "";
+      if (contextField) contextField.value = $("aeriom-request-context")?.value || "";
       await requestTest();
     } catch (err) { error.textContent = friendlyError(err); error.hidden = false; }
   });
