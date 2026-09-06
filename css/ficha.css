@@ -455,3 +455,97 @@ body.aeriom-page--character{
   .creation-navigation>.nav-secondary,
   .creation-navigation>.nav-primary{min-height:44px!important;height:44px!important;padding:0 10px!important}
 }
+
+/* Navegação da criação: Voltar e Próximo devem ter o mesmo peso visual */
+.creation-navigation .nav-secondary,
+.creation-navigation .nav-primary{
+  width:100%;
+  min-width:0;
+  justify-self:stretch;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  min-height:41px;
+  box-sizing:border-box;
+}
+.creation-navigation .nav-primary{
+  justify-self:stretch;
+}
+.creation-navigation .nav-secondary:disabled{
+  opacity:.42;
+  cursor:not-allowed;
+}
+@media(max-width:700px){
+  .creation-navigation{
+    grid-template-columns:minmax(0,1fr) 76px minmax(0,1fr);
+  }
+  .creation-navigation .nav-secondary,
+  .creation-navigation .nav-primary{
+    min-height:46px;
+    padding-inline:8px;
+  }
+}
+/* Mana — chama azul viva, discreta e não intrusiva */
+.mana-orb{
+  position:relative;
+  display:grid;
+  place-items:center;
+  overflow:hidden;
+}
+.mana-orb-value{
+  position:relative;
+  z-index:4;
+}
+.mana-flame{
+  position:absolute;
+  left:50%;
+  top:7px;
+  width:42px;
+  height:58px;
+  transform:translateX(-50%);
+  opacity:.38;
+  filter:drop-shadow(0 0 12px rgba(83,154,255,.32));
+  pointer-events:none;
+}
+.mana-flame span,
+.mana-flame i,
+.mana-flame b{
+  position:absolute;
+  left:50%;
+  bottom:2px;
+  display:block;
+  transform-origin:50% 100%;
+  border-radius:60% 42% 56% 46%;
+  background:linear-gradient(180deg,#c9e8ff 0%,#5fa8ff 38%,#2d6fca 100%);
+}
+.mana-flame span{
+  width:20px;height:39px;
+  margin-left:-9px;
+  transform:rotate(-7deg);
+  animation:aerionManaFlame 1.35s ease-in-out infinite;
+}
+.mana-flame i{
+  width:14px;height:29px;
+  margin-left:-3px;
+  transform:rotate(11deg);
+  opacity:.86;
+  animation:aerionManaFlame .95s ease-in-out infinite reverse;
+}
+.mana-flame b{
+  width:10px;height:21px;
+  margin-left:-15px;
+  transform:rotate(-19deg);
+  opacity:.72;
+  animation:aerionManaFlame 1.08s ease-in-out infinite .12s;
+}
+@keyframes aerionManaFlame{
+  0%,100%{transform:translateY(1px) scaleY(.96) rotate(-6deg);}
+  50%{transform:translateY(-2px) scaleY(1.08) rotate(8deg);}
+}
+@media(prefers-reduced-motion:reduce){
+  .mana-flame span,.mana-flame i,.mana-flame b{animation:none}
+}
+.mana-colors__grid{
+  align-items:stretch;
+}
