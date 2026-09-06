@@ -2350,6 +2350,10 @@
   .campaign-background-control {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+}
+
 /* ============================================================
    AERIOM — CORREÇÃO DO QR CODE DO CONVITE
    ============================================================ */
