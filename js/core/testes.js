@@ -168,82 +168,77 @@ function ensureTestsPanel() {
   section.innerHTML = `
     <div class="aeriom-tests-panel__header">
       <div>
-        <p class="aeriom-tests-panel__eyebrow">Sistema de testes</p>
-        <h2>Teste de atributo</h2>
-        <p>O atributo define qual dado será rolado. A rolagem acontece somente quando o teste é executado.</p>
+        <p class="aeriom-tests-panel__eyebrow">Dados & testes</p>
+        <h2>Central de rolagens</h2>
+        <p>Uma única ferramenta para rolagens livres, testes de atributo e pedidos do Mestre.</p>
       </div>
       <span id="aeriom-tests-role-badge" class="aeriom-tests-role-badge"></span>
     </div>
 
-    <div class="aeriom-tests-grid">
+    <div class="aeriom-tests-modes" role="tablist" aria-label="Tipo de rolagem">
+      <button type="button" class="aeriom-tests-mode is-active" data-test-mode="roll" role="tab" aria-selected="true">Rolagem livre</button>
+      <button type="button" class="aeriom-tests-mode" data-test-mode="attribute" role="tab" aria-selected="false">Teste de atributo</button>
+      <button type="button" class="aeriom-tests-mode" data-test-mode="request" role="tab" aria-selected="false">Pedir teste</button>
+    </div>
+
+    <div class="aeriom-tests-workspace">
       <div class="aeriom-tests-form">
-        <div class="aeriom-tests-field">
-          <span>Personagem</span>
-          <div class="aeriom-test-character-row">
-            <select id="aeriom-test-character"></select>
-            <a id="aeriom-test-character-edit" class="aeriom-test-character-edit" href="#" hidden>Editar ficha</a>
+        <div class="aeriom-tests-mode-panel" data-test-mode-panel="roll">
+          <div class="aeriom-tests-field">
+            <span>Dado</span>
+            <div id="aeriom-free-dice" class="aeriom-tests-dice-grid">
+              <button type="button" class="is-active" data-free-die="4">D4</button>
+              <button type="button" data-free-die="6">D6</button>
+              <button type="button" data-free-die="8">D8</button>
+              <button type="button" data-free-die="10">D10</button>
+              <button type="button" data-free-die="12">D12</button>
+              <button type="button" data-free-die="20">D20</button>
+              <button type="button" data-free-die="100">D100</button>
+            </div>
           </div>
+          <div class="aeriom-tests-inline">
+            <div class="aeriom-tests-field"><span>Modificador</span><input id="aeriom-free-modifier" type="number" value="0" min="-999" max="999" step="1"></div>
+            <div class="aeriom-tests-field"><span>Contexto</span><input id="aeriom-free-context" type="text" maxlength="500" placeholder="Ex.: ataque de oportunidade"></div>
+          </div>
+          <button id="aeriom-free-roll-button" class="aeriom-tests-primary" type="button">Rolar dado</button>
         </div>
 
-        <div class="aeriom-tests-field">
-          <span>Perícia</span>
-          <select id="aeriom-test-skill">
-            <option value="">Sem perícia</option>
-          </select>
+        <div class="aeriom-tests-mode-panel" data-test-mode-panel="attribute" hidden>
+          <div class="aeriom-tests-field"><span>Personagem</span><div class="aeriom-test-character-row"><select id="aeriom-test-character"></select><a id="aeriom-test-character-edit" class="aeriom-test-character-edit" href="#" hidden>Editar ficha</a></div></div>
+          <div class="aeriom-tests-field"><span>Perícia</span><select id="aeriom-test-skill"><option value="">Sem perícia</option></select></div>
+          <div class="aeriom-tests-field"><span>Modificador</span><input id="aeriom-test-modifier" type="number" value="0" min="-999" max="999" step="1"></div>
+          <div class="aeriom-tests-field"><span>Contexto</span><input id="aeriom-test-context" type="text" maxlength="500" placeholder="Ex.: resistir à magia"></div>
+          <div class="aeriom-tests-attributes" id="aeriom-test-attributes"></div>
+          <button id="aeriom-test-roll-button" class="aeriom-tests-primary" type="button">Fazer teste</button>
         </div>
 
-        <div class="aeriom-tests-field">
-          <span>Modificador</span>
-          <input id="aeriom-test-modifier" type="number" value="0" min="-999" max="999" step="1">
+        <div class="aeriom-tests-mode-panel" data-test-mode-panel="request" hidden>
+          <div class="aeriom-tests-field"><span>Personagem</span><select id="aeriom-request-character"></select></div>
+          <div class="aeriom-tests-field"><span>Teste</span><select id="aeriom-request-attribute"></select></div>
+          <div class="aeriom-tests-field"><span>Perícia</span><select id="aeriom-request-skill"><option value="">Sem perícia</option></select></div>
+          <div class="aeriom-tests-field"><span>Instrução</span><input id="aeriom-request-context" type="text" maxlength="500" placeholder="O que o jogador precisa testar?"></div>
+          <button id="aeriom-test-request-button" class="aeriom-tests-secondary" type="button">Enviar pedido ao jogador</button>
         </div>
-
-        <div class="aeriom-tests-field">
-          <span>Contexto</span>
-          <input id="aeriom-test-context" type="text" maxlength="500" placeholder="Ex.: resistir à magia">
-        </div>
-
-        <div class="aeriom-tests-attributes" id="aeriom-test-attributes"></div>
-
-        <button id="aeriom-test-roll-button" class="aeriom-tests-primary" type="button">
-          Fazer teste
-        </button>
-
-        <button id="aeriom-test-request-button" class="aeriom-tests-secondary" type="button">
-          Pedir teste ao jogador
-        </button>
-
         <p id="aeriom-tests-error" class="aeriom-tests-error" hidden></p>
       </div>
 
       <aside class="aeriom-tests-result">
         <p class="aeriom-tests-result__eyebrow">Resultado</p>
-        <div id="aeriom-test-result-empty" class="aeriom-tests-result__empty">
-          <strong>Pronto para testar.</strong>
-          <span>Escolha um atributo para começar.</span>
-        </div>
-        <div id="aeriom-test-result" class="aeriom-tests-result__value" hidden>
-          <strong id="aeriom-test-result-number">—</strong>
-          <span id="aeriom-test-result-meta">—</span>
-          <small id="aeriom-test-result-context"></small>
-        </div>
+        <div id="aeriom-test-result-empty" class="aeriom-tests-result__empty"><strong>Pronto para rolar.</strong><span>Escolha uma ferramenta acima.</span></div>
+        <div id="aeriom-test-result" class="aeriom-tests-result__value" hidden><strong id="aeriom-test-result-number">—</strong><span id="aeriom-test-result-meta">—</span><small id="aeriom-test-result-context"></small></div>
       </aside>
     </div>
 
     <section class="aeriom-tests-requests">
-      <div class="aeriom-tests-requests__header">
-        <div>
-          <p class="aeriom-tests-panel__eyebrow">Pedidos</p>
-          <h3>Testes aguardando resposta</h3>
-        </div>
-        <span id="aeriom-tests-pending-count">0</span>
-      </div>
+      <div class="aeriom-tests-requests__header"><div><p class="aeriom-tests-panel__eyebrow">Pedidos</p><h3>Testes aguardando resposta</h3></div><span id="aeriom-tests-pending-count">0</span></div>
       <div id="aeriom-tests-requests-list"></div>
     </section>
   `;
 
   dicePanel.appendChild(section);
+  const legacy = dicePanel.querySelector(".dice-layout");
+  if (legacy) legacy.hidden = true;
 }
-
 function renderSkills() {
   const select = $("aeriom-test-skill");
   if (!select) return;
@@ -551,67 +546,60 @@ async function refreshRequests() {
 }
 
 function bindEvents() {
+  $$("[data-test-mode]").forEach((button) => button.addEventListener("click", () => setTestMode(button.dataset.testMode)));
+
+  $("aeriom-free-dice")?.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-free-die]");
+    if (!button) return;
+    $$("[data-free-die]").forEach((item) => item.classList.toggle("is-active", item === button));
+  });
+
+  $("aeriom-free-roll-button")?.addEventListener("click", async () => {
+    const error = $("aeriom-tests-error"); error.hidden = true;
+    try { await performFreeRoll(); } catch (err) { error.textContent = friendlyError(err); error.hidden = false; }
+  });
+
   $("aeriom-test-character")?.addEventListener("change", () => {
     setSelectedAttribute(null);
     const id = $("aeriom-test-character")?.value;
     const edit = $("aeriom-test-character-edit");
-    if (edit) {
-      if (id) {
-        edit.href = `./fichas.html?id=${encodeURIComponent(id)}`;
-        edit.hidden = false;
-      } else {
-        edit.hidden = true;
-        edit.removeAttribute("href");
-      }
-    }
+    if (!edit) return;
+    edit.hidden = !id;
+    if (id) edit.href = `./fichas.html?id=${encodeURIComponent(id)}`; else edit.removeAttribute("href");
   });
 
   $("aeriom-test-roll-button")?.addEventListener("click", async () => {
-    const error = $("aeriom-tests-error");
-    error.hidden = true;
-    try {
-      await performTest();
-    } catch (err) {
-      error.textContent = friendlyError(err);
-      error.hidden = false;
-    }
+    const error = $("aeriom-tests-error"); error.hidden = true;
+    try { await performTest(); } catch (err) { error.textContent = friendlyError(err); error.hidden = false; }
   });
 
   $("aeriom-test-request-button")?.addEventListener("click", async () => {
-    const error = $("aeriom-tests-error");
-    error.hidden = true;
+    const error = $("aeriom-tests-error"); error.hidden = true;
     try {
+      const characterId = $("aeriom-request-character")?.value;
+      const attribute = $("aeriom-request-attribute")?.value;
+      const character = getCharacters().find((item) => String(item.id) === String(characterId));
+      if (!character) throw new Error("Escolha um personagem.");
+      if (!attribute) throw new Error("Escolha um atributo.");
+      if ($("aeriom-test-character")) $("aeriom-test-character").value = characterId;
+      setSelectedAttribute(attribute);
       await requestTest();
-    } catch (err) {
-      error.textContent = friendlyError(err);
-      error.hidden = false;
-    }
+    } catch (err) { error.textContent = friendlyError(err); error.hidden = false; }
   });
 
   $("aeriom-test-attributes")?.addEventListener("click", (event) => {
     const button = event.target.closest(".aeriom-test-attribute");
-    if (!button) return;
-    setSelectedAttribute(button.dataset.attribute);
+    if (button) setSelectedAttribute(button.dataset.attribute);
   });
 
   $("aeriom-tests-requests-list")?.addEventListener("click", async (event) => {
     const button = event.target.closest('[data-action="resolve-test"]');
     if (!button) return;
-
-    const error = $("aeriom-tests-error");
-    error.hidden = true;
-
-    try {
-      button.disabled = true;
-      await resolveRequest(button.dataset.requestId);
-    } catch (err) {
-      button.disabled = false;
-      error.textContent = friendlyError(err);
-      error.hidden = false;
-    }
+    const error = $("aeriom-tests-error"); error.hidden = true;
+    try { button.disabled = true; await resolveRequest(button.dataset.requestId); }
+    catch (err) { button.disabled = false; error.textContent = friendlyError(err); error.hidden = false; }
   });
 }
-
 function setupRealtime() {
   if (!state.supabase || !state.campaignId || state.realtimeChannel) return;
 
@@ -643,6 +631,8 @@ async function init() {
   ensureTestsPanel();
   readContext();
   buildCharacterSelect($("aeriom-test-character"));
+  buildRequestCharacterSelect();
+  renderRequestAttributes();
   renderSkills();
   renderAttributes();
   renderRole();
