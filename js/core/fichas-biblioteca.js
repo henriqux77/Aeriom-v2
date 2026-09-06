@@ -32,6 +32,7 @@ import { getSupabase } from "./supabase.js";
     user: null,
     characterId: null,
     currentCampaignId: null,
+    returnCampaignId: null,
     status: "draft",
     saving: false,
     finalizing: false,
@@ -370,6 +371,7 @@ import { getSupabase } from "./supabase.js";
 
     session.characterId = data.id;
     session.currentCampaignId = data.campaign_id || null;
+    session.returnCampaignId = params().get("returnCampaign") || session.currentCampaignId || null;
     session.status = data.status === "completed" ? "completed" : "draft";
     clearLocalDraft();
 
@@ -441,10 +443,10 @@ import { getSupabase } from "./supabase.js";
         session.status = "completed";
         notify("Ficha finalizada.", "success");
 
-        const url = new URL(window.location.href);
-        window.location.href = url.pathname.includes("fichas.html")
-          ? "./minhas-fichas.html"
+        const destination = session.returnCampaignId
+          ? `./campanha.html?campaign=${encodeURIComponent(session.returnCampaignId)}`
           : "./minhas-fichas.html";
+        window.location.href = destination;
       } catch (error) {
         console.error("[AERION][FICHAS] Finalização:", error);
         session.finalizing = false;
@@ -472,6 +474,9 @@ import { getSupabase } from "./supabase.js";
       existingId ||
       draftId ||
       crypto.randomUUID();
+
+    session.returnCampaignId =
+      p.get("returnCampaign") || null;
 
     session.status = existingId ? session.status : "draft";
 
