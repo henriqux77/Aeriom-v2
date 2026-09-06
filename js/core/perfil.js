@@ -65,7 +65,6 @@ async function save(event){
  const recoveryPhone=$("profile-recovery-phone").value.trim();
  if(name.length<2){message("Digite um nome de exibição com pelo menos 2 caracteres.","error");return;}
  if(recoveryEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recoveryEmail)){message("Digite um e-mail de recuperação válido.","error");return;}
- if(!recoveryEmail && !recoveryPhone){message("Informe um e-mail ou telefone de recuperação.","error");return;}
  const saveBtn=$("profile-save");saveBtn.disabled=true;
  try{
   let avatarPath=profile.avatar_path||null;
