@@ -84,9 +84,18 @@ function readContext() {
 
 function getCharacters() {
   const context = getCampaignContext();
-  return Array.isArray(context?.presentCharacters)
-    ? context.presentCharacters
-    : [];
+  if (!Array.isArray(context?.presentCharacters)) return [];
+  return context.presentCharacters
+    .map((entry) => {
+      const character = entry?.character || entry;
+      if (!character?.id) return null;
+      return {
+        ...character,
+        id: String(character.id),
+        campaignCharacterId: entry?.id ? String(entry.id) : null
+      };
+    })
+    .filter(Boolean);
 }
 
 function dispatch(name, detail = {}) {
@@ -156,10 +165,13 @@ function ensureTestsPanel() {
 
     <div class="aeriom-tests-grid">
       <div class="aeriom-tests-form">
-        <label>
-          Personagem
-          <select id="aeriom-test-character"></select>
-        </label>
+        <div class="aeriom-tests-field">
+          <span>Personagem</span>
+          <div class="aeriom-test-character-row">
+            <select id="aeriom-test-character"></select>
+            <a id="aeriom-test-character-edit" class="aeriom-test-character-edit" href="#" hidden>Editar ficha</a>
+          </div>
+        </div>
 
         <div class="aeriom-tests-field">
           <span>Perícia</span>
@@ -529,6 +541,17 @@ async function refreshRequests() {
 function bindEvents() {
   $("aeriom-test-character")?.addEventListener("change", () => {
     setSelectedAttribute(null);
+    const id = $("aeriom-test-character")?.value;
+    const edit = $("aeriom-test-character-edit");
+    if (edit) {
+      if (id) {
+        edit.href = `./fichas.html?id=${encodeURIComponent(id)}`;
+        edit.hidden = false;
+      } else {
+        edit.hidden = true;
+        edit.removeAttribute("href");
+      }
+    }
   });
 
   $("aeriom-test-roll-button")?.addEventListener("click", async () => {
