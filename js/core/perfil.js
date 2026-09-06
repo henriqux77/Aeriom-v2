@@ -85,9 +85,22 @@ async function save(event){
   if(profileError)throw profileError;
   const {error:metadataError}=await supabase.auth.updateUser({data:{display_name:name}});
   if(metadataError)throw metadataError;
-  const values={user_id:user.id,recovery_email:recoveryEmail||null,recovery_phone:recoveryPhone||null,updated_at:new Date().toISOString()};
-  const {error:rcError}=await supabase.from("profile_recovery_contacts").upsert(values,{onConflict:"user_id"});
-  if(rcError)throw rcError;
+  if(recoveryEmail || recoveryPhone){
+    const values={
+      user_id:user.id,
+      recovery_email:recoveryEmail||null,
+      recovery_phone:recoveryPhone||null,
+      updated_at:new Date().toISOString()
+    };
+    const {error:rcError}=await supabase.from("profile_recovery_contacts").upsert(values,{onConflict:"user_id"});
+    if(rcError)throw rcError;
+  }else{
+    const {error:deleteRecoveryError}=await supabase
+      .from("profile_recovery_contacts")
+      .delete()
+      .eq("user_id",user.id);
+    if(deleteRecoveryError)throw deleteRecoveryError;
+  }
   if(profile.avatar_path && avatarPath && profile.avatar_path!==avatarPath){
     await supabase.storage.from(BUCKET).remove([profile.avatar_path]).catch(()=>{});
   }
