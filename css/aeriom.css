@@ -2171,3 +2171,148 @@ body.aeriom-mobile-menu-open{overflow:hidden}
 @media(prefers-reduced-motion:reduce){
   .button{transition:none}
 }
+
+/* ============================================================
+   AERION V5 — COMMAND PALETTE / MOTION SYSTEM
+   ============================================================ */
+.aeriom-command-palette{
+  position:fixed;
+  inset:0;
+  z-index:2000;
+}
+.aeriom-command-palette[hidden]{display:none}
+.aeriom-command-backdrop{
+  position:absolute;
+  inset:0;
+  background:rgba(0,0,0,.68);
+  backdrop-filter:blur(7px);
+}
+.aeriom-command-dialog{
+  position:relative;
+  width:min(620px,calc(100vw - 24px));
+  max-height:min(700px,calc(100dvh - 36px));
+  margin:8vh auto 0;
+  overflow:hidden;
+  border:1px solid rgba(196,158,83,.18);
+  border-radius:17px;
+  background:
+    radial-gradient(circle at 100% 0,rgba(196,158,83,.07),transparent 35%),
+    #100e0b;
+  box-shadow:0 34px 100px rgba(0,0,0,.55);
+  animation:aeriomCommandIn .18s ease both;
+}
+.aeriom-command-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding:15px;
+  border-bottom:1px solid rgba(255,255,255,.06);
+}
+.aeriom-command-head span{
+  display:block;
+  margin-bottom:3px;
+  color:#c49e53;
+  font-size:6px;
+  font-weight:900;
+  letter-spacing:.18em;
+}
+.aeriom-command-head strong{
+  display:block;
+  color:#eee7da;
+  font:500 17px Cinzel,Georgia,serif;
+}
+.aeriom-command-head button{
+  width:34px;height:34px;
+  border:1px solid rgba(255,255,255,.07);
+  border-radius:9px;
+  background:rgba(255,255,255,.02);
+  color:#c1b8a8;
+  font-size:18px;
+  cursor:pointer;
+}
+.aeriom-command-input{
+  position:relative;
+  display:block;
+  padding:12px;
+}
+.aeriom-command-input>span{
+  position:absolute;
+  left:24px;
+  top:50%;
+  transform:translateY(-50%);
+  color:#dfbf67;
+  pointer-events:none;
+}
+.aeriom-command-input input{
+  width:100%;
+  min-height:46px;
+  padding:0 54px 0 38px;
+  border:1px solid rgba(196,158,83,.13);
+  border-radius:11px;
+  background:#0b0a08;
+  color:#eee7da;
+  font-size:15px;
+  outline:none;
+}
+.aeriom-command-input input:focus{
+  border-color:rgba(227,198,127,.34);
+  box-shadow:0 0 0 3px rgba(196,158,83,.045);
+}
+.aeriom-command-input kbd{
+  position:absolute;
+  right:22px;
+  top:50%;
+  transform:translateY(-50%);
+  color:#756e63;
+  font-size:6px;
+  letter-spacing:.08em;
+}
+.aeriom-command-results{
+  max-height:440px;
+  padding:0 10px 10px;
+  overflow:auto;
+}
+.aeriom-command-results button{
+  display:grid;
+  width:100%;
+  gap:3px;
+  padding:10px;
+  margin:2px 0;
+  border:1px solid transparent;
+  border-radius:9px;
+  background:transparent;
+  color:#c1b8a8;
+  text-align:left;
+  cursor:pointer;
+}
+.aeriom-command-results button strong{font-size:9px;color:#eee7da}
+.aeriom-command-results button span{font-size:7px;color:#756e63}
+.aeriom-command-results button.is-active{
+  border-color:rgba(196,158,83,.16);
+  background:rgba(196,158,83,.055);
+}
+.aeriom-command-help{
+  display:block;
+  padding:10px 14px 13px;
+  border-top:1px solid rgba(255,255,255,.05);
+  color:#756e63;
+  font-size:6px;
+}
+body.aeriom-command-open{overflow:hidden}
+@keyframes aeriomCommandIn{
+  from{opacity:0;transform:translateY(-7px) scale(.985)}
+  to{opacity:1;transform:translateY(0) scale(1)}
+}
+@media(max-width:600px){
+  .aeriom-command-dialog{
+    width:calc(100vw - 14px);
+    margin:4vh auto 0;
+    max-height:92dvh;
+    border-radius:14px;
+  }
+  .aeriom-command-results{max-height:55dvh}
+}
+@media(prefers-reduced-motion:reduce){
+  .aeriom-command-dialog{animation:none}
+}
