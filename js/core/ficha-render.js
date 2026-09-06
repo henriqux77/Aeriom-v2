@@ -9,6 +9,23 @@
   const assets=()=>window.AERIONPersonagemAssets||null;
   const SKIN=[['Muito claro','#f1d7c1','Tom bem claro.'],['Claro','#dfb995','Claro e suave.'],['Médio','#b9825e','Tom intermediário.'],['Bronzeado','#9b684b','Tom quente e bronzeado.'],['Escuro','#6e4836','Tom profundo.'],['Muito escuro','#432f29','Tom muito profundo.']];
   const HAIR=[['Preto','#181411'],['Castanho','#5b3b26'],['Loiro','#c6a45b'],['Ruivo','#9c4c2e'],['Branco','#ddddda'],['Cinza','#7e7c7a']];
+  const COAT_PALETTES={
+    gato:[["Natural","#8f7767","Pelagem natural"],["Preto","#25211f","Pelagem escura"],["Branco","#eee7de","Pelagem clara"],["Cinza","#777372","Pelagem cinza"],["Albino","#f5efe9","Albinismo"],["Rajado","#8c684f","Pelagem rajada"]],
+    pantera:[["Preta","#171515","Pelagem negra"],["Escura","#403638","Pelagem escura"],["Cinza","#6f6667","Pelagem cinza"],["Albina","#eee8df","Albinismo"]],
+    tigre:[["Laranja","#c87d3e","Pelagem laranja"],["Branca","#eee7dd","Pelagem branca"],["Dourada","#d39c58","Pelagem dourada"],["Pálida","#b9967b","Pelagem pálida"]],
+    leao:[["Dourada","#c79758","Pelagem dourada"],["Clara","#d9c29c","Pelagem clara"],["Branca","#eee8de","Pelagem branca"],["Escura","#7d634b","Pelagem escura"]],
+    lobo:[["Cinza","#767878","Pelagem cinza"],["Branca","#eee9df","Pelagem branca"],["Preta","#262627","Pelagem negra"],["Marrom","#725b4a","Pelagem castanha"],["Albino","#f6f1eb","Albinismo"]],
+    raposa:[["Laranja","#bf7138","Pelagem laranja"],["Vermelha","#9d4d2d","Pelagem avermelhada"],["Prateada","#918d8a","Pelagem prateada"],["Branca","#eee9df","Pelagem branca"],["Albina","#f7f1e9","Albinismo"]],
+    urso:[["Marrom","#6f503f","Pelagem marrom"],["Preta","#282523","Pelagem negra"],["Branca","#eee9df","Pelagem branca"],["Dourada","#a78662","Pelagem dourada"]],
+    falcao:[["Marrom","#6d5949","Plumagem marrom"],["Escura","#302d2b","Plumagem escura"],["Clara","#d7d2c9","Plumagem clara"],["Albina","#f2eee8","Albinismo"]],
+    aguia:[["Marrom","#725a47","Plumagem marrom"],["Branca","#eee9df","Plumagem branca"],["Escura","#2f302f","Plumagem escura"],["Dourada","#b18b4e","Plumagem dourada"]],
+    coruja:[["Marrom","#745947","Plumagem marrom"],["Branca","#eee9df","Plumagem branca"],["Cinza","#85888a","Plumagem cinza"],["Escura","#343333","Plumagem escura"]],
+    cobra:[["Verde","#5c7a4d","Escamas verdes"],["Preta","#272727","Escamas escuras"],["Dourada","#b6984f","Escamas douradas"],["Branca","#eee9df","Escamas claras"],["Albina","#f6f1eb","Albinismo"]],
+    crocodilo:[["Verde","#657752","Escamas verdes"],["Escura","#333d32","Escamas escuras"],["Clara","#9a9a73","Escamas claras"],["Albina","#e5dfd4","Albinismo"]],
+    tubarao:[["Cinza","#6f767b","Pele cinza"],["Azul-acinzentada","#536b79","Pele azulada"],["Branca","#e9e5dd","Pele clara"],["Escura","#343b40","Pele escura"]],
+    girafa:[["Dourada","#c7964d","Pelagem dourada"],["Clara","#dfc18a","Pelagem clara"],["Escura","#8d683b","Pelagem escura"],["Albina","#eee8dd","Albinismo"]],
+    macaco:[["Castanha","#765740","Pelagem castanha"],["Preta","#292725","Pelagem escura"],["Clara","#b89878","Pelagem clara"],["Albina","#eee8dd","Albinismo"]]
+  };
   const EYES=[['Castanhos','#6e4a2f'],['Âmbar','#c79032'],['Azuis','#5a88bd'],['Verdes','#5d9464'],['Cinza','#8f989f'],['Violetas','#8c6da7']];
   const titles=['Identidade','Raça','Aparência','Classe','Atributos','Poder & Mana','Perícias','Técnicas','Inventário','Revisão'];
   const descriptions=[
@@ -91,6 +108,14 @@
     $('#age-range-help').textContent='Vida típica: '+ar.min+'–'+ar.max+' anos';
 
     var d=s.appearance||{};
+    var isAnimalha=String(s.race||'').toLowerCase()==='animalha';
+    var animalId=animal?.id||s.animalha||'';
+    var coatPalette=COAT_PALETTES[animalId]||COAT_PALETTES.gato;
+    var skinLabel=document.querySelector('#skin-picker-button')?.closest('.appearance-option')?.querySelector('.label');
+    var skinHelp=document.querySelector('#skin-picker-button')?.querySelector('#skin-value');
+    var skinInfo=document.querySelector('#skin-picker-button');
+    if(skinLabel)skinLabel.textContent=isAnimalha?'Tom de pelagem':'Tom de pele';
+    if(skinInfo)skinInfo.setAttribute('aria-label',isAnimalha?'Selecionar tom de pelagem':'Selecionar tom de pele');
     var desc=$('[data-appearance="description"]'),scars=$('[data-appearance="scars"]'),custom=$('[data-appearance="customDetails"]');
     if(desc&&document.activeElement!==desc)desc.value=d.description||'';
     if(scars&&document.activeElement!==scars)scars.value=d.scars||'';
@@ -98,7 +123,34 @@
 
     renderSkin(s);renderMini('#hair-grid',HAIR,'hairColor','hair',s);renderMini('#eyes-grid',EYES,'eyeColor','eyes',s);
   }
-  function renderSkin(s){var p=$('#skin-picker'),sel=SKIN.find(x=>x[0]===s.appearance?.skinTone);$('#skin-value').textContent=sel?.[0]||'Escolher';$('#skin-swatch').style.background=sel?.[1]||'transparent';p.replaceChildren();SKIN.forEach(x=>{var b=document.createElement('button');b.type='button';b.className='swatch-option'+(sel?.[0]===x[0]?' is-selected':'');b.dataset.skin=x[0];b.innerHTML='<i style="background:'+x[1]+'"></i><span><strong>'+esc(x[0])+'</strong><small>'+esc(x[2])+'</small></span>'+(sel?.[0]===x[0]?'<b>✓</b>':'');p.appendChild(b);});}
+  function renderSkin(s){
+    var p=$('#skin-picker'),button=$('#skin-picker-button'),animalId=s.animalha||'',isAnimalha=String(s.race||'').toLowerCase()==='animalha';
+    var options=isAnimalha?(COAT_PALETTES[animalId]||COAT_PALETTES.gato):SKIN;
+    var selectedKey=isAnimalha?(s.appearance?.coatTone||''):(s.appearance?.skinTone||'');
+    var sel=options.find(x=>x[0]===selectedKey);
+    $('#skin-value').textContent=sel?.[0]||'Escolher';
+    $('#skin-swatch').style.background=sel?.[1]||'transparent';
+    p.replaceChildren();
+    options.forEach(function(x){
+      var b=document.createElement('button');
+      b.type='button';
+      b.className='swatch-option'+(sel?.[0]===x[0]?' is-selected':'');
+      b.dataset.skin=x[0];
+      b.dataset.skinKind=isAnimalha?'coat':'skin';
+      b.innerHTML='<i style="background:'+x[1]+'"></i><span><strong>'+esc(x[0])+'</strong><small>'+esc(x[2])+'</small></span>'+(sel?.[0]===x[0]?'<b>✓</b>':'');
+      p.appendChild(b);
+    });
+    if(button)button.setAttribute('aria-describedby','skin-picker-help');
+    var help=$('#skin-picker-help');
+    if(!help){
+      help=document.createElement('small');
+      help.id='skin-picker-help';
+      help.className='skin-picker-help';
+      button?.parentElement?.appendChild(help);
+    }
+    help.textContent=isAnimalha?'A pelagem varia conforme a linhagem escolhida.':'Escolha uma variação de pele.';
+  }
+
   function renderMini(sel,data,stateKey,dataKey,s){var r=$(sel);if(!r)return;r.replaceChildren();data.forEach(x=>{var b=document.createElement('button');b.type='button';b.className='mini-choice'+(s.appearance?.[stateKey]===x[0]?' is-selected':'');b.dataset[dataKey]=x[0];b.innerHTML='<i style="background:'+x[1]+'"></i><span>'+esc(x[0])+'</span>';r.appendChild(b);});}
   function renderClasses(s){var r=$('#class-grid');if(!r)return;r.replaceChildren();Object.values(api()?.getClasses?.()||{}).forEach(k=>{var b=document.createElement('button');b.type='button';b.className='class-card'+(s.class===k.id?' is-selected':'');b.dataset.classId=k.id;b.innerHTML='<div class="class-icon">'+esc(k.icon)+'</div><div class="class-body"><span>'+esc(k.role)+'</span><strong>'+esc(k.name)+'</strong><p>'+esc(k.description)+'</p></div><aside><small>Mana</small><b>'+esc(k.mana)+'</b><em>'+esc(k.skillCount)+' perícias</em></aside><i class="check">✓</i>';r.appendChild(b);});}
   function renderAttributes(s){var ds=api()?.getDice?.()||[],pool=$('#dice-pool');pool?.replaceChildren();ds.forEach(d=>{var taken=Object.values(s.assignedDice||{}).includes(d.id),b=document.createElement('span');b.className='pool-die'+(taken?' is-used':'');b.textContent=d.label;pool?.appendChild(b);});var grid=$('#attribute-grid');if(!grid)return;grid.replaceChildren();var attrs=api()?.getAttributes?.()||[];attrs.forEach(a=>{var assigned=s.assignedDice?.[a.id]||'',d=ds.find(x=>x.id===assigned),bonus=Number(s.derivedStats?.racialModifiers?.[a.id]||0),card=document.createElement('article');card.className='attribute-card'+(assigned?' is-assigned':'');card.innerHTML='<header><div><span>'+esc(a.short)+'</span><strong>'+esc(a.name)+'</strong></div>'+(bonus?'<b class="racial-bonus">'+(bonus>0?'+':'')+bonus+'</b>':'')+'</header><div class="attribute-value"><strong>'+esc(d?.label||'—')+'</strong>'+(assigned?'<button type="button" data-remove-die="'+esc(a.id)+'">×</button>':'')+'</div><div class="attribute-dice">'+ds.map(x=>{var taken=Object.entries(s.assignedDice||{}).some(y=>y[0]!==a.id&&y[1]===x.id);return '<button type="button" class="mini-die '+(assigned===x.id?'is-selected':'')+'" data-assign-die="'+x.id+'" data-attribute="'+a.id+'" '+(taken?'disabled':'')+'>'+x.label+'</button>';}).join('')+'</div>';grid.appendChild(card);});$('#attributes-status').textContent=Object.keys(s.assignedDice||{}).length===8?'✓ Atributos completos.':' '+Object.keys(s.assignedDice||{}).length+'/8 atributos preenchidos.';}
