@@ -392,3 +392,76 @@
 @media(max-width:420px){
   .aeriom-tests-actions{grid-template-columns:1fr 1fr;gap:5px}
 }
+
+/* ============================================================
+   CENTRAL DE ROLAGENS — interface unificada
+   ============================================================ */
+#campaign-panel-dice>.dice-layout[hidden]{display:none!important}
+.aeriom-tests-modes{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:6px;
+  margin:14px 0 10px;
+}
+.aeriom-tests-mode{
+  min-height:40px;
+  border:1px solid rgba(255,255,255,.07);
+  border-radius:10px;
+  background:rgba(255,255,255,.015);
+  color:rgba(255,255,255,.52);
+  font-size:8px;
+  font-weight:900;
+  cursor:pointer;
+}
+.aeriom-tests-mode.is-active{
+  border-color:rgba(216,182,95,.34);
+  background:rgba(216,182,95,.07);
+  color:#e6c66f;
+}
+.aeriom-tests-workspace{
+  display:grid;
+  grid-template-columns:minmax(0,1.2fr) minmax(220px,.8fr);
+  gap:10px;
+}
+.aeriom-tests-mode-panel[hidden]{display:none!important}
+.aeriom-tests-inline{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:7px;
+}
+.aeriom-tests-dice-grid{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:6px;
+}
+.aeriom-tests-dice-grid button{
+  min-height:38px;
+  border:1px solid rgba(255,255,255,.07);
+  border-radius:9px;
+  background:rgba(255,255,255,.015);
+  color:rgba(255,255,255,.62);
+  cursor:pointer;
+  font-size:8px;
+  font-weight:900;
+}
+.aeriom-tests-dice-grid button.is-active{
+  border-color:rgba(216,182,95,.42);
+  background:rgba(216,182,95,.08);
+  color:#e6c66f;
+}
+.aeriom-tests-mode-panel>.aeriom-tests-primary,
+.aeriom-tests-mode-panel>.aeriom-tests-secondary{
+  margin-top:10px;
+  width:100%;
+}
+@media(max-width:700px){
+  .aeriom-tests-modes{grid-template-columns:1fr}
+  .aeriom-tests-workspace{grid-template-columns:1fr}
+  .aeriom-tests-dice-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .aeriom-tests-inline{grid-template-columns:1fr 1fr}
+}
+@media(max-width:420px){
+  .aeriom-tests-dice-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .aeriom-tests-dice-grid button{min-height:36px}
+  .aeriom-tests-inline{grid-template-columns:1fr}
+}
