@@ -1915,6 +1915,19 @@ function renderUser() {
    UI — CAMPAIGN
    ============================================================ */
 
+function bindTableHud() {
+  if (state.tableHudBound) return;
+  state.tableHudBound = true;
+
+  document.addEventListener("click", (event) => {
+    const target = event.target.closest?.("[data-campaign-tab-target]");
+    if (target) {
+      const tab = target.dataset.campaignTabTarget;
+      if (tab) setActiveTab(tab);
+    }
+  });
+}
+
 function renderCampaign() {
 
   const campaign =
@@ -2136,6 +2149,20 @@ function renderCampaign() {
 
 
   applyTheme();
+
+  const hudMembers = getElement("campaign-hud-members");
+  if (hudMembers) hudMembers.textContent = String(state.members.length || 0);
+
+  const hudEvents = getElement("campaign-hud-events");
+  if (hudEvents) hudEvents.textContent = "AO VIVO";
+
+  const hudStatus = getElement("campaign-table-session");
+  if (hudStatus) {
+    hudStatus.textContent = isMaster()
+      ? "Você conduz esta mesa"
+      : "Você está na mesa";
+  }
+
 
 }
 
