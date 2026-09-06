@@ -165,6 +165,7 @@ function bind(){
   }
   if(!TYPES.has(file.type)){message("Formato de imagem não permitido.","error");$("profile-avatar-file").value="";return;}
   if(file.size>MAX_SIZE){message("A imagem precisa ter no máximo 5 MB.","error");$("profile-avatar-file").value="";return;}
+  $("profile-avatar-file").value="";
   openCropEditor(file);
  });
  $("profile-display-name").addEventListener("input",()=>{if(!selectedFile)renderAvatar(null,$("profile-display-name").value||"Aventureiro");$("profile-preview-name").textContent=$("profile-display-name").value||"Aventureiro";});
