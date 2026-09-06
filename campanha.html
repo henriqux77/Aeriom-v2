@@ -3052,7 +3052,7 @@
        ======================================================== -->
 <script
   type="module"
-  src="./js/core/campanha.js?v=20260904-01"
+  src="./js/core/campanha.js?v=20260905-03"
 ></script>
 
 
@@ -3062,12 +3062,12 @@
 
 <script
   type="module"
-  src="./js/core/dice.js?v=20260904-01"
+  src="./js/core/dice.js?v=20260905-02"
 ></script>
 
 <script
   type="module"
-  src="./js/core/testes.js?v=20260904-02"
+  src="./js/core/testes.js?v=20260905-03"
 ></script>
 <script
   type="module"
@@ -4417,14 +4417,17 @@ panel.querySelector("[data-aeriom-add-node]")
 
     const close = () => {
       menu.hidden = true;
+      menu.classList.remove("is-open");
       button.setAttribute("aria-expanded", "false");
     };
 
     button.addEventListener("click", (event) => {
       event.preventDefault();
       event.stopPropagation();
-      menu.hidden = !menu.hidden;
-      button.setAttribute("aria-expanded", String(!menu.hidden));
+      const open = menu.hidden;
+      menu.hidden = !open;
+      menu.classList.toggle("is-open", open);
+      button.setAttribute("aria-expanded", String(open));
     });
 
     menu.addEventListener("click", (event) => {
