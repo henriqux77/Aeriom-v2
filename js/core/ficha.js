@@ -7,8 +7,14 @@
     {id:'inventory',name:'Inventário'}, {id:'review',name:'Revisão'}
   ];
   const ATTRIBUTES = [
-    {id:'forca',name:'Força',short:'FOR'}, {id:'agilidade',name:'Agilidade',short:'AGI'}, {id:'percepcao',name:'Percepção',short:'PER'},
-    {id:'vigor',name:'Vigor',short:'VIG'}, {id:'intelecto',name:'Intelecto',short:'INT'}, {id:'presenca',name:'Presença',short:'PRS'}, {id:'controle',name:'Controle',short:'CON'}
+    {id:'forca',name:'Força',short:'FOR'},
+    {id:'agilidade',name:'Agilidade',short:'AGI'},
+    {id:'percepcao',name:'Percepção',short:'PER'},
+    {id:'vigor',name:'Vigor',short:'VIG'},
+    {id:'intelecto',name:'Intelecto',short:'INT'},
+    {id:'presenca',name:'Presença',short:'PRE'},
+    {id:'controle',name:'Controle',short:'CON'},
+    {id:'precisao',name:'Precisão',short:'PRI'}
   ];
   const DICE = [
     {id:'d4',label:'D4',sides:4}, {id:'d6a',label:'D6',sides:6}, {id:'d6b',label:'D6',sides:6}, {id:'d8',label:'D8',sides:8},
