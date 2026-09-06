@@ -76,7 +76,12 @@ async function save(event){
    if(error)throw error;
    avatarPath=path;
   }
-  const {error:profileError}=await supabase.from("profiles").update({display_name:name,avatar_path:avatarPath,updated_at:new Date().toISOString()}).eq("id",user.id);
+  const {error:profileError}=await supabase.from("profiles").upsert({
+    id:user.id,
+    display_name:name,
+    avatar_path:avatarPath,
+    updated_at:new Date().toISOString()
+  },{onConflict:"id"});
   if(profileError)throw profileError;
   const {error:metadataError}=await supabase.auth.updateUser({data:{display_name:name}});
   if(metadataError)throw metadataError;
