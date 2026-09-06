@@ -187,13 +187,13 @@ function ensureTestsPanel() {
           <div class="aeriom-tests-field">
             <span>Dado</span>
             <div id="aeriom-free-dice" class="aeriom-tests-dice-grid">
-              <button type="button" class="is-active" data-free-die="4">D4</button>
-              <button type="button" data-free-die="6">D6</button>
-              <button type="button" data-free-die="8">D8</button>
-              <button type="button" data-free-die="10">D10</button>
-              <button type="button" data-free-die="12">D12</button>
-              <button type="button" data-free-die="20">D20</button>
-              <button type="button" data-free-die="100">D100</button>
+              <button type="button" data-free-die="4" aria-pressed="false">D4</button>
+              <button type="button" data-free-die="6" aria-pressed="false">D6</button>
+              <button type="button" data-free-die="8" aria-pressed="false">D8</button>
+              <button type="button" data-free-die="10" aria-pressed="false">D10</button>
+              <button type="button" data-free-die="12" aria-pressed="false">D12</button>
+              <button type="button" data-free-die="20" aria-pressed="true">D20</button>
+              <button type="button" data-free-die="100" aria-pressed="false">D100</button>
             </div>
           </div>
           <div class="aeriom-tests-inline">
@@ -551,7 +551,14 @@ function bindEvents() {
   $("aeriom-free-dice")?.addEventListener("click", (event) => {
     const button = event.target.closest("[data-free-die]");
     if (!button) return;
-    $$("[data-free-die]").forEach((item) => item.classList.toggle("is-active", item === button));
+    const die = Number(button.dataset.freeDie);
+    $("[data-free-die]").forEach((item) => {
+      const active = item === button;
+      item.classList.toggle("is-active", active);
+      item.setAttribute("aria-pressed", active ? "true" : "false");
+    });
+    window.AERIOM_DICE?.setDie?.(die);
+    dispatch("dieselected", { die });
   });
 
   $("aeriom-free-roll-button")?.addEventListener("click", async () => {
