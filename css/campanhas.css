@@ -3948,3 +3948,7 @@ textarea:focus-visible {
   .mf-card .mf-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
   .mf-card .mf-actions .mf-btn{padding:0 6px;font-size:6px}
 }
+
+/* MOBILE SIDEBAR OVERLAY */
+.campaigns-mobile-menu-backdrop{display:none;position:fixed;inset:0;z-index:89;border:0;background:rgba(0,0,0,.52);backdrop-filter:blur(2px);cursor:pointer}
+@media(max-width:900px){.campaigns-mobile-menu-backdrop.is-open{display:block}}
