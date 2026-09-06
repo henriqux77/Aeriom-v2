@@ -2109,3 +2109,65 @@ body.aeriom-mobile-menu-open{overflow:hidden}
 @media(prefers-reduced-motion:reduce){
   .aeriom-sidebar{transition:none}
 }
+
+/* ============================================================
+   AERION DESIGN SYSTEM V3
+   Mesma estética. Mais hierarquia, densidade e consistência.
+   ============================================================ */
+:root{
+  --a-panel:#0e0c0a;
+  --a-panel-2:#14110d;
+  --a-panel-3:#1a1611;
+  --a-border:rgba(196,158,83,.12);
+  --a-border-strong:rgba(227,198,127,.28);
+  --a-text:#eee7da;
+  --a-soft:#c1b8a8;
+  --a-muted:#81786c;
+  --a-gold:#c49e53;
+  --a-gold-light:#e3c67f;
+  --a-focus:rgba(196,158,83,.05);
+}
+.aeriom-page{background:
+  radial-gradient(circle at 84% 4%,rgba(196,158,83,.055),transparent 28%),
+  radial-gradient(circle at 12% 92%,rgba(100,54,40,.035),transparent 25%),
+  var(--color-bg);
+}
+.aeriom-page::after{
+  content:"";
+  position:fixed;
+  inset:0;
+  z-index:0;
+  pointer-events:none;
+  background:linear-gradient(180deg,rgba(255,255,255,.012),transparent 18%,transparent 82%,rgba(0,0,0,.12));
+}
+.aeriom-shell,.aeriom-main,.aeriom-sidebar,.aeriom-topbar{min-width:0}
+.card,.panel,.modal,.aeriom-sidebar,.aeriom-topbar{
+  border-color:var(--a-border);
+}
+.button,.nav-item,.mobile-bottom-nav .nav-item{
+  border-radius:10px;
+}
+.button{
+  min-height:42px;
+  transition:transform var(--transition-fast),border-color var(--transition-fast),background-color var(--transition-fast),box-shadow var(--transition-fast);
+}
+.button:hover{transform:translateY(-1px)}
+.button:active{transform:translateY(0)}
+.button--primary{
+  box-shadow:0 8px 24px rgba(0,0,0,.15);
+}
+.form-field__input{
+  border-color:var(--a-border);
+  background:rgba(255,255,255,.018);
+}
+.form-field__input:focus{
+  border-color:var(--a-border-strong);
+  box-shadow:0 0 0 3px var(--a-focus);
+}
+@media(max-width:980px){
+  .aeriom-main{min-width:0}
+  .aeriom-topbar{border-bottom-color:rgba(196,158,83,.08)}
+}
+@media(prefers-reduced-motion:reduce){
+  .button{transition:none}
+}
