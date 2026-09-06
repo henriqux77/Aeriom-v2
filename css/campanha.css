@@ -2600,3 +2600,350 @@
   .campaign-character-card__actions{display:grid;grid-template-columns:1fr 1fr}
   .campaign-character-card__actions .campaign-button{width:100%;min-height:38px}
 }
+
+/* ============================================================
+   AERION V4 — MESA DIGITAL
+   Mesma identidade. Nova composição.
+   ============================================================ */
+:root{
+  --table-bg:#080706;
+  --table-surface:#0f0d0b;
+  --table-surface-2:#14110d;
+  --table-line:rgba(196,158,83,.12);
+  --table-line-strong:rgba(227,198,127,.26);
+  --table-gold:#d5b765;
+  --table-text:#eee8dc;
+  --table-muted:#756e63;
+}
+
+/* ---------- CAMADA DE MESA ---------- */
+.aeriom-page--campaign{
+  background:
+    radial-gradient(circle at 50% 0,rgba(196,158,83,.055),transparent 30%),
+    linear-gradient(180deg,#080706 0%,#0b0a08 48%,#080706 100%);
+}
+.aeriom-page--campaign .campaign-app{
+  min-height:100dvh;
+}
+.aeriom-page--campaign .campaign-main{
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.008),transparent 16%),
+    transparent;
+}
+.campaign-topbar{
+  border-bottom:1px solid rgba(196,158,83,.09);
+  box-shadow:0 10px 35px rgba(0,0,0,.16);
+}
+.campaign-content{
+  position:relative;
+}
+.campaign-table-hud{
+  position:sticky;
+  top:var(--campaign-topbar-height);
+  z-index:42;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto auto;
+  align-items:center;
+  gap:16px;
+  margin:0 0 12px;
+  padding:8px 12px;
+  border:1px solid rgba(196,158,83,.11);
+  border-top:0;
+  border-radius:0 0 14px 14px;
+  background:rgba(9,8,7,.88);
+  backdrop-filter:blur(18px);
+  box-shadow:0 12px 28px rgba(0,0,0,.14);
+}
+.campaign-table-hud__session{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  min-width:0;
+}
+.campaign-table-hud__session strong{
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  color:var(--table-text);
+  font:500 13px Cinzel,Georgia,serif;
+}
+.campaign-table-hud__live{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  padding:4px 7px;
+  border:1px solid rgba(93,140,99,.18);
+  border-radius:999px;
+  color:#93c49a;
+  background:rgba(93,140,99,.055);
+  font-size:6px;
+  font-weight:900;
+  letter-spacing:.14em;
+}
+.campaign-table-hud__live i{
+  width:5px;height:5px;border-radius:50%;background:#83ba89;
+  box-shadow:0 0 0 4px rgba(93,140,99,.08);
+}
+.campaign-table-hud__metrics{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  color:var(--table-muted);
+  font-size:7px;
+}
+.campaign-table-hud__metrics b{
+  color:var(--table-gold);
+}
+.campaign-table-hud__actions{
+  display:flex;
+  gap:5px;
+}
+.campaign-quick-action{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  min-height:32px;
+  padding:0 9px;
+  border:1px solid rgba(196,158,83,.12);
+  border-radius:8px;
+  background:rgba(255,255,255,.018);
+  color:rgba(255,255,255,.74);
+  cursor:pointer;
+  font-size:7px;
+  font-weight:800;
+  transition:transform .16s ease,border-color .16s ease,background .16s ease,color .16s ease;
+}
+.campaign-quick-action:hover{
+  transform:translateY(-1px);
+  border-color:rgba(227,198,127,.28);
+  background:rgba(196,158,83,.05);
+  color:var(--table-text);
+}
+
+/* ---------- VISÃO GERAL = PALCO ---------- */
+.campaign-panel[data-campaign-panel="overview"]{
+  display:grid;
+  grid-template-columns:minmax(0,1.55fr) minmax(300px,.85fr);
+  gap:14px;
+  align-items:start;
+}
+.campaign-panel[data-campaign-panel="overview"]>.campaign-hero{
+  grid-column:1;
+  min-height:410px;
+  margin:0;
+  border:1px solid rgba(196,158,83,.13);
+  border-radius:18px;
+  box-shadow:0 22px 55px rgba(0,0,0,.22);
+}
+.campaign-panel[data-campaign-panel="overview"]>.campaign-hero .campaign-hero__content{
+  max-width:720px;
+  padding:24px;
+}
+.campaign-panel[data-campaign-panel="overview"]>.campaign-section:first-of-type{
+  grid-column:2;
+  grid-row:1 / span 2;
+  margin:0;
+  min-height:410px;
+  padding:15px;
+  border:1px solid rgba(196,158,83,.10);
+  border-radius:18px;
+  background:linear-gradient(180deg,rgba(255,255,255,.018),rgba(255,255,255,.006));
+}
+.campaign-panel[data-campaign-panel="overview"]>.campaign-section:first-of-type .campaign-members-grid{
+  display:grid;
+  gap:7px;
+  max-height:330px;
+  overflow:auto;
+  padding-right:2px;
+}
+.campaign-overview-grid{
+  grid-column:1;
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+  margin:0;
+}
+.campaign-overview-grid .campaign-card{
+  min-height:150px;
+}
+.campaign-panel[data-campaign-panel="overview"]>.campaign-section:last-of-type{
+  grid-column:1/-1;
+  margin:0;
+  padding:15px;
+  border:1px solid rgba(196,158,83,.10);
+  border-radius:18px;
+  background:linear-gradient(145deg,rgba(255,255,255,.018),rgba(255,255,255,.006));
+}
+.campaign-panel[data-campaign-panel="overview"]>.campaign-section:last-of-type .campaign-section__heading{
+  margin-bottom:10px;
+}
+
+/* ---------- MEMBROS = MINI FICHAS ---------- */
+.campaign-panel[data-campaign-panel="overview"] .campaign-member-card{
+  display:grid;
+  grid-template-columns:42px minmax(0,1fr) auto;
+  gap:9px;
+  align-items:center;
+  padding:8px;
+  border:1px solid rgba(255,255,255,.06);
+  border-radius:11px;
+  background:rgba(255,255,255,.012);
+  transition:border-color .16s ease,transform .16s ease,background .16s ease;
+}
+.campaign-panel[data-campaign-panel="overview"] .campaign-member-card:hover{
+  transform:translateX(2px);
+  border-color:rgba(196,158,83,.16);
+  background:rgba(196,158,83,.025);
+}
+.campaign-panel[data-campaign-panel="overview"] .campaign-member-card__avatar{
+  width:42px;height:42px;border-radius:10px;
+}
+.campaign-panel[data-campaign-panel="overview"] .campaign-member-card__name{
+  font-size:10px;
+}
+.campaign-panel[data-campaign-panel="overview"] .campaign-member-card__role{
+  font-size:6px;
+}
+.campaign-panel[data-campaign-panel="overview"] .campaign-member-card__online{
+  width:7px;height:7px;
+}
+
+/* ---------- PERSONAGENS COMO FICHAS VIVAS ---------- */
+.campaign-panel[data-campaign-panel="overview"] .campaign-character-summary{
+  grid-template-columns:repeat(auto-fill,minmax(320px,1fr));
+  gap:10px;
+}
+.campaign-panel[data-campaign-panel="overview"] .campaign-character-card{
+  grid-template-columns:76px minmax(0,1fr);
+  padding:10px;
+  border-radius:14px;
+  background:
+    radial-gradient(circle at 0 0,rgba(196,158,83,.05),transparent 42%),
+    linear-gradient(145deg,rgba(255,255,255,.024),rgba(255,255,255,.008));
+}
+.campaign-panel[data-campaign-panel="overview"] .campaign-character-card__visual{
+  min-height:132px;
+  border-radius:10px;
+}
+.campaign-panel[data-campaign-panel="overview"] .campaign-character-card__name{
+  font-size:18px;
+}
+.campaign-panel[data-campaign-panel="overview"] .campaign-character-card__stats{
+  margin-top:7px;
+}
+.campaign-panel[data-campaign-panel="overview"] .campaign-character-card__actions .campaign-button{
+  min-height:31px;
+}
+
+/* ---------- PAINEL DE DADOS ---------- */
+.campaign-panel[data-campaign-panel="dice"] .campaign-panel__heading{
+  display:flex;
+  align-items:end;
+  justify-content:space-between;
+  margin-bottom:10px;
+}
+.campaign-panel[data-campaign-panel="dice"] .dice-layout{
+  display:grid;
+  grid-template-columns:minmax(0,1.25fr) minmax(260px,.75fr);
+  gap:10px;
+}
+.campaign-panel[data-campaign-panel="dice"] .dice-panel,
+.campaign-panel[data-campaign-panel="dice"] .dice-result-panel{
+  border-color:rgba(196,158,83,.10);
+  background:linear-gradient(145deg,rgba(255,255,255,.022),rgba(255,255,255,.007));
+  box-shadow:0 18px 44px rgba(0,0,0,.16);
+}
+.campaign-panel[data-campaign-panel="dice"] .dice-selector{
+  display:grid;
+  grid-template-columns:repeat(7,minmax(0,1fr));
+  gap:5px;
+}
+.campaign-panel[data-campaign-panel="dice"] .dice-button{
+  min-height:54px;
+  border-radius:10px;
+}
+.campaign-panel[data-campaign-panel="dice"] .dice-options{
+  gap:7px;
+}
+.campaign-panel[data-campaign-panel="dice"] .dice-history{
+  max-height:360px;
+  overflow:auto;
+}
+
+/* ---------- ABA = FERRAMENTA, NÃO PÁGINA ---------- */
+.campaign-panel:not([data-campaign-panel="overview"]){
+  max-width:1240px;
+  margin:0 auto;
+}
+.campaign-panel:not([data-campaign-panel="overview"]) .campaign-panel__heading h1{
+  font-size:clamp(28px,4vw,38px);
+}
+
+/* ---------- MOBILE ---------- */
+@media(max-width:980px){
+  .campaign-table-hud{
+    top:58px;
+    grid-template-columns:minmax(0,1fr) auto;
+  }
+  .campaign-table-hud__metrics{display:none}
+  .campaign-panel[data-campaign-panel="overview"]{
+    display:flex;
+    flex-direction:column;
+  }
+  .campaign-panel[data-campaign-panel="overview"]>.campaign-hero,
+  .campaign-panel[data-campaign-panel="overview"]>.campaign-section:first-of-type,
+  .campaign-overview-grid,
+  .campaign-panel[data-campaign-panel="overview"]>.campaign-section:last-of-type{
+    width:100%;
+  }
+  .campaign-panel[data-campaign-panel="overview"]>.campaign-hero{
+    min-height:350px;
+  }
+  .campaign-panel[data-campaign-panel="overview"]>.campaign-section:first-of-type{
+    min-height:0;
+  }
+  .campaign-panel[data-campaign-panel="overview"]>.campaign-section:first-of-type .campaign-members-grid{
+    max-height:none;
+  }
+  .campaign-panel[data-campaign-panel="overview"] .campaign-character-summary{
+    grid-template-columns:1fr;
+  }
+  .campaign-panel[data-campaign-panel="dice"] .dice-layout{
+    grid-template-columns:1fr;
+  }
+}
+@media(max-width:600px){
+  .campaign-table-hud{
+    margin-left:8px;
+    margin-right:8px;
+    padding:7px;
+    gap:7px;
+    border-radius:0 0 12px 12px;
+  }
+  .campaign-table-hud__session strong{font-size:10px}
+  .campaign-table-hud__actions .campaign-quick-action span{display:none}
+  .campaign-quick-action{width:34px;min-height:34px;padding:0;justify-content:center}
+  .campaign-panel[data-campaign-panel="overview"]>.campaign-hero{
+    min-height:300px;
+  }
+  .campaign-panel[data-campaign-panel="overview"]>.campaign-hero .campaign-hero__content{
+    padding:16px;
+  }
+  .campaign-panel[data-campaign-panel="overview"] .campaign-character-card{
+    grid-template-columns:62px minmax(0,1fr);
+  }
+  .campaign-panel[data-campaign-panel="overview"] .campaign-character-card__visual{
+    min-height:112px;
+  }
+  .campaign-panel[data-campaign-panel="overview"] .campaign-character-card__name{
+    font-size:16px;
+  }
+  .campaign-overview-grid{grid-template-columns:1fr}
+  .campaign-panel[data-campaign-panel="dice"] .dice-selector{
+    grid-template-columns:repeat(4,minmax(0,1fr));
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  .campaign-quick-action,.campaign-member-card{transition:none!important}
+}
