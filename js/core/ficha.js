@@ -54,7 +54,7 @@
     race:'',animalha:'',animalhaCategory:'',class:'',
     appearance:{height:170,skinTone:'',skinHex:'',hairColor:'Preto',eyeColor:'Castanhos',description:'',scars:'',customDetails:''},
     assignedDice:{},primaryPower:'',parallelPower:'',powerRoll:null,powerMode:'',customPowerDescription:'',
-    mana:{current:0,max:0},skills:{},techniques:[],inventory:[],equipment:[],conditions:[],hp:{current:10,max:10},defense:10,movement:9,
+    mana:{current:0,max:0,color:'azul',unlocked:['azul']},skills:{},techniques:[],inventory:[],equipment:[],conditions:[],hp:{current:10,max:10},defense:10,movement:9,
     derivedStats:{hpMax:10,defense:10,movement:9,size:'Médio',racialModifiers:{},abilities:[],resistances:[],senses:[]}
   };};
   let state=DEFAULT(), timer=null, ready=false;
@@ -85,8 +85,8 @@
   function commit(ev){calculateDerived();computeCompletion();state.saved=false;saveLocal(false);emit(ev||'aerion:ficha:update',{state:clone(state)});renderRequest();}
   function renderRequest(){emit('aerion:ficha:render',{state:clone(state)});}
   function reset(){state=DEFAULT();calculateDerived();computeCompletion();localStorage.removeItem(storageKey());saveLocal(true);renderRequest();}
-  function load(){try{var raw=localStorage.getItem(storageKey());if(raw){var saved=JSON.parse(raw),d=DEFAULT();state=Object.assign(d,saved,{gender:normalizeGender(saved.gender),appearance:Object.assign({},d.appearance,saved.appearance||{}),mana:Object.assign({},d.mana,saved.mana||{}),hp:Object.assign({},d.hp,saved.hp||{}),derivedStats:Object.assign({},d.derivedStats,saved.derivedStats||{})});}}catch(e){state=DEFAULT();}calculateDerived();computeCompletion();}
-  function setState(partial){state=Object.assign({},state,clone(partial),{gender:normalizeGender(partial.gender===undefined?state.gender:partial.gender),appearance:Object.assign({},state.appearance,partial.appearance||{}),mana:Object.assign({},state.mana,partial.mana||{}),hp:Object.assign({},state.hp,partial.hp||{}),derivedStats:Object.assign({},state.derivedStats,partial.derivedStats||{})});calculateDerived();computeCompletion();saveLocal(false);renderRequest();}
+  function load(){try{var raw=localStorage.getItem(storageKey());if(raw){var saved=JSON.parse(raw),d=DEFAULT();state=Object.assign(d,saved,{gender:normalizeGender(saved.gender),appearance:Object.assign({},d.appearance,saved.appearance||{}),mana:Object.assign({},d.mana,saved.mana||{},{unlocked:Array.from(new Set(['azul',...(saved.mana?.unlocked||[])]))}),hp:Object.assign({},d.hp,saved.hp||{}),derivedStats:Object.assign({},d.derivedStats,saved.derivedStats||{})});}}catch(e){state=DEFAULT();}calculateDerived();computeCompletion();}
+  function setState(partial){state=Object.assign({},state,clone(partial),{gender:normalizeGender(partial.gender===undefined?state.gender:partial.gender),appearance:Object.assign({},state.appearance,partial.appearance||{}),mana:Object.assign({},state.mana,partial.mana||{},{unlocked:Array.from(new Set(['azul',...(partial.mana?.unlocked||state.mana.unlocked||[])]))}),hp:Object.assign({},state.hp,partial.hp||{}),derivedStats:Object.assign({},state.derivedStats,partial.derivedStats||{})});calculateDerived();computeCompletion();saveLocal(false);renderRequest();}
   function selectRace(v){state.race=txt(v);state.animalha='';state.animalhaCategory='';var a=window.AERIONPersonagemAssets;var h=a&&a.getRaceHeight?a.getRaceHeight(state.race):null;if(h)state.appearance.height=Math.round((num(h.min,150)+num(h.max,200))/2);commit('aerion:race:selected');}
   function selectAnimalCategory(v){state.animalhaCategory=txt(v);state.animalha='';commit('aerion:animalha:category');}
   function selectAnimal(v){state.animalha=txt(v);commit('aerion:animalha:selected');}
@@ -99,6 +99,22 @@
   function powerField(k,v){if(k==='customPower'){state.primaryPower=txt(v);state.powerMode='custom';state.powerRoll=null;}else if(k==='customDescription'){state.customPowerDescription=txt(v);}commit('aerion:power:update');}
   function appearance(k,v){if(!(k in state.appearance))return;state.appearance[k]=k==='height'?num(v,170):txt(v);commit('aerion:appearance:update');}
   function manaCurrent(v){state.mana.current=Math.min(Math.max(0,num(v,0)),num(state.mana.max,0));commit('aerion:mana:update');}
+  function setManaColor(v){var color=txt(v).toLowerCase();var unlocked=Array.isArray(state.mana.unlocked)?state.mana.unlocked:['azul'];if(!unlocked.includes(color))return false;state.mana.color=color;commit('aerion:mana:color');return true;}
+  async function loadCampaignManaAccess(){
+    try{
+      var params=new URLSearchParams(window.location.search);
+      var campaignId=params.get('returnCampaign');
+      var characterId=currentCharacterId();
+      if(!campaignId||characterId==='unassigned')return;
+      var mod=await import('./supabase.js');
+      var sb=await mod.getSupabase();
+      var res=await sb.from('campaign_character_settings').select('unlocked_manas,selected_mana').eq('campaign_id',campaignId).eq('character_id',characterId).maybeSingle();
+      if(res.error||!res.data)return;
+      var unlocked=Array.isArray(res.data.unlocked_manas)?res.data.unlocked_manas.map(function(x){return txt(x).toLowerCase();}):['azul'];
+      state.mana.unlocked=Array.from(new Set(['azul'].concat(unlocked)));
+      if(state.mana.unlocked.includes(txt(res.data.selected_mana).toLowerCase()))state.mana.color=txt(res.data.selected_mana).toLowerCase();
+    }catch(e){}
+  }
   function toggleSkill(id){var s=state.skills[id]||{trained:false,bonus:0};state.skills[id]={trained:!s.trained,bonus:s.bonus||0};commit('aerion:skills:update');}
   function skillBonus(id,v){state.skills[id]=Object.assign({},state.skills[id]||{}, {trained:true,bonus:Math.max(0,num(v,0))});commit('aerion:skills:update');}
   function addTechnique(){state.techniques.push({id:crypto.randomUUID(),name:'',level:1,xp:0,cost:0,action:'Ação Principal',range:'',effect:''});commit('aerion:technique:add');}
@@ -126,14 +142,14 @@
     document.addEventListener('click',function(e){
       var g=e.target.closest('[data-field-choice]'),step=e.target.closest('[data-step]'),act=e.target.closest('[data-action]'),race=e.target.closest('[data-race-id]'),cat=e.target.closest('[data-animalha-category]'),animal=e.target.closest('[data-animalha-id]'),klass=e.target.closest('[data-class-id]'),die=e.target.closest('[data-assign-die]'),remDie=e.target.closest('[data-remove-die]'),skin=e.target.closest('[data-skin]'),hair=e.target.closest('[data-hair]'),eyes=e.target.closest('[data-eyes]'),power=e.target.closest('[data-uncommon-power]'),skill=e.target.closest('[data-skill-id]'),tr=e.target.closest('[data-remove-technique]'),it=e.target.closest('[data-remove-item]');
       if(g){selectGender(g.dataset.value);return;} if(step){var target=num(step.dataset.step);goToStep(target,target>state.currentStep);return;} if(race){selectRace(race.dataset.raceId);return;}if(cat){selectAnimalCategory(cat.dataset.animalhaCategory);return;}if(animal){selectAnimal(animal.dataset.animalhaId);return;}if(klass){selectClass(klass.dataset.classId);return;}if(die){assignDie(die.dataset.attribute,die.dataset.assignDie);return;}if(remDie){removeDie(remDie.dataset.removeDie);return;}if(skin){appearance('skinTone',skin.dataset.skin);$('#skin-picker').hidden=true;$('#skin-picker-button').setAttribute('aria-expanded','false');return;}if(hair){appearance('hairColor',hair.dataset.hair);return;}if(eyes){appearance('eyeColor',eyes.dataset.eyes);return;}if(power){uncommon(power.dataset.uncommonPower);return;}if(skill){toggleSkill(skill.dataset.skillId);return;}if(tr){removeTechnique(tr.dataset.removeTechnique);return;}if(it){removeItem(it.dataset.removeItem);return;}
-      if(act){var type=act.dataset.action;if(type==='roll-power'){rollPower();return;}if(type==='next-step'){next();return;}if(type==='previous-step'){previous();return;}if(type==='finalize'){finalizeCharacter();return;}if(type==='add-technique'){addTechnique();return;}if(type==='add-item'){addItem();return;}}
+      if(manaColor){setManaColor(manaColor.dataset.manaColor);return;}if(act){var type=act.dataset.action;if(type==='roll-power'){rollPower();return;}if(type==='next-step'){next();return;}if(type==='previous-step'){previous();return;}if(type==='finalize'){finalizeCharacter();return;}if(type==='add-technique'){addTechnique();return;}if(type==='add-item'){addItem();return;}}
     });
     $('#race-search')&&$('#race-search').addEventListener('input',function(e){emit('aerion:ficha:filter-race',{query:e.target.value});});
     $('#skin-picker-button')&&$('#skin-picker-button').addEventListener('click',function(e){e.stopPropagation();var p=$('#skin-picker');if(!p)return;p.hidden=!p.hidden;this.setAttribute('aria-expanded',String(!p.hidden));});
     document.addEventListener('click',function(e){if(!e.target.closest('#skin-picker')&&!e.target.closest('#skin-picker-button')){var p=$('#skin-picker');if(p)p.hidden=true;}});
   }
-  function boot(){if(ready)return;ready=true;load();bind();renderRequest();window.addEventListener('beforeunload',function(){saveLocal(true);});}
-  window.AERIONFicha=Object.freeze({getState:function(){return clone(state);},setState:setState,reset:reset,save:function(){saveLocal(true);},selectGender:selectGender,selectRace:selectRace,selectAnimalhaCategory:selectAnimalCategory,selectAnimalha:selectAnimal,selectClass:selectClass,assignDie:assignDie,removeDie:removeDie,rollPowerD100:rollPower,selectUncommonPower:uncommon,setPowerValue:powerField,setAppearance:appearance,setManaCurrent:manaCurrent,toggleSkill:toggleSkill,setSkillBonus:skillBonus,addTechnique:addTechnique,updateTechnique:updateTechnique,removeTechnique:removeTechnique,addItem:addItem,updateItem:updateItem,removeItem:removeItem,validateStep:validateStep,goToStep:goToStep,nextStep:next,previousStep:previous,finalizeCharacter:finalizeCharacter,getSteps:function(){return clone(STEPS);},getAttributes:function(){return clone(ATTRIBUTES);},getDice:function(){return clone(DICE);},getClasses:function(){return clone(CLASSES);},getSkills:function(){return clone(SKILLS);},getUncommonPowers:function(){return clone(UNCOMMON);}});
+  async function boot(){if(ready)return;ready=true;load();bind();await loadCampaignManaAccess();renderRequest();window.addEventListener('beforeunload',function(){saveLocal(true);});}
+  window.AERIONFicha=Object.freeze({getState:function(){return clone(state);},setState:setState,reset:reset,save:function(){saveLocal(true);},selectGender:selectGender,selectRace:selectRace,selectAnimalhaCategory:selectAnimalCategory,selectAnimalha:selectAnimal,selectClass:selectClass,assignDie:assignDie,removeDie:removeDie,rollPowerD100:rollPower,selectUncommonPower:uncommon,setPowerValue:powerField,setAppearance:appearance,setManaCurrent:manaCurrent,setManaColor:setManaColor,toggleSkill:toggleSkill,setSkillBonus:skillBonus,addTechnique:addTechnique,updateTechnique:updateTechnique,removeTechnique:removeTechnique,addItem:addItem,updateItem:updateItem,removeItem:removeItem,validateStep:validateStep,goToStep:goToStep,nextStep:next,previousStep:previous,finalizeCharacter:finalizeCharacter,getSteps:function(){return clone(STEPS);},getAttributes:function(){return clone(ATTRIBUTES);},getDice:function(){return clone(DICE);},getClasses:function(){return clone(CLASSES);},getSkills:function(){return clone(SKILLS);},getUncommonPowers:function(){return clone(UNCOMMON);}});
   window.AERION_FICHA=window.AERIONFicha;
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 })();
