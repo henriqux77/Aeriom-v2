@@ -2557,3 +2557,42 @@
   .campaign-character-card__actions{display:grid;grid-template-columns:1fr 1fr}
   .campaign-character-card__actions .campaign-button{width:100%}
 }
+
+/* PERSONAGENS — bloco de ficha */
+.campaign-character-summary{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px}
+.campaign-character-card{position:relative;display:grid;grid-template-columns:82px minmax(0,1fr);grid-template-areas:"visual info" "visual actions";gap:0 12px;min-width:0;padding:12px;border:1px solid rgba(216,182,95,.10);border-radius:16px;background:linear-gradient(145deg,rgba(255,255,255,.026),rgba(255,255,255,.007));box-shadow:0 16px 38px rgba(0,0,0,.16);overflow:hidden}
+.campaign-character-card::before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 0 0,rgba(216,182,95,.06),transparent 48%)}
+.campaign-character-card__visual{grid-area:visual;position:relative;display:grid;place-items:center;align-self:stretch;min-height:145px;border:1px solid rgba(216,182,95,.12);border-radius:12px;background:linear-gradient(180deg,#1a1510,#0b0a09);overflow:hidden}
+.campaign-character-card__visual img{width:100%;height:100%;object-fit:cover}
+.campaign-character-card__visual>span{font:500 34px Cinzel,Georgia,serif;color:#dfbf67}
+.campaign-character-card__info{grid-area:info;display:grid;align-content:start;min-width:0}
+.campaign-character-card__eyebrow{color:#dfbf67;font-size:6px;font-weight:900;letter-spacing:.14em;text-transform:uppercase}
+.campaign-character-card__name{display:block;margin:3px 0;font:500 21px Cinzel,Georgia,serif;color:#f1ece2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.campaign-character-card__meta{color:rgba(255,255,255,.54);font-size:8px;line-height:1.4}
+.campaign-character-card__owner{margin-top:4px;color:rgba(255,255,255,.30);font-size:6px;text-transform:uppercase;letter-spacing:.1em}
+.campaign-character-card__stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;margin-top:9px}
+.campaign-character-card__stats span{display:grid;gap:2px;padding:6px;border:1px solid rgba(255,255,255,.06);border-radius:8px;background:rgba(255,255,255,.015)}
+.campaign-character-card__stats b{font-size:5px;color:#dfbf67;letter-spacing:.12em}
+.campaign-character-card__stats strong{font-size:8px;color:rgba(255,255,255,.78)}
+.campaign-character-card__actions{grid-area:actions;display:flex;flex-wrap:wrap;gap:5px;align-self:end;margin-top:9px}
+.campaign-character-card__actions .campaign-button{min-height:32px;padding:0 9px;font-size:7px}
+.campaign-button--danger{border-color:rgba(192,108,100,.22)!important;color:#d99b94!important;background:rgba(192,108,100,.045)!important}
+.campaign-character-summary__empty{grid-column:1/-1;display:grid;grid-template-columns:42px minmax(0,1fr);gap:10px;align-items:center;padding:15px;border:1px dashed rgba(216,182,95,.12);border-radius:14px;background:rgba(255,255,255,.012)}
+.campaign-character-summary__empty>span{width:42px;height:42px;display:grid;place-items:center;border-radius:11px;background:rgba(216,182,95,.05);color:#dfbf67;font-size:20px}
+.campaign-character-summary__empty strong{font:500 14px Cinzel,Georgia,serif}
+.campaign-character-summary__empty p{margin-top:3px;color:rgba(255,255,255,.42);font-size:8px;line-height:1.45}
+@media(max-width:700px){
+  .aeriom-page--campaign .campaign-mobile-topbar{border-bottom:0!important;box-shadow:0 1px 0 rgba(0,0,0,.25)}
+  .campaign-character-summary{grid-template-columns:1fr;gap:9px}
+  .campaign-character-card{grid-template-columns:68px minmax(0,1fr);padding:10px;grid-template-areas:"visual info" "visual actions"}
+  .campaign-character-card__visual{min-height:120px}
+  .campaign-character-card__name{font-size:18px}
+  .campaign-character-card__stats strong{font-size:7px}
+}
+@media(max-width:420px){
+  .campaign-character-card{grid-template-columns:58px minmax(0,1fr);gap:8px}
+  .campaign-character-card__visual{min-height:108px}
+  .campaign-character-card__name{font-size:16px}
+  .campaign-character-card__actions{display:grid;grid-template-columns:1fr 1fr}
+  .campaign-character-card__actions .campaign-button{width:100%;min-height:38px}
+}
