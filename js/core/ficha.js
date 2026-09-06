@@ -131,9 +131,8 @@
   function bind(){
     document.addEventListener('input',function(e){var f=e.target.closest('[data-field]'),c=e.target.closest('[data-concept-field]'),p=e.target.closest('[data-power]'),a=e.target.closest('[data-appearance]'),m=e.target.closest('[data-mana]');if(f){state[f.dataset.field]=f.dataset.field==='age'?(f.value===''?'':num(f.value)):f.value;commit();return;}if(c){state[c.dataset.conceptField]=c.value;commit();return;}if(p){powerField(p.dataset.power,p.value);return;}if(a){appearance(a.dataset.appearance,a.value);return;}if(m){manaCurrent(m.value);}});
     document.addEventListener('change',function(e){var t=e.target.closest('[data-technique-field]'),i=e.target.closest('[data-item-field]'),s=e.target.closest('[data-skill-bonus]');if(t)updateTechnique(t.dataset.techniqueId,t.dataset.techniqueField,t.value);if(i)updateItem(i.dataset.itemId,i.dataset.itemField,i.value);if(s)skillBonus(s.dataset.skillBonus,s.value);});
-    $('#creation-next-button')&&$('#creation-next-button').addEventListener('click',function(e){e.preventDefault();next();});
-    $('#creation-prev-button')&&$('#creation-prev-button').addEventListener('click',function(e){e.preventDefault();previous();});
-
+    // A navegação usa um único listener delegado por data-action.
+    // Evita que os botões com ID + data-action executem a etapa duas vezes.
     $$('[data-field-choice="gender"]').forEach(function(button){
       button.addEventListener('click',function(event){
         event.preventDefault();
