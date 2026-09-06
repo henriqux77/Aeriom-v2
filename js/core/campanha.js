@@ -2154,7 +2154,7 @@ function renderCampaign() {
   if (hudMembers) hudMembers.textContent = String(state.members.length || 0);
 
   const hudEvents = getElement("campaign-hud-events");
-  if (hudEvents) hudEvents.textContent = "Sessão";
+  if (hudEvents) hudEvents.textContent = "Recursos";
 
   const hudStatus = getElement("campaign-table-session");
   if (hudStatus) {
