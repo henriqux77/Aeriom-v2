@@ -1716,6 +1716,7 @@ if (
   const items = [
     ["Campanhas","Abrir sua biblioteca de campanhas","./campanhas.html"],
     ["Minhas Fichas","Abrir personagens salvos","./minhas-fichas.html"],
+    ["Perfil","Editar nome, imagem e recuperação da conta","./perfil.html"],
     ["Livro do AERION","Consultar regras e pesquisar no livro","./livro.html"],
     ["Mesa","Voltar para a campanha atual","__campaign__"]
   ];
