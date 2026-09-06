@@ -20,7 +20,8 @@
       <a class="btn" href="./minhas-fichas.html">← Minhas Fichas</a>
       <button id="edit" class="btn primary" type="button">Editar</button>
     </div>
-  </header>
+  <script>if(new URLSearchParams(location.search).get("returnCampaign"))document.getElementById("ficha-viewer-back")?.setAttribute("href",`./campanha.html?campaign=${encodeURIComponent(new URLSearchParams(location.search).get("returnCampaign"))}`);</script>
+</header>
   <section class="hero">
     <article class="card hero-image"><img id="avatar" alt="" hidden></article>
     <article class="card">
@@ -82,7 +83,7 @@ const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&
     if(s.avatar){
       $("avatar").src=s.avatar;$("avatar").hidden=false;
     }
-    $("edit").onclick=()=>{location.href=`./fichas.html?id=${encodeURIComponent(row.id)}`};
+    $("edit").onclick=()=>{location.href=`./fichas.html?id=${encodeURIComponent(row.id)}${returnCampaign?`&returnCampaign=${encodeURIComponent(returnCampaign)}`:""}`};
   }catch(e){
     $("error").style.display="block";$("error").textContent=e?.message||"Não foi possível abrir a ficha.";
   }
