@@ -6,7 +6,7 @@
 (() => {
   "use strict";
 
-  const VERSION = 6;
+  const VERSION = 8;
 
   function normalizeId(value) {
     return String(value ?? "")
@@ -32,53 +32,26 @@
 
   const RACES = [
     {
-      id: "humano",
-      name: "Humano",
-      description: "Versátil e equilibrado, com ampla capacidade de adaptação.",
-      profile: "Equilibrado",
-      feature: "Versatilidade",
-      height: { min: 150, max: 200 },
-      lifespan: { min: 16, max: 90 },
       images: {
-        default: "https://i.ibb.co/CsQZXrJ4/file-00000000a044820e93e20f441ff9aa42.png",
-        masculino: "https://i.ibb.co/TBNmfF0S/file-000000008b74820ea8b432fcf06ed975.png",
-        feminino: "https://i.ibb.co/LdmxJ2h9/file-000000004b94820ead12a26ca92d75b7.png"
+        default: "https://i.ibb.co/2Yp1J01b/file-00000000510c820eb14e273763781ffd.png"
       }
     },
     {
-      id: "elfo",
-      name: "Elfo",
-      description: "Povo ágil e perceptivo, ligado à natureza e à magia.",
-      profile: "Ágil e perceptivo",
-      feature: "Percepção elevada",
-      height: { min: 155, max: 205 },
-      lifespan: { min: 18, max: 500 },
       images: {
-        default: "https://i.ibb.co/N6D4hdyD/file-000000004494820e92419468e53b58ad.png",
-        masculino: "https://i.ibb.co/0y8WXSr8/file-00000000495c820e99fc5de509918d90.png",
-        feminino: "https://i.ibb.co/F1DCc3j/file-00000000dcf8820e883635d6ca9de492.png"
-      }
+        default: "https://i.ibb.co/t5M1BgJ/file-000000007c58820e8a4c084fb8542cae.png"
+      }      }
     },
     {
-      id: "anao",
-      name: "Anão",
-      description: "Povo compacto e resistente, conhecido por sua robustez.",
-      profile: "Robusto",
-      feature: "Resistência",
-      height: { min: 125, max: 155 },
-      lifespan: { min: 20, max: 250 },
       images: {
-        default: "https://i.ibb.co/xq1F8q9C/file-0000000000ec820e8d67352e841e84ea.png",
-        masculino: "https://i.ibb.co/CySRyjQ/file-000000001824820e952c5a665ae3496f.png",
+        default: "https://i.ibb.co/chRQM94X/file-00000000e93c820e9e75478047b40f16.png"
+      }le-000000001824820e952c5a665ae3496f.png",
         feminino: "https://i.ibb.co/hJh4XYXM/file-00000000a4fc820e9bd0551b2472e125.png"
       }
     },
     {
-      id: "orc",
-      name: "Orc",
-      description: "Povo de estrutura poderosa e presença marcante.",
-      profile: "Forte e robusto",
-      feature: "Potência física",
+      images: {
+        default: "https://i.ibb.co/7xwq3YW4/file-0000000004cc820ea14f552665c417de.png"
+      }     feature: "Potência física",
       height: { min: 175, max: 225 },
       lifespan: { min: 14, max: 75 },
       images: {
@@ -88,7 +61,9 @@
       }
     },
     {
-      id: "centauro",
+      images: {
+        default: "https://i.ibb.co/zhG5JGyp/file-000000008c0c820e8ad3b4bddcf5764c.png"
+      }      id: "centauro",
       name: "Centauro",
       description: "Povo de anatomia híbrida e grande capacidade física.",
       profile: "Potente e resistente",
@@ -102,7 +77,9 @@
       }
     },
     {
-      id: "vampiro",
+      images: {
+        default: "https://i.ibb.co/60Fnbymf/file-0000000061b0820e8d6f930def5eedb9.png"
+      }      id: "vampiro",
       name: "Vampiro",
       description: "Ser sobrenatural com grande afinidade com forças vitais.",
       profile: "Sobrenatural",
@@ -116,7 +93,9 @@
       }
     },
     {
-      id: "duende",
+      images: {
+        default: "https://i.ibb.co/MXFmZPV/file-000000009fc8820eb5e47afc003f8d8a.png"
+      }      id: "duende",
       name: "Duende",
       description: "Pequeno povo conhecido por sua astúcia e adaptação.",
       profile: "Ágil e astuto",
@@ -130,7 +109,9 @@
       }
     },
     {
-      id: "fada",
+      images: {
+        default: "https://i.ibb.co/HpGV9WV1/file-000000008aa8820ebf6e6b32135dc292.png"
+      }      id: "fada",
       name: "Fada",
       description: "Ser feérico associado à magia e às forças sobrenaturais.",
       profile: "Leve e ágil",
@@ -144,7 +125,9 @@
       }
     },
     {
-      id: "povo_aquatico",
+      images: {
+        default: "https://i.ibb.co/gb1dwyq2/file-00000000a8f8820ea79c8c2115362a81.png"
+      }      id: "povo_aquatico",
       name: "Povo Aquático",
       description: "Povo adaptado a ambientes aquáticos.",
       profile: "Adaptado à água",
@@ -158,7 +141,9 @@
       }
     },
     {
-      id: "povo_nuvens",
+      images: {
+        default: "https://i.ibb.co/M51Tm6cw/file-0000000092dc820ea8776498f264996b.png"
+      }      id: "povo_nuvens",
       name: "Povo das Nuvens",
       description: "Povo associado aos céus e às regiões elevadas.",
       profile: "Leve",
@@ -172,6 +157,20 @@
       }
     },
     {
+      images: {
+        default: "https://i.ibb.co/v6JTzHG3/file-00000000f5d4820eb5b794068352ae82.png"
+      }    {
+      id: "animalha",
+      name: "Animalha",
+      description: "Humanoide de linhagem animal com características físicas próprias.",
+      profile: "Definido pela linhagem animal",
+      feature: "Características animais",
+      height: { min: 140, max: 220 },
+      lifespan: { min: 1, max: 100 },
+      images: {},
+      lineage: "animalha"
+    },
+
       id: "povo_natureza",
       name: "Povo da Natureza",
       description: "Povo ligado à natureza e às suas forças.",
@@ -185,7 +184,9 @@
       imagesPending: true
     },
     {
-      id: "neraliano",
+      images: {
+        default: "https://i.ibb.co/jPL8rwx4/file-000000005ebc820e97f528c06b313de7.png"
+      }      id: "neraliano",
       name: "Neraliano",
       description: "Povo adaptado a ambientes aquáticos e costeiros.",
       profile: "Adaptável",
@@ -205,13 +206,13 @@
       feature: "Características especiais",
       height: { min: 150, max: 205 },
       lifespan: { min: 18, max: 220 },
-      images: {
-        default: "https://i.ibb.co/W47hKBR2/file-000000000d84820eb2dee739ed2732a8.png"
-      },
+      images: {},
       imagesPending: true
     },
     {
-      id: "colosso",
+      images: {
+        default: "https://i.ibb.co/RGDpDKGK/file-00000000a700820e959a65d93cf8831e.png"
+      }      id: "colosso",
       name: "Colosso",
       description: "Raça de porte colossal e presença física dominante.",
       profile: "Colossal",
@@ -224,7 +225,9 @@
       imagesPending: true
     },
     {
-      id: "troll",
+      images: {
+        default: "https://i.ibb.co/WW7dJLzV/file-00000000039c820eac63bd8ff75f96db.png"
+      }      id: "troll",
       name: "Troll",
       description: "Raça robusta de grande porte e extraordinária resistência.",
       profile: "Resistente",
@@ -281,7 +284,7 @@
       leao: "https://i.ibb.co/fVfFL5ds/file-00000000b344820e9e39f31e92678a13.png",
       lobo: "https://i.ibb.co/23GdF2Py/file-000000001e48820ebbfa246147f05c6f.png",
       raposa: "https://i.ibb.co/gFFk7Kyv/file-00000000a170820eaf15f8650242c3c9.png",
-      urso: "https://i.ibb.co/k2ND7Tbp/file-000000003cb0820e842b5d0997ee34f5.png",
+      urso: "https://i.ibb.co/JjycKsGL/file-000000000d84820eb2dee739ed2732a8.png",
       falcao: "https://i.ibb.co/CpkBqzkC/file-00000000dee8820eb4f157009c1ceb5b.png"
     }
   };
