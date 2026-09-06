@@ -58,3 +58,31 @@ body.aeriom-page--book{
   .book-index{top:6px}
   .book-content{min-height:0}
 }
+
+/* ============================================================
+   AERION V5 — LIVRO MOBILE REAL
+   ============================================================ */
+.book-shell{width:100%;overflow:visible}
+.book-layout{min-width:0}
+.book-content{min-width:0;overflow:hidden}
+@media(max-width:900px){
+  .book-search-panel{grid-template-columns:1fr!important}
+  .book-search-panel>div:first-child{min-width:0}
+  .book-search-panel h2{max-width:none;white-space:normal}
+  .book-search-panel p{max-width:100%;line-height:1.5}
+  .book-layout{display:grid!important;grid-template-columns:1fr!important}
+  .book-index{width:100%;position:sticky;left:auto;right:auto;top:4px}
+  .book-index nav{width:100%;display:flex!important;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden}
+  .book-index button{flex:0 0 min(148px,44vw)}
+  .book-content{width:100%!important}
+}
+@media(max-width:520px){
+  .book-topbar{grid-template-columns:40px minmax(0,1fr)!important}
+  .book-topbar h1{font-size:26px}
+  .book-search-panel{padding:12px!important}
+  .book-index button{flex-basis:132px}
+  .book-content{padding:15px 12px!important}
+  .book-chapter h2{font-size:25px}
+  .book-chapter>p{font-size:10px}
+  .book-card{min-width:0}
+}
