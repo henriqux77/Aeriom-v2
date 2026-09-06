@@ -1791,78 +1791,78 @@ async function loadCharacters() {
    UI — USER
    ============================================================ */
 
-function renderUser() {
+async function renderUser() {
 
   const name =
     getDisplayName();
 
-
   const nameElement =
-    getElement(
-      "campaign-user-name"
-    );
+    getElement("campaign-user-name");
 
   const roleElement =
-    getElement(
-      "campaign-user-role"
-    );
+    getElement("campaign-user-role");
 
   const avatar =
-    getElement(
-      "campaign-user-avatar"
-    );
+    getElement("campaign-user-avatar");
 
-
-  if (
-    nameElement
-  ) {
-
-    nameElement.textContent =
-      name;
-
+  if (nameElement) {
+    nameElement.textContent = name;
   }
 
-
-  if (
-    roleElement
-  ) {
-
+  if (roleElement) {
     roleElement.textContent =
-      isMaster()
-        ? "Mestre"
-        : "Aventureiro";
-
+      isMaster() ? "Mestre" : "Aventureiro";
   }
 
+  if (!avatar) {
+    return;
+  }
 
-  if (
-    avatar
-  ) {
+  avatar.replaceChildren();
 
-    avatar.replaceChildren();
+  const initial =
+    document.createElement("span");
 
+  initial.textContent =
+    name.charAt(0).toUpperCase() || "?";
 
-    const initial =
-      document.createElement(
-        "span"
-      );
+  avatar.appendChild(initial);
 
+  const avatarPath =
+    text(state.profile?.avatar_path);
 
-    initial.textContent =
-      name
-        .charAt(
-          0
-        )
-        .toUpperCase() ||
-      "?";
+  if (!avatarPath || !state.supabase) {
+    return;
+  }
 
-
-    avatar.appendChild(
-      initial
+  const avatarUrl =
+    await resolveStorageUrl(
+      CONFIG.AVATAR_BUCKET,
+      avatarPath
     );
 
+  if (!avatarUrl) {
+    return;
   }
 
+  const image =
+    document.createElement("img");
+
+  image.src = avatarUrl;
+  image.alt = "";
+  image.loading = "eager";
+  image.decoding = "async";
+  image.referrerPolicy = "no-referrer";
+
+  image.addEventListener(
+    "error",
+    () => {
+      image.remove();
+    },
+    {once:true}
+  );
+
+  avatar.replaceChildren(image);
 }
 
 
@@ -3634,7 +3634,7 @@ function bindAuthChange() {
             await loadProfile();
 
 
-            renderUser();
+            void renderUser();
 
           }
 
@@ -3784,7 +3784,7 @@ async function initializeCampaign(
      * UI
      */
 
-    renderUser();
+    await renderUser();
 
     renderCampaign();
 
