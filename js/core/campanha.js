@@ -2266,6 +2266,54 @@ function createMemberCard(
     initial
   );
 
+  const memberAvatarPath =
+    text(
+      isCurrentUser
+        ? state.profile?.avatar_path
+        : profile?.avatar_path
+    );
+
+  if (memberAvatarPath && state.supabase) {
+    void resolveStorageUrl(
+      CONFIG.AVATAR_BUCKET,
+      memberAvatarPath
+    ).then((avatarUrl) => {
+      if (!avatarUrl) return;
+
+      const image =
+        document.createElement("img");
+
+      image.src = avatarUrl;
+      image.alt = "";
+      image.loading = "lazy";
+      image.decoding = "async";
+      image.referrerPolicy = "no-referrer";
+
+      image.addEventListener(
+        "error",
+        () => image.remove(),
+        {once:true}
+      );
+
+      avatar.replaceChildren(image);
+
+      if (member.userId === state.user?.id) {
+        const online =
+          document.createElement("span");
+
+        online.className =
+          "campaign-member-card__online";
+
+        online.setAttribute(
+          "aria-hidden",
+          "true"
+        );
+
+        avatar.appendChild(online);
+      }
+    }).catch(() => {});
+  }
+
 
   if (
     member.userId ===
