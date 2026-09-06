@@ -13,6 +13,7 @@
  */
 
 const TEST_CONFIG = Object.freeze({
+  version: "2026-09-05-rules-2",
   attributes: Object.freeze([
     ["forca", "Força"],
     ["agilidade", "Agilidade"],
@@ -20,7 +21,6 @@ const TEST_CONFIG = Object.freeze({
     ["intelecto", "Intelecto"],
     ["percepcao", "Percepção"],
     ["presenca", "Presença"],
-    ["precisao", "Precisão"],
     ["controle", "Controle"]
   ]),
   skills: Object.freeze([
