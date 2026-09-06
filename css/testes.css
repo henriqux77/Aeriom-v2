@@ -383,3 +383,12 @@
   .aeriom-tests-form > .aeriom-tests-field:nth-child(4) input{min-height:38px}
   .aeriom-tests-primary,.aeriom-tests-secondary{min-height:40px}
 }
+
+/* TESTE / PEDIDO — mesma barra de ação */
+.aeriom-tests-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+@media(max-width:700px){
+  .aeriom-tests-primary,.aeriom-tests-secondary{width:100%}
+}
+@media(max-width:420px){
+  .aeriom-tests-actions{grid-template-columns:1fr 1fr;gap:5px}
+}
