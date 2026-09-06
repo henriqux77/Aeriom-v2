@@ -115,6 +115,14 @@
   function bind(){
     document.addEventListener('input',function(e){var f=e.target.closest('[data-field]'),c=e.target.closest('[data-concept-field]'),p=e.target.closest('[data-power]'),a=e.target.closest('[data-appearance]'),m=e.target.closest('[data-mana]');if(f){state[f.dataset.field]=f.dataset.field==='age'?(f.value===''?'':num(f.value)):f.value;commit();return;}if(c){state[c.dataset.conceptField]=c.value;commit();return;}if(p){powerField(p.dataset.power,p.value);return;}if(a){appearance(a.dataset.appearance,a.value);return;}if(m){manaCurrent(m.value);}});
     document.addEventListener('change',function(e){var t=e.target.closest('[data-technique-field]'),i=e.target.closest('[data-item-field]'),s=e.target.closest('[data-skill-bonus]');if(t)updateTechnique(t.dataset.techniqueId,t.dataset.techniqueField,t.value);if(i)updateItem(i.dataset.itemId,i.dataset.itemField,i.value);if(s)skillBonus(s.dataset.skillBonus,s.value);});
+    $$('[data-field-choice="gender"]').forEach(function(button){
+      button.addEventListener('click',function(event){
+        event.preventDefault();
+        event.stopPropagation();
+        selectGender(button.dataset.value);
+      });
+    });
+
     document.addEventListener('click',function(e){
       var g=e.target.closest('[data-field-choice]'),step=e.target.closest('[data-step]'),act=e.target.closest('[data-action]'),race=e.target.closest('[data-race-id]'),cat=e.target.closest('[data-animalha-category]'),animal=e.target.closest('[data-animalha-id]'),klass=e.target.closest('[data-class-id]'),die=e.target.closest('[data-assign-die]'),remDie=e.target.closest('[data-remove-die]'),skin=e.target.closest('[data-skin]'),hair=e.target.closest('[data-hair]'),eyes=e.target.closest('[data-eyes]'),power=e.target.closest('[data-uncommon-power]'),skill=e.target.closest('[data-skill-id]'),tr=e.target.closest('[data-remove-technique]'),it=e.target.closest('[data-remove-item]');
       if(g){selectGender(g.dataset.value);return;} if(step){var target=num(step.dataset.step);goToStep(target,target>state.currentStep);return;} if(race){selectRace(race.dataset.raceId);return;}if(cat){selectAnimalCategory(cat.dataset.animalhaCategory);return;}if(animal){selectAnimal(animal.dataset.animalhaId);return;}if(klass){selectClass(klass.dataset.classId);return;}if(die){assignDie(die.dataset.attribute,die.dataset.assignDie);return;}if(remDie){removeDie(remDie.dataset.removeDie);return;}if(skin){appearance('skinTone',skin.dataset.skin);$('#skin-picker').hidden=true;$('#skin-picker-button').setAttribute('aria-expanded','false');return;}if(hair){appearance('hairColor',hair.dataset.hair);return;}if(eyes){appearance('eyeColor',eyes.dataset.eyes);return;}if(power){uncommon(power.dataset.uncommonPower);return;}if(skill){toggleSkill(skill.dataset.skillId);return;}if(tr){removeTechnique(tr.dataset.removeTechnique);return;}if(it){removeItem(it.dataset.removeItem);return;}
