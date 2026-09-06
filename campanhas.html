@@ -59,7 +59,7 @@
 
   <link
     rel="stylesheet"
-    href="./css/campanhas.css"
+    href="./css/campanhas.css?v=20260905-v3"
   >
 
 </head>
@@ -408,6 +408,18 @@
           </button>
 
 
+        </div>
+
+        <div class="campaigns-toolbar" aria-label="Ferramentas da biblioteca de campanhas">
+          <label class="campaigns-search">
+            <span class="campaigns-search__icon" aria-hidden="true">⌕</span>
+            <span class="visually-hidden">Pesquisar campanhas</span>
+            <input id="campaigns-search" type="search" inputmode="search" autocomplete="off" placeholder="Buscar campanha…" maxlength="120">
+          </label>
+          <div class="campaigns-toolbar__meta">
+            <span id="campaigns-count" class="campaigns-toolbar__count">0 campanhas</span>
+            <button id="campaigns-clear-search" class="campaigns-toolbar__clear" type="button" hidden>Limpar</button>
+          </div>
         </div>
 
 
