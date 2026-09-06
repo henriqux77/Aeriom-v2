@@ -199,7 +199,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
    A estética continua de ferramenta de RPG; a composição fica
    mais próxima de uma ficha digital premium.
    ============================================================ */
-body.aeriom-page--ficha{
+body.aeriom-page--character{
   background:
     radial-gradient(circle at 80% 0,rgba(196,158,83,.05),transparent 28%),
     radial-gradient(circle at 0 90%,rgba(77,48,36,.035),transparent 24%),
