@@ -34,7 +34,8 @@ const state = {
   modal: null,
   inviteTimer: null,
   authSubscription: null,
-  coverObjectUrl: null
+  coverObjectUrl: null,
+  searchQuery: ""
 };
 
 function $(id) {
@@ -1116,40 +1117,52 @@ function createCampaignCard(
   return article;
 }
 
+function getFilteredCampaigns() {
+  const query = state.searchQuery.trim().toLowerCase();
+  if (!query) return state.campaigns;
+
+  return state.campaigns.filter((campaign) =>
+    [campaign.name, campaign.description, campaign.role]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase()
+      .includes(query)
+  );
+}
+
 function renderCampaigns() {
+  const list = $("campaigns-list");
+  const count = $("campaigns-count");
+  const clear = $("campaigns-clear-search");
+  if (!list) return;
 
-  const list =
-    $("campaigns-list");
-
-  if (!list) {
-    return;
-  }
-
+  const filtered = getFilteredCampaigns();
   list.replaceChildren();
 
-  if (
-    !state.campaigns.length
-  ) {
+  if (count) {
+    count.textContent = filtered.length === 1 ? "1 campanha" : `${filtered.length} campanhas`;
+  }
+  if (clear) clear.hidden = !state.searchQuery;
 
+  if (!state.campaigns.length) {
     showEmpty();
-
     return;
   }
 
-  state.campaigns.forEach(
-    (
-      campaign
-    ) => {
+  if (!filtered.length) {
+    list.innerHTML = `
+      <div class="campaigns-state campaigns-state--empty campaigns-state--inline">
+        <div class="campaigns-state__ornament" aria-hidden="true">⌕</div>
+        <p class="campaigns-state__eyebrow">Busca</p>
+        <h3>Nenhuma campanha encontrada.</h3>
+        <p>Tente outro nome ou trecho da descrição.</p>
+      </div>
+    `;
+    showList();
+    return;
+  }
 
-      list.appendChild(
-        createCampaignCard(
-          campaign
-        )
-      );
-
-    }
-  );
-
+  filtered.forEach((campaign) => list.appendChild(createCampaignCard(campaign)));
   showList();
 }
 
@@ -2709,6 +2722,21 @@ async function handleLogout() {
 }
 
 function bindEvents() {
+
+  const searchInput = $("campaigns-search");
+  const clearSearch = $("campaigns-clear-search");
+
+  searchInput?.addEventListener("input", () => {
+    state.searchQuery = String(searchInput.value || "").slice(0, 120);
+    renderCampaigns();
+  });
+
+  clearSearch?.addEventListener("click", () => {
+    state.searchQuery = "";
+    if (searchInput) searchInput.value = "";
+    renderCampaigns();
+    searchInput?.focus();
+  });
 
   $(
     "campaigns-create-button"
