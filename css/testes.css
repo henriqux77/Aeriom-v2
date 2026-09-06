@@ -352,3 +352,34 @@
   .aeriom-test-character-edit{padding:0 8px;font-size:6px}
   .aeriom-tests-attributes{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
+
+/* MOBILE — COMPACTAÇÃO REAL DOS TESTES */
+@media(max-width:700px){
+  .aeriom-tests-form{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    display:grid;
+  }
+  .aeriom-tests-form > .aeriom-tests-field:first-child,
+  .aeriom-tests-form > .aeriom-tests-field:nth-child(4),
+  .aeriom-tests-attributes,
+  .aeriom-tests-primary,
+  .aeriom-tests-secondary,
+  .aeriom-tests-error{
+    grid-column:1/-1;
+  }
+  .aeriom-tests-form > .aeriom-tests-field:nth-child(4){order:4}
+  .aeriom-tests-form > .aeriom-tests-field:nth-child(2){order:2}
+  .aeriom-tests-form > .aeriom-tests-field:nth-child(3){order:3}
+  .aeriom-tests-attributes{order:5}
+  .aeriom-tests-primary{order:6}
+  .aeriom-tests-secondary{order:7}
+  .aeriom-tests-error{order:8}
+  .aeriom-test-character-row select{min-width:0}
+  .aeriom-tests-form .aeriom-tests-field:nth-child(2),
+  .aeriom-tests-form .aeriom-tests-field:nth-child(3){min-width:0}
+}
+@media(max-width:420px){
+  .aeriom-tests-form{gap:6px}
+  .aeriom-tests-form > .aeriom-tests-field:nth-child(4) input{min-height:38px}
+  .aeriom-tests-primary,.aeriom-tests-secondary{min-height:40px}
+}
