@@ -4797,3 +4797,4 @@ textarea:focus-visible {
     min-height:34px!important;
   }
 }
+.campaigns-user-badge[role="button"]{cursor:pointer}.campaigns-user-badge[role="button"]:focus-visible{outline:2px solid rgba(213,183,101,.55);outline-offset:3px}
