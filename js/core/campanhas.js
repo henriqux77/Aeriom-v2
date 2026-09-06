@@ -35,7 +35,8 @@ const state = {
   inviteTimer: null,
   authSubscription: null,
   coverObjectUrl: null,
-  searchQuery: ""
+  searchQuery: "",
+  filter: "all"
 };
 
 function $(id) {
@@ -909,219 +910,93 @@ function appendCoverSymbol(
   );
 }
 
-function createCampaignCard(
-  campaign
-) {
+function createCampaignCard(campaign) {
+  const article = document.createElement("article");
+  article.className = "campaign-card";
+  article.dataset.campaignId = campaign.id;
 
-  const article =
-    document.createElement(
-      "article"
-    );
-
-  article.className =
-    "campaign-card";
-
-  article.dataset.campaignId =
-    campaign.id;
-
-
-  const cover =
-    document.createElement(
-      "div"
-    );
-
-  cover.className =
-    "campaign-card__cover";
-
-
-  if (
-    isSafeImageUrl(
-      campaign.coverUrl
-    )
-  ) {
-
-    const image =
-      document.createElement(
-        "img"
-      );
-
-    image.className =
-      "campaign-card__image";
-
-    image.src =
-      campaign.coverUrl;
-
-    image.alt =
-      `Capa da campanha ${campaign.name}`;
-
-    image.loading =
-      "lazy";
-
-    image.referrerPolicy =
-      "no-referrer";
-
-    image.addEventListener(
-      "error",
-      () => {
-
-        image.remove();
-
-        cover.classList.add(
-          "campaign-card__cover--empty"
-        );
-
-        appendCoverSymbol(
-          cover
-        );
-
-      },
-      {
-        once:
-          true
-      }
-    );
-
-    cover.appendChild(
-      image
-    );
-
+  const cover = document.createElement("div");
+  cover.className = "campaign-card__cover";
+  if (isSafeImageUrl(campaign.coverUrl)) {
+    const image = document.createElement("img");
+    image.className = "campaign-card__image";
+    image.src = campaign.coverUrl;
+    image.alt = `Capa da campanha ${campaign.name}`;
+    image.loading = "lazy";
+    image.referrerPolicy = "no-referrer";
+    image.addEventListener("error", () => {
+      image.remove();
+      cover.classList.add("campaign-card__cover--empty");
+      appendCoverSymbol(cover);
+    }, {once:true});
+    cover.appendChild(image);
   } else {
-
-    cover.classList.add(
-      "campaign-card__cover--empty"
-    );
-
-    appendCoverSymbol(
-      cover
-    );
-
+    cover.classList.add("campaign-card__cover--empty");
+    appendCoverSymbol(cover);
   }
 
+  const content = document.createElement("div");
+  content.className = "campaign-card__content";
 
-  const content =
-    document.createElement(
-      "div"
-    );
+  const head = document.createElement("div");
+  head.className = "campaign-card__head";
 
-  content.className =
-    "campaign-card__content";
+  const role = document.createElement("span");
+  role.className = "campaign-card__role";
+  role.textContent = campaign.role === "master" ? "Mestre" : "Aventureiro";
 
+  const updated = document.createElement("span");
+  updated.className = "campaign-card__updated";
+  updated.textContent = campaign.updatedAt
+    ? `Atualizada ${formatDate(campaign.updatedAt)}`
+    : `Criada ${formatDate(campaign.createdAt)}`;
 
-  const role =
-    document.createElement(
-      "span"
-    );
+  head.append(role, updated);
 
-  role.className =
-    "campaign-card__role";
+  const title = document.createElement("h3");
+  title.className = "campaign-card__title";
+  title.textContent = campaign.name;
 
-  role.dataset.role =
-    campaign.role;
+  const description = document.createElement("p");
+  description.className = "campaign-card__description";
+  description.textContent = campaign.description || "Sem descrição. Abra a campanha para começar.";
 
-  role.textContent =
-    campaign.role === "master"
-      ? "Mestre"
-      : "Aventureiro";
+  const footer = document.createElement("div");
+  footer.className = "campaign-card__footer";
 
+  const details = document.createElement("div");
+  details.className = "campaign-card__details";
+  const detail = document.createElement("span");
+  detail.textContent = campaign.role === "master" ? "Campanha que você conduz" : "Você participa desta campanha";
+  details.appendChild(detail);
 
-  const title =
-    document.createElement(
-      "h3"
-    );
+  const openButton = document.createElement("button");
+  openButton.type = "button";
+  openButton.className = "button button--primary campaign-card__open";
+  openButton.textContent = "Abrir";
+  openButton.addEventListener("click", () => openCampaign(campaign.id));
 
-  title.className =
-    "campaign-card__title";
-
-  title.textContent =
-    campaign.name;
-
-
-  const description =
-    document.createElement(
-      "p"
-    );
-
-  description.className =
-    "campaign-card__description";
-
-  description.textContent =
-    campaign.description ||
-    "Uma nova aventura aguarda.";
-
-
-  const footer =
-    document.createElement(
-      "div"
-    );
-
-  footer.className =
-    "campaign-card__footer";
-
-
-  const date =
-    document.createElement(
-      "span"
-    );
-
-  date.className =
-    "campaign-card__date";
-
-  date.textContent =
-    formatDate(
-      campaign.createdAt
-    );
-
-
-  const openButton =
-    document.createElement(
-      "button"
-    );
-
-  openButton.type =
-    "button";
-
-  openButton.className =
-    "button button--primary campaign-card__open";
-
-  openButton.textContent =
-    "Abrir campanha";
-
-  openButton.addEventListener(
-    "click",
-    () => {
-      openCampaign(
-        campaign.id
-      );
-    }
-  );
-
-
-  footer.append(
-    date,
-    openButton
-  );
-
-  content.append(
-    role,
-    title,
-    description,
-    footer
-  );
-
-  article.append(
-    cover,
-    content
-  );
-
-
+  footer.append(details, openButton);
+  content.append(head, title, description, footer);
+  article.append(cover, content);
   return article;
 }
 
 function getFilteredCampaigns() {
   const query = state.searchQuery.trim().toLowerCase();
-  if (!query) return state.campaigns;
+  let list = [...state.campaigns];
 
-  return state.campaigns.filter((campaign) =>
+  if (state.filter === "master") list = list.filter((campaign) => campaign.role === "master");
+  if (state.filter === "player") list = list.filter((campaign) => campaign.role === "player");
+
+  if (state.filter === "recent") {
+    list.sort((a,b) => new Date(b.updatedAt || b.createdAt || 0) - new Date(a.updatedAt || a.createdAt || 0));
+    list = list.slice(0, 5);
+  }
+
+  if (!query) return list;
+
+  return list.filter((campaign) =>
     [campaign.name, campaign.description, campaign.role]
       .filter(Boolean)
       .join(" ")
@@ -2722,6 +2597,14 @@ async function handleLogout() {
 }
 
 function bindEvents() {
+
+  $("[data-campaign-filter]").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.filter = button.dataset.campaignFilter || "all";
+      $("[data-campaign-filter]").forEach((item) => item.classList.toggle("is-active", item === button));
+      renderCampaigns();
+    });
+  });
 
   const searchInput = $("campaigns-search");
   const clearSearch = $("campaigns-clear-search");
