@@ -1634,7 +1634,10 @@ async function loadCharacters() {
               hp_max,
               mana_current,
               mana_max,
-              avatar_path
+              avatar_path,
+              gender,
+              defense,
+              movement
             )
           `
         )
@@ -1779,6 +1782,23 @@ async function loadCharacters() {
                 avatarPath:
                   text(
                     character.avatar_path
+                  ),
+
+                gender:
+                  text(
+                    character.gender
+                  ),
+
+                defense:
+                  Number(
+                    character.defense ||
+                    10
+                  ),
+
+                movement:
+                  Number(
+                    character.movement ||
+                    0
                   )
 
               }
@@ -2380,36 +2400,123 @@ function renderCharacters() {
 
     const card = document.createElement("article");
     card.className = "campaign-character-card";
+    card.dataset.characterId = character.id;
+
+    const visual = document.createElement("div");
+    visual.className = "campaign-character-card__visual";
+
+    if (character.avatarPath && /^https?:\/\//i.test(character.avatarPath)) {
+      const img = document.createElement("img");
+      img.src = character.avatarPath;
+      img.alt = `Retrato de ${character.name || "personagem"}`;
+      img.loading = "lazy";
+      visual.appendChild(img);
+    } else {
+      const initial = document.createElement("span");
+      initial.textContent = (character.name || "A").charAt(0).toUpperCase();
+      visual.appendChild(initial);
+    }
 
     const info = document.createElement("div");
     info.className = "campaign-character-card__info";
 
+    const eyebrow = document.createElement("span");
+    eyebrow.className = "campaign-character-card__eyebrow";
+    eyebrow.textContent = character.gender || "Aventureiro";
+
     const name = document.createElement("strong");
+    name.className = "campaign-character-card__name";
     name.textContent = character.name || "Personagem";
 
     const meta = document.createElement("span");
+    meta.className = "campaign-character-card__meta";
     meta.textContent = [character.race, character.class].filter(Boolean).join(" • ") || "Ficha";
 
-    info.append(name, meta);
+    const owner = document.createElement("span");
+    owner.className = "campaign-character-card__owner";
+    owner.textContent =
+      character.userId === state.user?.id
+        ? "Sua ficha"
+        : "Personagem do grupo";
+
+    const stats = document.createElement("div");
+    stats.className = "campaign-character-card__stats";
+    [
+      ["HP", `${character.hpCurrent}/${character.hpMax}`],
+      ["DEF", String(character.defense || 10)],
+      ["MANA", `${character.manaCurrent}/${character.manaMax}`]
+    ].forEach(([label, value]) => {
+      const item = document.createElement("span");
+      item.innerHTML = `<b>${label}</b><strong>${value}</strong>`;
+      stats.appendChild(item);
+    });
+
+    info.append(eyebrow, name, meta, owner, stats);
 
     const actions = document.createElement("div");
     actions.className = "campaign-character-card__actions";
 
     const view = document.createElement("a");
     view.className = "campaign-button campaign-button--secondary";
-    view.href = `./ficha.html?id=${encodeURIComponent(character.id)}`;
+    view.href = `./ficha.html?id=${encodeURIComponent(character.id)}&returnCampaign=${encodeURIComponent(state.campaignId)}`;
     view.textContent = "Ver ficha";
 
     const edit = document.createElement("a");
     edit.className = "campaign-button campaign-button--secondary";
-    edit.href = `./fichas.html?id=${encodeURIComponent(character.id)}`;
+    edit.href = `./fichas.html?id=${encodeURIComponent(character.id)}&returnCampaign=${encodeURIComponent(state.campaignId)}`;
     edit.textContent = "Editar ficha";
 
     actions.append(view, edit);
-    card.append(info, actions);
+
+    if (isMaster()) {
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.className = "campaign-button campaign-button--danger";
+      remove.dataset.action = "remove-character";
+      remove.dataset.characterId = character.id;
+      remove.textContent = "Remover da campanha";
+      actions.appendChild(remove);
+    }
+
+    card.append(visual, info, actions);
     container.appendChild(card);
   });
 }
+
+async function removeCharacterFromCampaign(characterId, button) {
+  if (!isMaster()) {
+    throw new Error("Somente o Mestre pode remover personagens da campanha.");
+  }
+
+  const character = state.presentCharacters.find(
+    (entry) => String(entry.characterId) === String(characterId)
+  )?.character;
+
+  const name = character?.name || "este personagem";
+  if (!window.confirm(`Remover ${name} da campanha?`)) return false;
+
+  if (button) {
+    button.disabled = true;
+    button.textContent = "Removendo…";
+  }
+
+  const { error } = await state.supabase.rpc(
+    "aerion_remove_character_from_campaign",
+    {
+      p_character_id: characterId,
+      p_campaign_id: state.campaignId
+    }
+  );
+
+  if (error) throw error;
+
+  await loadCharacters();
+  renderCharacters();
+  dispatchCampaignEvent("characterschange", { characters: state.presentCharacters });
+  return true;
+}
+
+
 
 
 /* ============================================================
@@ -2898,6 +3005,21 @@ function bindButtons() {
       }
     );
 
+
+  getElement("campaign-character-summary")?.addEventListener("click", async (event) => {
+    const button = event.target.closest?.('[data-action="remove-character"]');
+    if (!button) return;
+    try {
+      await removeCharacterFromCampaign(button.dataset.characterId, button);
+    } catch (error) {
+      log("warn", "Não foi possível remover o personagem da campanha.", error);
+      window.dispatchEvent(new CustomEvent("aeriom:toast", {
+        detail: { message: error?.message || "Não foi possível remover o personagem.", type: "error" }
+      }));
+      button.disabled = false;
+      button.textContent = "Remover da campanha";
+    }
+  });
 
   getElements(
     "[data-campaign-action]"
