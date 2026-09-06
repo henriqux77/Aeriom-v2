@@ -2806,106 +2806,33 @@ function setActiveTab(
    ============================================================ */
 
 function toggleMobileMenu() {
+  const sidebar = getElement("campaign-sidebar");
+  const button = getElement("campaign-mobile-menu-button");
+  const backdrop = getElement("campaign-mobile-menu-backdrop");
 
-  const sidebar =
-    getElement(
-      "campaign-sidebar"
-    );
+  if (!sidebar) return;
 
-  const button =
-    getElement(
-      "campaign-mobile-menu-button"
-    );
+  state.mobileMenuOpen = !state.mobileMenuOpen;
+  sidebar.classList.toggle("is-open", state.mobileMenuOpen);
+  sidebar.classList.toggle("is-mobile-open", state.mobileMenuOpen);
+  backdrop?.classList.toggle("is-open", state.mobileMenuOpen);
 
-
-  if (
-    !sidebar
-  ) {
-
-    return;
-
-  }
-
-
-  state.mobileMenuOpen =
-    !state.mobileMenuOpen;
-
-
-  /*
-   * Suportamos os dois nomes de classe para manter
-   * compatibilidade com versões anteriores do CSS.
-   */
-
-  sidebar.classList.toggle(
-    "is-open",
-    state.mobileMenuOpen
-  );
-
-  sidebar.classList.toggle(
-    "is-mobile-open",
-    state.mobileMenuOpen
-  );
-
-
-  if (
-    button
-  ) {
-
-    button.setAttribute(
-      "aria-expanded",
-      String(
-        state.mobileMenuOpen
-      )
-    );
-
-  }
-
+  button?.setAttribute("aria-expanded", String(state.mobileMenuOpen));
+  button?.setAttribute("aria-label", state.mobileMenuOpen ? "Fechar navegação" : "Abrir navegação");
 }
 
-
 function closeMobileMenu() {
+  const sidebar = getElement("campaign-sidebar");
+  const button = getElement("campaign-mobile-menu-button");
+  const backdrop = getElement("campaign-mobile-menu-backdrop");
 
-  const sidebar =
-    getElement(
-      "campaign-sidebar"
-    );
+  state.mobileMenuOpen = false;
 
-  const button =
-    getElement(
-      "campaign-mobile-menu-button"
-    );
+  sidebar?.classList.remove("is-open","is-mobile-open");
+  backdrop?.classList.remove("is-open");
 
-
-  state.mobileMenuOpen =
-    false;
-
-
-  if (
-    sidebar
-  ) {
-
-    sidebar.classList.remove(
-      "is-open"
-    );
-
-    sidebar.classList.remove(
-      "is-mobile-open"
-    );
-
-  }
-
-
-  if (
-    button
-  ) {
-
-    button.setAttribute(
-      "aria-expanded",
-      "false"
-    );
-
-  }
-
+  button?.setAttribute("aria-expanded","false");
+  button?.setAttribute("aria-label","Abrir navegação");
 }
 
 
@@ -3047,6 +2974,18 @@ function bindButtons() {
 
       }
     );
+
+  getElement("campaign-mobile-menu-backdrop")?.addEventListener("click", closeMobileMenu);
+
+  document.addEventListener("pointerdown", (event) => {
+    if (!state.mobileMenuOpen) return;
+    const target = event.target;
+    const sidebar = getElement("campaign-sidebar");
+    const button = getElement("campaign-mobile-menu-button");
+    if (target instanceof Node && !sidebar?.contains(target) && !button?.contains(target)) {
+      closeMobileMenu();
+    }
+  });
 
 
   getElement(
