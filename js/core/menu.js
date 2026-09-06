@@ -1769,7 +1769,7 @@ if (
           document.querySelector(`[data-campaign-tab="${target.slice(8)}"]`)?.click();
         } else if (target === "__campaign__") {
           const id = new URLSearchParams(location.search).get("campaign");
-          if (id) location.href = \`./campanha.html?campaign=${encodeURIComponent(id)}\`;
+          if (id) location.href = "./campanha.html?campaign=" + encodeURIComponent(id);
         } else {
           location.href = target;
         }
