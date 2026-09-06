@@ -2535,3 +2535,25 @@
   .dice-selector{grid-template-columns:repeat(4,1fr)}
   .campaign-mobile-actions{right:8px;width:calc(100vw - 16px)}
 }
+
+/* CONTROLE DE SCROLL — página usa o documento como área principal */
+.aeriom-page--campaign{overflow-x:hidden;overflow-y:auto}
+.campaign-main{overflow:visible}
+.campaign-content{overflow:visible}
+@media(max-width:980px){
+  .aeriom-page--campaign{overflow-x:hidden;overflow-y:auto}
+  .campaign-main{overflow:visible}
+  .campaign-mobile-topbar{border-bottom:1px solid rgba(223,191,103,.06)}
+}
+.campaign-character-card__actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
+.campaign-character-card__actions .campaign-button{min-height:34px;padding:0 10px;font-size:8px}
+@media(max-width:700px){
+  .campaign-character-card{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .campaign-character-card__info{min-width:0}
+  .campaign-character-card__actions{justify-content:flex-end}
+}
+@media(max-width:480px){
+  .campaign-character-card{align-items:stretch;flex-direction:column}
+  .campaign-character-card__actions{display:grid;grid-template-columns:1fr 1fr}
+  .campaign-character-card__actions .campaign-button{width:100%}
+}
