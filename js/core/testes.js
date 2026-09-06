@@ -239,6 +239,81 @@ function ensureTestsPanel() {
   const legacy = dicePanel.querySelector(".dice-layout");
   if (legacy) legacy.hidden = true;
 }
+function setTestMode(mode) {
+  const target = ["roll","attribute","request"].includes(mode) ? mode : "roll";
+  if (target === "request" && !isMaster()) {
+    mode = "attribute";
+  } else {
+    mode = target;
+  }
+  $(".aeriom-tests-mode").forEach((button) => {
+    const active = button.dataset.testMode === mode;
+    button.classList.toggle("is-active", active);
+    button.setAttribute("aria-selected", active ? "true" : "false");
+  });
+  $(".aeriom-tests-mode-panel").forEach((panel) => {
+    panel.hidden = panel.dataset.testModePanel !== mode;
+  });
+}
+
+function buildRequestCharacterSelect() {
+  const select = $("aeriom-request-character");
+  if (!select) return;
+  const current = select.value;
+  select.replaceChildren();
+  const empty = document.createElement("option");
+  empty.value = "";
+  empty.textContent = "Escolha um personagem";
+  select.appendChild(empty);
+  getCharacters().forEach((character) => {
+    const option = document.createElement("option");
+    option.value = String(character.id);
+    option.textContent = character.name || "Personagem";
+    select.appendChild(option);
+  });
+  select.value = current;
+}
+
+function renderRequestAttributes() {
+  const select = $("aeriom-request-attribute");
+  if (!select) return;
+  const current = select.value;
+  select.replaceChildren();
+  TEST_CONFIG.attributes.forEach(([id,label]) => {
+    const option = document.createElement("option");
+    option.value = id;
+    option.textContent = label;
+    select.appendChild(option);
+  });
+  if (current && Array.from(select.options).some((option) => option.value === current)) {
+    select.value = current;
+  }
+}
+
+async function performFreeRoll() {
+  readContext();
+  const dice = window.AERIOM_DICE;
+  if (!dice?.roll) throw new Error("Motor de dados ainda não está pronto.");
+  const die = Number($("[data-free-die].is-active")?.dataset.freeDie || 20);
+  const modifier = Number($("aeriom-free-modifier")?.value || 0);
+  const context = safe($("aeriom-free-context")?.value);
+  const roll = await dice.roll({
+    die,
+    modifier,
+    visibility: "public",
+    context: context || "Rolagem livre"
+  });
+  showResult({
+    result: roll.totalResult,
+    die: roll.dieType,
+    modifier: roll.modifier,
+    skill: "",
+    context
+  });
+  dispatch("roll", { type:"free", die, modifier, context, roll });
+  return roll;
+}
+
 function renderSkills() {
   const select = $("aeriom-test-skill");
   if (!select) return;
