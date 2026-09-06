@@ -127,7 +127,7 @@
 <article class="power-roll"><div class="power-roll-head"><div><span>DESTINO ELEMENTAL</span><h3>D100</h3></div><strong id="power-roll-result">—</strong></div><p>01–25 Fogo · 26–50 Terra · 51–75 Água · 76–100 Ar.</p><button type="button" class="primary-action" data-action="roll-power">✦ Girar D100</button></article>
 <article><span>PODER INCOMUM</span><h3>Escolha diretamente</h3><div id="uncommon-powers" class="choice-grid two"></div></article>
 <article class="power-custom"><span>OUTRO PODER</span><h3>Criação própria</h3><label>Nome<input data-power="customPower" maxlength="120" placeholder="Nome do poder"></label><label>Descrição<textarea data-power="customDescription" rows="4" maxlength="1200" placeholder="Explique a ideia, aparência ou limitações."></textarea></label></article>
-<article class="mana-card"><div class="mana-orb"><b id="mana-value">0</b><span>MAX</span></div><div class="mana-copy"><span>RESERVA DA CLASSE</span><h3>Mana</h3><p id="mana-class-label">Escolha uma classe.</p></div><div class="mana-mini"><span>ATUAL</span><input id="mana-current" data-mana="current" type="number" min="0" inputmode="numeric"></div><div class="mana-colors"><div class="mana-colors__head"><span>COR DA MANA</span><small id="mana-colors-help">Na criação, somente Azul está liberada.</small></div><div id="mana-colors-grid" class="mana-colors__grid"></div></div></article>
+<article class="mana-card"><div class="mana-orb"><div class="mana-flame" aria-hidden="true"><span></span><i></i><b></b></div><strong class="mana-orb-value" id="mana-value">0</strong><span>MAX</span></div><div class="mana-copy"><span>RESERVA DA CLASSE</span><h3>Mana</h3><p id="mana-class-label">Escolha uma classe.</p></div><div class="mana-mini"><span>ATUAL</span><input id="mana-current" data-mana="current" type="number" min="0" inputmode="numeric"></div><div class="mana-colors"><div class="mana-colors__head"><span>COR DA MANA</span><small id="mana-colors-help">Na criação, somente Azul está liberada.</small></div><div id="mana-colors-grid" class="mana-colors__grid"></div></div></article>
 </div><div id="power-summary" class="context-card" hidden></div>
 </section>
 <section class="creation-panel" data-panel="skills" hidden>
@@ -155,8 +155,8 @@
 <script type="module" src="./js/core/main.js"></script>
 <script src="./js/core/personagem-assets.js?v=20260906-races12" defer></script>
 <script src="./js/core/personagem-render.js" defer></script>
-<script src="./js/core/ficha.js?v=20260906-navfix" defer></script>
-<script src="./js/core/ficha-render.js?v=20260906-appearancefix" defer></script>
+<script src="./js/core/ficha.js?v=20260906-navfix2" defer></script>
+<script src="./js/core/ficha-render.js?v=20260906-mana2" defer></script>
 <script type="module" src="./js/core/regras-raciais.js?v=20260905-phase2"></script>
 <script type="module" src="./js/core/fichas-biblioteca.js?v=20260905-phase2"></script>
 </body></html>
