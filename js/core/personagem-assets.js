@@ -1,123 +1,128 @@
-/* AERION — CATÁLOGO OFICIAL DE RAÇAS E ANIMALHAS */
+/* =========================================================
+   AERION — PERSONAGEM ASSETS
+   Catálogo visual consolidado.
+   ========================================================= */
 (() => {
   "use strict";
 
-  const VERSION = 9;
+  const VERSION = 10;
 
-  const RACES = [
+  const pairImages = [
     {
-      id:"humano", name:"Humano",
-      description:"Versátil e equilibrado, com ampla capacidade de adaptação.",
-      profile:"Equilibrado", feature:"Versatilidade",
-      height:{min:150,max:200}, lifespan:{min:16,max:90},
-      images:{default:"https://i.ibb.co/2Yp1J01b/file-00000000510c820eb14e273763781ffd.png"}
+      race:"animalha",
+      male:"https://i.ibb.co/mV94b1vK/file-00000000dee8820eb4f157009c1ceb5b.png",
+      female:"https://i.ibb.co/gbP4Tx0x/file-000000003cb0820e842b5d0997ee34f5.png"
     },
     {
-      id:"elfo", name:"Elfo",
-      description:"Povo ágil e perceptivo, ligado à natureza e à magia.",
-      profile:"Ágil e perceptivo", feature:"Percepção elevada",
-      height:{min:155,max:205}, lifespan:{min:18,max:500},
-      images:{default:"https://i.ibb.co/t5M1BgJ/file-000000007c58820e8a4c084fb8542cae.png"}
+      race:"colosso",
+      male:"https://i.ibb.co/MkgrWPnf/file-00000000a170820eaf15f8650242c3c9.png",
+      female:"https://i.ibb.co/MkTmcZxc/file-000000001e48820ebb3f101b2dc9f0f3.png"
     },
     {
-      id:"anao", name:"Anão",
-      description:"Povo compacto e resistente, conhecido por sua robustez.",
-      profile:"Robusto", feature:"Resistência",
-      height:{min:125,max:155}, lifespan:{min:20,max:250},
-      images:{default:"https://i.ibb.co/chRQM94X/file-00000000e93c820e9e75478047b40f16.png"}
+      race:"neraliano",
+      male:"https://i.ibb.co/GQ51CTfr/file-00000000b344820e9cd0c4ace952b82c.png",
+      female:"https://i.ibb.co/Zzn3TRDT/file-000000007a70820ea18c5cf3ce6529b7.png"
     },
     {
-      id:"orc", name:"Orc",
-      description:"Povo de estrutura poderosa e presença marcante.",
-      profile:"Forte e robusto", feature:"Potência física",
-      height:{min:175,max:225}, lifespan:{min:14,max:75},
-      images:{default:"https://i.ibb.co/7xwq3YW4/file-0000000004cc820ea14f552665c417de.png"}
+      race:"povo_natureza",
+      male:"https://i.ibb.co/8qtYvfd/file-00000000e4b0820eab531990258bbb09.png",
+      female:"https://i.ibb.co/N6C75zkX/file-000000001b7c820e8a317d79973c8733.png"
     },
     {
-      id:"centauro", name:"Centauro",
-      description:"Povo de anatomia híbrida e grande capacidade física.",
-      profile:"Potente e resistente", feature:"Anatomia híbrida",
-      height:{min:180,max:230}, lifespan:{min:16,max:100},
-      images:{default:"https://i.ibb.co/zhG5JGyp/file-000000008c0c820e8ad3b4bddcf5764c.png"}
+      race:"povo_nuvens",
+      male:"https://i.ibb.co/C5L91tgZ/file-0000000089f0820e89d6953c4857240c.png",
+      female:"https://i.ibb.co/SXYVf9Bs/file-00000000779c820ea18c5cf3ce6529b7.png"
     },
     {
-      id:"vampiro", name:"Vampiro",
-      description:"Ser sobrenatural com grande afinidade com forças vitais.",
-      profile:"Sobrenatural", feature:"Natureza vampírica",
-      height:{min:150,max:200}, lifespan:{min:18,max:500},
-      images:{default:"https://i.ibb.co/60Fnbymf/file-0000000061b0820e8d6f930def5eedb9.png"}
+      race:"povo_aquatico",
+      male:"https://i.ibb.co/qFWcNhJG/file-00000000f014820e954413d3d309ae96.png",
+      female:"https://i.ibb.co/BKzMBd4n/file-000000008c00820ebf7da3010a79bf7c.png"
     },
     {
-      id:"duende", name:"Duende",
-      description:"Pequeno povo conhecido por sua astúcia e adaptação.",
-      profile:"Ágil e astuto", feature:"Pequeno porte",
-      height:{min:100,max:145}, lifespan:{min:12,max:120},
-      images:{default:"https://i.ibb.co/MXFmZPV/file-000000009fc8820eb5e47afc003f8d8a.png"}
+      race:"fada",
+      male:"https://i.ibb.co/HTZzCQM4/file-000000003eb4820ebb3f101b2dc9f0f3.png",
+      female:"https://i.ibb.co/Zp8z4NzH/file-00000000639c820e85562494fed2f3d6.png"
     },
     {
-      id:"fada", name:"Fada",
-      description:"Ser feérico associado à magia e às forças sobrenaturais.",
-      profile:"Leve e ágil", feature:"Afinidade feérica",
-      height:{min:90,max:140}, lifespan:{min:10,max:300},
-      images:{default:"https://i.ibb.co/HpGV9WV1/file-000000008aa8820ebf6e6b32135dc292.png"}
+      race:"duende",
+      male:"https://i.ibb.co/1Yh8qxJQ/file-00000000d1ec820eb0c562669244c953.png",
+      female:"https://i.ibb.co/HDYJtsDf/file-000000001ce8820ea3db1f6c8da1c8dd.png"
     },
     {
-      id:"povo_aquatico", name:"Povo Aquático",
-      description:"Povo adaptado a ambientes aquáticos.",
-      profile:"Adaptado à água", feature:"Adaptação aquática",
-      height:{min:145,max:205}, lifespan:{min:16,max:120},
-      images:{default:"https://i.ibb.co/gb1dwyq2/file-00000000a8f8820ea79c8c2115362a81.png"}
+      race:"vampiro",
+      male:"https://i.ibb.co/p6PfF563/file-0000000019dc820ea49a893a9831ffeb.png",
+      female:"https://i.ibb.co/JRX44rnH/file-000000008cfc820e827a7b8376d3fd55.png"
     },
     {
-      id:"povo_nuvens", name:"Povo das Nuvens",
-      description:"Povo associado aos céus e às regiões elevadas.",
-      profile:"Leve", feature:"Afinidade aérea",
-      height:{min:145,max:200}, lifespan:{min:16,max:150},
-      images:{default:"https://i.ibb.co/M51Tm6cw/file-0000000092dc820ea8776498f264996b.png"}
+      race:"centauro",
+      male:"https://i.ibb.co/zHmxKwLS/file-00000000e5c8820ebb67aa67f2d7a1b8.png",
+      female:"https://i.ibb.co/KcPtMvxt/file-000000007e1c820ebec26e736b57ba50.png"
     },
     {
-      id:"povo_natureza", name:"Povo da Natureza",
-      description:"Povo ligado à natureza e às suas forças.",
-      profile:"Ligado à natureza", feature:"Afinidade natural",
-      height:{min:140,max:205}, lifespan:{min:15,max:180},
-      images:{default:"https://i.ibb.co/v6JTzHG3/file-00000000f5d4820eb5b794068352ae82.png"}
+      race:"orc",
+      male:"https://i.ibb.co/1Jr9NxJf/file-00000000decc820e9cd0c4ace952b82c.png",
+      female:"https://i.ibb.co/fWFkyLS/file-00000000e724820ebbe72fa63e4e81e3.png"
     },
     {
-      id:"neraliano", name:"Neraliano",
-      description:"Povo adaptado a ambientes aquáticos e costeiros.",
-      profile:"Adaptável", feature:"Afinidade aquática",
-      height:{min:145,max:205}, lifespan:{min:16,max:130},
-      images:{default:"https://i.ibb.co/jPL8rwx4/file-000000005ebc820e97f528c06b313de7.png"}
+      race:"anao",
+      male:"https://i.ibb.co/RpJF2JFY/file-000000001824820e952c5a665ae3496f.png",
+      female:"https://i.ibb.co/39m7zLqY/file-00000000a4fc820e9bd0551b2472e125.png"
     },
     {
-      id:"aureano", name:"Aureano",
-      description:"Povo de forte presença e características singulares.",
-      profile:"Equilibrado", feature:"Características especiais",
-      height:{min:150,max:205}, lifespan:{min:18,max:220},
-      images:{}, imagesPending:true
+      race:"elfo",
+      male:"https://i.ibb.co/Zbk4qXM/file-00000000dcf8820e883635d6ca9de492.png",
+      female:"https://i.ibb.co/xq6Xz2dG/file-00000000495c820e99fc5de509918d90.png"
     },
     {
-      id:"colosso", name:"Colosso",
-      description:"Raça de porte colossal e presença física dominante.",
-      profile:"Colossal", feature:"Grande porte",
-      height:{min:220,max:320}, lifespan:{min:20,max:180},
-      images:{default:"https://i.ibb.co/RGDpDKGK/file-00000000a700820e959a65d93cf8831e.png"}
-    },
-    {
-      id:"troll", name:"Troll",
-      description:"Raça robusta de grande porte e extraordinária resistência.",
-      profile:"Resistente", feature:"Regeneração e robustez",
-      height:{min:200,max:280}, lifespan:{min:15,max:120},
-      images:{default:"https://i.ibb.co/WW7dJLzV/file-00000000039c820eac63bd8ff75f96db.png"}
-    },
-    {
-      id:"animalha", name:"Animalha",
-      description:"Humanoide de linhagem animal com características físicas próprias.",
-      profile:"Definido pela linhagem animal", feature:"Características animais",
-      height:{min:140,max:220}, lifespan:{min:1,max:100},
-      images:{}, lineage:"animalha"
+      race:"humano",
+      male:"https://i.ibb.co/rKGXTzDt/file-000000004b94820ead12a26ca92d75b7.png",
+      female:"https://i.ibb.co/ymbZDFh9/file-000000008b74820ea8b432fcf06ed975.png"
     }
   ];
+
+  const base = {
+    humano:["Humano","Versátil e equilibrado.","Equilibrado","Versatilidade",{min:150,max:200},{min:16,max:90}],
+    elfo:["Elfo","Povo ágil e perceptivo, ligado à natureza e à magia.","Ágil e perceptivo","Percepção elevada",{min:155,max:205},{min:18,max:500}],
+    anao:["Anão","Povo compacto e resistente.","Robusto","Resistência",{min:125,max:155},{min:20,max:250}],
+    orc:["Orc","Povo de estrutura poderosa.","Forte e robusto","Potência física",{min:175,max:225},{min:14,max:75}],
+    centauro:["Centauro","Povo de anatomia híbrida.","Potente e resistente","Anatomia híbrida",{min:180,max:230},{min:16,max:100}],
+    vampiro:["Vampiro","Ser sobrenatural de grande afinidade vital.","Sobrenatural","Natureza vampírica",{min:150,max:200},{min:18,max:500}],
+    duende:["Duende","Pequeno povo astuto e adaptável.","Ágil e astuto","Pequeno porte",{min:100,max:145},{min:12,max:120}],
+    fada:["Fada","Ser feérico ligado à magia.","Leve e ágil","Afinidade feérica",{min:90,max:140},{min:10,max:300}],
+    povo_aquatico:["Povo Aquático","Povo adaptado a ambientes aquáticos.","Adaptado à água","Adaptação aquática",{min:145,max:205},{min:16,max:120}],
+    povo_nuvens:["Povo das Nuvens","Povo associado aos céus.","Leve","Afinidade aérea",{min:145,max:200},{min:16,max:150}],
+    povo_natureza:["Povo da Natureza","Povo ligado à natureza.","Ligado à natureza","Afinidade natural",{min:140,max:205},{min:15,max:180}],
+    neraliano:["Neraliano","Povo adaptado a ambientes aquáticos e costeiros.","Adaptável","Afinidade aquática",{min:145,max:205},{min:16,max:130}],
+    aureano:["Aureano","Povo de forte presença e características singulares.","Equilibrado","Características especiais",{min:150,max:205},{min:18,max:220}],
+    colosso:["Colosso","Raça de porte colossal.","Colossal","Grande porte",{min:220,max:320},{min:20,max:180}]
+  };
+
+  const RACES = Object.entries(base).map(([id,v]) => {
+    const pair = pairImages.find(x => x.race === id);
+    return {
+      id,
+      name:v[0],
+      description:v[1],
+      profile:v[2],
+      feature:v[3],
+      height:v[4],
+      lifespan:v[5],
+      images: pair ? {masculino:pair.male,feminino:pair.female} : {},
+      imagesPending: !pair
+    };
+  });
+
+  RACES.push({
+    id:"animalha",
+    name:"Animalha",
+    description:"Humanoide de linhagem animal com características próprias.",
+    profile:"Definido pela linhagem animal",
+    feature:"Características animais",
+    height:{min:140,max:220},
+    lifespan:{min:1,max:100},
+    images:{},
+    lineage:"animalha"
+  });
 
   const ANIMALHA_CATEGORIES = [
     {id:"voadores",name:"Voadores",description:"Linhagens com características aéreas.",icon:"◇"},
@@ -144,85 +149,60 @@
     tubarao:{id:"tubarao",name:"Tubarão",category:"marinhos",lineage:"aquatico",lifespan:{min:20,max:70}}
   };
 
-  /*
-   * O lote anterior de oito imagens femininas permanece.
-   * A nova imagem enviada agora substitui exclusivamente a
-   * imagem da Ursa feminina.
-   *
-   * Não há no histórico atual do repositório um conjunto separado
-   * de imagens masculinas das linhagens Animalha; portanto o mapa
-   * masculino fica explicitamente vazio até essas imagens existirem.
-   */
-  const ANIMALHA_IMAGES = {
-    masculino: {},
-    feminino: {
-      gato:"https://i.ibb.co/7d0b1Z65/file-000000001b7c820e8a317d79973c8733.png",
-      pantera:"https://i.ibb.co/4gMPMqkp/file-00000000e4b0820eab531990258bbb09.png",
-      tigre:"https://i.ibb.co/zW6JnjPb/file-000000007a70820ea284e54236c00052.png",
-      leao:"https://i.ibb.co/fVfFL5ds/file-00000000b344820e9e39f31e92678a13.png",
-      lobo:"https://i.ibb.co/23GdF2Py/file-000000001e48820e9529b7.png".replace("1e48820e9529b7","1e48820ebbfa246147f05c6f"),
-      raposa:"https://i.ibb.co/gFFk7Kyv/file-00000000a170820eaf15f8650242c3c9.png",
-      urso:"https://i.ibb.co/JjycKsGL/file-000000000d84820eb2dee739ed2732a8.png",
-      falcao:"https://i.ibb.co/CpkBqzkC/file-00000000dee8820eb4f157009c1ceb5b.png"
-    }
-  };
-
-  function getRace(raceId){
-    const id=normalizeId(raceId);
-    return RACES.find((race)=>normalizeId(race.id)===id)||null;
+  function normalizeId(v){
+    return String(v??"").trim().toLowerCase()
+      .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+      .replace(/\s+/g,"_");
   }
-  function getAnimalha(animalId){
-    return ANIMALHA_ANIMALS[normalizeId(animalId)]||null;
-  }
+  function clone(v){return JSON.parse(JSON.stringify(v));}
+  function getRace(id){const n=normalizeId(id);return RACES.find(r=>normalizeId(r.id)===n)||null;}
+  function getAnimalha(id){return ANIMALHA_ANIMALS[normalizeId(id)]||null;}
   function getRaceImage(raceId,gender){
-    const race=getRace(raceId);
-    if(!race||race.id==="animalha") return "";
-    const female=["feminino","feminina","female","f"].includes(normalizeId(gender));
-    return race.images?.[female?"feminino":"masculino"]||race.images?.default||"";
-  }
-  function getAnimalhaImage(animalId,gender){
-    const animal=getAnimalha(animalId);
-    if(!animal) return "";
+    const race=getRace(raceId); if(!race)return "";
     const key=normalizeId(gender)==="feminino"?"feminino":"masculino";
-    return ANIMALHA_IMAGES?.[key]?.[animal.id]||"";
+    return race.images?.[key]||race.images?.default||"";
   }
-  function getRaceHeight(raceId){
-    const race=getRace(raceId);
+  function getAnimalhaImage(id,gender){
+    const animal=getAnimalha(id); if(!animal)return "";
+    return "";
+  }
+  function getRaceHeight(id){
+    const race=getRace(id);
     return race?.height ? {min:Number(race.height.min)||150,max:Number(race.height.max)||200}:{min:150,max:200};
   }
   function getAgeRange(raceId,animalhaId=""){
     const race=getRace(raceId);
     if(race?.id==="animalha"){
       const animal=getAnimalha(animalhaId);
-      if(animal?.lifespan) return {min:Number(animal.lifespan.min)||1,max:Number(animal.lifespan.max)||100};
+      if(animal?.lifespan)return clone(animal.lifespan);
     }
-    if(race?.lifespan) return {min:Number(race.lifespan.min)||1,max:Number(race.lifespan.max)||100};
-    return {min:1,max:100};
+    return race?.lifespan ? clone(race.lifespan) : {min:1,max:100};
   }
-  function getAnimalhaCategory(categoryId){
-    const id=normalizeId(categoryId);
-    return ANIMALHA_CATEGORIES.find((category)=>normalizeId(category.id)===id)||null;
+  function getAnimalhaCategory(id){
+    const n=normalizeId(id);
+    return ANIMALHA_CATEGORIES.find(c=>normalizeId(c.id)===n)||null;
   }
   function getAnimalhaAnimals(categoryId=""){
-    const id=normalizeId(categoryId);
+    const n=normalizeId(categoryId);
     const all=Object.values(ANIMALHA_ANIMALS);
-    return id ? clone(all.filter((animal)=>normalizeId(animal.category)===id)) : clone(all);
+    return clone(n?all.filter(a=>normalizeId(a.category)===n):all);
   }
 
   const API=Object.freeze({
-    version:VERSION,races:RACES,animalhaCategories:ANIMALHA_CATEGORIES,
-    animalhaAnimals:ANIMALHA_ANIMALS,ANIMALHA_IMAGES,
+    version:VERSION,
+    races:RACES,
+    animalhaCategories:ANIMALHA_CATEGORIES,
+    animalhaAnimals:ANIMALHA_ANIMALS,
     getRace,getRaceImage,getAnimalhaImage,getRaceHeight,getAgeRange,
     getAnimalhaCategory,getAnimalhaAnimals,getAnimalha,
-    hasRace:(id)=>Boolean(getRace(id)),
-    hasAnimalha:(id)=>Boolean(getAnimalha(id))
+    hasRace:id=>Boolean(getRace(id)),
+    hasAnimalha:id=>Boolean(getAnimalha(id))
   });
 
   window.AERIONPersonagemAssets=API;
   window.AERION_CHARACTER_ASSETS=API;
   window.AERION_RACES=RACES;
-
-  window.dispatchEvent(new CustomEvent("aerion:personagem-assets:ready",{
-    detail:{version:VERSION,raceCount:RACES.length,animalhaCategoryCount:ANIMALHA_CATEGORIES.length,animalhaCount:Object.keys(ANIMALHA_ANIMALS).length}
-  }));
+  window.dispatchEvent(new CustomEvent("aerion:personagem-assets:ready",{detail:{
+    version:VERSION,raceCount:RACES.length,animalhaCategoryCount:ANIMALHA_CATEGORIES.length,animalhaCount:Object.keys(ANIMALHA_ANIMALS).length
+  }}));
 })();
