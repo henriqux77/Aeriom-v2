@@ -5,7 +5,7 @@
 (() => {
   "use strict";
 
-  const VERSION = 11;
+  const VERSION = 12;
 
   /*
    * Conjunto visual atual:
@@ -139,7 +139,31 @@
     coruja:{id:"coruja",name:"Coruja",category:"voadores",lineage:"ave",lifespan:{min:10,max:25}},
     cobra:{id:"cobra",name:"Cobra",category:"reptilianos",lineage:"reptil",lifespan:{min:10,max:30}},
     crocodilo:{id:"crocodilo",name:"Crocodilo",category:"marinhos",lineage:"reptil",lifespan:{min:50,max:80}},
-    tubarao:{id:"tubarao",name:"Tubarão",category:"marinhos",lineage:"aquatico",lifespan:{min:20,max:70}}
+    tubarao:{id:"tubarao",name:"Tubarão",category:"marinhos",lineage:"aquatico",lifespan:{min:20,max:70}},
+    girafa:{id:"girafa",name:"Girafa",category:"grandes",lineage:"mamifero",lifespan:{min:15,max:25}},
+    macaco:{id:"macaco",name:"Macaco",category:"terrestres",lineage:"primata",lifespan:{min:15,max:30}}
+  };
+
+  const ANIMALHA_IMAGES = {
+    masculino: {
+      raposa:"https://i.ibb.co/60Fnbymf/file-0000000061b0820e8d6f930def5eedb9.png",
+      lobo:"https://i.ibb.co/MXFmZPV/file-000000009fc8820eb5e47afc003f8d8a.png",
+      tigre:"https://i.ibb.co/HpGV9WV1/file-000000008aa8820ebf6e6b32135dc292.png",
+      aguia:"https://i.ibb.co/gbP4Tx0x/file-00000000a8f8820ebc26c8d3c9".replace("gbP4Tx0x","a8f8820ea79c8c2115362a81"),
+      pantera:"https://i.ibb.co/M51Tm6cw/file-0000000092dc820ea8776498f264996b.png",
+      girafa:"https://i.ibb.co/v6JTzHG3/file-00000000f5d4820eb5b794068352ae82.png",
+      macaco:"https://i.ibb.co/jPL8rwx4/file-000000005ebc820e97f528c06b313de7.png",
+      leao:"https://i.ibb.co/RGDpDKGK/file-00000000a700820e959a65d93cf8831e.png",
+      urso:"https://i.ibb.co/WW7dJLzV/file-00000000039c820eac63bd8ff75f96db.png"
+    },
+    feminino: {
+      tubarao:"https://i.ibb.co/2Yp1J01b/file-00000000510c820eb14e273763781ffd.png",
+      crocodilo:"https://i.ibb.co/t5M1BgJ/file-000000007c58820e8a4c084fb8542cae.png",
+      cobra:"https://i.ibb.co/chRQM94X/file-00000000e93c820e9e75478047b40f16.png",
+      coruja:"https://i.ibb.co/7xwq3YW4/file-0000000004cc820ea14f552665c417de.png",
+      aguia:"https://i.ibb.co/zhG5JGyp/file-000000008c0c820e8ad3b4bddcf5764c.png",
+      urso:"https://i.ibb.co/2Yp1J01b/file-00000000510c820eb14e273763781ffd.png"
+    }
   };
 
   function normalizeId(v){
@@ -160,12 +184,9 @@
   }
 
   function getAnimalhaImage(animalId,gender){
-    /*
-     * As duas imagens do lote foram atribuídas à própria raça
-     * Animalha. A linhagem continua definindo a anatomia/regras;
-     * não há imagem de linhagem inventada.
-     */
-    return getRaceImage("animalha",gender);
+    const id=normalizeId(animalId);
+    const key=normalizeId(gender)==="feminino"?"feminino":"masculino";
+    return ANIMALHA_IMAGES?.[key]?.[id]||"";
   }
 
   function getRaceHeight(id){
