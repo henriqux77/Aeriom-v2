@@ -21,7 +21,8 @@ const TEST_CONFIG = Object.freeze({
     ["intelecto", "Intelecto"],
     ["percepcao", "Percepção"],
     ["presenca", "Presença"],
-    ["controle", "Controle"]
+    ["controle", "Controle"],
+    ["precisao", "Precisão"]
   ]),
   skills: Object.freeze([
     "Acrobacia",
