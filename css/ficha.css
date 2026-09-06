@@ -193,3 +193,66 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
   }
   .nav-center{width:60px;min-width:60px}
 }
+
+/* ============================================================
+   AERION V4 — CRIAÇÃO DE PERSONAGEM
+   A estética continua de ferramenta de RPG; a composição fica
+   mais próxima de uma ficha digital premium.
+   ============================================================ */
+body.aeriom-page--ficha{
+  background:
+    radial-gradient(circle at 80% 0,rgba(196,158,83,.05),transparent 28%),
+    radial-gradient(circle at 0 90%,rgba(77,48,36,.035),transparent 24%),
+    #080706;
+}
+.ficha-app{
+  background:linear-gradient(180deg,rgba(255,255,255,.006),transparent 18%);
+}
+.ficha-topbar{
+  border-bottom-color:rgba(196,158,83,.08);
+  background:rgba(8,7,6,.90);
+  backdrop-filter:blur(18px);
+}
+.creation-panel{
+  position:relative;
+  overflow:hidden;
+  border:1px solid rgba(196,158,83,.10);
+  border-radius:18px;
+  background:
+    radial-gradient(circle at 100% 0,rgba(196,158,83,.045),transparent 28%),
+    linear-gradient(145deg,rgba(255,255,255,.020),rgba(255,255,255,.007));
+  box-shadow:0 20px 52px rgba(0,0,0,.18);
+}
+.creation-panel::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  border-radius:inherit;
+  background:linear-gradient(90deg,rgba(196,158,83,.018),transparent 26%,transparent 74%,rgba(196,158,83,.012));
+}
+.creation-panel>*{position:relative;z-index:1}
+.heading h2{letter-spacing:-.025em}
+.character-strip{
+  border-color:rgba(196,158,83,.10);
+  background:
+    radial-gradient(circle at 0 0,rgba(196,158,83,.05),transparent 35%),
+    rgba(255,255,255,.012);
+}
+.progress-panel{
+  border-color:rgba(196,158,83,.09);
+}
+.creation-navigation{
+  border:1px solid rgba(196,158,83,.10);
+  border-radius:14px;
+  background:rgba(9,8,7,.92);
+  box-shadow:0 14px 38px rgba(0,0,0,.18);
+  backdrop-filter:blur(14px);
+}
+@media(max-width:700px){
+  .creation-panel{border-radius:15px}
+  .creation-navigation{
+    margin-left:2px;
+    margin-right:2px;
+  }
+}
