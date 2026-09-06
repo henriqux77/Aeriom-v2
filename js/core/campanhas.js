@@ -2598,10 +2598,10 @@ async function handleLogout() {
 
 function bindEvents() {
 
-  $("[data-campaign-filter]").forEach((button) => {
+  document.querySelectorAll("[data-campaign-filter]").forEach((button) => {
     button.addEventListener("click", () => {
       state.filter = button.dataset.campaignFilter || "all";
-      $("[data-campaign-filter]").forEach((item) => item.classList.toggle("is-active", item === button));
+      document.querySelectorAll("[data-campaign-filter]").forEach((item) => item.classList.toggle("is-active", item === button));
       renderCampaigns();
     });
   });
