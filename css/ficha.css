@@ -549,3 +549,210 @@ body.aeriom-page--character{
 .mana-colors__grid{
   align-items:stretch;
 }
+
+
+/* ============================================================
+   PODER & MANA — painel visual
+   ============================================================ */
+.mana-card{
+  grid-column:1/-1;
+  grid-template-columns:76px minmax(0,1fr) 96px;
+  grid-template-rows:auto auto;
+  align-items:center;
+  gap:10px 12px;
+  min-width:0;
+  padding:13px;
+  overflow:hidden;
+  border-color:rgba(91,147,226,.17);
+  background:
+    radial-gradient(circle at 0 0,rgba(83,154,255,.075),transparent 34%),
+    linear-gradient(135deg,rgba(25,55,96,.16),rgba(13,12,11,.96) 58%);
+}
+.mana-orb{
+  width:68px;
+  height:68px;
+  border-color:rgba(120,169,255,.38);
+  box-shadow:inset 0 0 22px rgba(90,138,255,.08),0 0 26px rgba(57,116,196,.08);
+}
+.mana-copy{
+  min-width:0;
+}
+.mana-copy span,
+.mana-mini span{
+  letter-spacing:.12em;
+}
+.mana-copy h3{
+  margin:3px 0 4px;
+  color:var(--fx-text);
+  font-size:19px;
+}
+.mana-copy p{
+  max-width:44ch;
+  color:var(--fx-muted);
+  font-size:7px;
+  line-height:1.45;
+}
+.mana-mini{
+  display:grid;
+  gap:4px;
+  min-width:0;
+}
+.mana-mini span{
+  text-align:right;
+}
+.mana-mini input{
+  width:100%;
+  border:1px solid rgba(91,147,226,.20);
+  border-radius:9px;
+  background:rgba(33,63,101,.10);
+  color:var(--fx-soft);
+  font-size:12px;
+  font-weight:800;
+}
+.mana-colors{
+  grid-column:1/-1;
+  display:grid;
+  gap:8px;
+  min-width:0;
+  margin-top:2px;
+  padding-top:10px;
+  border-top:1px solid rgba(91,147,226,.12);
+}
+.mana-colors__head{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:12px;
+}
+.mana-colors__head>span{
+  color:#75a7ed;
+  font-size:6px;
+  font-weight:900;
+  letter-spacing:.13em;
+}
+.mana-colors__head>small{
+  max-width:72%;
+  color:var(--fx-muted);
+  font-size:6px;
+  line-height:1.4;
+  text-align:right;
+}
+.mana-colors__grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+  gap:7px;
+  min-width:0;
+}
+.mana-color{
+  appearance:none;
+  width:100%;
+  min-width:0;
+  min-height:54px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:8px 10px;
+  border:1px solid var(--fx-line);
+  border-radius:10px;
+  background:linear-gradient(135deg,rgba(255,255,255,.018),rgba(45,111,202,.018));
+  color:var(--fx-soft);
+  text-align:left;
+  cursor:pointer;
+  transition:border-color .16s ease,background .16s ease,transform .16s ease,box-shadow .16s ease;
+}
+.mana-color:hover{
+  border-color:rgba(91,147,226,.35);
+  background:linear-gradient(135deg,rgba(91,147,226,.07),rgba(255,255,255,.018));
+  transform:translateY(-1px);
+}
+.mana-color.is-active{
+  border-color:rgba(91,147,226,.52);
+  background:linear-gradient(135deg,rgba(64,119,190,.16),rgba(255,255,255,.02));
+  box-shadow:0 0 0 1px rgba(91,147,226,.08),0 8px 22px rgba(29,76,132,.10);
+}
+.mana-color>i{
+  flex:0 0 25px;
+  width:25px;
+  height:25px;
+  display:grid;
+  place-items:center;
+  border-radius:50%;
+  border:1px solid rgba(190,225,255,.20);
+  background:radial-gradient(circle at 35% 28%,#d9efff 0 10%,#66aeff 30%,#2d70ca 62%,#102745 100%);
+  box-shadow:0 0 12px rgba(83,154,255,.26);
+  color:#bddfff;
+  font-style:normal;
+  font-size:9px;
+}
+.mana-color span{
+  min-width:0;
+  display:grid;
+  gap:2px;
+}
+.mana-color strong{
+  display:block;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  color:var(--fx-text);
+  font-size:8px;
+}
+.mana-color small{
+  display:block;
+  color:var(--fx-muted);
+  font-size:6px;
+  line-height:1.35;
+}
+.mana-color--locked{
+  cursor:default;
+  border-style:dashed;
+  opacity:.78;
+  background:rgba(255,255,255,.012);
+}
+.mana-color--locked:hover{
+  transform:none;
+  border-color:var(--fx-line);
+  background:rgba(255,255,255,.012);
+}
+.mana-color--locked>i{
+  background:rgba(255,255,255,.025);
+  color:var(--fx-muted);
+  box-shadow:none;
+}
+@media(max-width:700px){
+  .mana-card{
+    grid-template-columns:62px minmax(0,1fr);
+    grid-template-rows:auto auto auto;
+    gap:9px 10px;
+  }
+  .mana-copy h3{font-size:18px}
+  .mana-mini{
+    grid-column:1/-1;
+  }
+  .mana-mini span{
+    text-align:left;
+  }
+  .mana-colors{
+    grid-column:1/-1;
+  }
+  .mana-colors__head{
+    align-items:flex-start;
+    flex-direction:column;
+    gap:4px;
+  }
+  .mana-colors__head>small{
+    max-width:none;
+    text-align:left;
+  }
+  .mana-colors__grid{
+    grid-template-columns:1fr;
+  }
+  .mana-color{
+    min-height:50px;
+  }
+}
+@media(max-width:390px){
+  .mana-card{
+    grid-template-columns:54px minmax(0,1fr)!important;
+  }
+}
