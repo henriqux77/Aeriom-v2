@@ -7,6 +7,7 @@
  */
 
 const MENU_CONFIG = Object.freeze({
+  bindCommandPaletteShortcuts();
 
   sidebarStorageKey:
     "aeriom_sidebar_collapsed",
@@ -1688,4 +1689,124 @@ if (
 
   initializeMenu();
 
+}function ensureCommandPalette() {
+  if (document.getElementById("aeriom-command-palette")) return;
+
+  const panel = document.createElement("div");
+  panel.id = "aeriom-command-palette";
+  panel.className = "aeriom-command-palette";
+  panel.hidden = true;
+  panel.innerHTML = `
+    <div class="aeriom-command-backdrop" data-command-close></div>
+    <section class="aeriom-command-dialog" role="dialog" aria-modal="true" aria-labelledby="aeriom-command-title">
+      <div class="aeriom-command-head">
+        <div><span>ATALHO DA MESA</span><strong id="aeriom-command-title">Pesquisar no AERION</strong></div>
+        <button type="button" data-command-close aria-label="Fechar">×</button>
+      </div>
+      <label class="aeriom-command-input">
+        <span aria-hidden="true">⌕</span>
+        <input id="aeriom-command-search" type="search" placeholder="Buscar ferramenta, página ou aba…" autocomplete="off">
+        <kbd>ESC</kbd>
+      </label>
+      <div id="aeriom-command-results" class="aeriom-command-results"></div>
+      <small class="aeriom-command-help">Ctrl/⌘ K ou / para abrir · ↑ ↓ para navegar · Enter para abrir</small>
+    </section>
+  `;
+  document.body.appendChild(panel);
+
+  const items = [
+    ["Campanhas","Abrir sua biblioteca de campanhas","./campanhas.html"],
+    ["Minhas Fichas","Abrir personagens salvos","./minhas-fichas.html"],
+    ["Livro do AERION","Consultar regras e pesquisar no livro","./livro.html"],
+    ["Mesa","Voltar para a campanha atual","__campaign__"]
+  ];
+
+  function campaignItems() {
+    return [...document.querySelectorAll("[data-campaign-tab]")].map((el) => [
+      String(el.textContent || "").replace(/\s+/g," ").trim(),
+      "Abrir esta ferramenta na mesa",
+      "__tab__:" + (el.dataset.campaignTab || "")
+    ]);
+  }
+
+  const input = panel.querySelector("#aeriom-command-search");
+  const results = panel.querySelector("#aeriom-command-results");
+  let active = 0;
+
+  function close() {
+    panel.hidden = true;
+    document.body.classList.remove("aeriom-command-open");
+  }
+
+  function open() {
+    panel.hidden = false;
+    document.body.classList.add("aeriom-command-open");
+    input.value = "";
+    active = 0;
+    render();
+    requestAnimationFrame(() => input.focus());
+  }
+
+  function allItems() {
+    return location.pathname.includes("campanha.html")
+      ? items.concat(campaignItems())
+      : items.filter(([name,,href]) => href !== "__campaign__");
+  }
+
+  function render() {
+    const q = input.value.trim().toLowerCase();
+    const list = allItems().filter(([name,desc]) => (name+" "+desc).toLowerCase().includes(q));
+    active = Math.min(active, Math.max(0,list.length-1));
+    results.replaceChildren();
+
+    list.forEach(([name,desc,target],index) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = index === active ? "is-active" : "";
+      button.innerHTML = `<strong>${name}</strong><span>${desc}</span>`;
+      button.addEventListener("click",()=> {
+        close();
+        if (target.startsWith("__tab__:")) {
+          document.querySelector(`[data-campaign-tab="${target.slice(8)}"]`)?.click();
+        } else if (target === "__campaign__") {
+          const id = new URLSearchParams(location.search).get("campaign");
+          if (id) location.href = \`./campanha.html?campaign=${encodeURIComponent(id)}\`;
+        } else {
+          location.href = target;
+        }
+      });
+      results.appendChild(button);
+    });
+  }
+
+  input.addEventListener("input", render);
+  input.addEventListener("keydown", (event) => {
+    const buttons = [...results.querySelectorAll("button")];
+    if (event.key === "ArrowDown") { event.preventDefault(); active=Math.min(active+1,buttons.length-1); render(); }
+    if (event.key === "ArrowUp") { event.preventDefault(); active=Math.max(active-1,0); render(); }
+    if (event.key === "Enter") { event.preventDefault(); buttons[active]?.click(); }
+    if (event.key === "Escape") close();
+  });
+  panel.addEventListener("click",(event)=>{ if(event.target.closest("[data-command-close]")) close(); });
+
+  window.AERIONCommand = { open, close };
 }
+
+function bindCommandPaletteShortcuts() {
+  if (window.__AERIONCommandBound) return;
+  window.__AERIONCommandBound = true;
+  ensureCommandPalette();
+
+  document.addEventListener("keydown",(event) => {
+    const key = String(event.key || "").toLowerCase();
+    if ((event.ctrlKey || event.metaKey) && key === "k") {
+      event.preventDefault();
+      window.AERIONCommand.open();
+    } else if (key === "/" && !event.ctrlKey && !event.metaKey && !["INPUT","TEXTAREA","SELECT"].includes(document.activeElement?.tagName)) {
+      event.preventDefault();
+      window.AERIONCommand.open();
+    }
+  });
+}
+
+
