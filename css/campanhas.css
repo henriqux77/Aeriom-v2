@@ -4313,3 +4313,134 @@ textarea:focus-visible {
 @media(prefers-reduced-motion:reduce){
   .campaigns-grid .campaign-card{animation:none}
 }
+
+/* ============================================================
+   AERION V6 — MINHAS FICHAS / ARQUIVO
+   ============================================================ */
+.mf-page{
+  position:relative;
+  width:min(1180px,100%);
+  margin:0 auto;
+  padding:24px 20px 58px;
+}
+.mf-page::before{
+  content:"";
+  position:fixed;
+  top:0;
+  right:0;
+  width:48vw;
+  height:42vh;
+  pointer-events:none;
+  background:radial-gradient(circle,rgba(196,158,83,.045),transparent 68%);
+}
+.mf-head{
+  position:relative;
+  align-items:center;
+  padding-bottom:14px;
+  border-bottom:1px solid rgba(196,158,83,.08);
+}
+.mf-head h1{
+  letter-spacing:-.03em;
+}
+.mf-head p{
+  max-width:620px;
+  line-height:1.65;
+}
+.mf-actions{
+  justify-content:flex-end;
+}
+.mf-btn{
+  min-height:40px;
+  border-color:rgba(196,158,83,.12);
+}
+.mf-btn.primary{
+  background:linear-gradient(135deg,#ddbd68,#b08840);
+  box-shadow:0 12px 28px rgba(0,0,0,.20);
+}
+.mf-hero{
+  position:relative;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  align-items:center;
+  gap:18px;
+  margin:14px 0;
+  padding:16px 18px;
+  border-color:rgba(196,158,83,.10);
+  background:
+    radial-gradient(circle at 95% 10%,rgba(196,158,83,.08),transparent 30%),
+    linear-gradient(145deg,rgba(255,255,255,.022),rgba(255,255,255,.007));
+}
+.mf-hero::after{
+  content:"ARQUIVO";
+  position:absolute;
+  right:16px;
+  bottom:10px;
+  color:rgba(196,158,83,.07);
+  font:700 42px Georgia,serif;
+  letter-spacing:.08em;
+  pointer-events:none;
+}
+.mf-hero strong{
+  font-size:18px;
+}
+.mf-toolbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding:0 2px 8px;
+}
+.mf-filter{
+  min-height:38px;
+}
+.mf-grid{
+  position:relative;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px;
+}
+.mf-card{
+  position:relative;
+  min-height:146px;
+  padding:11px;
+  border-color:rgba(196,158,83,.09);
+  background:
+    radial-gradient(circle at 0 0,rgba(196,158,83,.04),transparent 34%),
+    linear-gradient(145deg,rgba(255,255,255,.022),rgba(255,255,255,.007));
+  transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease;
+}
+.mf-card:hover{
+  transform:translateY(-2px);
+  border-color:rgba(196,158,83,.18);
+  box-shadow:0 20px 44px rgba(0,0,0,.20);
+}
+.mf-avatar{
+  border-color:rgba(196,158,83,.18);
+  background:
+    radial-gradient(circle at 50% 36%,rgba(196,158,83,.10),transparent 55%),
+    #120f0c;
+  font-size:28px;
+}
+.mf-title{
+  letter-spacing:-.015em;
+}
+.mf-meta{
+  line-height:1.65;
+}
+.mf-status{
+  box-shadow:inset 0 0 0 1px rgba(196,158,83,.04);
+}
+.mf-card .mf-btn{
+  min-height:32px;
+}
+@media(max-width:760px){
+  .mf-page{padding:15px 11px 34px}
+  .mf-head{align-items:stretch}
+  .mf-head>.mf-actions{display:grid;grid-template-columns:1fr 1.2fr}
+  .mf-hero{grid-template-columns:1fr;padding:13px 14px}
+  .mf-hero::after{display:none}
+  .mf-grid{grid-template-columns:1fr}
+}
+@media(max-width:420px){
+  .mf-head>.mf-actions{grid-template-columns:1fr}
+  .mf-card{grid-template-columns:58px minmax(0,1fr)}
+}
