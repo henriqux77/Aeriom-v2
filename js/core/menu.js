@@ -7,9 +7,7 @@
  */
 
 const MENU_CONFIG = Object.freeze({
-  bindCommandPaletteShortcuts();
-
-  sidebarStorageKey:
+sidebarStorageKey:
     "aeriom_sidebar_collapsed",
 
   mobileBreakpoint:
@@ -1536,6 +1534,7 @@ export function initializeMenu() {
     bindNavigation();
 
     bindGlobalEvents();
+    bindCommandPaletteShortcuts();
 
     restoreSidebarState();
 
