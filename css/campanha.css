@@ -2668,23 +2668,6 @@
   color:var(--table-text);
   font:500 13px Cinzel,Georgia,serif;
 }
-.campaign-table-hud__live{
-  display:inline-flex;
-  align-items:center;
-  gap:5px;
-  padding:4px 7px;
-  border:1px solid rgba(93,140,99,.18);
-  border-radius:999px;
-  color:#93c49a;
-  background:rgba(93,140,99,.055);
-  font-size:6px;
-  font-weight:900;
-  letter-spacing:.14em;
-}
-.campaign-table-hud__live i{
-  width:5px;height:5px;border-radius:50%;background:#83ba89;
-  box-shadow:0 0 0 4px rgba(93,140,99,.08);
-}
 .campaign-table-hud__metrics{
   display:flex;
   align-items:center;
