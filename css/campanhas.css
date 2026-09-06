@@ -3967,3 +3967,37 @@ textarea:focus-visible {
 @media(prefers-reduced-motion:reduce){
  .campaigns-nav-item,.campaigns-card,.campaign-card,.mf-btn{transition:none!important}
 }
+
+/* ============================================================
+   CAMPANHAS V3 — ferramenta, não dashboard
+   ============================================================ */
+.campaigns-main{background:
+  linear-gradient(180deg,rgba(255,255,255,.006),transparent 22%),
+  transparent;
+}
+.campaigns-content{width:min(1180px,100%);margin:0 auto}
+.campaigns-heading{padding-bottom:6px}
+.campaigns-heading__title{letter-spacing:-.025em}
+.campaigns-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.campaign-card{display:grid;grid-template-columns:145px minmax(0,1fr);min-width:0;overflow:hidden;border:1px solid rgba(196,158,83,.10);border-radius:16px;background:linear-gradient(145deg,rgba(255,255,255,.028),rgba(255,255,255,.008));box-shadow:0 16px 36px rgba(0,0,0,.12)}
+.campaign-card__cover{min-height:190px}
+.campaign-card__content{display:flex;flex-direction:column;min-width:0;padding:15px}
+.campaign-card__description{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden}
+.campaign-card__footer{margin-top:auto;padding-top:12px}
+.campaign-card__open{min-height:38px}
+@media(max-width:900px){
+ .campaigns-grid{grid-template-columns:1fr}
+ .campaign-card{grid-template-columns:118px minmax(0,1fr)}
+ .campaign-card__cover{min-height:164px}
+}
+@media(max-width:560px){
+ .campaigns-main{padding-bottom:calc(20px + env(safe-area-inset-bottom))}
+ .campaigns-content{padding-left:11px;padding-right:11px}
+ .campaigns-heading__title{font-size:31px}
+ .campaign-card{grid-template-columns:88px minmax(0,1fr);border-radius:14px}
+ .campaign-card__cover{min-height:138px}
+ .campaign-card__content{padding:11px}
+ .campaign-card__title{font-size:17px}
+ .campaign-card__description{font-size:8px}
+ .campaign-card__open{min-height:40px}
+}
