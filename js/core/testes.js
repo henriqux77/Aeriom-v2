@@ -144,6 +144,17 @@ function buildCharacterSelect(select) {
   });
 
   select.value = current;
+
+  const edit = $("aeriom-test-character-edit");
+  if (edit) {
+    if (select.value) {
+      edit.href = `./fichas.html?id=${encodeURIComponent(select.value)}`;
+      edit.hidden = false;
+    } else {
+      edit.hidden = true;
+      edit.removeAttribute("href");
+    }
+  }
 }
 
 function ensureTestsPanel() {
