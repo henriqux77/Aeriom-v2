@@ -425,3 +425,33 @@ body.aeriom-page--character{
 @media(max-width:390px){
   .choice-grid.three{grid-template-columns:1fr 1fr}
 }
+
+/* Navegação da criação — ações simétricas */
+.creation-navigation{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) minmax(74px,100px) minmax(0,1fr)!important;
+  align-items:center;
+  gap:8px;
+}
+.creation-navigation>.nav-secondary,
+.creation-navigation>.nav-primary{
+  width:100%!important;
+  min-width:0!important;
+  min-height:44px!important;
+  height:44px!important;
+  display:inline-flex!important;
+  align-items:center;
+  justify-content:center;
+  padding:0 14px!important;
+  box-sizing:border-box;
+  border-radius:10px!important;
+  font-size:8px!important;
+  line-height:1!important;
+}
+.creation-navigation>.nav-secondary{justify-self:stretch}
+.creation-navigation>.nav-primary{justify-self:stretch}
+@media(max-width:520px){
+  .creation-navigation{grid-template-columns:minmax(0,1fr) 70px minmax(0,1fr)!important;gap:6px}
+  .creation-navigation>.nav-secondary,
+  .creation-navigation>.nav-primary{min-height:44px!important;height:44px!important;padding:0 10px!important}
+}
