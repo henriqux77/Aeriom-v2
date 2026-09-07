@@ -143,6 +143,24 @@ function normalizeDieFromCharacter(character, attributeKey){
   return normalizeDieFromState(state.characterStates.get(String(character?.id))||character?.creationState||character?.creation_state||character,attributeKey);
 }
 
+async function loadCharacterStates() {
+  if (!state.supabase) return;
+  const characters = getCharacters();
+  const ids = characters.map((character) => String(character.id)).filter(Boolean);
+  if (!ids.length) return;
+  const { data, error } = await state.supabase
+    .from("characters")
+    .select("id,creation_state")
+    .in("id", ids);
+  if (error) {
+    console.warn("[AERION][TESTS] Não foi possível carregar os estados das fichas.", error);
+    return;
+  }
+  (data || []).forEach((row) => {
+    state.characterStates.set(String(row.id), row.creation_state || {});
+  });
+}
+
 function buildCharacterSelect(select) {
   if (!select) return;
 
