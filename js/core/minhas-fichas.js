@@ -23,7 +23,7 @@ import { getSupabase } from "./supabase.js";
 
   async function avatarUrl(row) { const path=String(row?.creation_state?.avatar||row?.avatar_path||"").trim(); if(!path) return ""; try { const r=await supabase.storage.from("avatars").createSignedUrl(path,3600); return r.data?.signedUrl||""; } catch { return ""; } }
 
-  async function title(row) {
+  function title(row) {
     return String(row.name || "Ficha sem nome").trim() || "Ficha sem nome";
   }
 
