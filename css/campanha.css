@@ -3017,3 +3017,27 @@
     top:58px!important;
   }
 }
+
+/* AERION — topbar mobile realmente centralizada */
+@media (max-width:980px){
+  .aeriom-page--campaign .campaign-mobile-topbar{
+    position:fixed!important;top:0!important;left:0!important;right:0!important;
+    display:grid!important;grid-template-columns:40px minmax(0,1fr) 40px!important;
+    align-items:center!important;width:100%!important;box-sizing:border-box!important;
+    min-height:58px!important;padding:0 10px!important;z-index:10000!important;
+  }
+  .aeriom-page--campaign .campaign-mobile-topbar__center{
+    grid-column:2!important;justify-self:center!important;align-items:center!important;
+    width:min(70vw,260px)!important;min-width:0!important;text-align:center!important;
+    padding:0!important;
+  }
+  .aeriom-page--campaign .campaign-mobile-topbar__eyebrow,
+  .aeriom-page--campaign .campaign-mobile-topbar__title{
+    text-align:center!important;width:100%!important;
+  }
+  .aeriom-page--campaign .campaign-mobile-topbar__title{
+    max-width:100%!important;
+  }
+  .aeriom-page--campaign #campaign-mobile-actions-button{grid-column:3;justify-self:end}
+  .aeriom-page--campaign #campaign-mobile-menu-button{grid-column:1;justify-self:start}
+}
