@@ -52,7 +52,8 @@ const state = {
   membership: null,
   requests: [],
   realtimeChannel: null,
-  selectedRequestId: null
+  selectedRequestId: null,
+  characterStates: new Map()
 };
 
 const $ = (id) => document.getElementById(id);
@@ -112,18 +113,37 @@ function attributeName(key) {
 }
 
 function normalizeDieFromCharacter(character, attributeKey) {
-  const attrs = character?.attributes || {};
-  const raw = attrs?.[attributeKey];
-
+  const state = statefulCharacterState(character);
+  const assigned = state?.assignedDice || state?.attributes || character?.attributes || {};
+  const raw = assigned?.[attributeKey];
   const candidate =
     typeof raw === "string"
       ? raw
       : raw?.die || raw?.dieType || raw?.type || raw?.sides;
-
   const match = String(candidate ?? "").match(/\d+/);
   const die = Number(match?.[0]);
-
   return TEST_CONFIG.allowedDice.includes(die) ? die : null;
+}
+
+function statefulCharacterState(character) {
+  if (!character?.id) return null;
+  return state.characterStates.get(String(character.id)) || character?.creationState || null;
+}
+
+async function loadCharacterStates() {
+  if (!state.supabase) return;
+  const characters = getCharacters();
+  const ids = characters.map(c => String(c.id)).filter(Boolean);
+  if (!ids.length) return;
+  const { data, error } = await state.supabase
+    .from("characters")
+    .select("id,creation_state")
+    .in("id", ids);
+  if (error) {
+    console.warn("[AERION][TESTS] Falha ao carregar atributos das fichas.", error);
+    return;
+  }
+  (data || []).forEach(row => state.characterStates.set(String(row.id), row.creation_state || {}));
 }
 
 function buildCharacterSelect(select) {
@@ -413,6 +433,7 @@ async function performTest() {
   const dice = window.AERIOM_DICE;
   if (!dice?.roll) throw new Error("Motor de dados ainda não está pronto.");
 
+  await loadCharacterStates();
   const data = getSelectedTestData();
 
   const roll = await dice.roll({
@@ -440,6 +461,7 @@ async function requestTest() {
   if (!isMaster()) throw new Error("Somente o Mestre pode solicitar testes.");
 
   readContext();
+  await loadCharacterStates();
   const data = getSelectedTestData();
 
   const payload = {
@@ -564,6 +586,7 @@ async function resolveRequest(requestId) {
 
   const character = getCharacters().find((c) => String(c.id) === String(request.character_id));
   if (!character) throw new Error("Personagem do teste não está disponível nesta sessão.");
+  await loadCharacterStates();
 
   const attribute = request.attribute_key || request.test_type;
   const die = normalizeDieFromCharacter(character, attribute);
@@ -717,6 +740,8 @@ async function init() {
   ensureTestsPanel();
   readContext();
   buildCharacterSelect($("aeriom-test-character"));
+  loadCharacterStates().catch(()=>{});
+  await loadCharacterStates();
   buildRequestCharacterSelect();
   renderRequestAttributes();
   renderSkills();
