@@ -137,6 +137,31 @@
 <div class="power-grid">
 <article class="power-roll"><div class="power-roll-head"><div><span>DESTINO ELEMENTAL</span><h3>D100</h3></div><strong id="power-roll-result">—</strong></div><p>01–25 Fogo · 26–50 Terra · 51–75 Água · 76–100 Ar.</p><button type="button" class="primary-action" data-action="roll-power">✦ Girar D100</button></article>
 <article><span>PODER INCOMUM</span><h3>Escolha diretamente</h3><div id="uncommon-powers" class="choice-grid two"></div></article>
+<article class="elemental-master-card" id="elemental-master-card" hidden>
+  <div class="elemental-master-head">
+    <div>
+      <span>SEU MESTRE ELEMENTAL</span>
+      <h3 id="elemental-master-title">Mestre</h3>
+      <p id="elemental-master-element">—</p>
+    </div>
+    <span class="elemental-master-badge">PET / MESTRE</span>
+  </div>
+  <div class="elemental-master-content">
+    <div class="elemental-master-portrait">
+      <img id="elemental-master-image" alt="" hidden>
+      <div id="elemental-master-placeholder" aria-hidden="true">✦</div>
+    </div>
+    <div class="elemental-master-form">
+      <div class="elemental-master-default">
+        <span>MESTRE DEFINIDO PELO ELEMENTO</span>
+        <strong id="elemental-master-species">—</strong>
+      </div>
+      <label>Nome do Mestre<input id="elemental-master-name" data-master-field="name" maxlength="80" placeholder="Escolha um nome"></label>
+      <label>Personalidade<textarea id="elemental-master-personality" data-master-field="personality" rows="3" maxlength="500" placeholder="Como esse mestre se comporta com você?"></textarea></label>
+      <label>Aparência<textarea id="elemental-master-appearance" data-master-field="appearance" rows="3" maxlength="700" placeholder="Personalize a aparência do seu mestre."></textarea></label>
+    </div>
+  </div>
+</article>
 <article class="power-custom"><span>OUTRO PODER</span><h3>Criação própria</h3><label>Nome<input data-power="customPower" maxlength="120" placeholder="Nome do poder"></label><label>Descrição<textarea data-power="customDescription" rows="4" maxlength="1200" placeholder="Explique a ideia, aparência ou limitações."></textarea></label></article>
 <article class="mana-card"><div class="mana-orb"><div class="mana-flame" aria-hidden="true"><span></span><i></i><b></b></div><strong class="mana-orb-value" id="mana-value">0</strong><span>MAX</span></div><div class="mana-copy"><span>RESERVA DA CLASSE</span><h3>Mana</h3><p id="mana-class-label">Escolha uma classe.</p></div><div class="mana-mini"><span>ATUAL</span><input id="mana-current" data-mana="current" type="number" min="0" inputmode="numeric"></div><div class="mana-colors"><div class="mana-colors__head"><span>COR DA MANA</span><small id="mana-colors-help">Na criação, somente Azul está liberada.</small></div><div id="mana-colors-grid" class="mana-colors__grid"></div></div></article>
 </div><div id="power-summary" class="context-card" hidden></div>
