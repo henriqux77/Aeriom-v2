@@ -321,7 +321,8 @@ import { getSupabase } from "./supabase.js";
           mana_max,
           defense,
           movement,
-          status
+          status,
+          creation_state
         )
       `)
       .eq("campaign_id",campaignId)
@@ -362,7 +363,7 @@ import { getSupabase } from "./supabase.js";
       card.className="aerion-campaign-character-card";
       card.innerHTML=`
         <div class="aerion-campaign-character-avatar">
-          ${esc(String(c.name||"?").slice(0,1).toUpperCase())}
+          ${avatar ? `<img src="${esc(avatar)}" alt="">` : esc(String(c.name||"?").slice(0,1).toUpperCase())}
         </div>
         <div>
           <strong>${esc(c.name||"Personagem")}</strong>
