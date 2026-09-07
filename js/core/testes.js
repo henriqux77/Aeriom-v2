@@ -112,38 +112,35 @@ function attributeName(key) {
   return TEST_CONFIG.attributes.find(([id]) => id === key)?.[1] || key;
 }
 
-function normalizeDieFromCharacter(character, attributeKey) {
-  const state = statefulCharacterState(character);
-  const assigned = state?.assignedDice || state?.attributes || character?.attributes || {};
-  const raw = assigned?.[attributeKey];
-  const candidate =
-    typeof raw === "string"
-      ? raw
-      : raw?.die || raw?.dieType || raw?.type || raw?.sides;
-  const match = String(candidate ?? "").match(/\d+/);
-  const die = Number(match?.[0]);
-  return TEST_CONFIG.allowedDice.includes(die) ? die : null;
-}
-
-function statefulCharacterState(character) {
-  if (!character?.id) return null;
-  return state.characterStates.get(String(character.id)) || character?.creationState || null;
-}
-
-async function loadCharacterStates() {
-  if (!state.supabase) return;
-  const characters = getCharacters();
-  const ids = characters.map(c => String(c.id)).filter(Boolean);
-  if (!ids.length) return;
-  const { data, error } = await state.supabase
-    .from("characters")
-    .select("id,creation_state")
-    .in("id", ids);
-  if (error) {
-    console.warn("[AERION][TESTS] Falha ao carregar atributos das fichas.", error);
-    return;
+async function resolveCharacterState(character){
+  if(!character?.id)return null;
+  const id=String(character.id);
+  const cached=state.characterStates.get(id);
+  if(cached?.assignedDice)return cached;
+  if(character.creationState?.assignedDice)return character.creationState;
+  if(character.creation_state?.assignedDice)return character.creation_state;
+  if(!state.supabase)return null;
+  const {data,error}=await state.supabase.from("characters").select("id,creation_state").eq("id",id).maybeSingle();
+  if(error){
+    console.warn("[AERION][TESTS] Não foi possível ler a ficha do personagem.",error);
+    return null;
   }
-  (data || []).forEach(row => state.characterStates.set(String(row.id), row.creation_state || {}));
+  const value=data?.creation_state||null;
+  if(value)state.characterStates.set(id,value);
+  return value;
+}
+
+function normalizeDieFromState(characterState, attributeKey){
+  const assigned=characterState?.assignedDice||characterState?.attributes||{};
+  const raw=assigned?.[attributeKey];
+  const candidate=typeof raw==="string"?raw:(raw?.die||raw?.dieType||raw?.type||raw?.sides);
+  const match=String(candidate??"").match(/\d+/);
+  const die=Number(match?.[0]);
+  return TEST_CONFIG.allowedDice.includes(die)?die:null;
+}
+
+function normalizeDieFromCharacter(character, attributeKey){
+  return normalizeDieFromState(state.characterStates.get(String(character?.id))||character?.creationState||character?.creation_state||character,attributeKey);
 }
 
 function buildCharacterSelect(select) {
@@ -395,27 +392,18 @@ function getSelectedCharacter() {
   return getCharacters().find((character) => String(character.id) === String(id)) || null;
 }
 
-function getSelectedTestData() {
-  const attribute = selectedAttribute();
-  const character = getSelectedCharacter();
-
-  if (!attribute) throw new Error("Escolha um atributo.");
-  if (!character) throw new Error("Escolha um personagem.");
-
-  const die = normalizeDieFromCharacter(character, attribute);
-  if (!die) {
-    throw new Error(`O atributo ${attributeName(attribute)} deste personagem não possui um dado válido.`);
+async function getSelectedTestData(){
+  const attribute=selectedAttribute();
+  const character=getSelectedCharacter();
+  if(!attribute)throw new Error("Escolha um atributo.");
+  if(!character)throw new Error("Escolha um personagem.");
+  let die=normalizeDieFromCharacter(character,attribute);
+  if(!die){
+    const fresh=await resolveCharacterState(character);
+    die=normalizeDieFromState(fresh,attribute);
   }
-
-  return {
-    attribute,
-    attributeLabel: attributeName(attribute),
-    character,
-    die,
-    skill: safe($("aeriom-test-skill")?.value),
-    modifier: Number($("aeriom-test-modifier")?.value || 0),
-    context: safe($("aeriom-test-context")?.value)
-  };
+  if(!die)throw new Error(`O atributo ${attributeName(attribute)} deste personagem não possui um dado válido.`);
+  return {attribute,attributeLabel:attributeName(attribute),character,die,skill:safe($("aeriom-test-skill")?.value),modifier:Number($("aeriom-test-modifier")?.value||0),context:safe($("aeriom-test-context")?.value)};
 }
 
 function showResult({ result, die, modifier, skill, context }) {
@@ -434,7 +422,7 @@ async function performTest() {
   if (!dice?.roll) throw new Error("Motor de dados ainda não está pronto.");
 
   await loadCharacterStates();
-  const data = getSelectedTestData();
+  const data = await getSelectedTestData();
 
   const roll = await dice.roll({
     die: data.die,
@@ -462,7 +450,7 @@ async function requestTest() {
 
   readContext();
   await loadCharacterStates();
-  const data = getSelectedTestData();
+  const data = await getSelectedTestData();
 
   const payload = {
     campaign_id: state.campaignId,
