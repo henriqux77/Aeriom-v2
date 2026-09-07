@@ -4876,3 +4876,6 @@ textarea:focus-visible {
 @media(max-width:700px){.aerion-campaign-character-appearance__image{width:82px!important;height:96px!important;min-height:96px!important}}
 
 .aerion-campaign-character-avatar{position:relative;overflow:hidden}.aerion-campaign-character-avatar img{position:absolute;inset:0;width:100%;height:100%;max-width:none;max-height:none;display:block;object-fit:cover;object-position:center;border-radius:inherit}.aerion-campaign-character-avatar span{position:relative;z-index:1}
+.campaign-master-mini{display:inline-flex;align-items:center;gap:6px;margin-top:6px;padding:4px 7px;border:1px solid rgba(216,182,95,.14);border-radius:999px;background:rgba(216,182,95,.035);color:rgba(216,182,95,.72);font-size:6px;font-weight:800}
+.campaign-master-mini img{width:22px;height:22px;border-radius:50%;object-fit:cover;display:block;border:1px solid rgba(216,182,95,.18)}
+.campaign-master-mini span{display:inline-block;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
