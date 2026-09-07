@@ -6,24 +6,9 @@ html[data-theme="cave"]{
 }
 
 html[data-theme="cave"] body{
-  background:#08090a;
+  background:#08090a url("../assets/themes/cave/background.webp") center top / cover fixed no-repeat !important;
   color:#eee9df;
 }
-
-html[data-theme="cave"] body::before{
-  content:"";
-  position:fixed;
-  inset:0;
-  z-index:-1;
-  background:
-    linear-gradient(rgba(6,7,8,.58),rgba(6,7,8,.58)),
-    var(--cave-background);
-  background-position:center;
-  background-size:cover;
-  background-repeat:no-repeat;
-  pointer-events:none;
-}
-
 html[data-theme="cave"] .campaign-app,
 html[data-theme="cave"] .campaign-workspace,
 html[data-theme="cave"] .campaign-main,
