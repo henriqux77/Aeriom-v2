@@ -1,0 +1,35 @@
+/* AERION — mapa mental reconstruído */
+.aerion-mind-map-tools{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.aerion-mind-map-tools>[data-zoom-label]{min-width:42px;text-align:center;color:rgba(255,255,255,.5);font-size:9px;font-weight:800}
+.aerion-mind-map-board{position:relative;min-height:520px;overflow:hidden;border:1px solid rgba(255,255,255,.07);border-radius:18px;background:radial-gradient(circle at 15% 15%,rgba(216,182,95,.04),transparent 25%),linear-gradient(rgba(255,255,255,.024) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.024) 1px,transparent 1px),#090806;background-size:auto,24px 24px,24px 24px,auto;touch-action:none;cursor:grab}
+.aerion-mind-map-board:active{cursor:grabbing}
+.aerion-mind-map-world{position:absolute;inset:0;transform-origin:50% 50%;will-change:transform}
+.aerion-mind-map-svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
+.aerion-mind-map-svg line{pointer-events:stroke}
+.aerion-mind-node{position:absolute;width:170px;min-height:96px;padding:12px;border:1px solid color-mix(in srgb,var(--node-color,#8b6f36) 55%,rgba(255,255,255,.08));border-radius:14px;background:linear-gradient(145deg,color-mix(in srgb,var(--node-color,#8b6f36) 12%,#11100d 88%),rgba(17,15,11,.97));box-shadow:0 14px 28px rgba(0,0,0,.28);transform:translate(-50%,-50%);cursor:grab;touch-action:none}
+.aerion-mind-node.is-dragging{cursor:grabbing;box-shadow:0 18px 34px rgba(0,0,0,.4)}
+.aerion-mind-node.is-connect{box-shadow:0 0 0 2px rgba(216,182,95,.55),0 18px 34px rgba(0,0,0,.4)}
+.aerion-mind-node img{display:block;width:calc(100% + 24px);height:78px;object-fit:cover;margin:-12px -12px 9px;border-radius:13px 13px 6px 6px}
+.aerion-mind-node__type{color:color-mix(in srgb,var(--node-color,#8b6f36) 85%,white 15%);font-size:6px;font-weight:900;letter-spacing:.13em;text-transform:uppercase}
+.aerion-mind-node h3{margin:4px 0;color:rgba(255,255,255,.88);font:500 15px Cinzel,Georgia,serif}
+.aerion-mind-node p{margin:0;color:rgba(255,255,255,.48);font-size:8px;line-height:1.45}
+.aerion-mind-node__edit{position:absolute;top:7px;right:7px;width:27px;height:27px;border:1px solid rgba(255,255,255,.1);border-radius:8px;background:rgba(10,9,8,.86);color:#e6c66f;cursor:pointer}
+.aerion-mind-modal{position:fixed;inset:0;z-index:5500;display:none;align-items:flex-end;justify-content:center;padding:14px;background:rgba(0,0,0,.7);backdrop-filter:blur(8px)}
+.aerion-mind-modal.is-open{display:flex}
+.aerion-mind-modal__card{width:min(640px,100%);max-height:90vh;overflow:auto;border:1px solid rgba(216,182,95,.16);border-radius:22px 22px 14px 14px;background:#0d0c0a;box-shadow:0 30px 90px rgba(0,0,0,.55)}
+.aerion-mind-modal__card header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px;border-bottom:1px solid rgba(255,255,255,.06)}
+.aerion-mind-modal__card header small{color:#e3c36d;font-size:7px;font-weight:900;letter-spacing:.16em}
+.aerion-mind-modal__card header h2{margin:3px 0 0;color:#f0ebe0;font:500 20px Cinzel,Georgia,serif}
+.aerion-mind-modal__card header>button{width:38px;height:38px;border:1px solid rgba(255,255,255,.08);border-radius:10px;background:rgba(255,255,255,.02);color:#eee;font-size:18px}
+.aerion-mind-modal__card form{display:grid;gap:11px;padding:15px}
+.aerion-mind-modal__card label{display:grid;gap:6px;color:rgba(255,255,255,.48);font-size:8px;font-weight:800}
+.aerion-mind-modal__card input,.aerion-mind-modal__card textarea,.aerion-mind-modal__card select{width:100%;box-sizing:border-box;border:1px solid rgba(255,255,255,.08);border-radius:10px;background:#12110f;color:#eee;padding:10px;font:500 10px Inter,Arial,sans-serif}
+.aerion-mind-modal__card textarea{min-height:120px;resize:vertical}
+.aerion-mind-form-grid{display:grid;grid-template-columns:110px 1fr;gap:10px}
+.aerion-mind-share{display:grid;gap:6px;max-height:180px;overflow:auto}
+.aerion-mind-share label{display:grid;grid-template-columns:18px minmax(0,1fr) auto;align-items:center;gap:7px;padding:8px;border:1px solid rgba(255,255,255,.06);border-radius:9px;background:rgba(255,255,255,.01)}
+.aerion-mind-share label input{width:auto}
+.aerion-mind-share span{color:rgba(255,255,255,.75);font-size:9px}
+.aerion-mind-share small{color:rgba(255,255,255,.34);font-size:7px}
+.aerion-mind-modal footer{display:grid;grid-template-columns:auto 1fr auto auto;gap:8px;align-items:center;padding-top:4px}
+@media(max-width:700px){.aerion-mind-map-board{min-height:56vh}.aerion-mind-node{width:150px}.aerion-mind-form-grid{grid-template-columns:1fr}.aerion-mind-modal__card{max-height:94vh}.aerion-mind-modal footer{grid-template-columns:auto 1fr auto}.aerion-mind-modal footer .aeriom-mini-button:last-child{grid-column:3}}
