@@ -2680,34 +2680,13 @@
             aria-labelledby="campaign-master-controls-title"
           >
             <div id="aeriom-master-controls-root">
-  <div class="campaign-panel__heading">
-    <div>
-      <p class="campaign-panel__eyebrow">GUIA DO MESTRE</p>
-      <h1 id="campaign-master-controls-title">Controle do Mestre</h1>
-      <p class="campaign-panel__description">Gerencie a campanha, as fichas, Mana, permissões, conteúdo e ações rápidas.</p>
-    </div>
-  </div>
+  <div class="campaign-panel__heading"><div><p class="campaign-panel__eyebrow">GUIA DO MESTRE</p><h1 id="campaign-master-controls-title">Controle do Mestre</h1><p class="campaign-panel__description">Gerencie a campanha, as fichas, Mana, permissões, conteúdo e ações rápidas.</p></div></div>
   <div class="aeriom-master-grid">
-    <section class="aeriom-master-card">
-      <div class="aeriom-master-card__head"><div><h3>Configuração da campanha</h3><p>Nome, descrição, capa e background.</p></div><span class="aeriom-master-badge">MESTRE</span></div>
-      <form class="aeriom-master-form" data-camp-form>
-        <label class="aeriom-master-field"><span>Nome</span><input name="name" maxlength="120" required></label>
-        <label class="aeriom-master-field"><span>Descrição</span><textarea name="description" maxlength="5000"></textarea></label>
-        <div class="aeriom-master-row">
-          <div class="aeriom-master-upload"><label class="aeriom-master-field"><span>Banner / Capa</span><input name="cover_file" type="file" accept="image/png,image/jpeg,image/webp"></label><div class="aeriom-master-upload-preview" data-cover-preview></div><button type="button" class="aeriom-master-button aeriom-master-button--danger" data-delete-image="cover">Excluir capa</button></div>
-          <div class="aeriom-master-upload"><label class="aeriom-master-field"><span>Fundo / Background</span><input name="background_file" type="file" accept="image/png,image/jpeg,image/webp"></label><div class="aeriom-master-upload-preview" data-background-preview></div><button type="button" class="aeriom-master-button aeriom-master-button--danger" data-delete-image="background">Excluir fundo</button></div>
-        </div>
-        <div class="aeriom-master-actions"><button class="aeriom-master-button aeriom-master-button--primary" type="submit">Salvar campanha</button></div>
-      </form>
-    </section>
-    <section class="aeriom-master-card">
-      <div class="aeriom-master-card__head"><div><h3>Ações do Mestre</h3><p>Atalhos rápidos para alterações da sessão.</p></div></div>
-      <div class="aeriom-quick-actions">
-        <button class="aeriom-master-button" data-quick="hp" type="button">♥ HP</button><button class="aeriom-master-button" data-quick="mana" type="button">✦ Mana</button><button class="aeriom-master-button" data-quick="condition" type="button">☠ Condição</button><button class="aeriom-master-button" data-quick="item" type="button">◆ Item</button><button class="aeriom-master-button" data-quick="ability" type="button">✧ Habilidade</button><button class="aeriom-master-button" data-quick="note" type="button">▤ Nota</button><button class="aeriom-master-button" data-quick="secret" type="button">🔐 Segredo</button><button class="aeriom-master-button" data-quick="xp" type="button">＋ XP</button>
-      </div>
-    </section>
-    <section class="aeriom-master-card"><div class="aeriom-master-card__head"><div><h3>Controle das fichas</h3><p>Mana, permissões e estado rápido por personagem.</p></div></div><div class="aeriom-master-list" id="aeriom-master-characters"><div class="aeriom-master-empty">Carregando fichas…</div></div></section>
-    <section class="aeriom-master-card"><div class="aeriom-master-card__head"><div><h3>Campanha</h3><p>Capítulos, sessões, acontecimentos, NPCs, locais, facções, missões e diário.</p></div><button class="aeriom-master-button aeriom-master-button--primary" data-new-content type="button">＋ Novo</button></div><div class="aeriom-master-list" id="aeriom-master-content"><div class="aeriom-master-empty">Carregando conteúdo…</div></div></section>
+    <section class="aeriom-master-card"><div class="aeriom-master-card__head"><div><h3>Configuração da campanha</h3><p>Nome, descrição, capa e background.</p></div><span class="aeriom-master-badge">MESTRE</span></div><form class="aeriom-master-form" data-camp-form><label class="aeriom-master-field"><span>Nome</span><input name="name" maxlength="120" required></label><label class="aeriom-master-field"><span>Descrição</span><textarea name="description" maxlength="5000"></textarea></label><div class="aeriom-master-row"><div class="aeriom-master-upload"><label class="aeriom-master-field"><span>Banner / Capa</span><input name="cover_file" type="file" accept="image/png,image/jpeg,image/webp"></label><div class="aeriom-master-upload-preview" data-cover-preview></div><button type="button" class="aeriom-master-button aeriom-master-button--danger" data-delete-image="cover">Excluir capa</button></div><div class="aeriom-master-upload"><label class="aeriom-master-field"><span>Fundo / Background</span><input name="background_file" type="file" accept="image/png,image/jpeg,image/webp"></label><div class="aeriom-master-upload-preview" data-background-preview></div><button type="button" class="aeriom-master-button aeriom-master-button--danger" data-delete-image="background">Excluir fundo</button></div></div><div class="aeriom-master-actions"><button class="aeriom-master-button aeriom-master-button--primary" type="submit">Salvar campanha</button></div></form></section>
+    <section class="aeriom-master-card"><div class="aeriom-master-card__head"><div><h3>Ações do Mestre</h3><p>Altere rapidamente o estado de uma ficha.</p></div></div><div class="aeriom-quick-actions"><button class="aeriom-master-button" data-quick="hp" type="button">♥ HP</button><button class="aeriom-master-button" data-quick="mana" type="button">✦ Mana</button><button class="aeriom-master-button" data-quick="condition" type="button">☠ Condição</button><button class="aeriom-master-button" data-quick="item" type="button">◆ Item</button><button class="aeriom-master-button" data-quick="ability" type="button">✧ Habilidade</button><button class="aeriom-master-button" data-quick="note" type="button">▤ Nota</button><button class="aeriom-master-button" data-quick="secret" type="button">🔐 Segredo</button><button class="aeriom-master-button" data-quick="xp" type="button">＋ XP</button></div></section>
+    <section class="aeriom-master-card"><div class="aeriom-master-card__head"><div><h3>Controle das fichas</h3><p>Mana, permissões e estado por personagem.</p></div></div><div class="aeriom-master-list" id="aeriom-master-characters"><div class="aeriom-master-empty">Carregando fichas…</div></div></section>
+    <section class="aeriom-master-card"><div class="aeriom-master-card__head"><div><h3>Mana da campanha</h3><p>O Mestre libera as cores oficialmente disponíveis.</p></div></div><div class="aeriom-mana-campaign-grid"><div class="aeriom-mana-campaign-item"><strong>🔵 Azul</strong><small>Mana Normal</small></div><div class="aeriom-mana-campaign-item"><strong>🟣 Roxa</strong><small>Mana Negra</small></div><div class="aeriom-mana-campaign-item"><strong>🟡 Dourada</strong><small>Mana Boa</small></div><div class="aeriom-mana-campaign-item"><strong>⚪ Branca</strong><small>Mana Perfeita</small></div></div></section>
+    <section class="aeriom-master-card"><div class="aeriom-master-card__head"><div><h3>Campanha</h3><p>Administre capítulos, sessões, acontecimentos, NPCs, locais, facções, missões e diário.</p></div><div class="aeriom-master-actions"><button class="aeriom-master-button" data-new-content-type="chapter" type="button">＋ Capítulo</button><button class="aeriom-master-button" data-new-content-type="session" type="button">＋ Sessão</button><button class="aeriom-master-button aeriom-master-button--primary" data-new-content type="button">＋ Novo</button></div></div><div class="aeriom-master-list" id="aeriom-master-content"><div class="aeriom-master-empty">Carregando conteúdo…</div></div></section>
   </div>
 </div>
           </section>
