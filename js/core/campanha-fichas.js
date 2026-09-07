@@ -65,7 +65,7 @@ import { getSupabase } from "./supabase.js";
       .aerion-campaign-sheet-stat{padding:10px;border:1px solid rgba(255,255,255,.06);border-radius:11px;text-align:center}
       .aerion-campaign-sheet-stat span{display:block;color:rgba(255,255,255,.4);font-size:7px;font-weight:900;letter-spacing:.1em}
       .aerion-campaign-sheet-stat strong{display:block;margin-top:4px;color:#e6c66f;font:500 20px Cinzel,serif}
-      .aerion-campaign-sheet-card--full{width:min(860px,100%)}.aerion-campaign-view-hero{display:grid;grid-template-columns:150px 1fr;gap:12px;margin:14px 0}.aerion-campaign-view-avatar{height:170px;display:grid;place-items:center;overflow:hidden;border:1px solid rgba(216,182,95,.15);border-radius:14px;background:#0b0a09;color:#d8b65f;font:500 42px Cinzel,serif}.aerion-campaign-view-avatar img{width:100%;height:100%;object-fit:contain}.aerion-campaign-sheet-stats--hero{margin:0}.aerion-campaign-master-card{margin-top:13px;padding:13px;border:1px solid rgba(216,182,95,.17);border-radius:15px;background:radial-gradient(circle at 10% 0,rgba(216,182,95,.06),transparent 38%),rgba(255,255,255,.012)}.aerion-campaign-master-card h4{margin:3px 0;font:500 22px Cinzel,serif;color:#eee}.aerion-campaign-master-card small{color:rgba(255,255,255,.42);font-size:8px}.aerion-campaign-master-body{display:grid;grid-template-columns:170px 1fr;gap:12px;margin-top:10px}.aerion-campaign-master-image{min-height:170px;display:grid;place-items:center;border:1px solid rgba(255,255,255,.06);border-radius:13px;background:#0b0a09;overflow:hidden}.aerion-campaign-master-image img{width:100%;height:100%;object-fit:contain}.aerion-campaign-master-image span{font-size:40px;color:#d8b65f}.aerion-campaign-master-copy{display:grid;gap:9px}.aerion-campaign-master-copy div{padding:9px;border:1px solid rgba(255,255,255,.05);border-radius:10px}.aerion-campaign-master-copy span{color:rgba(216,182,95,.72);font-size:6px;font-weight:900;letter-spacing:.12em}.aerion-campaign-master-copy p{margin:4px 0 0;color:rgba(255,255,255,.62);font-size:9px;line-height:1.5}
+      .aerion-campaign-sheet-card--full{width:min(860px,100%)}.aerion-campaign-view-hero{display:grid;grid-template-columns:150px 1fr;gap:12px;margin:14px 0}.aerion-campaign-view-avatar{height:170px;display:grid;place-items:center;overflow:hidden;border:1px solid rgba(216,182,95,.15);border-radius:14px;background:#0b0a09;color:#d8b65f;font:500 42px Cinzel,serif}.aerion-campaign-view-avatar img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center}.aerion-campaign-view-avatar{position:relative}.aerion-campaign-sheet-stats--hero{margin:0}.aerion-campaign-master-card{margin-top:13px;padding:13px;border:1px solid rgba(216,182,95,.17);border-radius:15px;background:radial-gradient(circle at 10% 0,rgba(216,182,95,.06),transparent 38%),rgba(255,255,255,.012)}.aerion-campaign-master-card h4{margin:3px 0;font:500 22px Cinzel,serif;color:#eee}.aerion-campaign-master-card small{color:rgba(255,255,255,.42);font-size:8px}.aerion-campaign-master-body{display:grid;grid-template-columns:170px 1fr;gap:12px;margin-top:10px}.aerion-campaign-master-image{min-height:170px;display:grid;place-items:center;border:1px solid rgba(255,255,255,.06);border-radius:13px;background:#0b0a09;overflow:hidden}.aerion-campaign-master-image img{width:100%;height:100%;object-fit:contain}.aerion-campaign-master-image span{font-size:40px;color:#d8b65f}.aerion-campaign-master-copy{display:grid;gap:9px}.aerion-campaign-master-copy div{padding:9px;border:1px solid rgba(255,255,255,.05);border-radius:10px}.aerion-campaign-master-copy span{color:rgba(216,182,95,.72);font-size:6px;font-weight:900;letter-spacing:.12em}.aerion-campaign-master-copy p{margin:4px 0 0;color:rgba(255,255,255,.62);font-size:9px;line-height:1.5}
       @media(max-width:700px){.aerion-campaign-view-hero,.aerion-campaign-master-body{grid-template-columns:1fr}.aerion-campaign-view-avatar{min-height:220px}}
       @media(max-width:700px){.aerion-campaign-character-grid{grid-template-columns:1fr}}
     `;
@@ -405,9 +405,7 @@ import { getSupabase } from "./supabase.js";
       const c=full||entry.characters, s=c.creation_state||{};
       const modal=document.createElement("div");
       modal.className="aerion-campaign-sheet-modal is-open";
-      let avatar="";
-      const avatarPath=String(s.avatar||c.avatar_path||"").trim();
-      if(avatarPath){try{avatar=(await supabase.storage.from("avatars").createSignedUrl(avatarPath,3600)).data?.signedUrl||""}catch{}}
+      let avatar=await signedAvatar(c);
       const master=s.elementalMaster||{};
       modal.innerHTML=`
         <div class="aerion-campaign-sheet-card aerion-campaign-sheet-card--full" role="dialog" aria-modal="true">
@@ -492,3 +490,6 @@ import { getSupabase } from "./supabase.js";
     });
   }
 })();
+
+      .aerion-campaign-character-appearance__image{position:relative;overflow:hidden}
+      .aerion-campaign-character-appearance__image img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center}
