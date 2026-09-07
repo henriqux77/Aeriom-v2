@@ -8,7 +8,37 @@ const TYPES=[["chapter","Capítulo / Arco"],["session","Sessão"],["event","Acon
 const $=id=>document.getElementById(id); const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c])); const toast=(message,type="warning")=>window.dispatchEvent(new CustomEvent("aerion:toast",{detail:{message,type}}));
 let sb=null,user=null,campaignId=null,chars=[];
 
-async function boot(){sb=await getSupabase();const a=await sb.auth.getUser();user=a.data?.user;const ctx=window.AERIOM_CAMPAIGN?.getContext?.()||{};campaignId=new URLSearchParams(location.search).get("campaign")||ctx.campaignId||ctx.campaign?.id;if(!user||!campaignId)return;const ctxRole=String(ctx.membership?.role||"").toLowerCase();let role=ctxRole; if(role!=="master"){const m=await sb.from("campaign_members").select("role").eq("campaign_id",campaignId).eq("user_id",user.id).maybeSingle();if(m.error)throw m.error;role=String(m.data?.role||"").toLowerCase();}if(role!=="master")return;injectNav();injectPanel();await refresh();}
+async function boot(){
+  sb=await getSupabase();
+  const a=await sb.auth.getUser();
+  user=a.data?.user||null;
+  const readContext=()=>window.AERIOM_CAMPAIGN?.getContext?.()||{};
+  const initial=readContext();
+  campaignId=new URLSearchParams(location.search).get("campaign")||initial.campaignId||initial.campaign?.id;
+  if(!user||!campaignId)return false;
+  let role=String(initial.membership?.role||"").toLowerCase();
+  if(role!=="master"){
+    const m=await sb.from("campaign_members").select("role").eq("campaign_id",campaignId).eq("user_id",user.id).maybeSingle();
+    if(m.error)throw m.error;
+    role=String(m.data?.role||"").toLowerCase();
+  }
+  if(role!=="master")return false;
+  injectNav();
+  injectPanel();
+  await refresh();
+  return true;
+}
+async function bootWhenReady(){
+  for(let i=0;i<50;i++){
+    try{ if(await boot()) return; }catch(e){ console.warn("[AERION][MASTER] init retry",e); }
+    await new Promise(r=>setTimeout(r,250));
+  }
+}
+window.addEventListener("aeriom:campaign:ready",()=>setTimeout(bootWhenReady,0));
+window.addEventListener("aeriom:campaigntabchange",e=>{
+  if(e.detail?.tab==="master-controls")setTimeout(()=>{if(!document.querySelector("#aeriom-master-controls-root")?.children.length)bootWhenReady();},0);
+});
+if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",bootWhenReady,{once:true});else bootWhenReady();
 function injectNav(){const host=$("master-navigation");if(!host||$("aeriom-master-nav"))return;host.hidden=false;const b=document.createElement("button");b.type="button";b.id="aeriom-master-nav";b.className="campaign-nav-item campaign-nav-item--master";b.dataset.campaignTab="master-controls";b.innerHTML='<span class="campaign-nav-item__icon">⚙</span><span>Controle do Mestre</span>';b.addEventListener("click",()=>{document.querySelectorAll("[data-campaign-panel]").forEach(p=>{const on=p.dataset.campaignPanel==="master-controls";p.hidden=!on;p.classList.toggle("is-active",on)});document.querySelectorAll("[data-campaign-tab]").forEach(x=>{const on=x.dataset.campaignTab==="master-controls";x.classList.toggle("is-active",on);on?x.setAttribute("aria-current","page"):x.removeAttribute("aria-current")});document.getElementById("campaign-sidebar")?.classList.remove("is-open","is-mobile-open");document.getElementById("campaign-mobile-menu-backdrop")?.classList.remove("is-open");window.dispatchEvent(new CustomEvent("aeriom:campaigntabchange",{detail:{campaignId,tab:"master-controls"}}));});host.appendChild(b);}
 function injectPanel(){
   const p=document.getElementById("campaign-panel-master-controls");
