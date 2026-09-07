@@ -133,7 +133,7 @@ import { getSupabase } from "./supabase.js";
   async function loadAvailable(){
     const {data,error}=await supabase
       .from("characters")
-      .select("id,name,race,class,power,hp_current,hp_max,defense,status,campaign_id,updated_at")
+      .select("id,name,race,class,power,hp_current,hp_max,defense,status,campaign_id,updated_at,creation_state")
       .eq("user_id",user.id)
       .eq("status","completed")
       .is("campaign_id",null)
@@ -227,7 +227,7 @@ import { getSupabase } from "./supabase.js";
           </div>
         `;
         list.appendChild(item);
-      });
+      }
 
       list.onclick=async event=>{
         const b=event.target.closest("[data-add-character]");
