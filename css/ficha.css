@@ -763,3 +763,136 @@ body.aeriom-page--character{
 .character-image-upload .secondary-action{margin:0;min-height:36px;padding:0 12px}
 .character-image-upload .secondary-action--danger{border-color:rgba(168,59,59,.28);color:#c98282}
 .character-image-upload button:disabled{opacity:.55;cursor:wait}
+
+/* =========================================================
+   CAMPOS OBRIGATÓRIOS — criação de ficha
+   ========================================================= */
+.required-chip{
+  display:inline-flex;
+  align-items:center;
+  vertical-align:middle;
+  margin-left:6px;
+  padding:3px 6px;
+  border:1px solid rgba(227,195,109,.38);
+  border-radius:999px;
+  background:rgba(227,195,109,.08);
+  color:var(--fx-gold,#e3c36d);
+  font:800 6px/1.2 inherit;
+  letter-spacing:.08em;
+  white-space:nowrap;
+}
+.required-field>span,
+.required-field>.label,
+.required-field>label>span{
+  display:flex;
+  align-items:center;
+  gap:5px;
+}
+.required-field em,
+.required-inline{
+  display:inline-flex;
+  align-items:center;
+  padding:2px 5px;
+  border-radius:999px;
+  background:rgba(227,195,109,.09);
+  color:var(--fx-gold,#e3c36d);
+  font-style:normal;
+  font-size:5px;
+  font-weight:900;
+  letter-spacing:.07em;
+  text-transform:uppercase;
+}
+.required-field input,
+.required-field textarea,
+.required-field select{
+  border-color:rgba(227,195,109,.24);
+}
+.required-field input:focus,
+.required-field textarea:focus,
+.required-field select:focus{
+  border-color:rgba(227,195,109,.55);
+  box-shadow:0 0 0 3px rgba(227,195,109,.08),0 0 18px rgba(227,195,109,.035);
+}
+.required-field>.choice-grid{
+  position:relative;
+  padding:4px;
+  border:1px solid rgba(227,195,109,.13);
+  border-radius:12px;
+  background:rgba(227,195,109,.018);
+}
+.required-field>.choice-grid::before{
+  content:"ESCOLHA UMA OPÇÃO";
+  display:block;
+  margin:0 0 4px 2px;
+  color:rgba(227,195,109,.52);
+  font-size:5px;
+  font-weight:900;
+  letter-spacing:.1em;
+}
+[data-panel="race"] .heading,
+[data-panel="class"] .heading,
+[data-panel="attributes"] .heading,
+[data-panel="power"] .heading,
+[data-panel="appearance"] .heading{
+  position:relative;
+}
+[data-panel="race"] #race-grid,
+[data-panel="class"] #class-grid,
+[data-panel="attributes"] #attribute-grid{
+  position:relative;
+}
+[data-panel="race"] #race-grid::before,
+[data-panel="class"] #class-grid::before,
+[data-panel="attributes"] #attribute-grid::before{
+  display:block;
+  width:100%;
+  margin-bottom:8px;
+  padding:6px 9px;
+  border:1px dashed rgba(227,195,109,.20);
+  border-radius:9px;
+  background:rgba(227,195,109,.025);
+  color:rgba(227,195,109,.72);
+  font-size:6px;
+  font-weight:900;
+  letter-spacing:.08em;
+  box-sizing:border-box;
+}
+[data-panel="race"] #race-grid::before{content:"✦ SELEÇÃO OBRIGATÓRIA · escolha uma raça para avançar";}
+[data-panel="class"] #class-grid::before{content:"✦ SELEÇÃO OBRIGATÓRIA · escolha uma classe para avançar";}
+[data-panel="attributes"] #attribute-grid::before{content:"✦ TODOS OS 8 ATRIBUTOS SÃO OBRIGATÓRIOS · distribua um dado em cada atributo";}
+[data-panel="appearance"] #character-age{
+  border-color:rgba(227,195,109,.28);
+}
+[data-panel="appearance"] .height-control{
+  padding:8px;
+  border:1px solid rgba(227,195,109,.13);
+  border-radius:12px;
+  background:rgba(227,195,109,.018);
+}
+[data-panel="power"] .power-grid>article:first-child,
+[data-panel="power"] .power-grid>article:nth-child(2),
+[data-panel="power"] .power-grid>article:nth-child(3){
+  border-color:rgba(227,195,109,.14);
+}
+[data-panel="power"] .power-grid>article:first-child::after{
+  content:"OBRIGATÓRIO: escolha ou sorteie um poder";
+  display:block;
+  margin-top:8px;
+  color:rgba(227,195,109,.58);
+  font-size:5px;
+  font-weight:900;
+  letter-spacing:.07em;
+}
+.creation-navigation .nav-primary{
+  position:relative;
+}
+.creation-navigation .nav-primary:not(:disabled)::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  border-radius:inherit;
+  pointer-events:none;
+}
+@media(max-width:700px){
+  .required-chip{font-size:5px;padding:3px 5px}
+}
