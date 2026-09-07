@@ -4879,3 +4879,5 @@ textarea:focus-visible {
 .campaign-master-mini{display:inline-flex;align-items:center;gap:6px;margin-top:6px;padding:4px 7px;border:1px solid rgba(216,182,95,.14);border-radius:999px;background:rgba(216,182,95,.035);color:rgba(216,182,95,.72);font-size:6px;font-weight:800}
 .campaign-master-mini img{width:22px;height:22px;border-radius:50%;object-fit:cover;display:block;border:1px solid rgba(216,182,95,.18)}
 .campaign-master-mini span{display:inline-block;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+.campaign-card__actions{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}.campaign-edit-modal__dialog{max-width:720px}#campaign-edit-cover-preview img{width:100%;height:100%;object-fit:cover;display:block}@media(max-width:640px){.campaign-card__actions{width:100%}.campaign-card__actions .button{flex:1}.campaign-edit-modal__dialog{width:calc(100vw - 24px)}}
