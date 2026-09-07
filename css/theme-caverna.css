@@ -1,6 +1,8 @@
 /* AERION — Tema Caverna */
 html[data-theme="cave"]{
-  --cave-background:url("https://i.ibb.co/ch7J9bmn/file-00000000d334820eabb913a2eaccee9b.png");
+  --cave-background:url("../assets/themes/cave/background.webp");
+  --cave-rock-top:url("../assets/themes/cave/rock-top.webp");
+  --cave-rock-bottom:url("../assets/themes/cave/rock-bottom.webp");
 }
 
 html[data-theme="cave"] body{
