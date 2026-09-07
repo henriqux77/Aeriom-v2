@@ -76,6 +76,7 @@ import { getSupabase } from "./supabase.js";
     if(!w&&nodesRoot&&svg){w=document.createElement("div");w.id="aerion-mind-map-world";w.className="aerion-mind-map-world";b.appendChild(w);w.append(svg,nodesRoot);}
     if(!nodesRoot||!svg)return;
     nodesRoot.innerHTML="";
+    const empty=document.getElementById("aerion-mind-map-empty"); if(empty) empty.hidden=state.nodes.length>0;
     state.nodes.forEach(node=>{
       const el=document.createElement("article");el.className="aerion-mind-node"+(state.connectFrom===String(node.id)?" is-connect":"");
       el.dataset.id=node.id;el.style.left=Number(node.pos_x)+"%";el.style.top=Number(node.pos_y)+"%";el.style.setProperty("--node-color",node.color||"#8b6f36");
@@ -127,6 +128,7 @@ import { getSupabase } from "./supabase.js";
     tools.dataset.bound="1";
     tools.innerHTML='<button class="aeriom-mini-button" type="button" data-add>＋ Nota</button><button class="aeriom-mini-button" type="button" data-connect>🔗 Ligar</button><button class="aeriom-mini-button" type="button" data-minus>−</button><span data-zoom-label>100%</span><button class="aeriom-mini-button" type="button" data-plus>＋</button><button class="aeriom-mini-button" type="button" data-reset>⟳</button>';
     tools.querySelector("[data-add]").onclick=()=>editor();
+    document.getElementById("aerion-mind-map-empty")?.querySelector("[data-mind-add]")?.addEventListener("click",()=>editor());
     tools.querySelector("[data-connect]").onclick=()=>{state.connectFrom=null;state.connectMode=!state.connectMode;toast(state.connectMode?"Modo ligar: toque em duas notas.":"Modo ligar desativado.");render();};
     tools.querySelector("[data-minus]").onclick=()=>{state.zoom=Math.max(.5,state.zoom-.15);applyView();};
     tools.querySelector("[data-plus]").onclick=()=>{state.zoom=Math.min(2.5,state.zoom+.15);applyView();};
@@ -168,7 +170,7 @@ import { getSupabase } from "./supabase.js";
         const payload={campaign_id:state.campaignId,created_by:node?.created_by||state.user.id,title:f.title.value.trim(),content:f.content.value.trim()||null,node_type:f.type.value,color:out.color,pos_x:node?.pos_x??(20+Math.random()*55),pos_y:node?.pos_y??(18+Math.random()*60),visibility:f.visibility.value,image_path:out.image_path??node?.image_path??null,updated_at:new Date().toISOString()};
         let saved;
         if(node){const r=await state.sb.from("aerion_mind_nodes").update(payload).eq("id",node.id).select("*").single();if(r.error)throw r.error;saved=r.data;}else{const r=await state.sb.from("aerion_mind_nodes").insert(payload).select("*").single();if(r.error)throw r.error;saved=r.data;}
-        await state.sb.from("aerion_mind_permissions").delete().eq("node_id",saved.id);
+        const clearPerms=await state.sb.from("aerion_mind_permissions").delete().eq("node_id",saved.id); if(clearPerms.error)throw clearPerms.error;
         if(f.visibility.value==="shared"){const ids=[...m.querySelectorAll('input[name="share"]:checked')].map(x=>x.value);if(ids.length){const pr=await state.sb.from("aerion_mind_permissions").insert(ids.map(uid=>({node_id:saved.id,user_id:uid,created_by:state.user.id})));if(pr.error)throw pr.error;}}
         if(saved.image_path){try{saved.imageUrl=(await state.sb.storage.from("campaign-assets").createSignedUrl(saved.image_path,3600)).data?.signedUrl||"";}catch{}}
         const idx=state.nodes.findIndex(n=>String(n.id)===String(saved.id));if(idx>=0)state.nodes[idx]=saved;else state.nodes.push(saved);
@@ -178,6 +180,8 @@ import { getSupabase } from "./supabase.js";
   }
 
   async function createEdge(from,to){
+    if(String(from)===String(to))return;
+    if(state.edges.some(e=>(String(e.from_node_id)===String(from)&&String(e.to_node_id)===String(to))||(String(e.from_node_id)===String(to)&&String(e.to_node_id)===String(from))))return toast("Essa ligação já existe.","error");
     const r=await state.sb.from("aerion_mind_edges").insert({campaign_id:state.campaignId,from_node_id:from,to_node_id:to,created_by:state.user.id,color:"#8b6f36"}).select("*").single();
     if(r.error)return toast(r.error.message,"error");state.edges.push(r.data);render();toast("Ligação criada.","success");
   }
@@ -191,11 +195,27 @@ import { getSupabase } from "./supabase.js";
   }
 
   async function boot(){
-    const init=async()=>{if(await ready()){await load();const panel=document.getElementById("campaign-panel-timeline");if(panel&&!panel.hidden){controls();bindBoard();render();}}};
+    const init=async()=>{
+      if(!(await ready()))return;
+      await load();
+      const panel=document.getElementById("campaign-panel-timeline");
+      if(panel&&!panel.hidden){controls();bindBoard();render();}
+      if(!state.realtimeChannel&&state.sb&&state.campaignId){
+        state.realtimeChannel=state.sb.channel("aerion-mind-"+state.campaignId)
+          .on("postgres_changes",{event:"*",schema:"public",table:"aerion_mind_nodes",filter:"campaign_id=eq."+state.campaignId},async()=>{try{await load();render();}catch{}})
+          .on("postgres_changes",{event:"*",schema:"public",table:"aerion_mind_edges",filter:"campaign_id=eq."+state.campaignId},async()=>{try{await load();render();}catch{}})
+          .subscribe();
+      }
+    };
     window.addEventListener("aeriom:campaigntabchange",e=>{if(e.detail?.tab==="timeline")setTimeout(init,0);});
-    const panel=document.getElementById("campaign-panel-timeline");
-    if(panel&&window.MutationObserver){state.boardObserver=new MutationObserver(()=>{const b=board();if(b&&!b.dataset.bound){controls();bindBoard();render();}});state.boardObserver.observe(panel,{childList:true,subtree:true});}
-    setTimeout(init,250);setTimeout(init,1000);setTimeout(init,2200);
+    const observe=()=>{
+      const panel=document.getElementById("campaign-panel-timeline");if(!panel||!window.MutationObserver)return;
+      state.boardObserver?.disconnect();
+      state.boardObserver=new MutationObserver(()=>{const b=board();if(b){controls();bindBoard();render();}});
+      state.boardObserver.observe(panel,{childList:true,subtree:true});
+    };
+    observe();
+    setTimeout(init,250);setTimeout(init,900);setTimeout(init,1800);
   }
   if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",boot,{once:true});else boot();
 })();
