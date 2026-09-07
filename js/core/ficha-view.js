@@ -35,6 +35,7 @@ import { getSupabase } from "./supabase.js";
     set("personality",s.personality); set("objective",s.objective); set("fear",s.fear); set("bond",s.importantBond); set("history",s.history);
     const tags=$("race-tags"); const mods=row.racial_modifiers||d.racialModifiers||{};
     if(tags) tags.innerHTML=Object.entries(mods).map(([k,v])=>"<span class=\"fv-tag\">"+esc(k)+" "+(Number(v)>0?"+":"")+esc(v)+"</span>").join("")||"<span class=\"fv-tag\">Sem modificadores</span>";
+    const master=s.elementalMaster||{};
     const avatarPath=String(s.avatar||row.avatar_path||"").trim();
     let avatarUrl=""; if(avatarPath){ const ar=await sb.storage.from("avatars").createSignedUrl(avatarPath,3600); avatarUrl=ar.data?.signedUrl||""; }
     const av=$("avatar"); const ph=$("avatar-placeholder"); if(av && avatarUrl){av.src=avatarUrl;av.hidden=false;if(ph)ph.hidden=true;}
