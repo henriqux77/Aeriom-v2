@@ -115,3 +115,64 @@ html[data-theme="cave"] .campaign-nav-item.is-active{
 @media(max-width:700px){
   .campaign-theme-option__preview{width:82px;height:60px;flex-basis:82px}
 }
+
+/* Pré-carregamento da Caverna — apenas bloqueia a troca enquanto os 3 assets respondem. */
+#aeriom-cave-loading-gate{
+  position:fixed;
+  inset:0;
+  z-index:99999;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  background:rgba(5,5,6,.82);
+  backdrop-filter:blur(4px);
+  pointer-events:auto;
+}
+#aeriom-cave-loading-gate.is-active{display:flex}
+.aeriom-cave-loading-gate__mark{
+  width:34px;
+  height:34px;
+  border:2px solid rgba(216,182,95,.22);
+  border-top-color:#d8b65f;
+  border-radius:50%;
+  animation:aeriom-cave-spin .8s linear infinite;
+}
+@keyframes aeriom-cave-spin{to{transform:rotate(360deg)}}
+
+/* Uma única área decorativa no card de ferramentas do Mestre. */
+html[data-theme="cave"] #campaign-master-card{
+  position:relative;
+  overflow:visible;
+}
+html[data-theme="cave"] #campaign-master-card::before{
+  content:"";
+  position:absolute;
+  left:50%;
+  top:-34px;
+  width:170px;
+  height:76px;
+  transform:translateX(-50%);
+  background-image:var(--cave-rock-top);
+  background-repeat:no-repeat;
+  background-size:contain;
+  background-position:center;
+  mix-blend-mode:screen;
+  pointer-events:none;
+  z-index:4;
+}
+html[data-theme="cave"] #campaign-master-card::after{
+  content:"";
+  position:absolute;
+  left:50%;
+  bottom:-34px;
+  width:182px;
+  height:78px;
+  transform:translateX(-50%);
+  background-image:var(--cave-rock-bottom);
+  background-repeat:no-repeat;
+  background-size:contain;
+  background-position:center;
+  mix-blend-mode:screen;
+  pointer-events:none;
+  z-index:4;
+}
