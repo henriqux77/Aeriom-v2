@@ -750,7 +750,7 @@
     }
   </style>
   <link rel="stylesheet" href="./css/ficha-jogo.css?v=20260906-07">
-<link rel="stylesheet" href="./css/mapa-mental.css?v=20260906-01">
+  <link rel="stylesheet" href="./css/mapa-mental-v2.css?v=20260906-01">
 </head>
 
 
@@ -4097,23 +4097,27 @@
 
       <div class="aeriom-timeline-feed" id="aeriom-timeline-feed"></div>
 
-      <section class="aeriom-knowledge-wrap">
+      <section class="aerion-mind-map-wrap">
         <div class="campaign-section__heading">
           <div>
             <p class="campaign-section__eyebrow">Conhecimento</p>
             <h2>Mapa mental</h2>
+            <p class="aerion-mind-map-subtitle">Conecte notas, pistas e ideias da campanha.</p>
           </div>
-          <div class="aeriom-map-toolbar">
-            <span class="aeriom-knowledge-scope"><span>Privado: ${isMaster() ? "Mestre" : "jogador"}</span></span>
-            <button class="aeriom-mini-button" type="button" data-aeriom-add-node>＋ Nó</button>
+          <div id="aerion-mind-map-tools" class="aerion-mind-map-tools"></div>
+        </div>
+        <div class="aerion-mind-map-board" id="aerion-mind-map-board">
+          <div class="aerion-mind-map-empty" id="aerion-mind-map-empty">
+            <strong>Nenhuma nota ainda</strong>
+            <span>Crie sua primeira nota para começar a conectar o conhecimento da campanha.</span>
+            <button type="button" class="aeriom-mini-button" data-mind-add>＋ Criar nota</button>
+          </div>
+          <div class="aerion-mind-map-world" id="aerion-mind-map-world">
+            <svg class="aerion-mind-map-svg" id="aerion-mind-map-svg" aria-hidden="true"></svg>
+            <div id="aerion-mind-map-nodes"></div>
           </div>
         </div>
-        <div class="aeriom-knowledge-board" id="aeriom-knowledge-board">
-          <svg class="aeriom-knowledge-svg" id="aeriom-knowledge-svg" aria-hidden="true"></svg>
-          <div id="aeriom-knowledge-nodes"></div>
-        </div>
-      </section>
-    `;
+      </section> `;
 
     renderTimelineFeed("all");
 
@@ -4128,7 +4132,7 @@
       ?.addEventListener("click", openEventEditor);
 
         panel.querySelector("[data-aeriom-focus-knowledge]")?.addEventListener("click", () => {
-      panel.querySelector(".aeriom-knowledge-wrap")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      panel.querySelector(".aerion-mind-map-wrap")?.scrollIntoView({ behavior: "smooth", block: "start" });
     });
 
 
@@ -4494,7 +4498,7 @@
 
 <script type="module" src="./js/core/campanha-fichas.js?v=20260905-01"></script>
 <script type="module" src="./js/core/ficha-jogo.js?v=20260906-07"></script>
-<script type="module" src="./js/core/mapa-mental.js?v=20260906-08"></script>
+<script type="module" src="./js/core/mapa-mental-v2.js?v=20260906-01"></script>
 </body>
 
 </html>
