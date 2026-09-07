@@ -21,19 +21,22 @@ import { getSupabase } from "./supabase.js";
     return Number.isFinite(n) ? n : d;
   }
 
-  function title(row) {
+  async function avatarUrl(row) { const path=String(row?.creation_state?.avatar||row?.avatar_path||"").trim(); if(!path) return ""; try { const r=await supabase.storage.from("avatars").createSignedUrl(path,3600); return r.data?.signedUrl||""; } catch { return ""; } }
+
+  async function title(row) {
     return String(row.name || "Ficha sem nome").trim() || "Ficha sem nome";
   }
 
-  function card(row) {
+  async function card(row) {
     const ready = row.status === "completed";
     const name = title(row);
     const meta = [row.race,row.class,row.power].filter(Boolean).join(" · ") || "Ainda não configurada";
+    const avatar = await avatarUrl(row);
 
     const el = document.createElement("article");
     el.className = "mf-card";
     el.innerHTML = `
-      <div class="mf-avatar">${esc(name.slice(0,1).toUpperCase())}</div>
+      <div class="mf-avatar">${avatar ? `<img src="${esc(avatar)}" alt="">` : esc(name.slice(0,1).toUpperCase())}</div>
       <div class="mf-body">
         <span class="mf-status ${ready ? "complete" : ""}">
           ${ready ? "Pronta" : "Incompleta"}
@@ -84,7 +87,7 @@ import { getSupabase } from "./supabase.js";
       return;
     }
 
-    rows.forEach(row => grid.appendChild(card(row)));
+    const cards = await Promise.all(rows.map(row => card(row))); cards.forEach(el => grid.appendChild(el));
   }
 
   async function load() {
