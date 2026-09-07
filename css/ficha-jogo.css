@@ -17,4 +17,8 @@
 .aerion-sheet-modal{z-index:6000!important;pointer-events:auto!important;position:fixed!important;inset:0!important;display:none!important;align-items:flex-end!important;justify-content:center!important;overflow:hidden!important;}
 .aerion-sheet-modal.is-open{display:flex!important;}
 .aerion-sheet-card{pointer-events:auto!important;position:relative!important;z-index:6001!important;}
-.aerion-sheet-shield{z-index:5990!important;}
+.aerion-sheet-shield{z-index:1390!important;}
+
+/* Exact center of the instruction ring inside the carousel. */
+.aerion-sheet-menu__hint{left:50%!important;top:50%!important;margin:0!important;transform:translate(-50%,-50%) scale(.8)!important;}
+.aerion-sheet-menu.is-open .aerion-sheet-menu__hint{transform:translate(-50%,-50%) scale(1)!important;}
