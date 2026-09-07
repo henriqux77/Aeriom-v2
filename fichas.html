@@ -109,7 +109,18 @@
     <span>anos</span>
   </label>
 </div>
-<div class="appearance-options"><div class="appearance-option"><span class="label">Tom de pele</span><button id="skin-picker-button" type="button" class="picker" aria-expanded="false"><i id="skin-swatch"></i><span id="skin-value">Escolher</span><b>⌄</b></button><div id="skin-picker" class="popover" hidden></div></div><div class="appearance-option"><span class="label">Cabelo</span><div id="hair-grid" class="mini-grid"></div></div><div class="appearance-option"><span class="label">Olhos</span><div id="eyes-grid" class="mini-grid"></div></div><div class="appearance-option appearance-free-form"><span class="label">Personalização livre</span><div class="free-form-grid"><label>Descrição da aparência<textarea data-appearance="description" rows="3" maxlength="900" placeholder="Traços, roupas, detalhes físicos ou qualquer outra característica."></textarea></label><label>Cicatrizes <span class="optional">(opcional)</span><textarea data-appearance="scars" rows="2" maxlength="600" placeholder="Cicatrizes, marcas, tatuagens, queimaduras…"></textarea></label><label>Outros detalhes <span class="optional">(opcional)</span><textarea data-appearance="customDetails" rows="2" maxlength="900" placeholder="Algo que não aparece nas opções prontas? Escreva aqui."></textarea></label></div></div></div></div></div>
+<div class="appearance-options"><div class="appearance-option appearance-avatar-upload">
+  <div class="appearance-field-heading">
+    <span class="label">Imagem do personagem</span>
+    <small>Use uma arte própria para substituir a imagem automática.</small>
+  </div>
+  <input id="character-image-file" type="file" accept="image/jpeg,image/png,image/webp,image/gif" hidden>
+  <div class="character-image-upload">
+    <button type="button" id="character-image-upload-button" class="secondary-action">＋ Enviar imagem</button>
+    <button type="button" id="character-image-remove-button" class="secondary-action secondary-action--danger" hidden>Remover</button>
+    <span id="character-image-upload-status">JPG, PNG, WEBP ou GIF · até 5 MB</span>
+  </div>
+</div><div class="appearance-option"><span class="label">Tom de pele</span><button id="skin-picker-button" type="button" class="picker" aria-expanded="false"><i id="skin-swatch"></i><span id="skin-value">Escolher</span><b>⌄</b></button><div id="skin-picker" class="popover" hidden></div></div><div class="appearance-option"><span class="label">Cabelo</span><div id="hair-grid" class="mini-grid"></div></div><div class="appearance-option"><span class="label">Olhos</span><div id="eyes-grid" class="mini-grid"></div></div><div class="appearance-option appearance-free-form"><span class="label">Personalização livre</span><div class="free-form-grid"><label>Descrição da aparência<textarea data-appearance="description" rows="3" maxlength="900" placeholder="Traços, roupas, detalhes físicos ou qualquer outra característica."></textarea></label><label>Cicatrizes <span class="optional">(opcional)</span><textarea data-appearance="scars" rows="2" maxlength="600" placeholder="Cicatrizes, marcas, tatuagens, queimaduras…"></textarea></label><label>Outros detalhes <span class="optional">(opcional)</span><textarea data-appearance="customDetails" rows="2" maxlength="900" placeholder="Algo que não aparece nas opções prontas? Escreva aqui."></textarea></label></div></div></div></div></div>
 </section>
 <section class="creation-panel" data-panel="class" hidden>
 <div class="heading"><div class="eyebrow">04 · CLASSE</div><h2>Como você joga?</h2><p>A classe define Mana, carga e estilo de jogo. Itens e bônus específicos entram conforme as regras forem fechadas.</p></div><div id="class-grid" class="class-grid"></div>
