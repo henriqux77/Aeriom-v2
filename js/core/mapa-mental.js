@@ -47,30 +47,21 @@ import { getSupabase } from "./supabase.js";
     return document.getElementById("aeriom-knowledge-world");
   }
 
-  function controls() {
-    const b = board();
-    if (!b || b.querySelector(".aeriom-knowledge-enhanced-tools")) return;
-    const toolbar = b.parentElement?.querySelector(".aeriom-map-toolbar");
-    if (!toolbar) return;
-    const tools = document.createElement("div");
-    tools.className = "aeriom-knowledge-enhanced-tools";
-    tools.innerHTML =
-      '<button type="button" class="aeriom-mini-button" data-km-minus>−</button>' +
-      '<span class="aeriom-knowledge-zoom-label">100%</span>' +
-      '<button type="button" class="aeriom-mini-button" data-km-plus>＋</button>' +
-      '<button type="button" class="aeriom-mini-button" data-km-reset>⟳</button>' +
-      '<button type="button" class="aeriom-mini-button" data-km-connect>🔗 Conectar</button>';
+  function controls(){
+    const b=board();
+    if(!b) return;
+    const toolbar=b.closest(".aeriom-knowledge-wrap")?.querySelector(".aeriom-map-toolbar") || b.parentElement?.querySelector(".aeriom-map-toolbar");
+    if(!toolbar) return;
+    toolbar.querySelectorAll(".aeriom-knowledge-enhanced-tools").forEach(el=>el.remove());
+    const tools=document.createElement("div");
+    tools.className="aeriom-knowledge-enhanced-tools";
+    tools.innerHTML='<button type="button" class="aeriom-mini-button" data-km-minus>−</button><span class="aeriom-knowledge-zoom-label">100%</span><button type="button" class="aeriom-mini-button" data-km-plus>＋</button><button type="button" class="aeriom-mini-button" data-km-reset>⟳</button><button type="button" class="aeriom-mini-button" data-km-connect>🔗 Conectar</button>';
     toolbar.appendChild(tools);
-    tools.querySelector("[data-km-minus]").onclick = () => zoom(-0.15);
-    tools.querySelector("[data-km-plus]").onclick = () => zoom(0.15);
-    tools.querySelector("[data-km-reset]").onclick = () => { state.zoom = 1; state.panX = 0; state.panY = 0; applyView(); };
-    tools.querySelector("[data-km-connect]").onclick = () => {
-      state.connectMode = !state.connectMode;
-      state.connectFirst = null;
-      tools.querySelector("[data-km-connect]").classList.toggle("is-active", state.connectMode);
-      toast(state.connectMode ? "Modo conectar: toque em dois nós." : "Modo conectar desativado.", "success");
-      render();
-    };
+    tools.querySelector("[data-km-minus]").onclick=()=>zoom(-.15);
+    tools.querySelector("[data-km-plus]").onclick=()=>zoom(.15);
+    tools.querySelector("[data-km-reset]").onclick=()=>{state.zoom=1;state.panX=0;state.panY=0;applyView();};
+    tools.querySelector("[data-km-connect]").onclick=()=>{state.connectMode=!state.connectMode;state.connectFirst=null;tools.querySelector("[data-km-connect]").classList.toggle("is-active",state.connectMode);toast(state.connectMode?"Modo conectar: toque em dois nós.":"Modo conectar desativado.","success");render();};
+    updateZoomLabel();
   }
 
   function zoom(delta) {
@@ -248,24 +239,30 @@ import { getSupabase } from "./supabase.js";
     });
   }
 
-  function watch() {
-    let lastPanel=false;
-    const timer=setInterval(async()=>{
+  function watch(){
+    if(document.documentElement.dataset.aerionKnowledgeWatchBound)return;
+    document.documentElement.dataset.aerionKnowledgeWatchBound="1";
+    window.addEventListener("aeriom:campaigntabchange",async(event)=>{
+      if(event.detail?.tab!=="timeline")return;
+      setTimeout(async()=>{try{await load();render();}catch(error){console.warn("[AERION][KNOWLEDGE] tab",error);}},0);
+    });
+    window.addEventListener("resize",()=>{
       const panel=document.getElementById("campaign-panel-timeline");
-      const open=panel && !panel.hidden;
-      if(open && !lastPanel){try{await load();render();}catch(e){console.warn("[AERION][KNOWLEDGE]",e);}}
-      lastPanel=Boolean(open);
-    },700);
-    window.addEventListener("resize",()=>{ if(document.getElementById("campaign-panel-timeline") && !document.getElementById("campaign-panel-timeline").hidden) render(); });
+      if(panel && !panel.hidden) render();
+    });
   }
 
   async function start(){
     bindAdd();
-    window.addEventListener("aerion:knowledge:panelready",async()=>{
-      try{await load();render();}catch(error){console.warn("[AERION][KNOWLEDGE] panel",error);}
-    });
     watch();
-    try{await load();render();}catch(error){console.warn("[AERION][KNOWLEDGE]",error);}
+    const tryInit=async()=>{
+      const b=board();
+      if(!b)return;
+      try{await load();render();}catch(error){console.warn("[AERION][KNOWLEDGE] init",error);}
+    };
+    await tryInit();
+    setTimeout(tryInit,250);
+    setTimeout(tryInit,900);
   }
   if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",start,{once:true});else start();
 })();
