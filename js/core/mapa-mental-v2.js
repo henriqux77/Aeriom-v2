@@ -28,16 +28,19 @@ import { getSupabase } from "./supabase.js";
   function toast(msg,type="info"){const r=document.getElementById("aeriom-toast-region");if(!r)return;const e=document.createElement("div");e.className="aeriom-toast";e.dataset.type=type;e.textContent=msg;r.appendChild(e);setTimeout(()=>e.remove(),2600);}
 
   async function load(){
-    if(!await ready())return false;
-    const [n,e]=await Promise.all([
-      state.sb.from("aerion_mind_nodes").select("*").eq("campaign_id",state.campaignId).order("created_at",{ascending:true}),
-      state.sb.from("aerion_mind_edges").select("*").eq("campaign_id",state.campaignId).order("created_at",{ascending:true})
-    ]);
-    if(n.error)throw n.error;if(e.error)throw e.error;
-    state.nodes=n.data||[];state.edges=e.data||[];
+    if(!await ready()) return false;
+    const nodesRes=await state.sb.from("aerion_mind_nodes").select("*").eq("campaign_id",state.campaignId).order("created_at",{ascending:true});
+    if(nodesRes.error) throw nodesRes.error;
+    const edgeRes=await state.sb.from("aerion_mind_edges").select("*").eq("campaign_id",state.campaignId).order("created_at",{ascending:true});
+    if(edgeRes.error) throw edgeRes.error;
+    state.nodes=nodesRes.data||[];
+    state.edges=edgeRes.data||[];
     await Promise.all(state.nodes.map(async node=>{
       if(!node.image_path)return;
-      try{const r=await state.sb.storage.from("campaign-assets").createSignedUrl(node.image_path,3600);node.imageUrl=r.data?.signedUrl||"";}catch{}
+      try{
+        const r=await state.sb.storage.from("campaign-assets").createSignedUrl(node.image_path,3600);
+        if(!r.error) node.imageUrl=r.data?.signedUrl||"";
+      }catch(error){console.warn("[AERION][MIND] image",error);}
     }));
     return true;
   }
