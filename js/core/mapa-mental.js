@@ -259,6 +259,13 @@ import { getSupabase } from "./supabase.js";
     window.addEventListener("resize",()=>{ if(document.getElementById("campaign-panel-timeline") && !document.getElementById("campaign-panel-timeline").hidden) render(); });
   }
 
-  async function start(){bindAdd();watch();try{await load();render();}catch(error){console.warn("[AERION][KNOWLEDGE]",error);}}
+  async function start(){
+    bindAdd();
+    window.addEventListener("aerion:knowledge:panelready",async()=>{
+      try{await load();render();}catch(error){console.warn("[AERION][KNOWLEDGE] panel",error);}
+    });
+    watch();
+    try{await load();render();}catch(error){console.warn("[AERION][KNOWLEDGE]",error);}
+  }
   if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",start,{once:true});else start();
 })();
