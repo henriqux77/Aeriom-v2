@@ -33,3 +33,10 @@
 .aerion-mind-share small{color:rgba(255,255,255,.34);font-size:7px}
 .aerion-mind-modal footer{display:grid;grid-template-columns:auto 1fr auto auto;gap:8px;align-items:center;padding-top:4px}
 @media(max-width:700px){.aerion-mind-map-board{min-height:56vh}.aerion-mind-node{width:150px}.aerion-mind-form-grid{grid-template-columns:1fr}.aerion-mind-modal__card{max-height:94vh}.aerion-mind-modal footer{grid-template-columns:auto 1fr auto}.aerion-mind-modal footer .aeriom-mini-button:last-child{grid-column:3}}
+
+.aerion-mind-map-board{isolation:isolate}
+.aerion-mind-map-world{z-index:1}
+.aerion-mind-map-empty{position:relative;z-index:5;pointer-events:auto;display:grid;place-items:center;gap:10px;min-height:260px;padding:70px 24px;text-align:center;color:rgba(255,255,255,.5);font-size:14px;line-height:1.5}
+.aerion-mind-map-empty strong{display:block;color:rgba(255,255,255,.88);font:500 22px Cinzel,Georgia,serif}
+.aerion-mind-map-empty span{display:block;max-width:460px}
+.aerion-mind-map-empty button{pointer-events:auto;position:relative;z-index:6}
