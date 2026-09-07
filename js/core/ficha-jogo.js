@@ -31,6 +31,6 @@ import { getSupabase } from "./supabase.js";
   function flash(msg){const el=document.getElementById("aerion-sheet-flash");if(!el)return;el.textContent=msg;el.classList.add("is-show");clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove("is-show"),2400);}
   async function openSheet(tab){menuOpen=false;document.getElementById("aerion-sheet-fab")?.classList.remove("is-open");document.getElementById("aerion-sheet-menu")?.classList.remove("is-open");currentTab=TABS.some(x=>x[0]===tab)?tab:"summary";await loadCharacter();render();document.getElementById("aerion-sheet-modal")?.classList.add("is-open");}
   function closeSheet(){document.getElementById("aerion-sheet-modal")?.classList.remove("is-open");}
-  async function boot(){ensure();window.addEventListener("aeriom:campaign:ready",()=>loadCharacter().catch(()=>{}));window.addEventListener("aeriom:campaign:characterschange",()=>loadCharacter().catch(()=>{}));}
+  async function boot(){ensure();document.addEventListener("click",e=>{const a=e.target.closest(".campaign-character-card a[href*=\"./ficha.html\"]");if(!a)return;const c=own();const id=new URL(a.href,location.href).searchParams.get("id");if(c&&id&&String(c.id)===String(id)){e.preventDefault();openSheet("summary");}});window.addEventListener("aeriom:campaign:ready",()=>loadCharacter().catch(()=>{}));window.addEventListener("aeriom:campaign:characterschange",()=>loadCharacter().catch(()=>{}));}
   if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",boot,{once:true});else boot();
 })();
