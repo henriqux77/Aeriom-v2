@@ -12,3 +12,9 @@
 .aerion-sheet-shield{position:fixed;inset:0;z-index:1398;background:rgba(0,0,0,.015);pointer-events:auto;touch-action:none;}
 .aerion-sheet-menu,.aerion-sheet-menu *{touch-action:none;}
 @media(max-width:700px){.aerion-sheet-menu{right:calc(50% - 115px);bottom:calc(76px + env(safe-area-inset-bottom));width:230px;height:230px;--sheet-radius:88px}.aerion-sheet-menu__button{width:50px;height:50px;font-size:18px}.aerion-sheet-menu__label{font-size:7px}}
+
+/* Ficha de jogo: modal acima de toda a mesa e interação garantida. */
+.aerion-sheet-modal{z-index:6000!important;pointer-events:auto!important;position:fixed!important;inset:0!important;display:none!important;align-items:flex-end!important;justify-content:center!important;overflow:hidden!important;}
+.aerion-sheet-modal.is-open{display:flex!important;}
+.aerion-sheet-card{pointer-events:auto!important;position:relative!important;z-index:6001!important;}
+.aerion-sheet-shield{z-index:5990!important;}
