@@ -415,15 +415,18 @@ import { getSupabase } from "./supabase.js";
             <div><span class="eyebrow">FICHA NA MESA</span><h3>${esc(c.name||"Personagem")}</h3><small>${esc([c.race||s.race,c.class||s.class,c.power||s.primaryPower].filter(Boolean).join(" · "))}</small></div>
             <button type="button" class="campaign-icon-button" data-close-view>×</button>
           </div>
-          <div class="aerion-campaign-view-hero">
-            <div class="aerion-campaign-view-avatar">${avatar?'<img src="'+esc(avatar)+'" alt="">':'<span>'+esc(String(c.name||"?").slice(0,1).toUpperCase())+'</span>'}</div>
-            <div class="aerion-campaign-sheet-stats aerion-campaign-sheet-stats--hero">
-              <div class="aerion-campaign-sheet-stat"><span>HP</span><strong>${num(c.hp_current)}/${num(c.hp_max)}</strong></div>
-              <div class="aerion-campaign-sheet-stat"><span>MANA</span><strong>${num(c.mana_current)}/${num(c.mana_max)}</strong></div>
-              <div class="aerion-campaign-sheet-stat"><span>DEFESA</span><strong>${num(c.defense,10)}</strong></div>
-              <div class="aerion-campaign-sheet-stat"><span>MOV.</span><strong>${num(c.movement,9)}m</strong></div>
-            </div>
+          <div class="aerion-campaign-sheet-stats aerion-campaign-sheet-stats--hero">
+            <div class="aerion-campaign-sheet-stat"><span>HP</span><strong>\${num(c.hp_current)}/\${num(c.hp_max)}</strong></div>
+            <div class="aerion-campaign-sheet-stat"><span>MANA</span><strong>\${num(c.mana_current)}/\${num(c.mana_max)}</strong></div>
+            <div class="aerion-campaign-sheet-stat"><span>DEFESA</span><strong>\${num(c.defense,10)}</strong></div>
+            <div class="aerion-campaign-sheet-stat"><span>MOV.</span><strong>\${num(c.movement,9)}m</strong></div>
           </div>
+          <section class="aerion-campaign-character-appearance">
+            <div class="aerion-campaign-character-appearance__image">
+              \${avatar?'<img src="'+esc(avatar)+'" alt="Imagem do personagem">':'<span>'+esc(String(c.name||"?").slice(0,1).toUpperCase())+'</span>'}
+            </div>
+            <div><span class="eyebrow">APARÊNCIA</span><strong>Imagem do personagem</strong><small>Imagem personalizada da ficha.</small></div>
+          </section>
           <div class="aerion-campaign-sheet-stats">
             <div class="aerion-campaign-sheet-stat"><span>RAÇA</span><strong>${esc(c.race||s.race||"—")}</strong></div>
             <div class="aerion-campaign-sheet-stat"><span>CLASSE</span><strong>${esc(c.class||s.class||"—")}</strong></div>
