@@ -177,7 +177,8 @@ function buildCharacterSelect(select) {
 
 function ensureTestsPanel() {
   const dicePanel = $("campaign-panel-dice");
-  if (!dicePanel || $("aeriom-tests-panel")) return;
+  if (!dicePanel) return false;
+  if ($("aeriom-tests-panel")) return true;
 
   const section = document.createElement("section");
   section.id = "aeriom-tests-panel";
@@ -255,6 +256,7 @@ function ensureTestsPanel() {
   dicePanel.appendChild(section);
   const legacy = dicePanel.querySelector(".dice-layout");
   if (legacy) legacy.hidden = true;
+  return true;
 }
 function setTestMode(mode) {
   const target = ["roll","attribute","request"].includes(mode) ? mode : "roll";
@@ -723,9 +725,14 @@ function setupRealtime() {
 }
 
 async function init() {
-  if (state.initialized) return;
+  if (state.initialized && $("aeriom-tests-panel")) return;
 
-  ensureTestsPanel();
+  const readyPanel = ensureTestsPanel();
+  if (!readyPanel) {
+    state.initialized = false;
+    return false;
+  }
+
   readContext();
   buildCharacterSelect($("aeriom-test-character"));
   loadCharacterStates().catch((error)=>console.warn("[AERION][TESTS] Contexto de ficha será carregado sob demanda.",error));
@@ -740,6 +747,7 @@ async function init() {
 
   state.initialized = true;
   dispatch("ready", { ...state, requests: state.requests });
+  return true;
 }
 
 function refreshContext() {
@@ -751,9 +759,12 @@ function refreshContext() {
 
 window.addEventListener("aeriom:campaign:ready", async () => {
   refreshContext();
-  if (!state.initialized) {
+  if (!state.initialized || !$("aeriom-tests-panel")) {
     await init();
   } else {
+    buildCharacterSelect($("aeriom-test-character"));
+    buildRequestCharacterSelect();
+    await loadCharacterStates().catch(()=>{});
     await refreshRequests();
   }
 });
