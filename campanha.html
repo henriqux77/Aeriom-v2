@@ -4093,8 +4093,7 @@
     `;
 
     renderTimelineFeed("all");
-    loadKnowledge().then(renderKnowledgeBoard).catch((error) =>
-      console.error("[AERION][KNOWLEDGE]", error));
+    loadKnowledge().catch((error) => console.error("[AERION][KNOWLEDGE]", error));
 
     panel.querySelectorAll("[data-timeline-filter]").forEach((button) =>
       button.addEventListener("click", () => {
@@ -4110,8 +4109,7 @@
       panel.querySelector(".aeriom-knowledge-wrap")?.scrollIntoView({ behavior: "smooth", block: "start" });
     });
 
-panel.querySelector("[data-aeriom-add-node]")
-      ?.addEventListener("click", () => openKnowledgeEditor());
+
   }
 
   function renderTimelineFeed(filter) {
