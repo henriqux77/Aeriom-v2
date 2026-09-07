@@ -56,7 +56,9 @@ const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&
     const {data:auth,error:authError}=await supabase.auth.getUser();
     if(authError) throw authError;
     if(!auth?.user){location.href="./index.html";return;}
-    const id=new URLSearchParams(location.search).get("id");
+    const params=new URLSearchParams(location.search);
+    const id=params.get("id");
+    const returnCampaign=params.get("returnCampaign");
     if(!id) throw new Error("Ficha não informada.");
     const {data,rowError}=await supabase.from("characters").select("*").eq("id",id).eq("user_id",auth.user.id).maybeSingle();
     if(rowError) throw rowError;
@@ -83,7 +85,7 @@ const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&
     if(s.avatar){
       $("avatar").src=s.avatar;$("avatar").hidden=false;
     }
-    $("edit").onclick=()=>{location.href=`./fichas.html?id=${encodeURIComponent(row.id)}${returnCampaign?`&returnCampaign=${encodeURIComponent(returnCampaign)}`:""}`};
+    const editButton=$("edit"); if(editButton){editButton.onclick=()=>{const url=new URL("./fichas.html",location.href);url.searchParams.set("id",row.id);if(returnCampaign)url.searchParams.set("returnCampaign",returnCampaign);location.href=url.href;};}
   }catch(e){
     $("error").style.display="block";$("error").textContent=e?.message||"Não foi possível abrir a ficha.";
   }
