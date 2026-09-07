@@ -728,8 +728,7 @@ async function init() {
   ensureTestsPanel();
   readContext();
   buildCharacterSelect($("aeriom-test-character"));
-  loadCharacterStates().catch(()=>{});
-  await loadCharacterStates();
+  loadCharacterStates().catch((error)=>console.warn("[AERION][TESTS] Contexto de ficha será carregado sob demanda.",error));
   buildRequestCharacterSelect();
   renderRequestAttributes();
   renderSkills();
