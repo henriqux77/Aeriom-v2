@@ -58,7 +58,7 @@ import { getSupabase } from "./supabase.js";
     return el;
   }
 
-  function renderRows() {
+  async function renderRows() {
     const filter = $("mf-filter")?.value || "all";
     const rows = filter === "all"
       ? allRows
@@ -105,7 +105,7 @@ import { getSupabase } from "./supabase.js";
     if (error) throw error;
 
     allRows = data || [];
-    renderRows();
+    await renderRows();
 
     if (!allRows.length) {
       grid.innerHTML = `
@@ -133,7 +133,7 @@ import { getSupabase } from "./supabase.js";
   }
 
   function bind() {
-    $("mf-filter")?.addEventListener("change", renderRows);
+    $("mf-filter")?.addEventListener("change", () => { renderRows().catch(error => { console.error("[AERION][MINHAS FICHAS][RENDER]", error); }); });
 
     $("mf-new").addEventListener("click", () => {
       window.location.href = "./fichas.html?new=1";
