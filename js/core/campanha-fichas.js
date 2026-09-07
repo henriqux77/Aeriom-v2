@@ -205,7 +205,7 @@ import { getSupabase } from "./supabase.js";
         item.className="aerion-campaign-character-card";
         item.innerHTML=`
           <div class="aerion-campaign-character-avatar">
-            ${esc(String(c.name||"?").slice(0,1).toUpperCase())}
+            ${avatar ? `<img src="${esc(avatar)}" alt="">` : esc(String(c.name||"?").slice(0,1).toUpperCase())}
           </div>
           <div>
             <strong>${esc(c.name||"Ficha sem nome")}</strong>
@@ -297,6 +297,8 @@ import { getSupabase } from "./supabase.js";
     notice("Ficha removida da campanha.","success");
   }
 
+  async function signedAvatar(character){ const path=String(character?.creation_state?.avatar||character?.avatar_path||"").trim(); if(!path)return ""; try{const r=await supabase.storage.from("avatars").createSignedUrl(path,3600);return r.data?.signedUrl||"";}catch{return "";} }
+
   async function refresh(){
     const {data,error}=await supabase
       .from("campaign_characters")
@@ -351,9 +353,10 @@ import { getSupabase } from "./supabase.js";
     const list=document.createElement("div");
     list.className="aerion-campaign-character-grid";
 
-    entries.forEach(entry=>{
+    for(const entry of entries){
       const c=entry.characters;
       const own=c.user_id===user.id;
+      const avatar=await signedAvatar(c);
 
       const card=document.createElement("article");
       card.className="aerion-campaign-character-card";
@@ -387,7 +390,7 @@ import { getSupabase } from "./supabase.js";
         </div>
       `;
       list.appendChild(card);
-    });
+    }
 
     root.appendChild(list);
   }
