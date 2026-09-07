@@ -18,9 +18,9 @@ import { getAvailableThemes, applyCampaignTheme } from "./theme.js";
     const c=ctx();if(!c?.supabase||!c.campaignId)return;
     try{const r=await c.supabase.from("campaigns").update({theme:id}).eq("id",c.campaignId);if(r.error)throw r.error;if(c.campaign)c.campaign.theme=id;applyCampaignTheme(id,id==="cave"?caveBg:null);render();}catch(e){console.error("[AERION][THEME]",e)}
   }
-  function sync(){render();const theme=String(ctx()?.campaign?.theme||document.documentElement.dataset.theme||"default");applyCampaignTheme(theme,theme==="cave"?caveBg:null);}
+  async function sync(){render();const theme=String(ctx()?.campaign?.theme||document.documentElement.dataset.theme||"default");await applyCampaignTheme(theme,null);}
   window.addEventListener("aeriom:campaign:ready",()=>setTimeout(sync,30));
-  window.addEventListener("aeriom:campaigntheme",e=>{applyCampaignTheme(e.detail?.theme||"default",e.detail?.theme==="cave"?caveBg:null);render()});
+  window.addEventListener("aeriom:campaigntheme",async e=>{await applyCampaignTheme(e.detail?.theme||"default",null);render()});
   window.addEventListener("aeriom:campaigntabchange",e=>{if(e.detail?.tab==="theme")setTimeout(sync,30)});
-  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",sync,{once:true});else sync();
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",()=>{void sync()},{once:true});else void sync();
 })();
