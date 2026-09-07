@@ -1,6 +1,6 @@
 :root[data-theme="cave"]{--cave-rock-top:url("https://i.ibb.co/N2vCMQB5/file-00000000e5a8820e95d23516d122ff4f.png");--cave-rock-bottom:url("https://i.ibb.co/MDgyr3N1/file-000000004614820e8063f423e89cea85.png");--cave-background:url("https://i.ibb.co/ch7J9bmn/file-00000000d334820eabb913a2eaccee9b.png")}
 body[data-cave-theme="true"]{background-image:var(--cave-background),linear-gradient(rgba(6,7,8,.58),rgba(6,7,8,.58));background-size:cover;background-position:center;background-attachment:fixed}
-body[data-cave-theme="true"] .campaign-workspace,body[data-cave-theme="true"] .campaign-main,body[data-cave-theme="true"] .campaign-panel{background:transparent}
+
 body[data-cave-theme="true"] .campaign-card,body[data-cave-theme="true"] .campaign-section,body[data-cave-theme="true"] .campaign-module{position:relative}
 body[data-cave-theme="true"] .campaign-sidebar{background:rgba(8,9,10,.90);border-color:rgba(160,139,106,.18)}
 body[data-cave-theme="true"] .campaign-nav-item.is-active{background:rgba(110,96,77,.18);color:#c9b28a}
@@ -54,4 +54,73 @@ body[data-cave-theme="true"] #campaign-master-card::after{
   background:url("https://i.ibb.co/MDgyr3N1/file-000000004614820e8063f423e89cea85.png") center/contain no-repeat;
   pointer-events:none;
   z-index:4;
+}
+
+/* CAVERNA — camada de ambiente exclusivamente no fundo */
+html body[data-cave-theme="true"]{
+  background:#08090a url("https://i.ibb.co/ch7J9bmn/file-00000000d334820eabb913a2eaccee9b.png") center center/cover fixed no-repeat;
+}
+body[data-cave-theme="true"] .campaign-app{
+  background:transparent;
+}
+body[data-cave-theme="true"] .campaign-workspace,
+body[data-cave-theme="true"] .campaign-main,
+body[data-cave-theme="true"] .campaign-panel{
+  background:transparent;
+}
+/* Superfícies da interface: nenhuma imagem do cenário atravessa os cards. */
+body[data-cave-theme="true"] .campaign-card,
+body[data-cave-theme="true"] .campaign-section,
+body[data-cave-theme="true"] .campaign-hero,
+body[data-cave-theme="true"] .campaign-member-card,
+body[data-cave-theme="true"] .campaign-overview-grid > *,
+body[data-cave-theme="true"] .campaign-module-placeholder,
+body[data-cave-theme="true"] .campaign-background-control{
+  background-color:rgba(8,8,8,.975);
+  background-image:none !important;
+}
+/* Sem pedras herdadas: nenhuma seção/card recebe pseudo decorativo por padrão. */
+body[data-cave-theme="true"] .campaign-card::before,
+body[data-cave-theme="true"] .campaign-card::after,
+body[data-cave-theme="true"] .campaign-section::before,
+body[data-cave-theme="true"] .campaign-section::after,
+body[data-cave-theme="true"] .campaign-module::before,
+body[data-cave-theme="true"] .campaign-module::after{
+  content:none !important;
+  display:none !important;
+}
+/* Um único ponto decorativo do tema. */
+body[data-cave-theme="true"] #campaign-master-card{
+  position:relative;
+  overflow:visible;
+}
+body[data-cave-theme="true"] #campaign-master-card::before{
+  content:"";
+  display:block;
+  position:absolute;
+  left:50%;
+  top:-38px;
+  width:190px;
+  height:86px;
+  transform:translateX(-50%);
+  background:url("https://i.ibb.co/N2vCMQB5/file-00000000e5a8820e95d23516d122ff4f.png") center/contain no-repeat;
+  pointer-events:none;
+  z-index:4;
+}
+body[data-cave-theme="true"] #campaign-master-card::after{
+  content:"";
+  display:block;
+  position:absolute;
+  left:50%;
+  bottom:-38px;
+  width:205px;
+  height:88px;
+  transform:translateX(-50%);
+  background:url("https://i.ibb.co/MDgyr3N1/file-000000004614820e8063f423e89cea85.png") center/contain no-repeat;
+  pointer-events:none;
+  z-index:4;
+}
+@media(max-width:700px){
+  body[data-cave-theme="true"] #campaign-master-card::before{width:150px;height:68px;top:-28px}
+  body[data-cave-theme="true"] #campaign-master-card::after{width:165px;height:72px;bottom:-30px}
 }
