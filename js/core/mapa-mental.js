@@ -192,55 +192,52 @@ import { getSupabase } from "./supabase.js";
     return m;
   }
 
-  async function memberChoices(selected) {
-    const r=await sb.from("campaign_members").select("user_id,role").eq("campaign_id",campaignId);
-    if(r.error)throw r.error;
-    const ids=(r.data||[]).map(x=>x.user_id);
-    let profiles=[];
-    if(ids.length){const p=await sb.from("profiles").select("id,display_name").in("id",ids);profiles=p.data||[];}
-    return (r.data||[]).filter(x=>x.user_id!==user?.id).map(x=>({id:x.user_id,role:x.role,name:profiles.find(p=>p.id===x.user_id)?.display_name||"Jogador",checked:selected.has(x.user_id)}));
+  async function memberChoices(selected){
+    try{
+      const r=await sb.from("campaign_members").select("user_id,role").eq("campaign_id",campaignId);
+      if(r.error)throw r.error;
+      const profiles=r.data?.length?((await sb.from("profiles").select("id,display_name").in("id",r.data.map(x=>x.user_id))).data||[]):[];
+      return (r.data||[]).filter(x=>x.user_id!==user?.id).map(x=>({id:x.user_id,name:profiles.find(p=>p.id===x.user_id)?.display_name||"Jogador",role:x.role,checked:selected.has(x.user_id)}));
+    }catch{return []}
   }
 
-  async function editor(node) {
+  async function editor(node=null){
     const m=ensureModal(), meta=node?.metadata||{}, selected=new Set(Array.isArray(meta.shared_with)?meta.shared_with:[]);
-    let members=[]; if(node?.visibility==="shared" || isMaster()) { try{members=await memberChoices(selected);}catch{} }
-    m.innerHTML='<div class="aeriom-modal-card">' +
-      '<header class="aeriom-modal-card__head"><div><p class="campaign-panel__eyebrow">Mapa mental</p><h3>'+(node?"Editar nota":"Nova nota")+'</h3></div><button class="campaign-icon-button" data-close>×</button></header>' +
-      '<form class="aeriom-modal-card__body" data-editor>' +
-      '<label class="aeriom-modal-field"><span>Título</span><input name="title" required maxlength="180" value="'+esc(node?.title||"")+'"></label>' +
-      '<label class="aeriom-modal-field"><span>Tipo</span><select name="type">'+["note","npc","location","clue","quest","item","faction","event"].map(v=>'<option value="'+v+'" '+(node?.node_type===v?"selected":"")+'>'+v+'</option>').join("")+'</select></label>' +
-      '<label class="aeriom-modal-field"><span>Informação</span><textarea name="content" maxlength="5000">'+esc(node?.content||"")+'</textarea></label>' +
-      '<div class="aeriom-knowledge-editor-grid"><label class="aeriom-modal-field"><span>Cor da nota</span><input type="color" name="color" value="'+esc(meta.color||"#8b6f36")+'"></label><label class="aeriom-modal-field"><span>Imagem</span><input type="file" name="image" accept="image/png,image/jpeg,image/webp,image/gif"></label></div>' +
-      (node?.__imageUrl?'<div class="aeriom-knowledge-current-image"><img src="'+esc(node.__imageUrl)+'" alt="Imagem atual"></div>':"") +
-      '<label class="aeriom-modal-field"><span>Visibilidade</span><select name="visibility"><option value="public" '+(node?.visibility==="public"?"selected":"")+'>Todos</option>'+(isMaster()?'<option value="master" '+(node?.visibility==="master"?"selected":"")+'>Somente Mestre</option>':"")+'<option value="private" '+(node?.visibility==="private"?"selected":"")+'>Somente eu</option><option value="shared" '+(node?.visibility==="shared"?"selected":"")+'>Pessoas específicas</option></select></label>' +
-      '<div class="aeriom-knowledge-share-panel"><div class="aeriom-knowledge-share-list">'+(members.length?members.map(x=>'<label class="aeriom-share-user"><input type="checkbox" name="share" value="'+x.id+'" '+(x.checked?"checked":"")+'><span>'+esc(x.name)+'</span><small>'+esc(x.role)+'</small></label>').join(""):'<small>Nenhum outro integrante.</small>')+'</div></div>' +
-      '<div class="aeriom-modal-actions">'+(node?'<button class="aeriom-mini-button aeriom-mini-button--danger" type="button" data-delete>Excluir</button>':"")+'<button class="campaign-button campaign-button--secondary" type="button" data-close>Cancelar</button><button class="campaign-button campaign-button--primary" type="submit">Salvar</button></div>' +
-      '</form></div>';
+    const members=(node?.visibility==="shared"||isMaster())?await memberChoices(selected):[];
+    m.innerHTML='<div class="aeriom-modal-card"><header class="aeriom-modal-card__head"><div><p class="campaign-panel__eyebrow">Mapa mental</p><h3>'+(node?"Editar nota":"Nova nota")+'</h3></div><button class="campaign-icon-button" data-close>×</button></header><form class="aeriom-modal-card__body" data-km-editor>'+
+      '<label class="aeriom-modal-field"><span>Título</span><input name="title" required maxlength="180" value="'+esc(node?.title||"")+'"></label>'+
+      '<label class="aeriom-modal-field"><span>Tipo</span><select name="type">'+["note","npc","location","clue","quest","item","faction","event"].map(v=>'<option value="'+v+'" '+(node?.node_type===v?"selected":"")+'>'+v+'</option>').join("")+'</select></label>'+
+      '<label class="aeriom-modal-field"><span>Informação</span><textarea name="content" maxlength="5000">'+esc(node?.content||"")+'</textarea></label>'+
+      '<div class="aeriom-knowledge-editor-grid"><label class="aeriom-modal-field"><span>Cor da nota</span><input type="color" name="color" value="'+esc(meta.color||"#8b6f36")+'"></label><label class="aeriom-modal-field"><span>Imagem</span><input type="file" name="image" accept="image/png,image/jpeg,image/webp,image/gif"></label></div>'+
+      (node?.__imageUrl?'<div class="aeriom-knowledge-current-image"><img src="'+esc(node.__imageUrl)+'" alt=""></div>':"")+
+      '<label class="aeriom-modal-field"><span>Visibilidade</span><select name="visibility"><option value="public" '+(node?.visibility==="public"?"selected":"")+'>Todos</option>'+(isMaster()?'<option value="master" '+(node?.visibility==="master"?"selected":"")+'>Somente Mestre</option>':"")+'<option value="private" '+(node?.visibility==="private"?"selected":"")+'>Somente eu</option><option value="shared" '+(node?.visibility==="shared"?"selected":"")+'>Pessoas específicas</option></select></label>'+
+      '<div class="aeriom-knowledge-share-list">'+(members.length?members.map(x=>'<label class="aeriom-share-user"><input type="checkbox" name="share" value="'+x.id+'" '+(x.checked?"checked":"")+'><span>'+esc(x.name)+'</span><small>'+esc(x.role)+'</small></label>').join(""):"")+'</div>'+
+      '<div class="aeriom-modal-actions">'+(node?'<button type="button" class="aeriom-mini-button aeriom-mini-button--danger" data-delete>Excluir</button>':"")+'<button type="button" class="campaign-button campaign-button--secondary" data-close>Cancelar</button><button type="submit" class="campaign-button campaign-button--primary">Salvar</button></div></form></div>';
     m.classList.add("is-open");
     m.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>m.classList.remove("is-open"));
+    const vis=m.querySelector('[name="visibility"]'), shareBox=m.querySelector(".aeriom-knowledge-share-list");
+    const sync=()=>{shareBox.style.display=vis.value==="shared"?"grid":"none";};vis.addEventListener("change",sync);sync();
     m.querySelector("[data-delete]")?.addEventListener("click",async()=>{if(!confirm("Excluir esta nota e suas ligações?"))return;const r=await sb.from("knowledge_nodes").delete().eq("id",node.id);if(r.error){toast(r.error.message,"error");return;}m.classList.remove("is-open");await load();render();toast("Nota excluída.","success");});
-    m.querySelector("[data-editor]").addEventListener("submit",async(e)=>{
-      e.preventDefault();const f=e.currentTarget;let id=node?.id, metaOut={...(node?.metadata||{}),color:f.color.value};let imagePath=metaOut.image_path||"";
-      const file=f.image.files?.[0];
-      if(file){const ext=(file.name.split(".").pop()||"bin").toLowerCase().replace(/[^a-z0-9]/g,"");imagePath=""+campaignId+"/knowledge/"+(id||crypto.randomUUID())+"-"+Date.now()+"."+ext;const up=await sb.storage.from("campaign-assets").upload(imagePath,file,{upsert:true,contentType:file.type});if(up.error)throw up.error;metaOut.image_path=imagePath;}
-      const shared=[...m.querySelectorAll('input[name="share"]:checked')].map(x=>x.value);metaOut.shared_with=shared;
-      const payload={campaign_id:campaignId,created_by:node?.created_by||user.id,owner_id:(f.visibility.value==="private"||f.visibility.value==="shared")?user.id:null,visibility:f.visibility.value,node_type:f.type.value,title:f.title.value.trim(),content:f.content.value.trim()||null,pos_x:node?.pos_x??20+Math.random()*45,pos_y:node?.pos_y??20+Math.random()*45,linked_pin_id:node?.linked_pin_id||null,metadata:metaOut};
-      if(node){const r=await sb.from("knowledge_nodes").update({...payload,updated_at:new Date().toISOString()}).eq("id",node.id);if(r.error)throw r.error;id=node.id;}else{const r=await sb.from("knowledge_nodes").insert(payload).select("id").single();if(r.error)throw r.error;id=r.data.id;}
-      await sb.from("knowledge_node_permissions").delete().eq("node_id",id);
-      if(f.visibility.value==="shared"&&shared.length){const r=await sb.from("knowledge_node_permissions").insert(shared.map(uid=>({node_id:id,user_id:uid,created_by:user.id})));if(r.error)throw r.error;}
-      m.classList.remove("is-open");await load();render();toast(node?"Nota atualizada.":"Nota criada.","success");
+    m.querySelector("[data-km-editor]").addEventListener("submit",async(e)=>{
+      e.preventDefault();const f=e.currentTarget;try{
+        const metaOut={...(node?.metadata||{}),color:f.color.value,shared_with:[...m.querySelectorAll('input[name="share"]:checked')].map(x=>x.value)};
+        const file=f.image.files?.[0];
+        if(file){const ext=(file.name.split(".").pop()||"bin").toLowerCase().replace(/[^a-z0-9]/g,"");const id=node?.id||crypto.randomUUID();const path=campaignId+"/knowledge/"+id+"-"+Date.now()+"."+ext;const up=await sb.storage.from("campaign-assets").upload(path,file,{upsert:true,contentType:file.type});if(up.error)throw up.error;metaOut.image_path=path;}
+        const payload={campaign_id:campaignId,created_by:node?.created_by||user.id,owner_id:(f.visibility.value==="private"||f.visibility.value==="shared")?user.id:null,visibility:f.visibility.value,node_type:f.type.value,title:f.title.value.trim(),content:f.content.value.trim()||null,pos_x:node?.pos_x??20+Math.random()*45,pos_y:node?.pos_y??20+Math.random()*45,linked_pin_id:node?.linked_pin_id||null,metadata:metaOut};
+        let id=node?.id;
+        if(node){const r=await sb.from("knowledge_nodes").update({...payload,updated_at:new Date().toISOString()}).eq("id",node.id);if(r.error)throw r.error;}else{const r=await sb.from("knowledge_nodes").insert(payload).select("id").single();if(r.error)throw r.error;id=r.data.id;}
+        await sb.from("knowledge_node_permissions").delete().eq("node_id",id);
+        if(f.visibility.value==="shared"){const selectedIds=metaOut.shared_with||[];if(selectedIds.length){const r=await sb.from("knowledge_node_permissions").insert(selectedIds.map(uid=>({node_id:id,user_id:uid,created_by:user.id})));if(r.error)throw r.error;}}
+        m.classList.remove("is-open");await load();render();toast(node?"Nota atualizada.":"Nota criada.","success");
+      }catch(err){console.error("[AERION][KNOWLEDGE]",err);toast(err?.message||"Não foi possível salvar a nota.","error");}
     });
   }
 
-  function edgeEditor(edge) {
-    const m=ensureModal();
-    m.innerHTML='<div class="aeriom-modal-card"><header class="aeriom-modal-card__head"><div><p class="campaign-panel__eyebrow">Conexão</p><h3>Editar ligação</h3></div><button class="campaign-icon-button" data-close>×</button></header><form class="aeriom-modal-card__body" data-edge><label class="aeriom-modal-field"><span>Rótulo</span><input name="label" maxlength="120" value="'+esc(edge.label||"")+'"></label><label class="aeriom-modal-field"><span>Cor da linha</span><input type="color" name="color" value="'+esc(edge.color||"#8b6f36")+'"></label><div class="aeriom-modal-actions"><button type="button" class="aeriom-mini-button aeriom-mini-button--danger" data-delete-edge>Excluir</button><button type="button" class="campaign-button campaign-button--secondary" data-close>Cancelar</button><button type="submit" class="campaign-button campaign-button--primary">Salvar</button></div></form></div>';
-    m.classList.add("is-open");m.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>m.classList.remove("is-open"));
-    m.querySelector("[data-delete-edge]").onclick=async()=>{const r=await sb.from("knowledge_edges").delete().eq("id",edge.id);if(r.error){toast(r.error.message,"error");return;}m.classList.remove("is-open");await load();render();toast("Ligação excluída.","success");};
-    m.querySelector("[data-edge]").onsubmit=async(e)=>{e.preventDefault();const f=e.currentTarget;const r=await sb.from("knowledge_edges").update({label:f.label.value.trim()||null,color:f.color.value}).eq("id",edge.id);if(r.error){toast(r.error.message,"error");return;}m.classList.remove("is-open");await load();render();toast("Ligação atualizada.","success");};
+  function edgeEditor(edge){
+    const m=ensureModal();m.innerHTML='<div class="aeriom-modal-card"><header class="aeriom-modal-card__head"><div><p class="campaign-panel__eyebrow">Conexão</p><h3>Editar ligação</h3></div><button class="campaign-icon-button" data-close>×</button></header><form class="aeriom-modal-card__body" data-edge><label class="aeriom-modal-field"><span>Rótulo</span><input name="label" value="'+esc(edge.label||"")+'"></label><label class="aeriom-modal-field"><span>Cor</span><input type="color" name="color" value="'+esc(edge.color||"#8b6f36")+'"></label><div class="aeriom-modal-actions"><button type="button" class="aeriom-mini-button aeriom-mini-button--danger" data-delete>Excluir</button><button type="button" class="campaign-button campaign-button--secondary" data-close>Cancelar</button><button type="submit" class="campaign-button campaign-button--primary">Salvar</button></div></form></div>';m.classList.add("is-open");m.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>m.classList.remove("is-open"));m.querySelector("[data-delete]").onclick=async()=>{const r=await sb.from("knowledge_edges").delete().eq("id",edge.id);if(r.error){toast(r.error.message,"error");return;}m.classList.remove("is-open");await load();render();};m.querySelector("[data-edge]").onsubmit=async(e)=>{e.preventDefault();const f=e.currentTarget,r=await sb.from("knowledge_edges").update({label:f.label.value.trim()||null,color:f.color.value}).eq("id",edge.id);if(r.error){toast(r.error.message,"error");return;}m.classList.remove("is-open");await load();render();};
   }
 
-  function watch() {
+  function bindAdd(){document.querySelectorAll("[data-aeriom-add-node]").forEach(b=>{if(b.dataset.kmBound)return;b.dataset.kmBound="1";b.onclick=(e)=>{e.preventDefault();e.stopPropagation();editor();};});}\n\n  function watch() {
     let lastPanel=false;
     const timer=setInterval(async()=>{
       const panel=document.getElementById("campaign-panel-timeline");
@@ -251,6 +248,6 @@ import { getSupabase } from "./supabase.js";
     window.addEventListener("resize",()=>{ if(document.getElementById("campaign-panel-timeline") && !document.getElementById("campaign-panel-timeline").hidden) render(); });
   }
 
-  async function start(){watch();try{await load();render();}catch{}}
+  async function start(){watch();try{await load();render();bindAdd();}catch{}}
   if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",start,{once:true});else start();
 })();
