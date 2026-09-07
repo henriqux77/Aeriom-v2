@@ -210,17 +210,68 @@ import { getSupabase } from "./supabase.js";
     const sync=()=>{shareBox.style.display=vis.value==="shared"?"grid":"none";};vis.addEventListener("change",sync);sync();
     m.querySelector("[data-delete]")?.addEventListener("click",async()=>{if(!confirm("Excluir esta nota e suas ligações?"))return;const r=await sb.from("knowledge_nodes").delete().eq("id",node.id);if(r.error){toast(r.error.message,"error");return;}m.classList.remove("is-open");await load();render();toast("Nota excluída.","success");});
     m.querySelector("[data-km-editor]").addEventListener("submit",async(e)=>{
-      e.preventDefault();const f=e.currentTarget;try{
+      e.preventDefault();
+      const f=e.currentTarget, submit=f.querySelector('[type="submit"]');
+      if(submit) submit.disabled=true;
+      try{
         const metaOut={...(node?.metadata||{}),color:f.color.value,shared_with:[...m.querySelectorAll('input[name="share"]:checked')].map(x=>x.value)};
         const file=f.image.files?.[0];
-        if(file){const ext=(file.name.split(".").pop()||"bin").toLowerCase().replace(/[^a-z0-9]/g,"");const id=node?.id||crypto.randomUUID();const path=campaignId+"/knowledge/"+id+"-"+Date.now()+"."+ext;const up=await sb.storage.from("campaign-assets").upload(path,file,{upsert:true,contentType:file.type});if(up.error)throw up.error;metaOut.image_path=path;}
-        const payload={campaign_id:campaignId,created_by:node?.created_by||user.id,owner_id:(f.visibility.value==="private"||f.visibility.value==="shared")?user.id:null,visibility:f.visibility.value,node_type:f.type.value,title:f.title.value.trim(),content:f.content.value.trim()||null,pos_x:node?.pos_x??20+Math.random()*45,pos_y:node?.pos_y??20+Math.random()*45,linked_pin_id:node?.linked_pin_id||null,metadata:metaOut};
-        let id=node?.id;
-        if(node){const r=await sb.from("knowledge_nodes").update({...payload,updated_at:new Date().toISOString()}).eq("id",node.id);if(r.error)throw r.error;}else{const r=await sb.from("knowledge_nodes").insert(payload).select("id").single();if(r.error)throw r.error;id=r.data.id;}
-        await sb.from("knowledge_node_permissions").delete().eq("node_id",id);
-        if(f.visibility.value==="shared"){const selectedIds=metaOut.shared_with||[];if(selectedIds.length){const r=await sb.from("knowledge_node_permissions").insert(selectedIds.map(uid=>({node_id:id,user_id:uid,created_by:user.id})));if(r.error)throw r.error;}}
-        m.classList.remove("is-open");await load();render();toast(node?"Nota atualizada.":"Nota criada.","success");
-      }catch(err){console.error("[AERION][KNOWLEDGE]",err);toast(err?.message||"Não foi possível salvar a nota.","error");}
+        const nodeId=node?.id||crypto.randomUUID();
+        if(file){
+          const ext=(file.name.split(".").pop()||"bin").toLowerCase().replace(/[^a-z0-9]/g,"");
+          const path=campaignId+"/knowledge/"+nodeId+"-"+Date.now()+"."+ext;
+          const up=await sb.storage.from("campaign-assets").upload(path,file,{upsert:true,contentType:file.type});
+          if(up.error)throw up.error;
+          metaOut.image_path=path;
+        }
+        const payload={
+          campaign_id:campaignId,
+          created_by:node?.created_by||user.id,
+          owner_id:(f.visibility.value==="private"||f.visibility.value==="shared")?user.id:null,
+          visibility:f.visibility.value,
+          node_type:f.type.value,
+          title:f.title.value.trim(),
+          content:f.content.value.trim()||null,
+          pos_x:node?.pos_x??35,
+          pos_y:node?.pos_y??35,
+          linked_pin_id:node?.linked_pin_id||null,
+          metadata:metaOut
+        };
+        let savedNode;
+        if(node){
+          const r=await sb.from("knowledge_nodes").update({...payload,updated_at:new Date().toISOString()}).eq("id",node.id).select("*").single();
+          if(r.error)throw r.error;
+          savedNode=r.data;
+        }else{
+          const r=await sb.from("knowledge_nodes").insert(payload).select("*").single();
+          if(r.error)throw r.error;
+          savedNode=r.data;
+        }
+        if(f.visibility.value==="shared"){
+          await sb.from("knowledge_node_permissions").delete().eq("node_id",savedNode.id);
+          const selected=[...m.querySelectorAll('input[name="share"]:checked')].map(x=>x.value);
+          if(selected.length){
+            const pr=await sb.from("knowledge_node_permissions").insert(selected.map(uid=>({node_id:savedNode.id,user_id:uid,created_by:user.id})));
+            if(pr.error)throw pr.error;
+          }
+        }else{
+          await sb.from("knowledge_node_permissions").delete().eq("node_id",savedNode.id);
+        }
+        if(metaOut.image_path){
+          try{const u=await sb.storage.from("campaign-assets").createSignedUrl(metaOut.image_path,3600);savedNode.__imageUrl=u.data?.signedUrl||"";}catch{}
+        }
+        const idx=state.nodes.findIndex(n=>String(n.id)===String(savedNode.id));
+        if(idx>=0)state.nodes[idx]=savedNode;else state.nodes.unshift(savedNode);
+        m.classList.remove("is-open");
+        render();
+        updateZoomLabel();
+        toast(node?"Nota atualizada.":"Nota criada.","success");
+      }catch(err){
+        console.error("[AERION][KNOWLEDGE] save",err);
+        toast(err?.message||"Não foi possível salvar a nota.","error");
+      }finally{
+        if(submit)submit.disabled=false;
+      }
     });
   }
 
