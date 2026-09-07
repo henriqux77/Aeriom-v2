@@ -2,9 +2,6 @@
 body[data-cave-theme="true"]{background-image:var(--cave-background),linear-gradient(rgba(6,7,8,.58),rgba(6,7,8,.58));background-size:cover;background-position:center;background-attachment:fixed}
 body[data-cave-theme="true"] .campaign-workspace,body[data-cave-theme="true"] .campaign-main,body[data-cave-theme="true"] .campaign-panel{background:transparent}
 body[data-cave-theme="true"] .campaign-card,body[data-cave-theme="true"] .campaign-section,body[data-cave-theme="true"] .campaign-module{position:relative}
-body[data-cave-theme="true"] .campaign-card::before,body[data-cave-theme="true"] .campaign-section::before,body[data-cave-theme="true"] .campaign-module::before{content:"";position:absolute;inset:0 0 auto 0;height:58px;background-image:var(--cave-rock-top);background-repeat:no-repeat;background-size:contain;background-position:top center;pointer-events:none;z-index:2}
-body[data-cave-theme="true"] .campaign-card::after,body[data-cave-theme="true"] .campaign-section::after,body[data-cave-theme="true"] .campaign-module::after{content:"";position:absolute;inset:auto 0 0 0;height:64px;background-image:var(--cave-rock-bottom);background-repeat:no-repeat;background-size:contain;background-position:bottom center;pointer-events:none;z-index:2}
-body[data-cave-theme="true"] .campaign-card>*,body[data-cave-theme="true"] .campaign-section>*,body[data-cave-theme="true"] .campaign-module>*{position:relative;z-index:3}
 body[data-cave-theme="true"] .campaign-sidebar{background:rgba(8,9,10,.90);border-color:rgba(160,139,106,.18)}
 body[data-cave-theme="true"] .campaign-nav-item.is-active{background:rgba(110,96,77,.18);color:#c9b28a}
 body[data-cave-theme="true"] .campaign-button--primary,body[data-cave-theme="true"] .aeriom-mini-button{border-color:rgba(201,178,138,.24)}
@@ -19,4 +16,42 @@ height:74px;background-position:top center;background-size:180px auto;background
 }
 body[data-cave-theme="true"] .campaign-card::after,body[data-cave-theme="true"] .campaign-section::after,body[data-cave-theme="true"] .campaign-module::after{
 height:82px;background-position:bottom center;background-size:200px auto;background-image:var(--cave-rock-bottom)
+}
+
+/* Caverna: o background fica atrás da interface; os cards permanecem opacos. */
+body[data-cave-theme="true"] .campaign-card,
+body[data-cave-theme="true"] .campaign-section,
+body[data-cave-theme="true"] .campaign-hero{
+  background-color:rgba(10,10,10,.96);
+  background-image:none;
+}
+/* Uma única decoração de pedra, em um único local da tela. */
+body[data-cave-theme="true"] #campaign-master-card{
+  position:relative;
+  isolation:isolate;
+  overflow:visible;
+}
+body[data-cave-theme="true"] #campaign-master-card::before{
+  content:"";
+  position:absolute;
+  left:50%;
+  top:-32px;
+  width:190px;
+  height:85px;
+  transform:translateX(-50%);
+  background:url("https://i.ibb.co/N2vCMQB5/file-00000000e5a8820e95d23516d122ff4f.png") center/contain no-repeat;
+  pointer-events:none;
+  z-index:4;
+}
+body[data-cave-theme="true"] #campaign-master-card::after{
+  content:"";
+  position:absolute;
+  left:50%;
+  bottom:-35px;
+  width:205px;
+  height:88px;
+  transform:translateX(-50%);
+  background:url("https://i.ibb.co/MDgyr3N1/file-000000004614820e8063f423e89cea85.png") center/contain no-repeat;
+  pointer-events:none;
+  z-index:4;
 }
