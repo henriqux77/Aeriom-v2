@@ -1414,16 +1414,9 @@ function clearCoverPreview() {
     state.editCoverObjectUrl = null;
   }
 
-  if (
-    state.coverObjectUrl
-  )
-
-    URL.revokeObjectURL(
-      state.coverObjectUrl
-    );
-
-    state.coverObjectUrl =
-      null;
+  if (state.coverObjectUrl) {
+    URL.revokeObjectURL(state.coverObjectUrl);
+    state.coverObjectUrl = null;
   }
 
   const preview =
@@ -2787,6 +2780,18 @@ function bindEvents() {
     if (searchInput) searchInput.value = "";
     renderCampaigns();
     searchInput?.focus();
+  });
+
+  $("campaign-edit-close")?.addEventListener("click", closeEditCampaignModal);
+  $("campaign-edit-cancel")?.addEventListener("click", closeEditCampaignModal);
+  $("campaign-edit-form")?.addEventListener("submit", saveCampaignEdits);
+  $("campaign-edit-cover")?.addEventListener("change", (event) => {
+    const file = event.currentTarget?.files?.[0] || null;
+    const error = $("campaign-edit-cover-error");
+    if (error) error.textContent = "";
+    if (!file) { clearEditCoverPreview(); return; }
+    try { validateCover(file); previewEditCover(file); }
+    catch (err) { if (error) error.textContent = err?.message || "Imagem inválida."; event.currentTarget.value = ""; clearEditCoverPreview(); }
   });
 
   $(
