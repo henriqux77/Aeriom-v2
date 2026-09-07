@@ -490,6 +490,3 @@ import { getSupabase } from "./supabase.js";
     });
   }
 })();
-
-      .aerion-campaign-character-appearance__image{position:relative;overflow:hidden}
-      .aerion-campaign-character-appearance__image img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center}
