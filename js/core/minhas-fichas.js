@@ -21,7 +21,17 @@ import { getSupabase } from "./supabase.js";
     return Number.isFinite(n) ? n : d;
   }
 
-  async function avatarUrl(row) { const path=String(row?.creation_state?.avatar||row?.avatar_path||"").trim(); if(!path) return ""; try { const r=await supabase.storage.from("avatars").createSignedUrl(path,3600); return r.data?.signedUrl||""; } catch { return ""; } }
+  async function avatarUrl(row) {
+    const path = String(row?.creation_state?.avatar || row?.avatar_path || row?.avatar || "").trim();
+    if (!path) return "";
+    if (/^https?:\/\//i.test(path)) return path;
+    try {
+      const result = await supabase.storage.from("avatars").createSignedUrl(path, 3600);
+      return result.data?.signedUrl || "";
+    } catch {
+      return "";
+    }
+  }
 
   function title(row) {
     return String(row.name || "Ficha sem nome").trim() || "Ficha sem nome";
@@ -36,7 +46,7 @@ import { getSupabase } from "./supabase.js";
     const el = document.createElement("article");
     el.className = "mf-card";
     el.innerHTML = `
-      <div class="mf-avatar">${avatar ? `<img src="${esc(avatar)}" alt="">` : esc(name.slice(0,1).toUpperCase())}</div>
+      <div class="mf-avatar">\n        ${avatar ? `<img src="${esc(avatar)}" alt="Imagem de ${esc(name)}" loading="lazy" onerror="this.hidden=true;this.nextElementSibling.hidden=false">` : ""}\n        <span ${avatar ? "hidden" : ""}>${esc(name.slice(0,1).toUpperCase())}</span>\n      </div>
       <div class="mf-body">
         <span class="mf-status ${ready ? "complete" : ""}">
           ${ready ? "Pronta" : "Incompleta"}
