@@ -147,6 +147,65 @@ const THEME_CONFIG = Object.freeze({
 
 
 /* ============================================================
+   CAVERNA — pré-carregamento dos assets
+   ============================================================ */
+const CAVE_ASSETS = Object.freeze({
+  background: "https://i.ibb.co/ch7J9bmn/file-00000000d334820eabb913a2eaccee9b.png",
+  rockTop: "https://i.ibb.co/N2vCMQB5/file-00000000e5a8820e95d23516d122ff4f.png",
+  rockBottom: "https://i.ibb.co/MDgyr3N1/file-000000004614820e8063f423e89cea85.png"
+});
+
+let caveLoadingPromise = null;
+let caveAssetsReady = false;
+
+function ensureCaveLoadingGate() {
+  let gate = document.getElementById("aeriom-cave-loading-gate");
+  if (gate) return gate;
+
+  gate = document.createElement("div");
+  gate.id = "aeriom-cave-loading-gate";
+  gate.innerHTML = '<div class="aeriom-cave-loading-gate__mark" aria-hidden="true"></div>';
+  document.body?.appendChild(gate);
+  return gate;
+}
+
+function preloadCaveImage(url) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => resolve(true);
+    img.onerror = () => resolve(false);
+    img.src = url;
+  });
+}
+
+function prepareCaveAssets() {
+  if (caveAssetsReady) return Promise.resolve(true);
+  if (caveLoadingPromise) return caveLoadingPromise;
+
+  const gate = ensureCaveLoadingGate();
+  gate?.classList.add("is-active");
+
+  caveLoadingPromise = Promise.all([
+    preloadCaveImage(CAVE_ASSETS.background),
+    preloadCaveImage(CAVE_ASSETS.rockTop),
+    preloadCaveImage(CAVE_ASSETS.rockBottom)
+  ]).then((results) => {
+    const root = document.documentElement;
+    root.style.setProperty("--cave-background", 'url("' + CAVE_ASSETS.background + '")');
+    root.style.setProperty("--cave-rock-top", 'url("' + CAVE_ASSETS.rockTop + '")');
+    root.style.setProperty("--cave-rock-bottom", 'url("' + CAVE_ASSETS.rockBottom + '")');
+    caveAssetsReady = results.some(Boolean);
+    gate?.classList.remove("is-active");
+    return caveAssetsReady;
+  }).catch(() => {
+    gate?.classList.remove("is-active");
+    return false;
+  });
+
+  return caveLoadingPromise;
+}
+
+/* ============================================================
    ESTADO
    ============================================================ */
 
@@ -569,6 +628,10 @@ export function applyTheme(
   document.documentElement.dataset.theme =
     theme.id;
 
+  if (theme.id === "cave") {
+    void prepareCaveAssets();
+  }
+
   currentTheme =
     theme.id;
 
@@ -589,6 +652,7 @@ export function applyTheme(
     );
   }
   else if (
+    theme.id !== "cave" &&
     currentBackground
   ) {
     applyBackgroundImage(
