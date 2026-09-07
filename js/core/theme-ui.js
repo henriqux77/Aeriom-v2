@@ -1,7 +1,7 @@
 import { getAvailableThemes, applyCampaignTheme } from "./theme.js";
 (() => {
   "use strict";
-  const caveBg="https://i.ibb.co/ch7J9bmn/file-00000000d334820eabb913a2eaccee9b.png";
+  const caveBg=new URL("../../assets/themes/cave/background.webp", import.meta.url).href;
   const $=id=>document.getElementById(id);
   const ctx=()=>window.AERIOM_CAMPAIGN?.getContext?.()||{};
   function render(){
