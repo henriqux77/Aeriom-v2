@@ -35,6 +35,8 @@ const state = {
   inviteTimer: null,
   authSubscription: null,
   coverObjectUrl: null,
+  editCoverObjectUrl: null,
+  isEditing: false,
   searchQuery: "",
   filter: "all"
 };
@@ -977,13 +979,27 @@ function createCampaignCard(campaign) {
   detail.textContent = campaign.role === "master" ? "Campanha que você conduz" : "Você participa desta campanha";
   details.appendChild(detail);
 
+  const actions = document.createElement("div");
+  actions.className = "campaign-card__actions";
+
   const openButton = document.createElement("button");
   openButton.type = "button";
   openButton.className = "button button--primary campaign-card__open";
   openButton.textContent = "Abrir";
   openButton.addEventListener("click", () => openCampaign(campaign.id));
 
-  footer.append(details, openButton);
+  actions.appendChild(openButton);
+
+  if (campaign.role === "master") {
+    const editButton = document.createElement("button");
+    editButton.type = "button";
+    editButton.className = "button button--secondary campaign-card__edit";
+    editButton.textContent = "Editar";
+    editButton.addEventListener("click", () => openEditCampaignModal(campaign));
+    actions.appendChild(editButton);
+  }
+
+  footer.append(details, actions);
   content.append(head, title, description, footer);
   article.append(cover, content);
   return article;
@@ -1102,6 +1118,146 @@ function openCampaign(
   window.location.assign(
     url.href
   );
+}
+
+
+function clearEditCoverPreview() {
+  if (state.editCoverObjectUrl) {
+    URL.revokeObjectURL(state.editCoverObjectUrl);
+    state.editCoverObjectUrl = null;
+  }
+  const preview = $("campaign-edit-cover-preview");
+  if (!preview) return;
+  preview.replaceChildren();
+  const placeholder = document.createElement("span");
+  placeholder.className = "campaign-cover-upload__placeholder";
+  placeholder.setAttribute("aria-hidden","true");
+  placeholder.textContent = "✦";
+  preview.appendChild(placeholder);
+}
+
+function previewEditCover(file) {
+  clearEditCoverPreview();
+  const preview = $("campaign-edit-cover-preview");
+  if (!preview || !file) return;
+  state.editCoverObjectUrl = URL.createObjectURL(file);
+  const image = document.createElement("img");
+  image.src = state.editCoverObjectUrl;
+  image.alt = "";
+  image.setAttribute("aria-hidden","true");
+  preview.replaceChildren(image);
+}
+
+async function openEditCampaignModal(campaign) {
+  if (!campaign || campaign.role !== "master") {
+    showToast("Somente o Mestre pode editar esta campanha.", "error");
+    return;
+  }
+  state.selectedCampaign = campaign;
+  const modal = $("campaign-edit-modal");
+  const name = $("campaign-edit-name");
+  const description = $("campaign-edit-description");
+  const errorMessage = $("campaign-edit-message");
+  if (!modal || !name || !description) return;
+
+  name.value = campaign.name || "";
+  description.value = campaign.description || "";
+  ["campaign-edit-name-error","campaign-edit-description-error","campaign-edit-cover-error"].forEach(id => { const e=$(id); if(e)e.textContent=""; });
+  if(errorMessage){errorMessage.hidden=true;errorMessage.textContent="";}
+  clearEditCoverPreview();
+
+  if (campaign.coverUrl) {
+    const image = document.createElement("img");
+    image.src = campaign.coverUrl;
+    image.alt = "";
+    image.loading = "eager";
+    image.addEventListener("error", clearEditCoverPreview, {once:true});
+    $("campaign-edit-cover-preview")?.replaceChildren(image);
+  } else {
+    const resolved = campaign.coverPath ? await resolveSignedUrl(CONFIG.STORAGE_BUCKET,campaign.coverPath) : null;
+    if (resolved) {
+      const image=document.createElement("img");
+      image.src=resolved;
+      image.alt="";
+      image.loading="eager";
+      $("campaign-edit-cover-preview")?.replaceChildren(image);
+    }
+  }
+
+  modal.hidden = false;
+  modal.setAttribute("aria-hidden","false");
+  state.modal = "edit";
+  window.setTimeout(() => name.focus(), 0);
+}
+
+function closeEditCampaignModal() {
+  const modal = $("campaign-edit-modal");
+  if (modal) {
+    modal.hidden = true;
+    modal.setAttribute("aria-hidden","true");
+  }
+  clearEditCoverPreview();
+  state.modal = null;
+  state.selectedCampaign = null;
+}
+
+function setEditButtonLoading(loading) {
+  const button=$("campaign-edit-submit");
+  if(!button)return;
+  button.disabled=loading;
+  button.querySelector(".button__label")?.toggleAttribute("hidden",loading);
+  button.querySelector(".button__loading")?.toggleAttribute("hidden",!loading);
+}
+
+function getEditValues() {
+  return {
+    name: safeString($("campaign-edit-name")?.value).trim(),
+    description: safeString($("campaign-edit-description")?.value).trim(),
+    cover: $("campaign-edit-cover")?.files?.[0] || null
+  };
+}
+
+function validateEditValues(values) {
+  let valid=true;
+  const ne=$("campaign-edit-name-error"), de=$("campaign-edit-description-error"), ce=$("campaign-edit-cover-error");
+  [ne,de,ce].forEach(e=>{if(e)e.textContent="";});
+  if(values.name.length<1||values.name.length>CONFIG.MAX_NAME_LENGTH){valid=false;if(ne)ne.textContent=`O nome deve possuir entre 1 e ${CONFIG.MAX_NAME_LENGTH} caracteres.`;}
+  if(values.description.length>CONFIG.MAX_DESCRIPTION_LENGTH){valid=false;if(de)de.textContent=`A descrição pode possuir no máximo ${CONFIG.MAX_DESCRIPTION_LENGTH} caracteres.`;}
+  if(values.cover){try{validateCover(values.cover);}catch(error){valid=false;if(ce)ce.textContent=error.message;}}
+  return valid;
+}
+
+async function saveCampaignEdits(event) {
+  event?.preventDefault?.();
+  if(state.isEditing)return;
+  const campaign=state.selectedCampaign;
+  if(!campaign||campaign.role!=="master"){showToast("Somente o Mestre pode editar esta campanha.","error");return;}
+  const values=getEditValues();
+  if(!validateEditValues(values))return;
+  state.isEditing=true;
+  setEditButtonLoading(true);
+  try{
+    const payload={name:values.name,description:values.description||null,updated_at:new Date().toISOString()};
+    const {data,error}=await state.supabase.from("campaigns").update(payload).eq("id",campaign.id).select("id,name,description,cover_path,cover_url,created_by,theme,background_path,created_at,updated_at").maybeSingle();
+    if(error)throw normalizeError(error,{file:"js/core/campanhas.js",function:"saveCampaignEdits",table:"campaigns",operation:"update"});
+    let updated=data||{};
+    if(values.cover){
+      const path=await uploadCampaignCover(campaign.id,values.cover);
+      await updateCampaignCoverPath(campaign.id,path);
+      updated={...updated,cover_path:path,cover_url:null};
+    }
+    const index=state.campaigns.findIndex(item=>item.id===campaign.id);
+    const merged={...campaign,...updated,role:"master",coverPath:updated.cover_path||campaign.coverPath||"",coverUrl:updated.cover_url||"",name:updated.name||values.name,description:updated.description||values.description,updatedAt:updated.updated_at||new Date().toISOString()};
+    if(index>=0)state.campaigns.splice(index,1,merged);
+    closeEditCampaignModal();
+    renderCampaigns();
+    showToast("Campanha atualizada com sucesso.","success");
+  }catch(error){
+    log("error","Erro ao editar campanha.",error);
+    const msg=error?.message||"Não foi possível salvar as alterações.";
+    const el=$("campaign-edit-message"); if(el){el.hidden=false;el.dataset.type="error";el.textContent=msg;}
+    showToast(msg,"error");
+  }finally{state.isEditing=false;setEditButtonLoading(false);}
 }
 
 function openCreateCampaignModal() {
@@ -1253,9 +1409,14 @@ function validateCover(
 
 function clearCoverPreview() {
 
+  if (state.editCoverObjectUrl) {
+    URL.revokeObjectURL(state.editCoverObjectUrl);
+    state.editCoverObjectUrl = null;
+  }
+
   if (
     state.coverObjectUrl
-  ) {
+  )
 
     URL.revokeObjectURL(
       state.coverObjectUrl
@@ -2863,6 +3024,13 @@ function bindEvents() {
       ) {
 
         closeCreateCampaignModal();
+
+      } else if (
+        state.modal ===
+        "edit"
+      ) {
+
+        closeEditCampaignModal();
 
       } else if (
         state.modal ===
