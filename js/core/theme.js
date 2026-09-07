@@ -150,9 +150,9 @@ const THEME_CONFIG = Object.freeze({
    CAVERNA — pré-carregamento dos assets
    ============================================================ */
 const CAVE_ASSETS = Object.freeze({
-  background: "https://i.ibb.co/ch7J9bmn/file-00000000d334820eabb913a2eaccee9b.png",
-  rockTop: "https://i.ibb.co/N2vCMQB5/file-00000000e5a8820e95d23516d122ff4f.png",
-  rockBottom: "https://i.ibb.co/MDgyr3N1/file-000000004614820e8063f423e89cea85.png"
+  background: new URL("../../assets/themes/cave/background.webp", import.meta.url).href,
+  rockTop: new URL("../../assets/themes/cave/rock-top.webp", import.meta.url).href,
+  rockBottom: new URL("../../assets/themes/cave/rock-bottom.webp", import.meta.url).href
 });
 
 let caveLoadingPromise = null;
@@ -194,7 +194,7 @@ function prepareCaveAssets() {
     root.style.setProperty("--cave-background", 'url("' + CAVE_ASSETS.background + '")');
     root.style.setProperty("--cave-rock-top", 'url("' + CAVE_ASSETS.rockTop + '")');
     root.style.setProperty("--cave-rock-bottom", 'url("' + CAVE_ASSETS.rockBottom + '")');
-    caveAssetsReady = results.some(Boolean);
+    caveAssetsReady = results.every(Boolean);
     gate?.classList.remove("is-active");
     return caveAssetsReady;
   }).catch(() => {
@@ -687,19 +687,29 @@ export function applyTheme(
    TEMA DE CAMPANHA
    ============================================================ */
 
-export function applyCampaignTheme(
+export async function applyCampaignTheme(
   themeId,
   backgroundImage = null
 ) {
+  const theme = getTheme(themeId);
+
+  if (theme.id === "cave") {
+    await prepareCaveAssets();
+    return applyTheme(
+      themeId,
+      {
+        persist: false,
+        animate: false,
+        backgroundImage: null
+      }
+    );
+  }
+
   return applyTheme(
     themeId,
     {
-      persist:
-        false,
-
-      animate:
-        true,
-
+      persist: false,
+      animate: true,
       backgroundImage
     }
   );
