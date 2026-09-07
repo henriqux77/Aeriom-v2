@@ -10,6 +10,10 @@ import {
   getSupabase,
   normalizeSupabaseError
 } from "./supabase.js";
+import {
+  getAvailableThemes,
+  applyCampaignTheme
+} from "./theme.js";
 
 
 /* ============================================================
@@ -2626,6 +2630,66 @@ function renderMasterInterface() {
    TEMA
    ============================================================ */
 
+function renderThemeSelector() {
+  const root = getElement("campaign-theme-selector");
+  if (!root) return;
+
+  const current = text(state.campaign?.theme, CONFIG.DEFAULT_THEME);
+  const themes = getAvailableThemes();
+
+  root.replaceChildren();
+
+  themes.forEach(theme => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "campaign-theme-option";
+    button.dataset.themeId = theme.id;
+    button.classList.toggle("is-active", theme.id === current);
+
+    const preview = document.createElement("div");
+    preview.className = "campaign-theme-option__preview";
+    preview.dataset.themePreview = theme.id;
+
+    const copy = document.createElement("div");
+    const name = document.createElement("strong");
+    const description = document.createElement("span");
+    name.textContent = theme.name;
+    description.textContent = theme.description;
+    copy.append(name, description);
+
+    button.append(preview, copy);
+
+    button.addEventListener("click", async () => {
+      if (!isMaster() || !state.supabase || !state.campaignId) return;
+
+      button.disabled = true;
+      try {
+        const { error } = await state.supabase
+          .from("campaigns")
+          .update({ theme: theme.id })
+          .eq("id", state.campaignId);
+
+        if (error) throw error;
+
+        state.campaign = {
+          ...(state.campaign || {}),
+          theme: theme.id
+        };
+
+        applyCampaignTheme(theme.id, null);
+        renderThemeSelector();
+        log("info", "Tema da campanha alterado.", { theme: theme.id });
+      } catch (error) {
+        log("error", "Não foi possível alterar o tema da campanha.", error);
+      } finally {
+        button.disabled = false;
+      }
+    });
+
+    root.appendChild(button);
+  });
+}
+
 function applyTheme() {
 
   const theme =
@@ -2637,6 +2701,8 @@ function applyTheme() {
 
   document.documentElement.dataset.theme =
     theme;
+
+  renderThemeSelector();
 
 
   const app =
