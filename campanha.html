@@ -4116,7 +4116,7 @@
     `;
 
     renderTimelineFeed("all");
-    loadKnowledge().catch((error) => console.error("[AERION][KNOWLEDGE]", error));
+    window.dispatchEvent(new CustomEvent("aerion:knowledge:panelready"));
 
     panel.querySelectorAll("[data-timeline-filter]").forEach((button) =>
       button.addEventListener("click", () => {
