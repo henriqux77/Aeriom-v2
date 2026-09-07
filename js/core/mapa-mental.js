@@ -237,7 +237,18 @@ import { getSupabase } from "./supabase.js";
     const m=ensureModal();m.innerHTML='<div class="aeriom-modal-card"><header class="aeriom-modal-card__head"><div><p class="campaign-panel__eyebrow">Conexão</p><h3>Editar ligação</h3></div><button class="campaign-icon-button" data-close>×</button></header><form class="aeriom-modal-card__body" data-edge><label class="aeriom-modal-field"><span>Rótulo</span><input name="label" value="'+esc(edge.label||"")+'"></label><label class="aeriom-modal-field"><span>Cor</span><input type="color" name="color" value="'+esc(edge.color||"#8b6f36")+'"></label><div class="aeriom-modal-actions"><button type="button" class="aeriom-mini-button aeriom-mini-button--danger" data-delete>Excluir</button><button type="button" class="campaign-button campaign-button--secondary" data-close>Cancelar</button><button type="submit" class="campaign-button campaign-button--primary">Salvar</button></div></form></div>';m.classList.add("is-open");m.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>m.classList.remove("is-open"));m.querySelector("[data-delete]").onclick=async()=>{const r=await sb.from("knowledge_edges").delete().eq("id",edge.id);if(r.error){toast(r.error.message,"error");return;}m.classList.remove("is-open");await load();render();};m.querySelector("[data-edge]").onsubmit=async(e)=>{e.preventDefault();const f=e.currentTarget,r=await sb.from("knowledge_edges").update({label:f.label.value.trim()||null,color:f.color.value}).eq("id",edge.id);if(r.error){toast(r.error.message,"error");return;}m.classList.remove("is-open");await load();render();};
   }
 
-  function bindAdd(){document.querySelectorAll("[data-aeriom-add-node]").forEach(b=>{if(b.dataset.kmBound)return;b.dataset.kmBound="1";b.onclick=(e)=>{e.preventDefault();e.stopPropagation();editor();};});}\n\n  function watch() {
+  function bindAdd(){
+    if(document.documentElement.dataset.aerionKnowledgeAddBound)return;
+    document.documentElement.dataset.aerionKnowledgeAddBound="1";
+    document.addEventListener("click",(event)=>{
+      const button=event.target.closest?.("[data-aeriom-add-node]");
+      if(!button)return;
+      event.preventDefault();event.stopPropagation();
+      editor().catch((error)=>{console.error("[AERION][KNOWLEDGE] create",error);toast(error?.message||"Não foi possível abrir a criação da nota.","error");});
+    });
+  }
+
+  function watch() {
     let lastPanel=false;
     const timer=setInterval(async()=>{
       const panel=document.getElementById("campaign-panel-timeline");
@@ -248,6 +259,6 @@ import { getSupabase } from "./supabase.js";
     window.addEventListener("resize",()=>{ if(document.getElementById("campaign-panel-timeline") && !document.getElementById("campaign-panel-timeline").hidden) render(); });
   }
 
-  async function start(){watch();try{await load();render();bindAdd();}catch{}}
+  async function start(){bindAdd();watch();try{await load();render();}catch(error){console.warn("[AERION][KNOWLEDGE]",error);}}
   if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",start,{once:true});else start();
 })();
