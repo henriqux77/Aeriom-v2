@@ -759,7 +759,7 @@ async function initializeThemeModule() {
 
     const themeModule =
       await import(
-        "./theme.js"
+        "./theme.js?v=20260907-02"
       );
 
 
