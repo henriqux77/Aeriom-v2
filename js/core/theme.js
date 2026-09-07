@@ -164,7 +164,7 @@ function ensureCaveLoadingGate() {
 
   gate = document.createElement("div");
   gate.id = "aeriom-cave-loading-gate";
-  gate.innerHTML = '<div class="aeriom-cave-loading-gate__mark" aria-hidden="true"></div>';
+  gate.innerHTML = '<div class="aeriom-cave-loading-gate__content"><div class="aeriom-cave-loading-gate__mark" aria-hidden="true"></div><strong>Preparando a Caverna</strong><span>Carregando o ambiente da mesa...</span></div>';
   document.body?.appendChild(gate);
   return gate;
 }
