@@ -2435,16 +2435,40 @@ function renderCharacters() {
     const visual = document.createElement("div");
     visual.className = "campaign-character-card__visual";
 
-    if (character.avatarPath && /^https?:\/\//i.test(character.avatarPath)) {
+    const initial = document.createElement("span");
+    initial.textContent = (character.name || "A").charAt(0).toUpperCase();
+    visual.appendChild(initial);
+
+    const rawAvatar =
+      character.avatarPath ||
+      character.avatar_url ||
+      character.avatar ||
+      character.creationState?.avatar ||
+      character.creation_state?.avatar ||
+      "";
+
+    const applyAvatar = (url) => {
+      if (!url) return;
       const img = document.createElement("img");
-      img.src = character.avatarPath;
+      img.src = url;
       img.alt = `Retrato de ${character.name || "personagem"}`;
       img.loading = "lazy";
-      visual.appendChild(img);
-    } else {
-      const initial = document.createElement("span");
-      initial.textContent = (character.name || "A").charAt(0).toUpperCase();
-      visual.appendChild(initial);
+      img.addEventListener("load", () => { initial.hidden = true; }, { once: true });
+      img.addEventListener("error", () => { img.remove(); }, { once: true });
+      visual.prepend(img);
+    };
+
+    if (typeof rawAvatar === "string" && rawAvatar.trim()) {
+      const path = rawAvatar.trim();
+      if (/^https?:\/\//i.test(path)) {
+        applyAvatar(path);
+      } else if (state.supabase) {
+        state.supabase.storage
+          .from("avatars")
+          .createSignedUrl(path, CONFIG.SIGNED_URL_SECONDS)
+          .then(({ data }) => applyAvatar(data?.signedUrl || ""))
+          .catch(() => {});
+      }
     }
 
     const info = document.createElement("div");
