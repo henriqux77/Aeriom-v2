@@ -211,13 +211,6 @@ import { getSupabase } from "./supabase.js";
       }
     };
     window.addEventListener("aeriom:campaigntabchange",e=>{if(e.detail?.tab==="timeline")setTimeout(init,0);});
-    const observe=()=>{
-      const panel=document.getElementById("campaign-panel-timeline");if(!panel||!window.MutationObserver)return;
-      state.boardObserver?.disconnect();
-      state.boardObserver=new MutationObserver(()=>{const b=board();if(b){controls();bindBoard();render();}});
-      state.boardObserver.observe(panel,{childList:true,subtree:true});
-    };
-    observe();
     setTimeout(init,250);setTimeout(init,900);setTimeout(init,1800);
   }
   if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",boot,{once:true});else boot();
