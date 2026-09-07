@@ -200,7 +200,8 @@ import { getSupabase } from "./supabase.js";
 
       list.replaceChildren();
 
-      chars.forEach(c=>{
+      for(const c of chars){
+        const avatar=await signedAvatar(c);
         const item=document.createElement("article");
         item.className="aerion-campaign-character-card";
         item.innerHTML=`
@@ -297,7 +298,20 @@ import { getSupabase } from "./supabase.js";
     notice("Ficha removida da campanha.","success");
   }
 
-  async function signedAvatar(character){ const path=String(character?.creation_state?.avatar||character?.avatar_path||"").trim(); if(!path)return ""; try{const r=await supabase.storage.from("avatars").createSignedUrl(path,3600);return r.data?.signedUrl||"";}catch{return "";} }
+  async function signedAvatar(character){
+    const state=character?.creation_state||{};
+    const raw=state.avatar||state.avatar_url||state.avatarPath||character?.avatar_path||character?.avatar||"";
+    const path=String(raw).trim();
+    if(!path) return "";
+    if(/^https?:\/\//i.test(path)) return path;
+    try{
+      const r=await supabase.storage.from("avatars").createSignedUrl(path,3600);
+      return r.data?.signedUrl||"";
+    }catch(error){
+      console.warn("[AERION][CAMPAIGN AVATAR] Falha ao carregar avatar.",error);
+      return "";
+    }
+  }
 
   async function refresh(){
     const {data,error}=await supabase
