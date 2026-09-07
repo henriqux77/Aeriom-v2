@@ -896,3 +896,31 @@ body.aeriom-page--character{
 @media(max-width:700px){
   .required-chip{font-size:5px;padding:3px 5px}
 }
+
+.required-badge{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:max-content;
+  margin:0 0 4px;
+  padding:2px 5px;
+  border:1px solid rgba(227,195,109,.28);
+  border-radius:999px;
+  background:rgba(227,195,109,.07);
+  color:var(--fx-gold,#e3c36d);
+  font-size:5px;
+  font-weight:900;
+  line-height:1.1;
+  letter-spacing:.07em;
+  text-transform:uppercase;
+}
+.attribute-card header .required-badge{
+  display:inline-flex;
+  margin:0 0 0 5px;
+  vertical-align:middle;
+}
+.race-card .required-badge,
+.class-card .required-badge{
+  align-self:flex-start;
+  margin-bottom:3px;
+}
