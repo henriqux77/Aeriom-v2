@@ -2770,7 +2770,9 @@ function validTab(
 
     "secrets",
 
-    "theme"
+    "theme",
+
+    "master-controls"
 
   ];
 
