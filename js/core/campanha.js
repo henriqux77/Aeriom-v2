@@ -27,6 +27,9 @@ const CONFIG = Object.freeze({
   STORAGE_BUCKET:
     "campaign-covers",
 
+  AVATAR_BUCKET:
+    "avatars",
+
   SIGNED_URL_SECONDS:
     3600,
 
@@ -2239,9 +2242,25 @@ async function heartbeatPresence(){
 function startPresence(){
   if(!(state.memberPresence instanceof Map)) state.memberPresence=new Map();
   if(state.presenceTimer) clearInterval(state.presenceTimer);
-  void heartbeatPresence();
-  state.presenceTimer=window.setInterval(async()=>{await heartbeatPresence();await loadMemberPresence();renderMembers();},30000);
+  const pulse=async()=>{await heartbeatPresence();await loadMemberPresence();renderMembers();};
+  void pulse();
+  state.presenceTimer=window.setInterval(pulse,30000);
+  document.removeEventListener("visibilitychange",handlePresenceVisibility);
+  document.addEventListener("visibilitychange",handlePresenceVisibility);
+  window.removeEventListener("pageshow",handlePresencePageShow);
+  window.addEventListener("pageshow",handlePresencePageShow);
 }
+async function handlePresenceVisibility(){
+  if(document.visibilityState==="visible") await pulsePresenceOnce();
+}
+async function pulsePresenceOnce(){
+  if(!state.supabase||!state.campaignId||!state.user)return;
+  await heartbeatPresence();
+  await loadMemberPresence();
+  renderMembers();
+}
+function handlePresencePageShow(){void pulsePresenceOnce();}
+
 
 function stopPresence(){
   if(state.presenceTimer){clearInterval(state.presenceTimer);state.presenceTimer=null;}
