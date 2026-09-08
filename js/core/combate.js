@@ -39,6 +39,143 @@ function currentCombatant() {
   return COMBAT.combatants[Number(COMBAT.session.turn_index || 0)] || null;
 }
 
+function characterProfile(combatant) {
+  const profile = combatant?.action_data?.character_profile;
+  return profile && typeof profile === "object" ? profile : {};
+}
+
+function numeric(value, fallback = 0) {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : fallback;
+}
+
+function attrDie(profile, key, fallback = 8) {
+  const attrs = profile.attributes || {};
+  const value = attrs[key] ?? profile.assignedDice?.[key] ?? fallback;
+  const match = String(value).match(/\d+/);
+  return Math.max(4, Number(match?.[0] || fallback));
+}
+
+function skillBonus(profile, skill) {
+  const direct = profile.skill_modifiers?.[skill];
+  if (direct != null) return numeric(direct);
+  const state = profile.creation_state?.skills?.[skill];
+  return numeric(state?.bonus ?? state?.modifier ?? 0);
+}
+
+function physicalTier(die) {
+  if (die >= 20) return { damageDie: 8, bonus: 2 };
+  if (die >= 12) return { damageDie: 8, bonus: 1 };
+  if (die >= 10) return { damageDie: 6, bonus: 1 };
+  if (die >= 8) return { damageDie: 6, bonus: 0 };
+  return { damageDie: 4, bonus: 0 };
+}
+
+function racialKey(profile) {
+  return String(profile.race || "").trim().toLowerCase();
+}
+
+function buildStandardActions(combatant) {
+  const profile = characterProfile(combatant);
+  const race = racialKey(profile);
+  const strengthDie = attrDie(profile, "forca", 8);
+  const agilityDie = attrDie(profile, "agilidade", 8);
+  const vigorDie = attrDie(profile, "vigor", 8);
+  const precisionDie = attrDie(profile, "precisao", 8);
+  const perceptionDie = attrDie(profile, "percepcao", 8);
+  const strength = physicalTier(strengthDie);
+  const agility = physicalTier(agilityDie);
+
+  const actions = [
+    {
+      id: "punch", name: "Soco", icon: "👊", cost: "main", type: "attack",
+      attackDie: strengthDie, attackBonus: skillBonus(profile, "atletismo"),
+      damageFormula: "1d" + strength.damageDie + "+" + strength.bonus,
+      description: "Golpe direto usando Força."
+    },
+    {
+      id: "kick", name: "Chute", icon: "🦵", cost: "main", type: "attack",
+      attackDie: agilityDie, attackBonus: skillBonus(profile, "acrobacia"),
+      damageFormula: "1d" + agility.damageDie + "+" + agility.bonus,
+      description: "Golpe rápido usando Agilidade."
+    },
+    {
+      id: "tackle", name: "Investida", icon: "➜", cost: "main", type: "attack",
+      attackDie: Math.max(strengthDie, agilityDie),
+      attackBonus: skillBonus(profile, "atletismo"),
+      damageFormula: "1d" + Math.max(strength.damageDie, agility.damageDie) + "+" + Math.max(strength.bonus, agility.bonus),
+      description: "Avança e atinge com o corpo."
+    },
+    {
+      id: "grab", name: "Agarrar", icon: "✊", cost: "main", type: "contest",
+      attackDie: strengthDie, defenseAttribute: "vigor", targetDie: "vigor",
+      attackBonus: skillBonus(profile, "atletismo"),
+      damageFormula: "", conditionOnSuccess: "Agarrado",
+      description: "Disputa física contra o Vigor do alvo."
+    },
+    {
+      id: "sweep", name: "Derrubar", icon: "⬇", cost: "quick", type: "contest",
+      attackDie: agilityDie, defenseAttribute: "vigor", targetDie: "vigor",
+      attackBonus: skillBonus(profile, "acrobacia"),
+      damageFormula: "", conditionOnSuccess: "Caído",
+      description: "Usa técnica e equilíbrio para derrubar."
+    },
+    {
+      id: "choke", name: "Mata-leão", icon: "♜", cost: "main", type: "contest",
+      attackDie: agilityDie, defenseAttribute: "vigor", targetDie: "vigor",
+      attackBonus: skillBonus(profile, "acrobacia"),
+      damageFormula: "1d4+" + agility.bonus, conditionOnSuccess: "Contido",
+      description: "Imobilização curta; vence por Agilidade contra Vigor."
+    },
+    {
+      id: "defend", name: "Esquiva", icon: "◇", cost: "reaction", type: "utility",
+      attackDie: agilityDie, attackBonus: 0, damageFormula: "",
+      conditionOnSuccess: "Defesa +2",
+      description: "Prepara o corpo para o próximo golpe."
+    }
+  ];
+
+  const racial = [];
+  const racialMap = {
+    "humano": { name: "Adaptação", icon: "✦", cost: "reaction", type: "utility", description: "Repete um teste recém-falhado; o segundo resultado é aceito.", conditionOnSuccess: "Adaptação pronta" },
+    "elfo": { name: "Percepção Élfica", icon: "◉", cost: "quick", type: "utility", attackDie: perceptionDie, description: "Percebe Mana, criaturas escondidas e alterações mágicas." },
+    "anão": { name: "Forja Ancestral", icon: "⚒", cost: "quick", type: "utility", attackDie: strengthDie, description: "Analisa material, estrutura ou arma em combate." },
+    "orc": { name: "Fúria de Sangue", icon: "🔥", cost: "quick", type: "utility", conditionOnSuccess: "Fúria", hpGate: true, description: "Com poucos PV, entra em Fúria por uma cena." },
+    "neraliano": { name: "Adaptação Abissal", icon: "≈", cost: "move", type: "utility", description: "Manobra aquática; respiração e movimento em água." },
+    "aureano": { name: "Corpo Celestial", icon: "☁", cost: "move", type: "utility", description: "Salto ou queda controlada acima do normal." },
+    "animalhas": { name: "Instinto Animal", icon: "🐾", cost: "quick", type: "utility", description: "Explora a característica da linhagem animal escolhida." },
+    "centauro": { name: "Galope Ancestral", icon: "♞", cost: "move", type: "attack", attackDie: Math.max(strengthDie, agilityDie), attackBonus: skillBonus(profile, "atletismo"), damageFormula: "1d" + Math.max(agility.damageDie, strength.damageDie) + "+" + Math.max(agility.bonus, strength.bonus) + 1, description: "Investida acelerada que aumenta o impacto físico." },
+    "povo da natureza": { name: "Vínculo Natural", icon: "❧", cost: "quick", type: "utility", description: "Sente alterações na natureza e interage com plantas, animais e ambiente." },
+    "fada": { name: "Bênção Feérica", icon: "✦", cost: "quick", type: "utility", description: "Concede ou recebe uma pequena bênção de Mana quando há dignidade reconhecida." },
+    "vampiro": { name: "Regeneração Sanguínea", icon: "🩸", cost: "main", type: "attack", attackDie: agilityDie, attackBonus: skillBonus(profile, "furtividade"), damageFormula: "1d4", description: "Ataque sanguíneo que pode recuperar parte dos PV segundo a regra racial." },
+    "troll": { name: "Regeneração Brutal", icon: "♢", cost: "quick", type: "utility", conditionOnSuccess: "Regeneração", description: "Recuperação gradual quando não sofre tipos específicos de dano." },
+    "colosso": { name: "Asas Colossais", icon: "🪽", cost: "reaction", type: "utility", conditionOnSuccess: "Guarda alada", description: "Usa as asas como escudo, arma ou para planar." },
+    "povo aquático": { name: "Anfíbio", icon: "≋", cost: "move", type: "utility", description: "Respira e se move naturalmente na água." },
+    "povo das nuvens": { name: "Passo do Céu", icon: "☁", cost: "move", type: "utility", description: "Salto ou plano extraordinário em altitude." },
+    "duende": { name: "Leitura de Oportunidade", icon: "◈", cost: "quick", type: "utility", attackDie: perceptionDie, description: "Usa percepção comercial para identificar uma abertura, fraude ou fraqueza de negociação." }
+  };
+  const racialAction = racialMap[race];
+  if (racialAction) racial.push({ id: "racial-" + race.replace(/\s+/g, "-"), ...racialAction, racial: true });
+  return { standard: actions, racial };
+}
+
+function allCombatActions(combatant) {
+  const data = actionData(combatant);
+  const monsterActions = (data.actions || []).map((entry, index) => {
+    const name = Array.isArray(entry) ? String(entry[0]) : String(entry);
+    const text = Array.isArray(entry) ? String(entry[1] || "") : "";
+    const formula = text.match(/(\d+d\d+(?:[+-]\d+)?)/i)?.[1] || "";
+    return {
+      id: "monster-" + index, name, icon: "🎲", cost: "main", type: "attack",
+      attackDie: data.attackDie, attackBonus: data.attackBonus,
+      damageFormula: formula, description: text, monsterAction: true
+    };
+  });
+  if (combatant?.entity_type === "monster") return { standard: monsterActions, racial: [] };
+  const generated = buildStandardActions(combatant);
+  return { standard: generated.standard, racial: generated.racial };
+}
+
 function safeRoll(sides) {
   const n = Math.max(1, Number(sides) || 20);
   if (window.crypto?.getRandomValues) {
