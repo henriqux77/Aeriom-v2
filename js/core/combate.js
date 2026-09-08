@@ -1216,12 +1216,15 @@ function render() {
       '<div class="combat-turn-rail" aria-label="Ordem de iniciativa">' + turnRail + '</div>' +
       '<section class="combat-focus-card">' +
         '<div class="combat-focus-card__head">' +
-          '<div><span class="combat-focus-card__eyebrow">EM TURNO</span><h3>' + esc(current?.name || "—") + '</h3><small>' + esc(profileMeta || "Combate") + '</small></div>' +
+          '<div><span class="combat-focus-card__eyebrow">EM TURNO</span><h3>' + esc(current?.name || "—") + '</h3><small>' + esc(profileMeta || "Combate") + '</small>' + (current?.entity_type === "character" && current?.action_data?.character_profile?.xp_total != null ? '<div class="combat-focus-xp">XP ' + esc(current.action_data.character_profile.xp_total) + '</div>' : '') + '</div>' +
           '<div class="combat-focus-card__stats"><div><b>DEF</b><span>' + esc(current?.defense ?? "—") + '</span></div><div><b>MOV</b><span>' + esc(current?.movement ?? "—") + 'm</span></div></div>' +
         '</div>' +
         '<div class="combat-focus-hp"><div><span>HP</span><strong>' + esc(hp) + ' / ' + esc(current?.hp_max ?? 0) + '</strong></div><div class="combat-focus-hp__track"><i style="width:' + hpPercent + '%"></i></div></div>' +
         '<div class="combat-focus-actions"><button class="combat-big-action" id="combat-action" ' + (canAct ? "" : "disabled") + '><span>🎲</span><div><strong>Ações</strong><small>Escolher golpe, técnica ou manobra</small></div><b>›</b></button>' +
-        '<div class="combat-mini-actions">' + (isMaster() ? '<button id="combat-hp-minus">−5 HP</button><button id="combat-hp-plus">+5 HP</button>' : '') + (current?.entity_type === "monster" ? '<button id="combat-monster-sheet">Ficha</button>' : '') + '</div></div>' +
+        '<div class="combat-mini-actions">' +
+          (isMaster() ? '<button id="combat-hp-minus">−5 HP</button><button id="combat-hp-plus">+5 HP</button><button id="combat-remove">Remover</button>' : '') +
+          (current?.entity_type === "monster" ? '<button id="combat-monster-sheet">Ficha</button>' : '') +
+        '</div></div>' +
       '</section>' +
       '<div class="combat-actionbar combat-actionbar--compact">' + quickActions + actionButton + masterActions + '</div>' +
       '<section class="combat-log combat-log--compact"><div class="combat-card__head"><h3>Últimos acontecimentos</h3><span>3</span></div>' + renderEvents() + '</section>' +
@@ -1241,6 +1244,7 @@ function render() {
   root.querySelector("#combat-end")?.addEventListener("click", () => endCombat().catch((e) => alert(e?.message || "Erro ao encerrar combate.")));
   root.querySelector("#combat-hp-minus")?.addEventListener("click", () => setHp(current.id, hp - 5));
   root.querySelector("#combat-hp-plus")?.addEventListener("click", () => setHp(current.id, hp + 5));
+  root.querySelector("#combat-remove")?.addEventListener("click", () => removeCombatant(current.id).catch((e) => alert(e?.message || "Erro ao remover.")));
   root.querySelector("#combat-monster-sheet")?.addEventListener("click", () => openMonsterDetails(current.monster_id));
   root.querySelectorAll("[data-focus]").forEach((button) => button.addEventListener("click", () => focusCombatant(button.dataset.focus)));
 
