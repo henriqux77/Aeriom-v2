@@ -1341,7 +1341,7 @@ async function loadMembers() {
 
   state.memberProfiles.clear();
 
-  await loadMemberPresence();
+  void loadMemberPresence();
 
 
   const ids =
@@ -2211,6 +2211,7 @@ function formatLastAccess(value){
 }
 
 function isMemberOnline(userId){
+  if(!(state.memberPresence instanceof Map)) state.memberPresence=new Map();
   const p=state.memberPresence.get(String(userId));
   if(!p?.last_seen_at) return false;
   return Date.now()-new Date(p.last_seen_at).getTime() < 75*1000;
@@ -2236,6 +2237,7 @@ async function heartbeatPresence(){
 }
 
 function startPresence(){
+  if(!(state.memberPresence instanceof Map)) state.memberPresence=new Map();
   if(state.presenceTimer) clearInterval(state.presenceTimer);
   void heartbeatPresence();
   state.presenceTimer=window.setInterval(async()=>{await heartbeatPresence();await loadMemberPresence();renderMembers();},30000);
@@ -2274,7 +2276,7 @@ function createMemberCard(
   info.className="campaign-member-card__info";
   const nameElement=document.createElement("span");nameElement.className="campaign-member-card__name";nameElement.textContent=isCurrentUser?`${name} (você)`:name;
   const role=document.createElement("span");role.className="campaign-member-card__role";role.textContent=member.role==="master"?"Mestre":"Jogador";
-  const presence=document.createElement("span");presence.className="campaign-member-card__presence";presence.textContent=formatLastAccess(state.memberPresence.get(member.userId)?.last_seen_at);presence.classList.toggle("is-online",online);
+  const presence=document.createElement("span");presence.className="campaign-member-card__presence";presence.textContent=formatLastAccess((state.memberPresence instanceof Map ? state.memberPresence.get(member.userId) : null)?.last_seen_at);presence.classList.toggle("is-online",online);
   info.append(nameElement,role,presence);
   article.append(avatar,info);
   return article;
@@ -3922,7 +3924,8 @@ function destroyCampaign() {
   state.members =
     [];
 
-  state.memberProfiles.clear();
+  if(state.memberProfiles instanceof Map) state.memberProfiles.clear();
+  if(state.memberPresence instanceof Map) state.memberPresence.clear();
 
   state.session =
     null;
