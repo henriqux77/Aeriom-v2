@@ -1009,7 +1009,7 @@ function createCampaignCard(campaign) {
     editButton.type = "button";
     editButton.className = "button button--secondary campaign-card__edit";
     editButton.setAttribute("aria-label", "Editar campanha");
-    editButton.innerHTML = '<span aria-hidden="true">✎</span><span>Editar</span>';
+    editButton.textContent = "Editar";
     editButton.addEventListener("click", () => openEditCampaignModal(campaign));
 
     actions.appendChild(editButton);
