@@ -4949,3 +4949,35 @@ textarea:focus-visible {
     min-width:0!important;
   }
 }
+
+/* Final campaign action normalization */
+.campaign-card__open,
+.campaign-card__edit{
+  appearance:none!important;
+  -webkit-appearance:none!important;
+  font-family:inherit!important;
+  font-size:16px!important;
+  font-weight:700!important;
+  line-height:1!important;
+  letter-spacing:0!important;
+  text-transform:none!important;
+  height:48px!important;
+  min-height:48px!important;
+  padding:0 16px!important;
+  margin:0!important;
+  box-sizing:border-box!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  vertical-align:middle!important;
+  white-space:nowrap!important;
+}
+.campaign-card__edit{gap:0!important}
+@media(max-width:700px){
+  .campaign-card__actions .campaign-card__open,
+  .campaign-card__actions .campaign-card__edit{
+    height:48px!important;
+    min-height:48px!important;
+    font-size:16px!important;
+  }
+}
