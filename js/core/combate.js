@@ -625,6 +625,197 @@ async function setHp(id, value, reason = "HP ajustado") {
   render();
 }
 
+
+function lootRangeForSize(size) {
+  const map = {
+    "Pequeno": [1, 2],
+    "Médio": [2, 4],
+    "Grande": [5, 8],
+    "Enorme": [10, 14],
+    "Gigantesco": [10, 14],
+    "Colossal": [20, 24]
+  };
+  return map[size] || [1, 2];
+}
+
+function lootOutcome(total, difficulty, natural) {
+  if (natural === 1) return "critical";
+  if (natural >= 20) return "exceptional";
+  if (total < difficulty) return "fail";
+  if (total >= difficulty + 8) return "exceptional";
+  if (total >= difficulty + 4) return "high";
+  return "success";
+}
+
+function lootQuality(outcome) {
+  return ({ critical: "Ruim", fail: "Comum", success: "Comum", high: "Bom", exceptional: "Excelente" })[outcome] || "Comum";
+}
+
+function buildMonsterLoot(monster, outcome) {
+  const [min, max] = lootRangeForSize(monster.size);
+  if (outcome === "fail" || outcome === "critical") {
+    return outcome === "critical"
+      ? [{ name: "Material danificado", quantity: 1, quality: "Ruim" }]
+      : [];
+  }
+  const quantity = outcome === "exceptional" ? max : outcome === "high" ? Math.max(min, max - 1) : Math.ceil((min + max) / 2);
+  const parts = [
+    ["Carne", 0.45],
+    ["Sangue", 0.15],
+    ["Ossos", 0.20],
+    ["Parte defensiva", 0.20]
+  ];
+  return parts.map(([name, ratio]) => ({
+    name,
+    quantity: Math.max(1, Math.floor(quantity * ratio)),
+    quality: lootQuality(outcome),
+    sourceMonsterId: monster.id
+  })).filter(item => item.quantity > 0);
+}
+
+async function awardCombatXP(defeatedCombatant) {
+  if (!COMBAT.settings.xp_enabled || !defeatedCombatant?.monster_id || !COMBAT.session) return [];
+  const monster = COMBAT.monsters.find(m => m.id === defeatedCombatant.monster_id);
+  if (!monster?.xp_reward) return [];
+  const awards = [];
+  for (const participant of COMBAT.combatants.filter(c => c.entity_type === "character" && c.character_id)) {
+    const existing = await COMBAT.supabase.from("combat_xp_awards")
+      .select("id").eq("monster_combatant_id", defeatedCombatant.id).eq("character_id", participant.character_id).maybeSingle();
+    if (existing.data) continue;
+    const inserted = await COMBAT.supabase.from("combat_xp_awards").insert({
+      combat_id: COMBAT.session.id,
+      campaign_id: COMBAT.campaignId,
+      monster_combatant_id: defeatedCombatant.id,
+      character_id: participant.character_id,
+      xp_amount: monster.xp_reward
+    });
+    if (inserted.error) continue;
+    const current = await COMBAT.supabase.from("characters").select("xp_total").eq("id", participant.character_id).maybeSingle();
+    const nextXp = Number(current.data?.xp_total || 0) + Number(monster.xp_reward);
+    const updated = await COMBAT.supabase.from("characters").update({ xp_total: nextXp, updated_at: new Date().toISOString() }).eq("id", participant.character_id);
+    if (!updated.error) awards.push({ characterId: participant.character_id, amount: monster.xp_reward });
+  }
+  return awards;
+}
+
+async function registerDefeat(defeatedCombatant, sourceId) {
+  const monster = defeatedCombatant?.monster_id ? COMBAT.monsters.find(m => m.id === defeatedCombatant.monster_id) : null;
+  if (!monster) return;
+  const killer = sourceId ? COMBAT.combatants.find(c => c.id === sourceId) : null;
+  const killerCharacterId = killer?.character_id || null;
+  const xpAwards = await awardCombatXP(defeatedCombatant);
+  await updateCombatant(defeatedCombatant.id, {
+    killer_combatant_id: sourceId || null,
+    loot_resolved: false
+  });
+  const event = await insertCombatEvent({
+    event_type: "defeated",
+    source_combatant_id: sourceId || null,
+    target_combatant_id: defeatedCombatant.id,
+    action_name: monster.name + " derrotado",
+    metadata: {
+      loot_available: Boolean(COMBAT.settings.loot_enabled),
+      monster_id: monster.id,
+      monster_name: monster.name,
+      killer_name: killer?.name || "Desconhecido",
+      killer_character_id: killerCharacterId,
+      xp_amount: monster.xp_reward || 0,
+      xp_awards: xpAwards
+    }
+  });
+  if (event && killerCharacterId && COMBAT.ownCharacterIds.has(killerCharacterId)) {
+    COMBAT.pendingLoot = event;
+    renderLootOverlay();
+  }
+}
+
+async function claimLoot(event) {
+  if (!event || !COMBAT.settings.loot_enabled) return;
+  const killerCharacterId = event.metadata?.killer_character_id;
+  if (!killerCharacterId || !COMBAT.ownCharacterIds.has(killerCharacterId)) return;
+  const monster = COMBAT.monsters.find(m => m.id === event.metadata?.monster_id);
+  if (!monster) return;
+  const already = await COMBAT.supabase.from("combat_loot_claims").select("id")
+    .eq("monster_combatant_id", event.target_combatant_id).eq("user_id", COMBAT.user.id).maybeSingle();
+  if (already.data) return;
+  const profile = characterProfile(COMBAT.combatants.find(c => c.character_id === killerCharacterId) || {});
+  const die = attrDie(profile, "percepcao", 8);
+  const bonus = skillBonus(profile, "percepcao");
+  const result = safeRoll(die);
+  const total = result + bonus;
+  const difficulty = Number(monster.loot_difficulty) || 10;
+  const outcome = lootOutcome(total, difficulty, result);
+  const loot = buildMonsterLoot(monster, outcome);
+
+  const claim = await COMBAT.supabase.from("combat_loot_claims").insert({
+    combat_id: COMBAT.session.id,
+    campaign_id: COMBAT.campaignId,
+    monster_combatant_id: event.target_combatant_id,
+    character_id: killerCharacterId,
+    user_id: COMBAT.user.id,
+    test_attribute: "percepcao",
+    die_sides: die,
+    die_result: result,
+    test_bonus: bonus,
+    total_result: total,
+    difficulty,
+    outcome,
+    quantity: loot.reduce((sum, item) => sum + Number(item.quantity || 0), 0),
+    loot
+  });
+  if (claim.error) throw claim.error;
+
+  if (loot.length) {
+    const current = await COMBAT.supabase.from("characters").select("inventory").eq("id", killerCharacterId).maybeSingle();
+    if (current.error) throw current.error;
+    const inventory = Array.isArray(current.data?.inventory) ? current.data.inventory.slice() : [];
+    loot.forEach(item => inventory.push({
+      id: crypto.randomUUID(),
+      name: item.name,
+      quantity: item.quantity,
+      quality: item.quality,
+      source: monster.name,
+      acquired_at: new Date().toISOString()
+    }));
+    const updated = await COMBAT.supabase.from("characters").update({ inventory, updated_at: new Date().toISOString() }).eq("id", killerCharacterId);
+    if (updated.error) throw updated.error;
+  }
+  await updateCombatant(event.target_combatant_id, { loot_resolved: true });
+  await insertCombatEvent({
+    event_type: "loot_claimed",
+    source_combatant_id: COMBAT.combatants.find(c => c.character_id === killerCharacterId)?.id || null,
+    target_combatant_id: event.target_combatant_id,
+    action_name: "Aproveitamento",
+    roll_die: die,
+    roll_result: result,
+    attack_total: total,
+    defense_value: difficulty,
+    metadata: { outcome, loot, quantity: loot.reduce((sum, item) => sum + Number(item.quantity || 0), 0) }
+  });
+  COMBAT.pendingLoot = null;
+  renderLootOverlay();
+  render();
+}
+
+function renderLootOverlay() {
+  let overlay = document.getElementById("combat-loot-overlay");
+  if (!COMBAT.pendingLoot) {
+    overlay?.remove();
+    return;
+  }
+  if (!overlay) {
+    overlay = document.createElement("div");
+    overlay.id = "combat-loot-overlay";
+    overlay.className = "combat-loot-overlay";
+    document.body.appendChild(overlay);
+  }
+  const monsterName = COMBAT.pendingLoot.metadata?.monster_name || "Criatura";
+  const killerName = COMBAT.pendingLoot.metadata?.killer_name || "Você";
+  overlay.innerHTML =
+    '<div class="combat-loot-card"><span class="campaign-panel__eyebrow">ÚLTIMO GOLPE</span><h3>' + esc(killerName) + '</h3><p>' + esc(monsterName) + ' foi derrotado.</p><div class="combat-loot-xp">+' + esc(COMBAT.pendingLoot.metadata?.xp_amount || 0) + ' XP</div><div class="combat-loot-rule">Teste de Aproveitamento · Percepção</div><button class="campaign-button campaign-button--primary" id="combat-loot-roll">🎲 Fazer teste de saque</button></div>';
+  overlay.querySelector("#combat-loot-roll")?.addEventListener("click", () => claimLoot(COMBAT.pendingLoot).catch(e => alert(e?.message || "Não foi possível fazer o teste de aproveitamento.")));
+}
+
 async function applyDamage(id, amount, metadata = {}) {
   const c = COMBAT.combatants.find((item) => item.id === id);
   if (!c) return 0;
