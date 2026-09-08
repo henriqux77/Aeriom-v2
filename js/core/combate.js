@@ -456,6 +456,17 @@ async function executeAction(source, targetId, actionName, actionCost, manualDam
     updated_at: new Date().toISOString()
   }).eq("id", COMBAT.session.id);
 
+  if (attackResult) {
+    window.AERIOM_DICE?.playResultEffect?.(
+      attackResult.result === 20 && attackDie === 20
+        ? "critical"
+        : attackResult.result === 1 && attackDie === 20
+          ? "critical-failure"
+          : "normal",
+      attackDie
+    );
+  }
+
   if (target && hit && damageResult) {
     await applyDamage(target.id, damageResult.total, {
       sourceId: source.id,
