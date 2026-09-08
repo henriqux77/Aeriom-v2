@@ -2277,7 +2277,6 @@ function createMemberCard(
   avatar.appendChild(initial);
   const memberAvatarPath=text(isCurrentUser?state.profile?.avatar_path:profile?.avatar_path);
   const online=isMemberOnline(member.userId);
-  if(online){const dot=document.createElement("span");dot.className="campaign-member-card__online";dot.setAttribute("aria-label","Online");avatar.appendChild(dot);}
   if(memberAvatarPath&&state.supabase){
     void resolveStorageUrl(CONFIG.AVATAR_BUCKET,memberAvatarPath).then((avatarUrl)=>{
       if(!avatarUrl)return;
@@ -2289,10 +2288,12 @@ function createMemberCard(
   }
   const info=document.createElement("div");
   info.className="campaign-member-card__info";
+  const nameRow=document.createElement("div");nameRow.className="campaign-member-card__name-row";
   const nameElement=document.createElement("span");nameElement.className="campaign-member-card__name";nameElement.textContent=isCurrentUser?`${name} (você)`:name;
+  if(online){const dot=document.createElement("span");dot.className="campaign-member-card__online";dot.setAttribute("aria-label","Online");dot.title="Online agora";nameRow.append(nameElement,dot);}else{nameRow.append(nameElement);}
   const role=document.createElement("span");role.className="campaign-member-card__role";role.textContent=member.role==="master"?"Mestre":"Jogador";
   const presence=document.createElement("span");presence.className="campaign-member-card__presence";presence.textContent=formatLastAccess((state.memberPresence instanceof Map ? state.memberPresence.get(member.userId) : null)?.last_seen_at);presence.classList.toggle("is-online",online);
-  info.append(nameElement,role,presence);
+  info.append(nameRow,role,presence);
   article.append(avatar,info);
   return article;
 }
