@@ -249,6 +249,28 @@ async function addMonster(monster) {
   render();
 }
 
+async function rerollInitiative() {
+  if (!isMaster() || !COMBAT.session || !COMBAT.combatants.length) return;
+  for (const c of COMBAT.combatants) {
+    const monster = c.monster_id ? COMBAT.monsters.find((m) => m.id === c.monster_id) : null;
+    const die = Number(c.action_data?.initiative_die) || Number(monster?.initiative_die) || 20;
+    await updateCombatant(c.id, { initiative: safeRoll(die), resource_state: setTurnResourceDefaults() });
+  }
+  sortCombatants();
+  const first = COMBAT.combatants[0] || null;
+  const { data, error } = await COMBAT.supabase.from("combat_sessions").update({
+    turn_index: 0,
+    turn_combatant_id: first?.id || null,
+    round_number: 1,
+    turn_state: setTurnResourceDefaults(),
+    updated_at: new Date().toISOString()
+  }).eq("id", COMBAT.session.id).select("*").single();
+  if (error) throw error;
+  COMBAT.session = data;
+  await insertCombatEvent({ event_type: "initiative_rerolled", action_name: "Iniciativa rolada novamente", metadata: { count: COMBAT.combatants.length } });
+  render();
+}
+
 function sortCombatants() {
   COMBAT.combatants.sort((a, b) => (b.initiative - a.initiative) || ((a.sort_order || 0) - (b.sort_order || 0)));
 }
@@ -597,7 +619,7 @@ function render() {
   const current = currentCombatant();
   const currentResources = resourcesFor(current);
   const actions = isMaster()
-    ? '<button class="campaign-button campaign-button--secondary" id="combat-add-char">＋ Personagem</button><button class="campaign-button campaign-button--secondary" id="combat-add-monster">＋ Monstro</button>'
+    ? '<button class="campaign-button campaign-button--secondary" id="combat-add-char">＋ Personagem</button><button class="campaign-button campaign-button--secondary" id="combat-add-monster">＋ Monstro</button><button class="campaign-button campaign-button--secondary" id="combat-reroll">↻ Iniciativa</button>'
     : '';
   const turnButtons = (current && (isMaster() || current.character_id && COMBAT.ownCharacterIds.has(current.character_id)))
     ? '<button class="campaign-button campaign-button--primary" id="combat-action">⚔ Ação</button>'
@@ -624,6 +646,7 @@ function render() {
   root.querySelector("#combat-start")?.addEventListener("click", () => startCombat().catch((e) => alert(e?.message || "Erro ao iniciar combate.")));
   root.querySelector("#combat-add-char")?.addEventListener("click", () => openCharacterPicker());
   root.querySelector("#combat-add-monster")?.addEventListener("click", () => openMonsterPicker());
+  root.querySelector("#combat-reroll")?.addEventListener("click", () => rerollInitiative().catch((e) => alert(e?.message || "Erro ao rolar iniciativa.")));
   root.querySelector("#combat-action")?.addEventListener("click", () => openActionModal(current.id));
   root.querySelector("#combat-next")?.addEventListener("click", () => nextTurn().catch((e) => alert(e?.message || "Erro ao avançar o turno.")));
   root.querySelector("#combat-end")?.addEventListener("click", () => endCombat().catch((e) => alert(e?.message || "Erro ao encerrar combate.")));
