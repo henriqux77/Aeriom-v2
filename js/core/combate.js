@@ -165,15 +165,36 @@ function allCombatActions(combatant) {
     const name = Array.isArray(entry) ? String(entry[0]) : String(entry);
     const text = Array.isArray(entry) ? String(entry[1] || "") : "";
     const formula = text.match(/(\d+d\d+(?:[+-]\d+)?)/i)?.[1] || "";
-    return {
-      id: "monster-" + index, name, icon: "🎲", cost: "main", type: "attack",
-      attackDie: data.attackDie, attackBonus: data.attackBonus,
-      damageFormula: formula, description: text, monsterAction: true
-    };
+    return { id: "monster-" + index, name, icon: "🎲", cost: "main", type: "attack",
+      attackDie: data.attackDie, attackBonus: data.attackBonus, damageFormula: formula,
+      description: text, monsterAction: true };
   });
   if (combatant?.entity_type === "monster") return { standard: monsterActions, racial: [] };
+
   const generated = buildStandardActions(combatant);
-  return { standard: generated.standard, racial: generated.racial };
+  const profile = characterProfile(combatant);
+  const techniques = Array.isArray(profile.techniques) ? profile.techniques : [];
+  const techniqueActions = techniques.slice(0, 8).map((technique, index) => {
+    const name = String(technique?.name || "Técnica " + (index + 1));
+    const description = String(technique?.description || technique?.effect || "Técnica da ficha");
+    const damage = String(technique?.damage || technique?.dano || "").match(/(\d+d\d+(?:[+-]\d+)?)/i)?.[1] || "";
+    const manaCost = numeric(technique?.cost ?? technique?.manaCost, 0);
+    const test = String(technique?.test || technique?.teste || "").toLowerCase();
+    const attackAttr = test.includes("precis") ? "precisao" :
+      test.includes("controle") || test.includes("mana") ? "controle" :
+      test.includes("intelect") ? "intelecto" : "forca";
+    const bonusSkill = attackAttr === "precisao" ? "pontaria" :
+      attackAttr === "controle" ? "oficio" :
+      attackAttr === "intelecto" ? "conhecimento" : "atletismo";
+    return {
+      id: "technique-" + index, name, icon: "✦", cost: "main",
+      type: damage ? "attack" : "utility",
+      attackDie: attrDie(profile, attackAttr, 8),
+      attackBonus: skillBonus(profile, bonusSkill),
+      damageFormula: damage, manaCost, description, technique: true
+    };
+  });
+  return { standard: [...generated.standard, ...techniqueActions], racial: generated.racial };
 }
 
 function safeRoll(sides) {
