@@ -737,65 +737,78 @@ function openActionModal(sourceId) {
   const source = COMBAT.combatants.find((c) => c.id === sourceId);
   if (!source || !playerCanAct(source) || (source.id !== currentCombatant()?.id && !isMaster())) return;
 
-  const available = allCombatActions(source);
-  const actions = [...available.standard, ...available.racial];
+  const groups = allCombatActions(source);
+  const tabs = [
+    { key: "standard", label: "Golpes", icon: "👊", items: groups.standard.slice(0, 6) },
+    { key: "racial", label: "Raça", icon: "✦", items: groups.racial },
+    { key: "technique", label: "Técnicas", icon: "✦", items: groups.standard.filter((a) => a.technique).slice(0, 6) }
+  ].filter((group) => group.items.length);
+  let activeTab = tabs[0]?.key || "standard";
+
   const modal = document.createElement("div");
   modal.className = "combat-modal";
   modal.innerHTML =
     '<div class="combat-modal__card combat-modal__card--action" role="dialog" aria-modal="true">' +
-      '<div class="combat-modal__head"><div><span class="campaign-panel__eyebrow">Seu turno</span><h3>' + esc(source.name) + '</h3></div><button type="button" class="combat-modal__close" data-close aria-label="Fechar">×</button></div>' +
+      '<div class="combat-modal__head"><div><span class="campaign-panel__eyebrow">SEU TURNO</span><h3>' + esc(source.name) + '</h3></div><button type="button" class="combat-modal__close" data-close aria-label="Fechar">×</button></div>' +
       '<div class="combat-quick-sheet">' +
-        '<div class="combat-quick-sheet__label">Ações rápidas</div>' +
-        '<div class="combat-action-list">' +
-          actions.map((action, index) => {
-            const icon = action.icon || "🎲";
-            const type = action.racial ? "racial" : "standard";
-            return '<button type="button" class="combat-action-card ' + (index === 0 ? "is-selected" : "") + '" data-action-id="' + esc(action.id) + '" data-action-index="' + index + '" data-type="' + type + '">' +
-              '<span class="combat-action-card__icon">' + icon + '</span><span class="combat-action-card__body"><strong>' + esc(action.name) + '</strong><small>' + esc(action.description || "Ação disponível") + (action.damageFormula ? " · " + esc(action.damageFormula) : "") + '</small></span><span class="combat-action-card__arrow">›</span>' +
-            '</button>';
-          }).join("") +
-        '</div>' +
+        '<div class="combat-action-tabs">' + tabs.map((tab) => '<button type="button" class="' + (tab.key === activeTab ? 'is-active' : '') + '" data-tab="' + tab.key + '">' + tab.icon + ' ' + tab.label + '</button>').join("") + '</div>' +
+        '<div class="combat-action-pages"></div>' +
         '<label class="combat-target-picker"><span>Alvo</span><select name="target_id"><option value="">Sem alvo</option>' +
-          COMBAT.combatants.filter((c) => c.id !== source.id && !c.is_defeated).map((c) => '<option value="' + esc(c.id) + '">' + esc(c.name) + ' · DEF ' + esc(c.defense ?? "-") + '</option>').join("") +
-        '</select></label>' +
+          COMBAT.combatants.filter((c) => c.id !== source.id && !c.is_defeated).map((c) => '<option value="' + esc(c.id) + '">' + esc(c.name) + ' · DEF ' + esc(c.defense ?? "-") + '</option>').join("") + '</select></label>' +
         '<details class="combat-advanced"><summary>Ajustes avançados</summary><div class="combat-form__grid">' +
-          '<label><span>Dado de ataque</span><input name="die" type="number" min="4" max="20" value=""></label>' +
-          '<label><span>Bônus</span><input name="bonus" type="number" value=""></label>' +
+          '<label><span>Dado de ataque</span><input name="die" type="number" min="4" max="20"></label>' +
+          '<label><span>Bônus</span><input name="bonus" type="number"></label>' +
           '<label><span>Dano</span><input name="damage" placeholder="automático"></label>' +
           '<label><span>Custo</span><select name="cost">' + ACTIONS.map((item) => '<option value="' + item.value + '">' + item.label + '</option>').join("") + '</select></label>' +
         '</div></details>' +
-        '<div class="combat-quick-sheet__footer"><span class="combat-quick-roll"><span>🎲</span> Rolar e resolver</span><button type="button" class="campaign-button campaign-button--secondary" data-close>Cancelar</button><button type="button" class="campaign-button campaign-button--primary" data-execute>Executar</button></div>' +
+        '<div class="combat-quick-sheet__footer"><span class="combat-quick-roll"><span>🎲</span> resolver</span><button type="button" class="campaign-button campaign-button--secondary" data-close>Cancelar</button><button type="button" class="campaign-button campaign-button--primary" data-execute>Executar</button></div>' +
       '</div>' +
     '</div>';
-
   document.body.appendChild(modal);
+
+  let selected = null;
   const close = () => modal.remove();
   modal.querySelectorAll("[data-close]").forEach((button) => button.addEventListener("click", close));
   modal.addEventListener("click", (event) => { if (event.target === modal) close(); });
 
-  const cards = Array.from(modal.querySelectorAll("[data-action-id]"));
-  let selected = actions[0] || null;
-  const syncAdvanced = () => {
-    const die = modal.querySelector('[name="die"]');
-    const bonus = modal.querySelector('[name="bonus"]');
-    const damage = modal.querySelector('[name="damage"]');
-    const cost = modal.querySelector('[name="cost"]');
-    if (!selected) return;
-    die.value = selected.attackDie || "";
-    bonus.value = selected.attackBonus ?? "";
-    damage.value = selected.damageFormula || "";
-    cost.value = selected.cost || "main";
+  const page = modal.querySelector(".combat-action-pages");
+  const renderPage = () => {
+    const group = tabs.find((tab) => tab.key === activeTab) || tabs[0];
+    if (!group) return;
+    page.innerHTML = '<div class="combat-action-page-label">' + group.icon + ' ' + esc(group.label) + '</div>' +
+      '<div class="combat-action-grid">' + group.items.map((action) =>
+        '<button type="button" class="combat-action-tile ' + (selected?.id === action.id ? "is-selected" : "") + '" data-action-id="' + esc(action.id) + '">' +
+          '<span class="combat-action-tile__icon">' + (action.icon || "🎲") + '</span><span class="combat-action-tile__body"><strong>' + esc(action.name) + '</strong><small>' + esc(action.description || "") + (action.damageFormula ? " · " + esc(action.damageFormula) : "") + (action.manaCost ? " · " + esc(action.manaCost) + " Mana" : "") + '</small></span>' +
+        '</button>'
+      ).join("") + '</div>';
+    page.querySelectorAll("[data-action-id]").forEach((card) => card.addEventListener("click", () => {
+      selected = group.items.find((item) => item.id === card.dataset.actionId) || selected;
+      renderPage();
+      syncAdvanced();
+    }));
   };
-  cards.forEach((card) => card.addEventListener("click", () => {
-    cards.forEach((item) => item.classList.remove("is-selected"));
-    card.classList.add("is-selected");
-    selected = actions.find((item) => item.id === card.dataset.actionId) || selected;
-    syncAdvanced();
+  const syncAdvanced = () => {
+    if (!selected) return;
+    modal.querySelector('[name="die"]').value = selected.attackDie || "";
+    modal.querySelector('[name="bonus"]').value = selected.attackBonus ?? "";
+    modal.querySelector('[name="damage"]').value = selected.damageFormula || "";
+    modal.querySelector('[name="cost"]').value = selected.cost || "main";
+  };
+  modal.querySelectorAll("[data-tab]").forEach((button) => button.addEventListener("click", () => {
+    activeTab = button.dataset.tab;
+    modal.querySelectorAll("[data-tab]").forEach((item) => item.classList.toggle("is-active", item.dataset.tab === activeTab));
+    selected = null;
+    renderPage();
   }));
+  selected = tabs[0]?.items[0] || null;
+  renderPage();
   syncAdvanced();
 
   modal.querySelector("[data-execute]")?.addEventListener("click", async () => {
-    if (!selected) return;
+    if (!selected) {
+      alert("Escolha uma ação.");
+      return;
+    }
     const targetId = modal.querySelector('[name="target_id"]')?.value || "";
     const damage = modal.querySelector('[name="damage"]')?.value.trim() || "";
     const cost = modal.querySelector('[name="cost"]')?.value || selected.cost || "main";
