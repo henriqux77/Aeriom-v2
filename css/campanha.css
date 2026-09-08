@@ -3049,3 +3049,45 @@
 
 .campaign-member-card__name-row{display:flex;align-items:center;gap:7px;min-width:0}
 .campaign-member-card__online{display:inline-block;flex:0 0 8px;width:8px;height:8px;border-radius:50%;background:var(--campaign-success);box-shadow:0 0 0 3px rgba(145,191,124,.08)}
+
+/* Ficha do personagem — rolagem vertical correta em mobile */
+.aerion-sheet-modal{
+  position:fixed!important;
+  inset:0!important;
+  z-index:1200!important;
+  display:flex!important;
+  align-items:flex-start!important;
+  justify-content:center!important;
+  width:100%!important;
+  height:100%!important;
+  max-height:100%!important;
+  padding:calc(env(safe-area-inset-top, 0px) + 14px) 12px calc(env(safe-area-inset-bottom, 0px) + 92px)!important;
+  box-sizing:border-box!important;
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+  -webkit-overflow-scrolling:touch!important;
+  overscroll-behavior:contain!important;
+  touch-action:pan-y!important;
+}
+.aerion-sheet-card{
+  width:min(860px,100%)!important;
+  max-width:100%!important;
+  max-height:none!important;
+  height:auto!important;
+  min-height:0!important;
+  margin:0 auto!important;
+  overflow:visible!important;
+  flex:0 0 auto!important;
+}
+.aerion-sheet-inner{
+  min-height:0!important;
+}
+@media(max-width:700px){
+  .aerion-sheet-modal{
+    align-items:flex-start!important;
+    padding:calc(env(safe-area-inset-top, 0px) + 10px) 10px calc(env(safe-area-inset-bottom, 0px) + 86px)!important;
+  }
+  .aerion-sheet-card{
+    border-radius:18px!important;
+  }
+}
