@@ -978,5 +978,10 @@ window.addEventListener("aeriom:campaigntabchange", (event) => {
   if (event.detail?.tab === "combat") init().catch((e) => console.warn("[AERION][COMBAT]", e));
 });
 window.addEventListener("aeriom:campaignready", () => init().catch((e) => console.warn("[AERION][COMBAT]", e)));
+window.addEventListener("aeriom:dice:ready", () => {
+  if (COMBAT.session && document.body.classList.contains("aeriom-combat-active")) {
+    window.AERIOM_DICE?.startCombatAtmosphere?.();
+  }
+});
 if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", () => init().catch(() => {}), { once: true });
 else init().catch(() => {});
