@@ -267,6 +267,22 @@ import { getSupabase } from "./supabase.js";
     picker().classList.remove("is-open");
     await refresh();
 
+    try {
+      const { data: character } = await supabase.from("characters").select("name").eq("id",characterId).maybeSingle();
+      const { error: logError } = await supabase.from("timeline_events").insert({
+        campaign_id: campaignId,
+        actor_id: user.id,
+        character_id: characterId,
+        event_type: "action",
+        title: (user.user_metadata?.display_name || "Jogador") + " adicionou a ficha à mesa",
+        description: "Ficha " + (character?.name || "Personagem") + " entrou na campanha.",
+        metadata: { source:"character", action:"attach", character_name:character?.name || null }
+      });
+      if (logError) console.warn("[AERION][CAMPAIGN FICHA] Log não registrado.",logError);
+    } catch (logError) {
+      console.warn("[AERION][CAMPAIGN FICHA] Falha ao registrar log.",logError);
+    }
+
     notice("Ficha adicionada à campanha.","success");
 
     window.dispatchEvent(
@@ -295,6 +311,18 @@ import { getSupabase } from "./supabase.js";
     }
 
     await refresh();
+    try {
+      const { data: character } = await supabase.from("characters").select("name").eq("id",characterId).maybeSingle();
+      await supabase.from("timeline_events").insert({
+        campaign_id: campaignId,
+        actor_id: user.id,
+        character_id: characterId,
+        event_type: "action",
+        title: (user.user_metadata?.display_name || "Jogador") + " removeu uma ficha da mesa",
+        description: "Ficha " + (character?.name || "Personagem") + " saiu da campanha.",
+        metadata: { source:"character", action:"remove", character_name:character?.name || null }
+      });
+    } catch {}
     notice("Ficha removida da campanha.","success");
   }
 
