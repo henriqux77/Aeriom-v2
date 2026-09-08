@@ -352,7 +352,7 @@ async function loadActiveCombat() {
 
 async function getCharacters() {
   const { data, error } = await COMBAT.supabase.from("campaign_characters")
-    .select("character_id,characters(id,name,hp_current,hp_max,defense,movement,initiative,attributes,race,class,power,origin,racial_ability,class_bonus,techniques,conditions,skill_modifiers,natural_profile,movement_profile,power_type,resistances,senses,creation_state)")
+    .select("character_id,characters(id,name,hp_current,hp_max,defense,movement,initiative,attributes,race,class,power,origin,racial_ability,class_bonus,techniques,conditions,skill_modifiers,natural_profile,movement_profile,power_type,resistances,senses,creation_state,xp_total)")
     .eq("campaign_id", COMBAT.campaignId).eq("is_present", true);
   if (error) throw error;
   return (data || []).map((row) => row.characters).filter(Boolean);
@@ -440,7 +440,10 @@ async function addCharacter(character) {
         power_type: character.power_type || "",
         resistances: character.resistances || [],
         senses: character.senses || [],
-        creation_state: character.creation_state || {}
+        creation_state: character.creation_state || {},
+        xp_total: character.xp_total || 0,
+        mana_current: character.mana_current || 0,
+        mana_max: character.mana_max || 0
       }
     }
   }).select("*").single();
@@ -823,6 +826,7 @@ async function applyDamage(id, amount, metadata = {}) {
   const damage = Math.max(0, Math.floor(Number(amount) || 0));
   const next = Math.max(0, Math.min(Number(c.hp_max ?? 0), before - damage));
   const defeated = next <= 0;
+  const wasDefeated = Boolean(c.is_defeated);
 
   await updateCombatant(id, {
     hp_current: next,
@@ -832,7 +836,7 @@ async function applyDamage(id, amount, metadata = {}) {
 
   if (COMBAT.session) {
     await insertCombatEvent({
-      event_type: defeated ? "defeated" : "damage",
+      event_type: defeated && !wasDefeated ? "defeat_blow" : "damage",
       source_combatant_id: metadata.sourceId || null,
       target_combatant_id: id,
       action_cost: metadata.actionCost || null,
@@ -845,8 +849,9 @@ async function applyDamage(id, amount, metadata = {}) {
       damage_result: damage,
       hp_before: before,
       hp_after: next,
-      metadata: metadata.extra || {}
+      metadata: { ...(metadata.extra || {}), lethal: defeated && !wasDefeated }
     });
+    if (defeated && !wasDefeated) await registerDefeat({ ...c, hp_current: next, is_defeated: true }, metadata.sourceId || null);
   }
   return damage;
 }
@@ -1259,15 +1264,21 @@ function setupRealtime() {
   COMBAT.channel = COMBAT.supabase.channel("aeriom-combat-" + COMBAT.campaignId)
     .on("postgres_changes", { event: "*", schema: "public", table: "combat_sessions", filter: "campaign_id=eq." + COMBAT.campaignId }, async () => {
       await loadActiveCombat();
+      await loadLootStatus();
       render();
+      renderLootOverlay();
     })
     .on("postgres_changes", { event: "*", schema: "public", table: "combatants" }, async () => {
       await loadActiveCombat();
+      await loadLootStatus();
       render();
+      renderLootOverlay();
     })
     .on("postgres_changes", { event: "INSERT", schema: "public", table: "combat_events", filter: "campaign_id=eq." + COMBAT.campaignId }, async () => {
       await loadActiveCombat();
+      await loadLootStatus();
       render();
+      renderLootOverlay();
     })
     .subscribe();
 }
