@@ -610,47 +610,110 @@ function render() {
   if (!root) return;
 
   if (!COMBAT.session) {
-    root.innerHTML = '<div class="combat-empty"><div class="combat-empty__icon">⚔</div><h2>Nenhum combate ativo</h2><p>Inicie um encontro e monte a iniciativa da batalha.</p>' +
-      (isMaster() ? '<button class="campaign-button campaign-button--primary" id="combat-start">Iniciar combate</button>' : '') + '</div>';
+    document.body.classList.remove("aeriom-combat-active");
+    window.AERIOM_DICE?.stopCombatAtmosphere?.();
+    root.innerHTML =
+      '<div class="combat-empty">' +
+        '<div class="combat-empty__icon">⚔</div>' +
+        '<span class="campaign-panel__eyebrow">Combate</span>' +
+        '<h2>Nenhum combate ativo</h2>' +
+        '<p>O Mestre inicia o encontro. A iniciativa e as ações serão compartilhadas com toda a mesa.</p>' +
+        (isMaster() ? '<button class="campaign-button campaign-button--primary" id="combat-start">Iniciar combate</button>' : '') +
+      '</div>';
     root.querySelector("#combat-start")?.addEventListener("click", () => startCombat().catch((e) => alert(e?.message || "Erro ao iniciar combate.")));
     return;
   }
 
+  document.body.classList.add("aeriom-combat-active");
+  if (window.AERIOM_DICE?.getAudioSettings?.().combatAtmosphere !== false) {
+    window.AERIOM_DICE?.startCombatAtmosphere?.();
+  }
+
   const current = currentCombatant();
-  const currentResources = resourcesFor(current);
+  const turnResources = resourcesFor(current);
+
   const actions = isMaster()
-    ? '<button class="campaign-button campaign-button--secondary" id="combat-add-char">＋ Personagem</button><button class="campaign-button campaign-button--secondary" id="combat-add-monster">＋ Monstro</button><button class="campaign-button campaign-button--secondary" id="combat-reroll">↻ Iniciativa</button>'
-    : '';
-  const turnButtons = (current && (isMaster() || current.character_id && COMBAT.ownCharacterIds.has(current.character_id)))
-    ? '<button class="campaign-button campaign-button--primary" id="combat-action">⚔ Ação</button>'
-    : '';
+    ? '<button class="combat-icon-action" id="combat-add-char" title="Adicionar personagem" aria-label="Adicionar personagem"><span>👤</span><small>Personagem</small></button>' +
+      '<button class="combat-icon-action" id="combat-add-monster" title="Adicionar monstro" aria-label="Adicionar monstro"><span>👹</span><small>Monstro</small></button>' +
+      '<button class="combat-icon-action combat-dice-button" id="combat-reroll" title="Rolar iniciativa novamente" aria-label="Rolar iniciativa novamente"><span>🎲</span><small>Iniciativa</small></button>'
+    : "";
+
+  const canAct = Boolean(current && (isMaster() || (current.character_id && COMBAT.ownCharacterIds.has(current.character_id))));
+  const turnButtons = canAct
+    ? '<button class="combat-icon-action combat-icon-action--primary" id="combat-action" title="Abrir ações do turno" aria-label="Abrir ações do turno"><span>⚔</span><small>Ação</small></button>'
+    : "";
+
+  const masterFlow = isMaster()
+    ? '<button class="combat-icon-action" id="combat-next" title="Próximo turno" aria-label="Próximo turno"><span>›</span><small>Próximo</small></button>' +
+      '<button class="combat-icon-action combat-icon-action--danger" id="combat-end" title="Encerrar combate" aria-label="Encerrar combate"><span>×</span><small>Encerrar</small></button>'
+    : "";
 
   const list = COMBAT.combatants.map((c, index) => {
     const percent = Math.max(0, Math.min(100, ((Number(c.hp_current ?? 0) / Math.max(1, Number(c.hp_max ?? 1))) * 100)));
     const cRes = resourcesFor(c);
-    const monsterButton = c.entity_type === "monster" && c.monster_id ? '<button class="combatant__details" data-monster="' + esc(c.monster_id) + '">Ficha</button>' : '';
-    return '<article class="combatant ' + ((c.id === COMBAT.session.turn_combatant_id || (!COMBAT.session.turn_combatant_id && index === Number(COMBAT.session.turn_index || 0))) ? 'is-active ' : '') + (c.is_defeated ? 'is-defeated' : '') + '">' +
+    const active = c.id === COMBAT.session.turn_combatant_id ||
+      (!COMBAT.session.turn_combatant_id && index === Number(COMBAT.session.turn_index || 0));
+    const monsterButton = c.entity_type === "monster" && c.monster_id
+      ? '<button class="combatant__details" data-monster="' + esc(c.monster_id) + '">Ficha</button>'
+      : "";
+    const status = c.is_defeated ? "Derrotado" : active ? "Turno atual" : "Aguardando";
+    return '<article class="combatant ' + (active ? "is-active " : "") + (c.is_defeated ? "is-defeated" : "") + '">' +
       '<div class="combatant__initiative">' + esc(c.initiative) + '</div>' +
-      '<div class="combatant__main"><strong>' + esc(c.name) + '</strong><small>' + (c.entity_type === "monster" ? "Monstro" : "Personagem") + ' · DEF ' + esc(c.defense ?? "-") + ' · ' + esc(c.movement ?? "-") + 'm</small><div class="combat-hp"><span style="width:' + percent + '%"></span></div><small>HP ' + esc(c.hp_current ?? 0) + '/' + esc(c.hp_max ?? 0) + ' · ' + (c.is_defeated ? 'Derrotado' : (index === Number(COMBAT.session.turn_index || 0) ? 'Turno atual' : 'Aguardando')) + '</small><div class="combat-resources">' + ACTIONS.map((a) => '<span class="' + (cRes[a.value] ? 'is-ready' : 'is-used') + '">' + a.label.replace("Ação ", "").replace("Movimento", "Mov.").replace("Reação", "Reaç.") + '</span>').join("") + '</div></div>' +
-      '<div class="combatant__actions">' + monsterButton + (isMaster() ? '<button data-hp="-5" data-id="' + esc(c.id) + '">−5</button><button data-hp="5" data-id="' + esc(c.id) + '">+5</button><button data-remove="' + esc(c.id) + '">×</button>' : '') + '</div>' +
-      '</article>';
+      '<div class="combatant__main">' +
+        '<div class="combatant__name-row"><strong>' + esc(c.name) + '</strong><span class="combatant__status">' + status + '</span></div>' +
+        '<small>' + (c.entity_type === "monster" ? "Monstro" : "Personagem") + ' · DEF ' + esc(c.defense ?? "-") + ' · ' + esc(c.movement ?? "-") + 'm</small>' +
+        '<div class="combat-hp"><span style="width:' + percent + '%"></span></div>' +
+        '<small>HP ' + esc(c.hp_current ?? 0) + '/' + esc(c.hp_max ?? 0) + '</small>' +
+        '<div class="combat-resources">' +
+          [['main','A'],['move','M'],['quick','R'],['reaction','↩']].map(([key,label]) =>
+            '<span class="' + (cRes[key] ? "is-ready" : "is-used") + '" title="' + esc(ACTIONS.find(a => a.value === key)?.label || key) + '">' + label + '</span>'
+          ).join("") +
+        '</div>' +
+      '</div>' +
+      '<div class="combatant__actions">' + monsterButton +
+        (isMaster() ? '<button data-hp="-5" data-id="' + esc(c.id) + '" title="Dano 5">−5</button><button data-hp="5" data-id="' + esc(c.id) + '" title="Cura 5">+5</button><button data-remove="' + esc(c.id) + '" title="Remover">×</button>' : '') +
+      '</div>' +
+    '</article>';
   }).join("");
 
   root.innerHTML =
     '<div class="combat-shell">' +
-      '<div class="combat-toolbar"><div><span class="campaign-panel__eyebrow">Combate ativo</span><h2>Rodada ' + esc(COMBAT.session.round_number || 1) + '</h2><p>' + (current ? 'Turno de <strong>' + esc(current.name) + '</strong>' : 'Monte a iniciativa abaixo.') + '</p></div><div class="combat-toolbar__actions">' + actions + turnButtons + (isMaster() ? '<button class="campaign-button campaign-button--primary" id="combat-next">Próximo turno</button><button class="campaign-button campaign-button--secondary" id="combat-end">Encerrar</button>' : '') + '</div></div>' +
-      '<div class="combat-grid"><section class="combat-card"><div class="combat-card__head"><h3>Iniciativa</h3><span>' + COMBAT.combatants.length + ' combatentes</span></div><div class="combat-list">' + list + '</div></section>' +
-      '<section class="combat-card"><div class="combat-card__head"><h3>Registro do combate</h3><span>Últimas ações</span></div><div class="combat-log">' + renderEvents() + '</div></section></div>' +
+      '<div class="combat-turnbar">' +
+        '<div class="combat-turnbar__identity">' +
+          '<span class="campaign-panel__eyebrow">COMBATE ATIVO</span>' +
+          '<div class="combat-turnbar__round">Rodada ' + esc(COMBAT.session.round_number || 1) + '</div>' +
+          '<div class="combat-turnbar__current">' + (current ? '<span>Turno de</span> <strong>' + esc(current.name) + '</strong>' : 'Prepare a iniciativa') + '</div>' +
+        '</div>' +
+        '<div class="combat-turnbar__resources" aria-label="Ações do turno">' +
+          '<span class="' + (turnResources.main ? "is-ready" : "is-used") + '">A</span>' +
+          '<span class="' + (turnResources.move ? "is-ready" : "is-used") + '">M</span>' +
+          '<span class="' + (turnResources.quick ? "is-ready" : "is-used") + '">R</span>' +
+          '<span class="' + (turnResources.reaction ? "is-ready" : "is-used") + '">↩</span>' +
+        '</div>' +
+      '</div>' +
+      '<div class="combat-actionbar">' + actions + turnButtons + masterFlow + '</div>' +
+      '<div class="combat-grid">' +
+        '<section class="combat-card"><div class="combat-card__head"><h3>Iniciativa</h3><span>' + COMBAT.combatants.length + ' combatentes</span></div><div class="combat-list">' + list + '</div></section>' +
+        '<section class="combat-card combat-card--log"><div class="combat-card__head"><h3>Registro</h3><span>Últimas ações</span></div><div class="combat-log">' + renderEvents() + '</div></section>' +
+      '</div>' +
     '</div>';
 
-  root.querySelector("#combat-start")?.addEventListener("click", () => startCombat().catch((e) => alert(e?.message || "Erro ao iniciar combate.")));
   root.querySelector("#combat-add-char")?.addEventListener("click", () => openCharacterPicker());
   root.querySelector("#combat-add-monster")?.addEventListener("click", () => openMonsterPicker());
-  root.querySelector("#combat-reroll")?.addEventListener("click", () => rerollInitiative().catch((e) => alert(e?.message || "Erro ao rolar iniciativa.")));
+  root.querySelector("#combat-reroll")?.addEventListener("click", async (event) => {
+    const button = event.currentTarget;
+    button.classList.remove("is-rolling");
+    void button.offsetWidth;
+    button.classList.add("is-rolling");
+    try { await rerollInitiative(); } catch (e) { alert(e?.message || "Erro ao rolar iniciativa."); }
+    window.setTimeout(() => button.classList.remove("is-rolling"), 700);
+  });
   root.querySelector("#combat-action")?.addEventListener("click", () => openActionModal(current.id));
   root.querySelector("#combat-next")?.addEventListener("click", () => nextTurn().catch((e) => alert(e?.message || "Erro ao avançar o turno.")));
   root.querySelector("#combat-end")?.addEventListener("click", () => endCombat().catch((e) => alert(e?.message || "Erro ao encerrar combate.")));
-  root.querySelectorAll("[data-hp]").forEach((button) => button.addEventListener("click", () => setHp(button.dataset.id, Number(COMBAT.combatants.find((c) => c.id === button.dataset.id)?.hp_current || 0) + Number(button.dataset.hp))));
+  root.querySelectorAll("[data-hp]").forEach((button) => {
+    button.addEventListener("click", () => setHp(button.dataset.id, Number(COMBAT.combatants.find((c) => c.id === button.dataset.id)?.hp_current || 0) + Number(button.dataset.hp)));
+  });
   root.querySelectorAll("[data-remove]").forEach((button) => button.addEventListener("click", () => removeCombatant(button.dataset.remove).catch((e) => alert(e?.message || "Erro ao remover."))));
   root.querySelectorAll("[data-monster]").forEach((button) => button.addEventListener("click", () => openMonsterDetails(button.dataset.monster)));
 }
