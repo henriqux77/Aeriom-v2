@@ -137,7 +137,7 @@ function buildStandardActions(combatant) {
 
   const racial = [];
   const racialMap = {
-    "humano": { name: "Adaptação", icon: "✦", cost: "reaction", type: "utility", description: "Repete um teste recém-falhado; o segundo resultado é aceito.", conditionOnSuccess: "Adaptação pronta" },
+    "humano": { name: "Adaptação", icon: "✦", cost: "reaction", type: "utility", encounter: true, description: "1 vez por cena, repete um teste recém-falhado; aceita o segundo resultado." },
     "elfo": { name: "Percepção Élfica", icon: "◉", cost: "quick", type: "utility", attackDie: perceptionDie, description: "Percebe Mana, criaturas escondidas e alterações mágicas." },
     "anão": { name: "Forja Ancestral", icon: "⚒", cost: "quick", type: "utility", attackDie: strengthDie, description: "Analisa material, estrutura ou arma em combate." },
     "orc": { name: "Fúria de Sangue", icon: "🔥", cost: "quick", type: "utility", conditionOnSuccess: "Fúria", hpGate: true, description: "Com poucos PV, entra em Fúria por uma cena." },
@@ -152,7 +152,7 @@ function buildStandardActions(combatant) {
     "colosso": { name: "Asas Colossais", icon: "🪽", cost: "reaction", type: "utility", conditionOnSuccess: "Guarda alada", description: "Usa as asas como escudo, arma ou para planar." },
     "povo aquático": { name: "Anfíbio", icon: "≋", cost: "move", type: "utility", description: "Respira e se move naturalmente na água." },
     "povo das nuvens": { name: "Passo do Céu", icon: "☁", cost: "move", type: "utility", description: "Salto ou plano extraordinário em altitude." },
-    "duende": { name: "Leitura de Oportunidade", icon: "◈", cost: "quick", type: "utility", attackDie: perceptionDie, description: "Usa percepção comercial para identificar uma abertura, fraude ou fraqueza de negociação." }
+    "duende": { name: "Leitura de Oportunidade", icon: "◈", cost: "quick", type: "utility", attackDie: perceptionDie, encounter: true, description: "1 vez por cena, usa percepção comercial para identificar uma fraude, preço injusto ou oportunidade." }
   };
   const racialAction = racialMap[race];
   if (racialAction) racial.push({ id: "racial-" + race.replace(/\s+/g, "-"), ...racialAction, racial: true });
@@ -612,6 +612,20 @@ async function executeAction(source, targetId, actionMeta, actionCost, manualDam
     return;
   }
 
+  const profile = characterProfile(source);
+  const usedRacial = { ...(source.action_data?.used_racial || {}) };
+  if (actionMeta?.encounter && usedRacial[actionMeta.id]) {
+    alert("Essa habilidade racial já foi usada nesta cena.");
+    return;
+  }
+
+  const manaCost = Math.max(0, numeric(actionMeta?.manaCost, 0));
+  const currentMana = numeric(profile.mana_current ?? profile.mana?.current, 0);
+  if (manaCost > currentMana) {
+    alert("Mana insuficiente para usar esta técnica.");
+    return;
+  }
+
   const target = targetId ? COMBAT.combatants.find((c) => c.id === targetId) : null;
   const data = actionData(source);
   const meta = actionMeta || {};
@@ -643,7 +657,19 @@ async function executeAction(source, targetId, actionMeta, actionCost, manualDam
   if (hit && damageFormula) damageResult = rollFormula(damageFormula);
 
   const resourceState = { ...resources, [cost]: false };
-  await updateCombatant(source.id, { resource_state: resourceState });
+  if (actionMeta?.encounter) usedRacial[actionMeta.id] = true;
+
+  const newActionData = actionMeta?.encounter
+    ? { ...(source.action_data || {}), used_racial: usedRacial }
+    : (source.action_data || {});
+
+  if (manaCost > 0 && source.character_id) {
+    const nextMana = Math.max(0, currentMana - manaCost);
+    profile.mana_current = nextMana;
+    await COMBAT.supabase.from("characters").update({ mana_current: nextMana, updated_at: new Date().toISOString() }).eq("id", source.character_id);
+  }
+
+  await updateCombatant(source.id, { resource_state: resourceState, action_data: newActionData });
   await COMBAT.supabase.from("combat_sessions").update({
     turn_state: resourceState,
     last_action_at: new Date().toISOString(),
