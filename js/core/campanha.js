@@ -75,6 +75,12 @@ const state = {
   memberProfiles:
     new Map(),
 
+  memberPresence:
+    new Map(),
+
+  presenceTimer:
+    null,
+
   session:
     null,
 
@@ -2212,6 +2218,7 @@ function isMemberOnline(userId){
 
 async function loadMemberPresence(){
   if(!state.supabase||!state.campaignId) return;
+  if(!(state.memberPresence instanceof Map)) state.memberPresence=new Map();
   const {data,error}=await state.supabase.from("campaign_presence").select("user_id,last_seen_at").eq("campaign_id",state.campaignId);
   if(error){log("warn","Presença dos membros não pôde ser carregada.",error);return;}
   state.memberPresence.clear();
