@@ -120,3 +120,43 @@
   .combat-resources{gap:3px}
   .combat-log{max-height:310px}
 }
+
+/* HUD rápido de combate */
+.combat-quick-sheet{display:grid;gap:12px;padding:15px}
+.combat-quick-sheet__label{font-size:8px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.36)}
+.combat-action-list{display:grid;gap:7px}
+.combat-action-card{
+  width:100%;
+  display:grid;
+  grid-template-columns:36px minmax(0,1fr) 18px;
+  align-items:center;
+  gap:9px;
+  min-height:58px;
+  padding:8px 10px;
+  border:1px solid rgba(255,255,255,.07);
+  border-radius:12px;
+  background:rgba(255,255,255,.018);
+  color:rgba(255,255,255,.84);
+  text-align:left;
+  cursor:pointer;
+}
+.combat-action-card.is-selected{border-color:rgba(216,182,95,.42);background:rgba(216,182,95,.06)}
+.combat-action-card__icon{font-size:20px;display:grid;place-items:center}
+.combat-action-card__body{min-width:0}
+.combat-action-card__body strong{display:block;font-size:11px}
+.combat-action-card__body small{display:block;margin-top:3px;color:rgba(255,255,255,.4);font-size:8px;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.combat-action-card__arrow{color:rgba(255,255,255,.28);font-size:18px}
+.combat-target-picker{display:grid;gap:6px}
+.combat-target-picker>span{font-size:8px;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.4)}
+.combat-target-picker select{min-height:44px;padding:0 10px;border:1px solid rgba(255,255,255,.08);border-radius:10px;background:#11100e;color:rgba(255,255,255,.84)}
+.combat-advanced{border-top:1px solid rgba(255,255,255,.06);padding-top:10px}
+.combat-advanced summary{cursor:pointer;color:rgba(255,255,255,.4);font-size:8px;text-transform:uppercase;letter-spacing:.1em}
+.combat-advanced .combat-form__grid{margin-top:10px}
+.combat-quick-sheet__footer{display:flex;align-items:center;gap:7px;justify-content:flex-end;padding-top:2px}
+.combat-quick-roll{margin-right:auto;color:rgba(255,255,255,.34);font-size:8px}
+.combat-quick-roll span{font-size:13px}
+@media(max-width:700px){
+  .combat-actionbar{position:sticky;bottom:78px;z-index:20;padding:7px;background:rgba(9,8,7,.86);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.05);border-radius:14px}
+  .combat-quick-sheet{padding:12px}
+  .combat-quick-sheet__footer .campaign-button{min-height:44px}
+}
