@@ -339,6 +339,7 @@ async function startCombat() {
   COMBAT.session = data;
   COMBAT.combatants = [];
   COMBAT.events = [];
+  window.AERIOM_DICE?.playCombatCue?.("start");
   await insertCombatEvent({ event_type: "combat_started", action_name: "Combate iniciado", metadata: {} });
   render();
 }
@@ -492,6 +493,7 @@ async function nextTurn() {
   if (error) throw error;
 
   COMBAT.session = data;
+  window.AERIOM_DICE?.playCombatCue?.("turn");
 
   const current = currentCombatant();
   if (current) await updateCombatant(current.id, { resource_state: setTurnResourceDefaults() });
