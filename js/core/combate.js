@@ -838,111 +838,107 @@ function render() {
     document.body.classList.remove("aeriom-combat-active");
     window.AERIOM_DICE?.stopCombatAtmosphere?.();
     root.innerHTML =
-      '<div class="combat-empty">' +
-        '<div class="combat-empty__icon">⚔</div>' +
-        '<span class="campaign-panel__eyebrow">Combate</span>' +
-        '<h2>Nenhum combate ativo</h2>' +
-        '<p>O Mestre inicia o encontro. A iniciativa e as ações serão compartilhadas com toda a mesa.</p>' +
-        (isMaster() ? '<button class="campaign-button campaign-button--primary" id="combat-start">Iniciar combate</button>' : '') +
+      '<div class="combat-empty"><div class="combat-empty__icon">⚔</div><span class="campaign-panel__eyebrow">Combate</span><h2>Nenhum combate ativo</h2><p>O Mestre inicia o encontro e a mesa acompanha tudo em tempo real.</p>' +
+      (isMaster() ? '<button class="campaign-button campaign-button--primary" id="combat-start">Iniciar combate</button>' : '') +
       '</div>';
     root.querySelector("#combat-start")?.addEventListener("click", () => startCombat().catch((e) => alert(e?.message || "Erro ao iniciar combate.")));
     return;
   }
 
   document.body.classList.add("aeriom-combat-active");
-  if (window.AERIOM_DICE?.getAudioSettings?.().combatAtmosphere !== false) {
-    window.AERIOM_DICE?.startCombatAtmosphere?.();
-  }
+  window.AERIOM_DICE?.startCombatAtmosphere?.();
 
   const current = currentCombatant();
-  const turnResources = resourcesFor(current);
+  const currentResources = resourcesFor(current);
+  const selectedData = current ? actionData(current) : null;
+  const available = current ? allCombatActions(current) : { standard: [], racial: [] };
+  const next = COMBAT.combatants.length
+    ? COMBAT.combatants[(COMBAT.combatants.findIndex((c) => c.id === current?.id) + 1) % COMBAT.combatants.length]
+    : null;
 
-  const actions = isMaster()
-    ? '<button class="combat-icon-action" id="combat-add-char" title="Adicionar personagem" aria-label="Adicionar personagem"><span>👤</span><small>Personagem</small></button>' +
-      '<button class="combat-icon-action" id="combat-add-monster" title="Adicionar monstro" aria-label="Adicionar monstro"><span>👹</span><small>Monstro</small></button>' +
-      '<button class="combat-icon-action combat-dice-button" id="combat-reroll" title="Rolar iniciativa novamente" aria-label="Rolar iniciativa novamente"><span>🎲</span><small>Iniciativa</small></button>'
+  const quickActions = isMaster()
+    ? '<button class="combat-icon-action" id="combat-add-char" title="Adicionar personagem"><span>👤</span><small>Personagem</small></button>' +
+      '<button class="combat-icon-action" id="combat-add-monster" title="Adicionar monstro"><span>👹</span><small>Monstro</small></button>'
     : "";
-
   const canAct = Boolean(current && (isMaster() || (current.character_id && COMBAT.ownCharacterIds.has(current.character_id))));
-  const turnButtons = canAct
-    ? '<button class="combat-icon-action combat-icon-action--primary" id="combat-action" title="Abrir ações do turno" aria-label="Abrir ações do turno"><span>⚔</span><small>Ação</small></button>'
+  const actionButton = canAct
+    ? '<button class="combat-icon-action combat-icon-action--primary" id="combat-action" title="Abrir ações"><span>🎲</span><small>Rolar</small></button>'
+    : "";
+  const masterActions = isMaster()
+    ? '<button class="combat-icon-action combat-dice-button" id="combat-reroll" title="Rolar iniciativa novamente"><span>🎲</span><small>Iniciativa</small></button>' +
+      '<button class="combat-icon-action" id="combat-next" title="Próximo turno"><span>›</span><small>Próximo</small></button>' +
+      '<button class="combat-icon-action combat-icon-action--danger" id="combat-end" title="Encerrar combate"><span>×</span><small>Encerrar</small></button>'
     : "";
 
-  const masterFlow = isMaster()
-    ? '<button class="combat-icon-action" id="combat-next" title="Próximo turno" aria-label="Próximo turno"><span>›</span><small>Próximo</small></button>' +
-      '<button class="combat-icon-action combat-icon-action--danger" id="combat-end" title="Encerrar combate" aria-label="Encerrar combate"><span>×</span><small>Encerrar</small></button>'
-    : "";
-
-  const list = COMBAT.combatants.map((c, index) => {
-    const percent = Math.max(0, Math.min(100, ((Number(c.hp_current ?? 0) / Math.max(1, Number(c.hp_max ?? 1))) * 100)));
-    const cRes = resourcesFor(c);
-    const active = c.id === COMBAT.session.turn_combatant_id ||
-      (!COMBAT.session.turn_combatant_id && index === Number(COMBAT.session.turn_index || 0));
-    const monsterButton = c.entity_type === "monster" && c.monster_id
-      ? '<button class="combatant__details" data-monster="' + esc(c.monster_id) + '">Ficha</button>'
-      : "";
-    const status = c.is_defeated ? "Derrotado" : active ? "Turno atual" : "Aguardando";
-    return '<article class="combatant ' + (active ? "is-active " : "") + (c.is_defeated ? "is-defeated" : "") + '">' +
-      '<div class="combatant__initiative">' + esc(c.initiative) + '</div>' +
-      '<div class="combatant__main">' +
-        '<div class="combatant__name-row"><strong>' + esc(c.name) + '</strong><span class="combatant__status">' + status + '</span></div>' +
-        '<small>' + (c.entity_type === "monster" ? "Monstro" : "Personagem") + ' · DEF ' + esc(c.defense ?? "-") + ' · ' + esc(c.movement ?? "-") + 'm</small>' +
-        '<div class="combat-hp"><span style="width:' + percent + '%"></span></div>' +
-        '<small>HP ' + esc(c.hp_current ?? 0) + '/' + esc(c.hp_max ?? 0) + '</small>' +
-        '<div class="combat-resources">' +
-          [['main','A'],['move','M'],['quick','R'],['reaction','↩']].map(([key,label]) =>
-            '<span class="' + (cRes[key] ? "is-ready" : "is-used") + '" title="' + esc(ACTIONS.find(a => a.value === key)?.label || key) + '">' + label + '</span>'
-          ).join("") +
-        '</div>' +
-      '</div>' +
-      '<div class="combatant__actions">' + monsterButton +
-        (isMaster() ? '<button data-hp="-5" data-id="' + esc(c.id) + '" title="Dano 5">−5</button><button data-hp="5" data-id="' + esc(c.id) + '" title="Cura 5">+5</button><button data-remove="' + esc(c.id) + '" title="Remover">×</button>' : '') +
-      '</div>' +
-    '</article>';
+  const turnRail = COMBAT.combatants.map((c, index) => {
+    const active = c.id === current?.id;
+    return '<button type="button" class="combat-turn-chip ' + (active ? 'is-active' : '') + (c.is_defeated ? 'is-defeated' : '') + '" data-focus="' + esc(c.id) + '">' +
+      '<span class="combat-turn-chip__init">' + esc(c.initiative) + '</span>' +
+      '<span class="combat-turn-chip__name">' + esc(c.name) + '</span>' +
+      '<span class="combat-turn-chip__hp">' + esc(c.hp_current ?? 0) + '</span>' +
+    '</button>';
   }).join("");
 
+  const hp = Number(current?.hp_current ?? 0);
+  const hpMax = Math.max(1, Number(current?.hp_max ?? 1));
+  const hpPercent = Math.max(0, Math.min(100, hp / hpMax * 100));
+  const race = characterProfile(current)?.race || "";
+  const cls = characterProfile(current)?.class || "";
+  const profileMeta = [current?.entity_type === "monster" ? "Monstro" : race, current?.entity_type === "monster" ? (selectedData?.monster?.threat || "") : cls].filter(Boolean).join(" · ");
+
   root.innerHTML =
-    '<div class="combat-shell">' +
-      '<div class="combat-turnbar">' +
-        '<div class="combat-turnbar__identity">' +
-          '<span class="campaign-panel__eyebrow">COMBATE ATIVO</span>' +
-          '<div class="combat-turnbar__round">Rodada ' + esc(COMBAT.session.round_number || 1) + '</div>' +
-          '<div class="combat-turnbar__current">' + (current ? '<span>Turno de</span> <strong>' + esc(current.name) + '</strong>' : 'Prepare a iniciativa') + '</div>' +
-        '</div>' +
-        '<div class="combat-turnbar__resources" aria-label="Ações do turno">' +
-          '<span class="' + (turnResources.main ? "is-ready" : "is-used") + '">A</span>' +
-          '<span class="' + (turnResources.move ? "is-ready" : "is-used") + '">M</span>' +
-          '<span class="' + (turnResources.quick ? "is-ready" : "is-used") + '">R</span>' +
-          '<span class="' + (turnResources.reaction ? "is-ready" : "is-used") + '">↩</span>' +
+    '<div class="combat-stage">' +
+      '<div class="combat-stage__top">' +
+        '<div><span class="campaign-panel__eyebrow">COMBATE · RODADA ' + esc(COMBAT.session.round_number || 1) + '</span><h2>Turno de <strong>' + esc(current?.name || "—") + '</strong></h2><p>' + esc(profileMeta || "Aguardando ação") + '</p></div>' +
+        '<div class="combat-stage__state">' +
+          '<span class="' + (currentResources.main ? "is-ready" : "is-used") + '">A</span><span class="' + (currentResources.move ? "is-ready" : "is-used") + '">M</span><span class="' + (currentResources.quick ? "is-ready" : "is-used") + '">R</span><span class="' + (currentResources.reaction ? "is-ready" : "is-used") + '">↩</span>' +
         '</div>' +
       '</div>' +
-      '<div class="combat-actionbar">' + actions + turnButtons + masterFlow + '</div>' +
-      '<div class="combat-grid">' +
-        '<section class="combat-card"><div class="combat-card__head"><h3>Iniciativa</h3><span>' + COMBAT.combatants.length + ' combatentes</span></div><div class="combat-list">' + list + '</div></section>' +
-        '<section class="combat-card combat-card--log"><div class="combat-card__head"><h3>Registro</h3><span>Últimas ações</span></div><div class="combat-log">' + renderEvents() + '</div></section>' +
-      '</div>' +
+      '<div class="combat-turn-rail" aria-label="Ordem de iniciativa">' + turnRail + '</div>' +
+      '<section class="combat-focus-card">' +
+        '<div class="combat-focus-card__head">' +
+          '<div><span class="combat-focus-card__eyebrow">EM TURNO</span><h3>' + esc(current?.name || "—") + '</h3><small>' + esc(profileMeta || "Combate") + '</small></div>' +
+          '<div class="combat-focus-card__stats"><div><b>DEF</b><span>' + esc(current?.defense ?? "—") + '</span></div><div><b>MOV</b><span>' + esc(current?.movement ?? "—") + 'm</span></div></div>' +
+        '</div>' +
+        '<div class="combat-focus-hp"><div><span>HP</span><strong>' + esc(hp) + ' / ' + esc(current?.hp_max ?? 0) + '</strong></div><div class="combat-focus-hp__track"><i style="width:' + hpPercent + '%"></i></div></div>' +
+        '<div class="combat-focus-actions"><button class="combat-big-action" id="combat-action" ' + (canAct ? "" : "disabled") + '><span>🎲</span><div><strong>Ações</strong><small>Escolher golpe, técnica ou manobra</small></div><b>›</b></button>' +
+        '<div class="combat-mini-actions">' + (isMaster() ? '<button id="combat-hp-minus">−5 HP</button><button id="combat-hp-plus">+5 HP</button>' : '') + (current?.entity_type === "monster" ? '<button id="combat-monster-sheet">Ficha</button>' : '') + '</div></div>' +
+      '</section>' +
+      '<div class="combat-actionbar combat-actionbar--compact">' + quickActions + actionButton + masterActions + '</div>' +
+      '<section class="combat-log combat-log--compact"><div class="combat-card__head"><h3>Últimos acontecimentos</h3><span>3</span></div>' + renderEvents() + '</section>' +
     '</div>';
 
   root.querySelector("#combat-add-char")?.addEventListener("click", () => openCharacterPicker());
   root.querySelector("#combat-add-monster")?.addEventListener("click", () => openMonsterPicker());
   root.querySelector("#combat-reroll")?.addEventListener("click", async (event) => {
     const button = event.currentTarget;
-    button.classList.remove("is-rolling");
-    void button.offsetWidth;
     button.classList.add("is-rolling");
+    window.AERIOM_DICE?.playRollEffect?.(20);
     try { await rerollInitiative(); } catch (e) { alert(e?.message || "Erro ao rolar iniciativa."); }
     window.setTimeout(() => button.classList.remove("is-rolling"), 700);
   });
-  root.querySelector("#combat-action")?.addEventListener("click", () => openActionModal(current.id));
+  root.querySelector("#combat-action")?.addEventListener("click", () => openActionModal(current?.id));
   root.querySelector("#combat-next")?.addEventListener("click", () => nextTurn().catch((e) => alert(e?.message || "Erro ao avançar o turno.")));
   root.querySelector("#combat-end")?.addEventListener("click", () => endCombat().catch((e) => alert(e?.message || "Erro ao encerrar combate.")));
-  root.querySelectorAll("[data-hp]").forEach((button) => {
-    button.addEventListener("click", () => setHp(button.dataset.id, Number(COMBAT.combatants.find((c) => c.id === button.dataset.id)?.hp_current || 0) + Number(button.dataset.hp)));
-  });
-  root.querySelectorAll("[data-remove]").forEach((button) => button.addEventListener("click", () => removeCombatant(button.dataset.remove).catch((e) => alert(e?.message || "Erro ao remover."))));
-  root.querySelectorAll("[data-monster]").forEach((button) => button.addEventListener("click", () => openMonsterDetails(button.dataset.monster)));
+  root.querySelector("#combat-hp-minus")?.addEventListener("click", () => setHp(current.id, hp - 5));
+  root.querySelector("#combat-hp-plus")?.addEventListener("click", () => setHp(current.id, hp + 5));
+  root.querySelector("#combat-monster-sheet")?.addEventListener("click", () => openMonsterDetails(current.monster_id));
+  root.querySelectorAll("[data-focus]").forEach((button) => button.addEventListener("click", () => focusCombatant(button.dataset.focus)));
+
+  if (current && window.AERIOM_DICE?.getAudioSettings?.().combatAtmosphere !== false) {
+    window.AERIOM_DICE?.startCombatAtmosphere?.();
+  }
 }
 
+function focusCombatant(id) {
+  const target = COMBAT.combatants.find((c) => c.id === id);
+  if (!target) return;
+  const index = COMBAT.combatants.findIndex((c) => c.id === id);
+  window.scrollTo({ top: document.querySelector("#campaign-combat-content")?.offsetTop || 0, behavior: "smooth" });
+  const label = target.id === currentCombatant()?.id ? "Turno atual" : "Iniciativa " + target.initiative;
+  window.AERIOM_DICE?.playClickEffect?.();
+  document.querySelectorAll(".combat-turn-chip").forEach((button) => button.classList.toggle("is-preview", button.dataset.focus === id));
+}
 function setupRealtime() {
   if (!COMBAT.supabase || !COMBAT.campaignId) return;
   if (COMBAT.channel) COMBAT.supabase.removeChannel(COMBAT.channel);
