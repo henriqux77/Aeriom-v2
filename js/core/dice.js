@@ -25,6 +25,212 @@
    CONFIGURAÇÃO
    ============================================================ */
 
+const DICE_AUDIO_CONFIG = Object.freeze({
+  storageKey: "aeriom:dice:sound",
+  defaultEnabled: true,
+  defaultVolume: 0.58
+});
+
+
+const diceAudio = {
+  context: null,
+  masterGain: null,
+  enabled: true,
+  volume: DICE_AUDIO_CONFIG.defaultVolume,
+  initialized: false
+};
+
+
+function loadDiceAudioPreferences() {
+  try {
+    const raw = localStorage.getItem(DICE_AUDIO_CONFIG.storageKey);
+    if (!raw) return;
+    const value = JSON.parse(raw);
+    if (typeof value.enabled === "boolean") diceAudio.enabled = value.enabled;
+    if (Number.isFinite(value.volume)) {
+      diceAudio.volume = Math.max(0, Math.min(1, value.volume));
+    }
+  } catch {}
+}
+
+
+function saveDiceAudioPreferences() {
+  try {
+    localStorage.setItem(DICE_AUDIO_CONFIG.storageKey, JSON.stringify({
+      enabled: diceAudio.enabled,
+      volume: diceAudio.volume
+    }));
+  } catch {}
+}
+
+
+function ensureDiceAudio() {
+  if (!diceAudio.enabled) return false;
+  try {
+    if (!diceAudio.context) {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) return false;
+      diceAudio.context = new Ctx();
+      diceAudio.masterGain = diceAudio.context.createGain();
+      diceAudio.masterGain.gain.value = diceAudio.volume;
+      diceAudio.masterGain.connect(diceAudio.context.destination);
+    }
+    if (diceAudio.context.state === "suspended") {
+      void diceAudio.context.resume();
+    }
+    diceAudio.initialized = true;
+    return true;
+  } catch (error) {
+    log("warn", "Áudio das rolagens indisponível.", error);
+    return false;
+  }
+}
+
+
+function audioTone({
+  frequency,
+  duration = 0.08,
+  type = "triangle",
+  start = 0,
+  gain = 0.14,
+  glideTo = null
+}) {
+  if (!ensureDiceAudio()) return;
+  const ctx = diceAudio.context;
+  const osc = ctx.createOscillator();
+  const g = ctx.createGain();
+  const now = ctx.currentTime + start;
+  osc.type = type;
+  osc.frequency.setValueAtTime(frequency, now);
+  if (glideTo !== null) osc.frequency.exponentialRampToValueAtTime(Math.max(30, glideTo), now + duration);
+  g.gain.setValueAtTime(0.0001, now);
+  g.gain.exponentialRampToValueAtTime(Math.max(0.0001, gain), now + Math.min(0.012, duration * 0.25));
+  g.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+  osc.connect(g);
+  g.connect(diceAudio.masterGain);
+  osc.start(now);
+  osc.stop(now + duration + 0.02);
+}
+
+
+function audioNoise({
+  duration = 0.12,
+  start = 0,
+  gain = 0.07,
+  cutoff = 2600
+} = {}) {
+  if (!ensureDiceAudio()) return;
+  const ctx = diceAudio.context;
+  const buffer = ctx.createBuffer(1, Math.max(1, Math.floor(ctx.sampleRate * duration)), ctx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / data.length);
+  const source = ctx.createBufferSource();
+  const filter = ctx.createBiquadFilter();
+  const g = ctx.createGain();
+  const now = ctx.currentTime + start;
+  filter.type = "lowpass";
+  filter.frequency.value = cutoff;
+  g.gain.setValueAtTime(0.0001, now);
+  g.gain.exponentialRampToValueAtTime(Math.max(0.0001, gain), now + 0.008);
+  g.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+  source.buffer = buffer;
+  source.connect(filter);
+  filter.connect(g);
+  g.connect(diceAudio.masterGain);
+  source.start(now);
+}
+
+
+function playDiceShake(die) {
+  if (!ensureDiceAudio()) return;
+  const intensity = die >= 20 ? 1.0 : 0.82;
+  audioNoise({ duration: 0.10, gain: 0.045 * intensity, start: 0.00, cutoff: 1800 });
+  audioTone({ frequency: 190, duration: 0.055, type: "triangle", gain: 0.09 * intensity, start: 0.03, glideTo: 130 });
+  audioNoise({ duration: 0.08, gain: 0.035 * intensity, start: 0.105, cutoff: 2200 });
+  audioTone({ frequency: 145, duration: 0.07, type: "triangle", gain: 0.08 * intensity, start: 0.14, glideTo: 95 });
+}
+
+
+function playDiceResultSound(classification, die) {
+  if (!ensureDiceAudio()) return;
+  if (classification === "critical") {
+    audioTone({ frequency: 523.25, duration: 0.16, type: "sine", gain: 0.11, start: 0 });
+    audioTone({ frequency: 783.99, duration: 0.20, type: "sine", gain: 0.10, start: 0.075 });
+    audioTone({ frequency: 1046.5, duration: 0.28, type: "sine", gain: 0.08, start: 0.15 });
+    return;
+  }
+  if (classification === "critical-failure") {
+    audioTone({ frequency: 170, duration: 0.22, type: "sawtooth", gain: 0.10, start: 0, glideTo: 72 });
+    audioTone({ frequency: 82, duration: 0.28, type: "sine", gain: 0.08, start: 0.11, glideTo: 48 });
+    return;
+  }
+  const base = die >= 20 ? 240 : 210;
+  audioTone({ frequency: base, duration: 0.12, type: "triangle", gain: 0.10, start: 0, glideTo: base * 0.72 });
+  audioTone({ frequency: base * 1.55, duration: 0.08, type: "sine", gain: 0.045, start: 0.055 });
+}
+
+
+function playDiceClick() {
+  if (!ensureDiceAudio()) return;
+  audioTone({ frequency: 280, duration: 0.045, type: "square", gain: 0.035, start: 0 });
+}
+
+
+function setDiceAudioEnabled(enabled) {
+  diceAudio.enabled = Boolean(enabled);
+  saveDiceAudioPreferences();
+  if (diceAudio.enabled) ensureDiceAudio();
+  renderDiceAudioSettings();
+}
+
+
+function setDiceAudioVolume(volume) {
+  const value = Number(volume);
+  diceAudio.volume = Number.isFinite(value) ? Math.max(0, Math.min(1, value)) : DICE_AUDIO_CONFIG.defaultVolume;
+  if (diceAudio.masterGain) diceAudio.masterGain.gain.value = diceAudio.volume;
+  saveDiceAudioPreferences();
+  renderDiceAudioSettings();
+}
+
+
+function createDiceAudioSettings() {
+  let root = document.getElementById("dice-audio-settings");
+  if (root) return root;
+  const anchor = document.querySelector(".dice-history__toolbar") || document.querySelector(".dice-panel__header");
+  if (!anchor) return null;
+  root = document.createElement("div");
+  root.id = "dice-audio-settings";
+  root.className = "dice-audio-settings";
+  root.innerHTML = '<button type="button" class="dice-audio-settings__toggle" aria-expanded="false" aria-controls="dice-audio-settings-panel">🔊 Sons</button><div id="dice-audio-settings-panel" class="dice-audio-settings__panel" hidden><label><span>Sons das rolagens</span><input id="dice-audio-enabled" type="checkbox"></label><label><span>Volume</span><input id="dice-audio-volume" type="range" min="0" max="1" step="0.01"></label></div>';
+  anchor.appendChild(root);
+  const toggle = root.querySelector(".dice-audio-settings__toggle");
+  const panel = root.querySelector(".dice-audio-settings__panel");
+  toggle.addEventListener("click", () => {
+    playDiceClick();
+    const open = panel.hidden;
+    panel.hidden = !open;
+    toggle.setAttribute("aria-expanded", String(open));
+  });
+  root.querySelector("#dice-audio-enabled").addEventListener("change", e => setDiceAudioEnabled(e.target.checked));
+  root.querySelector("#dice-audio-volume").addEventListener("input", e => setDiceAudioVolume(e.target.value));
+  renderDiceAudioSettings();
+  return root;
+}
+
+
+function renderDiceAudioSettings() {
+  const root = document.getElementById("dice-audio-settings");
+  if (!root) return;
+  const enabled = root.querySelector("#dice-audio-enabled");
+  const volume = root.querySelector("#dice-audio-volume");
+  if (enabled) enabled.checked = diceAudio.enabled;
+  if (volume) volume.value = String(diceAudio.volume);
+}
+
+
+loadDiceAudioPreferences();
+
+
 const DICE_CONFIG = Object.freeze({
 
   allowedDice:
@@ -1351,6 +1557,8 @@ async function roll(
     true
   );
 
+  createDiceAudioSettings();
+
 
   try {
 
@@ -1478,6 +1686,8 @@ async function roll(
     }
 
 
+    playDiceShake(die);
+
     const local =
       rollLocal(
         die,
@@ -1525,6 +1735,8 @@ async function roll(
     renderLastRoll(
       rollData
     );
+
+    window.setTimeout(() => playDiceResultSound(rollData.classification, die), 230);
 
 
     dispatchDiceEvent(
@@ -3324,6 +3536,8 @@ function handleRemoteRoll(
     roll
   );
 
+  playDiceResultSound(roll.classification, roll.dieType);
+
 
   dispatchDiceEvent(
     "remoteroll",
@@ -4077,6 +4291,10 @@ function exposeApi() {
       formatRollResult,
 
       classifyRoll,
+
+      setAudioEnabled: setDiceAudioEnabled,
+      setAudioVolume: setDiceAudioVolume,
+      getAudioSettings: () => ({ enabled: diceAudio.enabled, volume: diceAudio.volume }),
 
       refresh:
         async () => {
