@@ -3337,6 +3337,55 @@ function setupRealtime() {
       {
 
         event:
+          "INSERT",
+
+        schema:
+          "public",
+
+        table:
+          "timeline_events",
+
+        filter:
+          `campaign_id=eq.${state.campaignId}`
+
+      },
+      async () => {
+
+        try {
+
+          window.dispatchEvent(
+            new CustomEvent(
+              "aeriom:timeline:refresh",
+              {
+                detail: {
+                  campaignId:
+                    state.campaignId
+                }
+              }
+            )
+          );
+
+        } catch (
+          error
+        ) {
+
+          log(
+            "warn",
+            "Falha ao atualizar os logs em tempo real.",
+            error
+          );
+
+        }
+
+      }
+    );
+
+
+    channel.on(
+      "postgres_changes",
+      {
+
+        event:
           "*",
 
         schema:
