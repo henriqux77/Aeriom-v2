@@ -495,47 +495,80 @@ async function executeAction(source, targetId, actionName, actionCost, manualDam
 
 function openActionModal(sourceId) {
   const source = COMBAT.combatants.find((c) => c.id === sourceId);
-  if (!source || !playerCanAct(source) || source.id !== currentCombatant()?.id && !isMaster()) return;
+  if (!source || !playerCanAct(source) || (source.id !== currentCombatant()?.id && !isMaster())) return;
 
   const data = actionData(source);
+  const actions = data.actions.length
+    ? data.actions
+    : [["Ataque", "Ataque básico"], ["Movimento", "Mover-se"]];
+
   const modal = document.createElement("div");
   modal.className = "combat-modal";
   modal.innerHTML =
-    '<div class="combat-modal__card" role="dialog" aria-modal="true">' +
-      '<div class="combat-modal__head"><div><span class="campaign-panel__eyebrow">Ação de combate</span><h3>' + esc(source.name) + '</h3></div><button type="button" class="combat-modal__close" data-close>×</button></div>' +
-      '<form class="combat-form">' +
-        '<label><span>Ação</span><select name="action_name">' +
-          (data.actions.length ? data.actions.map((a) => '<option value="' + esc(a[0]) + '">' + esc(a[0]) + '</option>').join("") : '<option value="Ataque">Ataque</option><option value="Movimento">Movimento</option>') +
+    '<div class="combat-modal__card combat-modal__card--action" role="dialog" aria-modal="true">' +
+      '<div class="combat-modal__head">' +
+        '<div><span class="campaign-panel__eyebrow">Seu turno</span><h3>' + esc(source.name) + '</h3></div>' +
+        '<button type="button" class="combat-modal__close" data-close aria-label="Fechar">×</button>' +
+      '</div>' +
+      '<div class="combat-quick-sheet">' +
+        '<div class="combat-quick-sheet__label">Escolha uma ação</div>' +
+        '<div class="combat-action-list">' +
+          actions.map((action, index) => {
+            const name = Array.isArray(action) ? action[0] : String(action);
+            const text = Array.isArray(action) ? action[1] : "";
+            const formula = String(text || "").match(/(\d+d\d+(?:[+-]\d+)?)/i)?.[1] || "";
+            const key = ACTIONS[index % ACTIONS.length]?.value || "main";
+            return '<button type="button" class="combat-action-card ' + (index === 0 ? "is-selected" : "") + '" data-action="' + esc(name) + '" data-cost="' + key + '" data-damage="' + esc(formula) + '">' +
+              '<span class="combat-action-card__icon">🎲</span><span class="combat-action-card__body"><strong>' + esc(name) + '</strong><small>' + esc(text || "Ação disponível") + '</small></span><span class="combat-action-card__arrow">›</span>' +
+            '</button>';
+          }).join("") +
+        '</div>' +
+        '<label class="combat-target-picker"><span>Alvo</span><select name="target_id"><option value="">Sem alvo</option>' +
+          COMBAT.combatants.filter((c) => c.id !== source.id && !c.is_defeated).map((c) => '<option value="' + esc(c.id) + '">' + esc(c.name) + ' · DEF ' + esc(c.defense ?? "-") + '</option>').join("") +
         '</select></label>' +
-        '<label><span>Custo</span><select name="cost">' + ACTIONS.map((a) => '<option value="' + a.value + '">' + a.label + '</option>').join("") + '</select></label>' +
-        '<label><span>Alvo</span><select name="target_id"><option value="">Sem alvo</option>' + COMBAT.combatants.filter((c) => c.id !== source.id && !c.is_defeated).map((c) => '<option value="' + esc(c.id) + '">' + esc(c.name) + ' · DEF ' + esc(c.defense ?? "-") + '</option>').join("") + '</select></label>' +
-        '<div class="combat-form__grid"><label><span>Dado de ataque</span><input name="die" type="number" min="1" max="100" value="' + esc(data.attackDie) + '"></label><label><span>Bônus</span><input name="bonus" type="number" value="' + esc(data.attackBonus) + '"></label></div>' +
-        '<label><span>Dano (fórmula opcional)</span><input name="damage" placeholder="Ex.: 1d8+2"></label>' +
-        '<p class="combat-form__hint">Para monstros, a descrição da ação preenche o dano automaticamente quando houver uma fórmula.</p>' +
-        '<div class="combat-form__actions"><button type="button" class="campaign-button campaign-button--secondary" data-close>Cancelar</button><button type="submit" class="campaign-button campaign-button--primary">Executar ação</button></div>' +
-      '</form>' +
+        '<details class="combat-advanced"><summary>Ajustes avançados</summary><div class="combat-form__grid">' +
+          '<label><span>Dado de ataque</span><input name="die" type="number" min="1" max="100" value="' + esc(data.attackDie) + '"></label>' +
+          '<label><span>Bônus</span><input name="bonus" type="number" value="' + esc(data.attackBonus) + '"></label>' +
+          '<label><span>Dano</span><input name="damage" placeholder="1d8+2"></label>' +
+          '<label><span>Custo</span><select name="cost">' + ACTIONS.map((item) => '<option value="' + item.value + '">' + item.label + '</option>').join("") + '</select></label>' +
+        '</div></details>' +
+        '<div class="combat-quick-sheet__footer"><span class="combat-quick-roll"><span>🎲</span> Rolar e resolver</span><button type="button" class="campaign-button campaign-button--secondary" data-close>Cancelar</button><button type="button" class="campaign-button campaign-button--primary" data-execute>Executar</button></div>' +
+      '</div>' +
     '</div>';
 
   document.body.appendChild(modal);
   const close = () => modal.remove();
-  modal.querySelectorAll("[data-close]").forEach((b) => b.addEventListener("click", close));
+  modal.querySelectorAll("[data-close]").forEach((button) => button.addEventListener("click", close));
   modal.addEventListener("click", (event) => { if (event.target === modal) close(); });
-  modal.querySelector("form").addEventListener("submit", async (event) => {
-    event.preventDefault();
-    const form = event.currentTarget;
+
+  const cards = Array.from(modal.querySelectorAll("[data-action]"));
+  let selected = cards[0] || null;
+  cards.forEach((card) => card.addEventListener("click", () => {
+    cards.forEach((item) => item.classList.remove("is-selected"));
+    card.classList.add("is-selected");
+    selected = card;
+    const advancedDamage = modal.querySelector('[name="damage"]');
+    const advancedCost = modal.querySelector('[name="cost"]');
+    if (advancedDamage && card.dataset.damage) advancedDamage.value = card.dataset.damage;
+    if (advancedCost) advancedCost.value = card.dataset.cost || "main";
+  }));
+
+  modal.querySelector("[data-execute]")?.addEventListener("click", async () => {
+    if (!selected) return;
+    const targetId = modal.querySelector('[name="target_id"]')?.value || "";
+    const advancedDamage = modal.querySelector('[name="damage"]')?.value.trim() || selected.dataset.damage || "";
+    const advancedCost = modal.querySelector('[name="cost"]')?.value || selected.dataset.cost || "main";
+    const die = modal.querySelector('[name="die"]')?.value || data.attackDie;
+    const bonus = modal.querySelector('[name="bonus"]')?.value || data.attackBonus;
+    const button = modal.querySelector("[data-execute]");
+    button.disabled = true;
     try {
-      await executeAction(
-        source,
-        form.target_id.value,
-        form.action_name.value,
-        form.cost.value,
-        form.damage.value.trim(),
-        form.die.value,
-        form.bonus.value
-      );
+      window.AERIOM_DICE?.playRollEffect?.(Number(die));
+      await executeAction(source, targetId, selected.dataset.action, advancedCost, advancedDamage, die, bonus);
       close();
     } catch (error) {
       alert(error?.message || "Não foi possível executar a ação.");
+      button.disabled = false;
     }
   });
 }
