@@ -1,3 +1,5 @@
+import { getSupabase } from "./supabase.js";
+
 const S=[
 ["Visão Geral","01 · Fundamentos","CONFIRMADO","AERION é um sistema próprio de RPG de mesa acompanhado por uma aplicação web. A aplicação reúne ficha, campanha, dados, testes, personagens, inventário, Mana, Poder, técnicas, mapas e recursos de mesa.",[["Princípio","O aplicativo deve funcionar como uma mesa virtual própria, sem copiar outra plataforma."],["Dados","Um atributo não é um número fixo. FOR = D12 significa que o teste de Força rola 1D12."]]],
 ["Atributos & Dados","02 · Personagem","CONFIRMADO","O AERION usa tipos de dado como valor estrutural dos atributos.",[["FOR","Força"],["AGI","Agilidade"],["PER","Percepção"],["VIG","Vigor"],["INT","Intelecto"],["PRE","Presença"],["CON","Controle"],["Dados possíveis","D4, D6, D8, D10, D12 e D20."]]],
@@ -11,12 +13,36 @@ const S=[
 ["Status das Regras","10 · Governança","IMPORTANTE","O livro mantém separado o que é regra estabelecida do que ainda está em balanceamento.",[["CONFIRMADO","Regra já estabelecida."],["PROPOSTA","Ideia ainda sujeita a mudança."],["EM REVISÃO","Implementação ou decisão parcial que ainda não deve ser tratada como definitiva."]]]
 ];
 
+let BOOK_SECTIONS = S.slice();
+
+const monsterSection = (m) => [
+  "Monstruário · " + m.name,
+  "11 · Monstruário",
+  "MONSTRUÁRIO",
+  "Baseado na ficha visual do Monstruário AERION, página " + m.page_number + ". Os valores de combate abaixo foram calibrados para as regras atuais do livro e permanecem sujeitos ao balanceamento futuro.",
+  [
+    ["Perfil", m.category + " · " + m.size + " · Ameaça " + m.threat],
+    ["Habitat", m.habitat || "Não informado"],
+    ["HP / Defesa / Movimento", m.hp_max + " HP · Defesa " + m.defense + " · " + m.movement + "m"],
+    ["Iniciativa", "1D" + m.initiative_die + " · modificador de ataque " + (m.attack_bonus >= 0 ? "+" : "") + m.attack_bonus],
+    ["Ataques", "1D" + m.attack_die + " + bônus. " + (m.actions || []).map(a => a[0] + ": " + a[1]).join(" · ")],
+    ["Habilidades", (m.abilities || []).join(" · ")],
+    ["Reações", (m.reactions || []).join(" · ")],
+    ["Sentidos", (m.senses || []).join(" · ")],
+    ["Resistências", (m.resistances || []).join(" · ") || "Nenhuma registrada"],
+    ["Fraquezas", (m.weaknesses || []).join(" · ") || "Nenhuma registrada"],
+    ["Anatomia / partes aproveitáveis", (m.anatomy || []).join(" · ")],
+    ["Descrição", m.description || "Não informada"],
+    ["Comportamento", m.behavior || "Não informado"]
+  ]
+];
+
 const e=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
 const input=document.getElementById("book-search"),index=document.getElementById("book-index-list"),content=document.getElementById("book-content"),status=document.getElementById("book-search-status"),count=document.getElementById("book-result-count");
 
 function render(q=""){
  const text=q.trim().toLowerCase();
- const hits=S.filter(x=>([x[0],x[1],x[2],x[3]].concat(x[4].flat())).join(" ").toLowerCase().includes(text));
+ const hits=BOOK_SECTIONS.filter(x=>([x[0],x[1],x[2],x[3]].concat(x[4].flat())).join(" ").toLowerCase().includes(text));
  index.replaceChildren();content.replaceChildren();count.textContent=String(hits.length);
  status.textContent=text?hits.length+" seção(ões) encontradas para “"+text+"”.":"Mostrando todas as seções.";
  if(!hits.length){content.innerHTML="<div class='book-empty'><strong>Nenhum resultado.</strong><p>Tente outra palavra ou o nome de uma seção.</p></div>";return;}
@@ -31,4 +57,21 @@ function render(q=""){
   content.appendChild(sec);
  });
 }
-input.addEventListener("input",e=>render(e.target.value));render();
+input.addEventListener("input",e=>render(e.target.value));
+
+async function loadMonsterManual(){
+  try{
+    const sb=await getSupabase();
+    const {data,error}=await sb.from("monsters").select("name,page_number,category,size,habitat,threat,hp_max,defense,movement,initiative_die,attack_die,attack_bonus,senses,abilities,actions,reactions,resistances,weaknesses,anatomy,description,behavior").order("page_number");
+    if(error) throw error;
+    const monsterSections=(data||[]).map(monsterSection);
+    BOOK_SECTIONS=S.concat(monsterSections);
+    render(input?.value||"");
+  }catch(error){
+    status.textContent="Livro carregado. O Monstruário estará disponível quando a sessão puder consultar o banco.";
+    console.warn("[AERION][BOOK] Monstruário não carregado.",error);
+  }
+}
+
+render();
+void loadMonsterManual();
