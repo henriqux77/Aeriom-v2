@@ -333,6 +333,36 @@ function setCombatAtmosphereEnabled(enabled) {
   renderDiceAudioSettings();
 }
 
+function playCombatCue(type = "turn") {
+  if (!ensureDiceAudio()) return;
+  if (type === "start") {
+    playBuffer(makeImpact(0.22, 0.9), {
+      gain: 0.14, attack: 0.002, release: 0.18,
+      filter: { type: "lowpass", frequency: 900 }
+    });
+    playBuffer(makeMetalClatter(0.16), {
+      start: 0.09, gain: 0.045, attack: 0.002, release: 0.13,
+      filter: { type: "bandpass", frequency: 1250, Q: 1.1 }
+    });
+    return;
+  }
+  if (type === "turn") {
+    playBuffer(makeImpact(0.075, 0.65), {
+      gain: 0.055, attack: 0.001, release: 0.055,
+      filter: { type: "lowpass", frequency: 720 }
+    });
+    playBuffer(makeMetalClatter(0.055), {
+      start: 0.05, gain: 0.016, attack: 0.001, release: 0.045,
+      filter: { type: "bandpass", frequency: 1700, Q: 1.3 }
+    });
+    return;
+  }
+  playBuffer(makeImpact(0.10, 0.8), {
+    gain: 0.075, attack: 0.001, release: 0.07,
+    filter: { type: "lowpass", frequency: 1100 }
+  });
+}
+
 function playDiceClick() {
   playBuffer(makeImpact(0.035, 0.22), {
     gain: 0.035,
@@ -4463,6 +4493,7 @@ function exposeApi() {
       getAudioSettings: () => ({ enabled: diceAudio.enabled, volume: diceAudio.volume, combatAtmosphere: diceAudio.combatAtmosphere }),
       playRollEffect: (die = 20) => playDiceRollSound(Number(die) || 20),
       playResultEffect: (classification = "normal", die = 20) => playDiceResultSound(classification, Number(die) || 20),
+      playCombatCue,
       startCombatAtmosphere,
       stopCombatAtmosphere,
       setCombatAtmosphereEnabled,
