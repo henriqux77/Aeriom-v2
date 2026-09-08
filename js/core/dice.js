@@ -1279,9 +1279,31 @@ async function saveRoll(
   }
 
 
-  return normalizeSavedRoll(
-    data
-  );
+  const saved = normalizeSavedRoll(data);
+
+  try {
+    const { error: logError } = await state.supabase
+      .from("timeline_events")
+      .insert({
+        campaign_id: state.campaignId,
+        actor_id: state.user.id,
+        character_id: roll.characterId || null,
+        event_type: "action",
+        title: `🡒 ${state.user.user_metadata?.display_name || "Jogador"} rolou D${saved.dieType}`,
+        description: `Resultado: ${saved.totalResult}${saved.modifier ? ` (${saved.modifier > 0 ? "+" : ""}${saved.modifier})` : ""}${saved.context ? ` · ${saved.context}` : ""}`,
+        metadata: {
+          source: "dice",
+          roll_id: saved.id,
+          die_type: saved.dieType,
+          total_result: saved.totalResult
+        }
+      });
+    if (logError) log("warn", "Rolagem salva, mas não foi possível registrar o log.", logError);
+  } catch (logError) {
+    log("warn", "Rolagem salva, mas o log falhou.", logError);
+  }
+
+  return saved;
 
 }
 
