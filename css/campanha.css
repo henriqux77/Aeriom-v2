@@ -3041,3 +3041,8 @@
   .aeriom-page--campaign #campaign-mobile-actions-button{grid-column:3;justify-self:end}
   .aeriom-page--campaign #campaign-mobile-menu-button{grid-column:1;justify-self:start}
 }
+.campaign-member-card__presence{display:block;margin-top:6px;color:rgba(255,255,255,.34);font-size:8px;line-height:1.2}
+.campaign-member-card__presence.is-online{color:var(--campaign-success)}
+.campaign-member-card__online{position:absolute;right:1px;bottom:1px;width:9px;height:9px;border:2px solid #15120e;border-radius:50%;background:var(--campaign-success);box-shadow:0 0 0 3px rgba(145,191,124,.08)}
+.campaign-member-card__avatar img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1}
+.campaign-member-card__avatar>span:not(.campaign-member-card__online){position:relative;z-index:0}
