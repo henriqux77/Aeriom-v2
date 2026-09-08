@@ -2057,3 +2057,47 @@
     bottom:82px;
   }
 }
+
+/* Áudio — agora integrado ao menu de três pontos da mesa */
+.dice-audio-settings{display:block;margin:0 0 7px}
+.dice-audio-settings__toggle{
+  width:100%;
+  min-height:46px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:0 12px;
+  border:1px solid rgba(255,255,255,.06);
+  border-radius:12px;
+  background:rgba(255,255,255,.015);
+  color:rgba(255,255,255,.78);
+  cursor:pointer;
+  font:inherit;
+  font-size:10px;
+  font-weight:800;
+  text-align:left;
+}
+.dice-audio-settings__toggle:hover{
+  border-color:rgba(216,182,95,.18);
+  background:rgba(216,182,95,.03);
+}
+.dice-audio-settings__panel{
+  position:relative;
+  right:auto;
+  bottom:auto;
+  width:auto;
+  margin-top:7px;
+  padding:11px;
+  border:1px solid var(--dice-border);
+  border-radius:12px;
+  background:rgba(9,8,7,.72);
+  box-shadow:none;
+}
+.dice-audio-settings__panel label{font-size:9px}
+@media(max-width:700px){
+  .dice-audio-settings__panel{
+    position:relative;
+    right:auto;
+    bottom:auto;
+  }
+}
