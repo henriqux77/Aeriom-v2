@@ -36,6 +36,11 @@ const diceAudio = {
   masterGain: null,
   enabled: true,
   volume: DICE_AUDIO_CONFIG.defaultVolume,
+  combatAtmosphere: true,
+  atmosphereGain: null,
+  atmosphereSource: null,
+  atmosphereFilter: null,
+  atmosphereTimer: null,
   initialized: false
 };
 
@@ -46,6 +51,7 @@ function loadDiceAudioPreferences() {
     const value = JSON.parse(raw);
     if (typeof value.enabled === "boolean") diceAudio.enabled = value.enabled;
     if (Number.isFinite(value.volume)) diceAudio.volume = Math.max(0, Math.min(1, value.volume));
+    if (typeof value.combatAtmosphere === "boolean") diceAudio.combatAtmosphere = value.combatAtmosphere;
   } catch {}
 }
 
@@ -53,7 +59,8 @@ function saveDiceAudioPreferences() {
   try {
     localStorage.setItem(DICE_AUDIO_CONFIG.storageKey, JSON.stringify({
       enabled: diceAudio.enabled,
-      volume: diceAudio.volume
+      volume: diceAudio.volume,
+      combatAtmosphere: diceAudio.combatAtmosphere
     }));
   } catch {}
 }
@@ -253,6 +260,78 @@ function playDiceResultSound(classification, die) {
   });
 }
 
+function stopCombatAtmosphere() {
+  if (diceAudio.atmosphereTimer) {
+    clearTimeout(diceAudio.atmosphereTimer);
+    diceAudio.atmosphereTimer = null;
+  }
+  try {
+    diceAudio.atmosphereSource?.stop();
+    diceAudio.atmosphereSource?.disconnect();
+  } catch {}
+  diceAudio.atmosphereSource = null;
+  try { diceAudio.atmosphereGain?.disconnect(); } catch {}
+  try { diceAudio.atmosphereFilter?.disconnect(); } catch {}
+  diceAudio.atmosphereGain = null;
+  diceAudio.atmosphereFilter = null;
+}
+
+function startCombatAtmosphere() {
+  if (!diceAudio.combatAtmosphere || !ensureDiceAudio()) return;
+  stopCombatAtmosphere();
+  const ctx = diceAudio.context;
+  const length = Math.floor(ctx.sampleRate * 4);
+  const buffer = ctx.createBuffer(1, length, ctx.sampleRate);
+  const data = buffer.getChannelData(0);
+  let low = 0;
+  for (let i = 0; i < length; i++) {
+    const white = Math.random() * 2 - 1;
+    low = low * 0.996 + white * 0.004;
+    const slow = Math.sin(2 * Math.PI * 18 * i / ctx.sampleRate) * 0.012;
+    data[i] = (low * 0.14 + slow) * 0.55;
+  }
+  const source = ctx.createBufferSource();
+  const filter = ctx.createBiquadFilter();
+  const gain = ctx.createGain();
+  source.buffer = buffer;
+  source.loop = true;
+  filter.type = "lowpass";
+  filter.frequency.value = 320;
+  gain.gain.value = Math.min(0.022, diceAudio.volume * 0.042);
+  source.connect(filter);
+  filter.connect(gain);
+  gain.connect(diceAudio.masterGain);
+  source.start();
+  diceAudio.atmosphereSource = source;
+  diceAudio.atmosphereFilter = filter;
+  diceAudio.atmosphereGain = gain;
+
+  const subtleClink = () => {
+    if (!diceAudio.atmosphereSource || !diceAudio.combatAtmosphere || !diceAudio.enabled) return;
+    diceAudio.atmosphereTimer = setTimeout(() => {
+      playBuffer(makeMetalClatter(0.045), {
+        gain: 0.009 + Math.random() * 0.006,
+        attack: 0.001,
+        release: 0.04,
+        filter: { type: "bandpass", frequency: 1500 + Math.random() * 700, Q: 1.3 }
+      });
+      subtleClink();
+    }, 3500 + Math.random() * 6500);
+  };
+  subtleClink();
+}
+
+function setCombatAtmosphereEnabled(enabled) {
+  diceAudio.combatAtmosphere = Boolean(enabled);
+  saveDiceAudioPreferences();
+  if (diceAudio.combatAtmosphere && document.body?.classList.contains("aeriom-combat-active")) {
+    startCombatAtmosphere();
+  } else if (!diceAudio.combatAtmosphere) {
+    stopCombatAtmosphere();
+  }
+  renderDiceAudioSettings();
+}
+
 function playDiceClick() {
   playBuffer(makeImpact(0.035, 0.22), {
     gain: 0.035,
@@ -285,7 +364,7 @@ function createDiceAudioSettings() {
   root = document.createElement("div");
   root.id = "dice-audio-settings";
   root.className = "dice-audio-settings";
-  root.innerHTML = '<button type="button" class="dice-audio-settings__toggle" aria-expanded="false" aria-controls="dice-audio-settings-panel">🔊 Sons da mesa</button><div id="dice-audio-settings-panel" class="dice-audio-settings__panel" hidden><label><span>Efeitos das rolagens</span><input id="dice-audio-enabled" type="checkbox"></label><label><span>Volume</span><input id="dice-audio-volume" type="range" min="0" max="1" step="0.01"></label></div>';
+  root.innerHTML = '<button type="button" class="dice-audio-settings__toggle" aria-expanded="false" aria-controls="dice-audio-settings-panel">🔊 Sons da mesa</button><div id="dice-audio-settings-panel" class="dice-audio-settings__panel" hidden><label><span>Efeitos das rolagens</span><input id="dice-audio-enabled" type="checkbox"></label><label><span>Volume</span><input id="dice-audio-volume" type="range" min="0" max="1" step="0.01"></label><label><span>Atmosfera de combate</span><input id="dice-combat-atmosphere" type="checkbox"></label></div>';
   anchor.prepend(root);
   const toggle = root.querySelector(".dice-audio-settings__toggle");
   const panel = root.querySelector(".dice-audio-settings__panel");
@@ -297,6 +376,7 @@ function createDiceAudioSettings() {
   });
   root.querySelector("#dice-audio-enabled").addEventListener("change", e => setDiceAudioEnabled(e.target.checked));
   root.querySelector("#dice-audio-volume").addEventListener("input", e => setDiceAudioVolume(e.target.value));
+  root.querySelector("#dice-combat-atmosphere")?.addEventListener("change", e => setCombatAtmosphereEnabled(e.target.checked));
   renderDiceAudioSettings();
   return root;
 }
@@ -308,6 +388,8 @@ function renderDiceAudioSettings() {
   const volume = root.querySelector("#dice-audio-volume");
   if (enabled) enabled.checked = diceAudio.enabled;
   if (volume) volume.value = String(diceAudio.volume);
+  const atmosphere = root.querySelector("#dice-combat-atmosphere");
+  if (atmosphere) atmosphere.checked = diceAudio.combatAtmosphere;
 }
 
 loadDiceAudioPreferences();
@@ -4377,7 +4459,10 @@ function exposeApi() {
 
       setAudioEnabled: setDiceAudioEnabled,
       setAudioVolume: setDiceAudioVolume,
-      getAudioSettings: () => ({ enabled: diceAudio.enabled, volume: diceAudio.volume }),
+      getAudioSettings: () => ({ enabled: diceAudio.enabled, volume: diceAudio.volume, combatAtmosphere: diceAudio.combatAtmosphere }),
+      startCombatAtmosphere,
+      stopCombatAtmosphere,
+      setCombatAtmosphereEnabled,
 
       refresh:
         async () => {
