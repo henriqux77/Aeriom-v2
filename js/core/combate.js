@@ -504,11 +504,11 @@ function openActionModal(sourceId) {
     '<div class="combat-modal__card" role="dialog" aria-modal="true">' +
       '<div class="combat-modal__head"><div><span class="campaign-panel__eyebrow">Ação de combate</span><h3>' + esc(source.name) + '</h3></div><button type="button" class="combat-modal__close" data-close>×</button></div>' +
       '<form class="combat-form">' +
-        '<label><span>Ação</span><select name="action">' +
+        '<label><span>Ação</span><select name="action_name">' +
           (data.actions.length ? data.actions.map((a) => '<option value="' + esc(a[0]) + '">' + esc(a[0]) + '</option>').join("") : '<option value="Ataque">Ataque</option><option value="Movimento">Movimento</option>') +
         '</select></label>' +
         '<label><span>Custo</span><select name="cost">' + ACTIONS.map((a) => '<option value="' + a.value + '">' + a.label + '</option>').join("") + '</select></label>' +
-        '<label><span>Alvo</span><select name="target"><option value="">Sem alvo</option>' + COMBAT.combatants.filter((c) => c.id !== source.id && !c.is_defeated).map((c) => '<option value="' + esc(c.id) + '">' + esc(c.name) + ' · DEF ' + esc(c.defense ?? "-") + '</option>').join("") + '</select></label>' +
+        '<label><span>Alvo</span><select name="target_id"><option value="">Sem alvo</option>' + COMBAT.combatants.filter((c) => c.id !== source.id && !c.is_defeated).map((c) => '<option value="' + esc(c.id) + '">' + esc(c.name) + ' · DEF ' + esc(c.defense ?? "-") + '</option>').join("") + '</select></label>' +
         '<div class="combat-form__grid"><label><span>Dado de ataque</span><input name="die" type="number" min="1" max="100" value="' + esc(data.attackDie) + '"></label><label><span>Bônus</span><input name="bonus" type="number" value="' + esc(data.attackBonus) + '"></label></div>' +
         '<label><span>Dano (fórmula opcional)</span><input name="damage" placeholder="Ex.: 1d8+2"></label>' +
         '<p class="combat-form__hint">Para monstros, a descrição da ação preenche o dano automaticamente quando houver uma fórmula.</p>' +
@@ -526,8 +526,8 @@ function openActionModal(sourceId) {
     try {
       await executeAction(
         source,
-        form.target.value,
-        form.action.value,
+        form.target_id.value,
+        form.action_name.value,
         form.cost.value,
         form.damage.value.trim(),
         form.die.value,
