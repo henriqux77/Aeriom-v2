@@ -33,6 +33,9 @@ function playerCanAct(combatant) {
 
 function currentCombatant() {
   if (!COMBAT.session) return null;
+  if (COMBAT.session.turn_combatant_id) {
+    return COMBAT.combatants.find((c) => c.id === COMBAT.session.turn_combatant_id) || null;
+  }
   return COMBAT.combatants[Number(COMBAT.session.turn_index || 0)] || null;
 }
 
@@ -168,6 +171,7 @@ async function startCombat() {
     is_active: true,
     round_number: 1,
     turn_index: 0,
+    turn_combatant_id: null,
     started_by: COMBAT.user.id,
     turn_state: setTurnResourceDefaults(),
     last_action_at: new Date().toISOString()
@@ -201,6 +205,13 @@ async function addCharacter(character) {
   if (error) throw error;
   COMBAT.combatants.push(data);
   sortCombatants();
+  if (!COMBAT.session.turn_combatant_id) {
+    const { data: updatedSession, error: turnError } = await COMBAT.supabase.from("combat_sessions")
+      .update({ turn_combatant_id: data.id, turn_index: COMBAT.combatants.findIndex((c) => c.id === data.id) })
+      .eq("id", COMBAT.session.id).select("*").single();
+    if (turnError) throw turnError;
+    COMBAT.session = updatedSession;
+  }
   await insertCombatEvent({
     event_type: "combatant_added",
     source_combatant_id: data.id,
@@ -254,15 +265,21 @@ async function updateCombatant(id, patch) {
 async function nextTurn() {
   if (!isMaster() || !COMBAT.session || !COMBAT.combatants.length) return;
 
-  let idx = Number(COMBAT.session.turn_index || 0) + 1;
+  const currentIndex = Math.max(0, COMBAT.combatants.findIndex((c) => c.id === COMBAT.session.turn_combatant_id));
+  let idx = currentIndex + 1;
   let round = Number(COMBAT.session.round_number || 1);
+  while (idx < COMBAT.combatants.length && COMBAT.combatants[idx].is_defeated) idx += 1;
   if (idx >= COMBAT.combatants.length) {
     idx = 0;
     round += 1;
+    while (idx < COMBAT.combatants.length && COMBAT.combatants[idx].is_defeated) idx += 1;
+    if (idx >= COMBAT.combatants.length) idx = currentIndex;
   }
+  const nextCombatant = COMBAT.combatants[idx] || null;
 
   const { data, error } = await COMBAT.supabase.from("combat_sessions").update({
     turn_index: idx,
+    turn_combatant_id: nextCombatant?.id || null,
     round_number: round,
     turn_state: setTurnResourceDefaults(),
     last_action_at: new Date().toISOString(),
@@ -315,7 +332,8 @@ async function removeCombatant(id) {
   if (error) throw error;
   COMBAT.combatants = COMBAT.combatants.filter((c) => c.id !== id);
   const nextIndex = Math.min(Number(COMBAT.session.turn_index || 0), Math.max(0, COMBAT.combatants.length - 1));
-  const { data } = await COMBAT.supabase.from("combat_sessions").update({ turn_index: nextIndex }).eq("id", COMBAT.session.id).select("*").single();
+  const nextId = COMBAT.combatants[nextIndex]?.id || null;
+  const { data } = await COMBAT.supabase.from("combat_sessions").update({ turn_index: nextIndex, turn_combatant_id: nextId }).eq("id", COMBAT.session.id).select("*").single();
   if (data) COMBAT.session = data;
   render();
 }
@@ -589,7 +607,7 @@ function render() {
     const percent = Math.max(0, Math.min(100, ((Number(c.hp_current ?? 0) / Math.max(1, Number(c.hp_max ?? 1))) * 100)));
     const cRes = resourcesFor(c);
     const monsterButton = c.entity_type === "monster" && c.monster_id ? '<button class="combatant__details" data-monster="' + esc(c.monster_id) + '">Ficha</button>' : '';
-    return '<article class="combatant ' + (index === Number(COMBAT.session.turn_index || 0) ? 'is-active ' : '') + (c.is_defeated ? 'is-defeated' : '') + '">' +
+    return '<article class="combatant ' + ((c.id === COMBAT.session.turn_combatant_id || (!COMBAT.session.turn_combatant_id && index === Number(COMBAT.session.turn_index || 0))) ? 'is-active ' : '') + (c.is_defeated ? 'is-defeated' : '') + '">' +
       '<div class="combatant__initiative">' + esc(c.initiative) + '</div>' +
       '<div class="combatant__main"><strong>' + esc(c.name) + '</strong><small>' + (c.entity_type === "monster" ? "Monstro" : "Personagem") + ' · DEF ' + esc(c.defense ?? "-") + ' · ' + esc(c.movement ?? "-") + 'm</small><div class="combat-hp"><span style="width:' + percent + '%"></span></div><small>HP ' + esc(c.hp_current ?? 0) + '/' + esc(c.hp_max ?? 0) + ' · ' + (c.is_defeated ? 'Derrotado' : (index === Number(COMBAT.session.turn_index || 0) ? 'Turno atual' : 'Aguardando')) + '</small><div class="combat-resources">' + ACTIONS.map((a) => '<span class="' + (cRes[a.value] ? 'is-ready' : 'is-used') + '">' + a.label.replace("Ação ", "").replace("Movimento", "Mov.").replace("Reação", "Reaç.") + '</span>').join("") + '</div></div>' +
       '<div class="combatant__actions">' + monsterButton + (isMaster() ? '<button data-hp="-5" data-id="' + esc(c.id) + '">−5</button><button data-hp="5" data-id="' + esc(c.id) + '">+5</button><button data-remove="' + esc(c.id) + '">×</button>' : '') + '</div>' +
