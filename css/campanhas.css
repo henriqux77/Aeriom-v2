@@ -4898,3 +4898,54 @@ textarea:focus-visible {
 
 .campaign-card__delete{border-color:rgba(113,149,214,.28);background:rgba(86,123,190,.05);color:rgba(151,180,232,.95)}
 .campaign-card__delete:hover{background:rgba(86,123,190,.12);border-color:rgba(113,149,214,.55);color:#b7cef4}
+
+/* AERION — ações da campanha */
+.campaign-card__open,
+.campaign-card__edit{
+  min-width:112px!important;
+  min-height:44px!important;
+  height:44px!important;
+  padding:0 16px!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:7px!important;
+  box-sizing:border-box!important;
+  font-size:.82rem!important;
+  line-height:1!important;
+  font-weight:700!important;
+  text-align:center!important;
+}
+.campaign-card__edit span{display:inline-flex;align-items:center;justify-content:center}
+.campaign-card__delete{
+  position:absolute!important;
+  top:16px!important;
+  right:16px!important;
+  width:42px!important;
+  height:42px!important;
+  min-width:42px!important;
+  min-height:42px!important;
+  padding:0!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  border-radius:10px!important;
+  z-index:5!important;
+}
+.campaign-card__delete svg{width:19px;height:19px;display:block}
+.campaign-card__delete:focus-visible{
+  outline:2px solid rgba(196,158,83,.65);
+  outline-offset:2px;
+}
+@media(max-width:700px){
+  .campaign-card__delete{top:12px!important;right:12px!important}
+  .campaign-card__actions{
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+  }
+  .campaign-card__actions .campaign-card__open,
+  .campaign-card__actions .campaign-card__edit{
+    width:100%!important;
+    min-width:0!important;
+  }
+}
