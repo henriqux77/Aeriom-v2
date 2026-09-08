@@ -87,3 +87,18 @@
     border-radius:18px!important;
   }
 }
+
+/* AERION — espaço seguro para a ficha abaixo da topbar */
+.aerion-sheet-modal{
+  padding-top:74px!important;
+  padding-bottom:calc(94px + env(safe-area-inset-bottom,0px))!important;
+  z-index:1100!important;
+}
+@media(max-width:700px){
+  .aerion-sheet-modal{
+    padding-top:72px!important;
+    padding-left:10px!important;
+    padding-right:10px!important;
+    padding-bottom:calc(94px + env(safe-area-inset-bottom,0px))!important;
+  }
+}
