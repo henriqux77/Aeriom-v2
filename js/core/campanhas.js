@@ -947,6 +947,20 @@ function createCampaignCard(campaign) {
   const content = document.createElement("div");
   content.className = "campaign-card__content";
 
+  if (campaign.role === "master") {
+    const deleteButton = document.createElement("button");
+    deleteButton.type = "button";
+    deleteButton.className = "campaign-card__delete";
+    deleteButton.setAttribute("aria-label", "Excluir campanha " + campaign.name);
+    deleteButton.title = "Excluir campanha";
+    deleteButton.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9 3h6m-9 3h12M7 6l1 14h8l1-14M10 10v7m4-7v7" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    deleteButton.addEventListener("click", (event) => {
+      event.stopPropagation();
+      deleteCampaign(campaign);
+    });
+    article.appendChild(deleteButton);
+  }
+
   const head = document.createElement("div");
   head.className = "campaign-card__head";
 
@@ -998,14 +1012,7 @@ function createCampaignCard(campaign) {
     editButton.innerHTML = '<span aria-hidden="true">✎</span><span>Editar</span>';
     editButton.addEventListener("click", () => openEditCampaignModal(campaign));
 
-    const deleteButton = document.createElement("button");
-    deleteButton.type = "button";
-    deleteButton.className = "campaign-card__delete";
-    deleteButton.setAttribute("aria-label", "Excluir campanha " + campaign.name);
-    deleteButton.title = "Excluir campanha";
-    deleteButton.innerHTML = '<span aria-hidden="true">⌫</span>';
-    deleteButton.addEventListener("click", () => deleteCampaign(campaign));
-    actions.append(editButton, deleteButton);
+    actions.appendChild(editButton);
   }
 
   footer.append(details, actions);
