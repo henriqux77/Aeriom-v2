@@ -1082,6 +1082,22 @@ function openActionModal(sourceId) {
   });
 }
 
+function openCombatantManager() {
+  const modal = document.createElement("div");
+  modal.className = "combat-modal";
+  modal.innerHTML =
+    '<div class="combat-modal__card"><div class="combat-modal__head"><div><span class="campaign-panel__eyebrow">MESTRE</span><h3>Participantes</h3></div><button class="combat-modal__close" data-close type="button">×</button></div><div class="combat-picker__list">' +
+    COMBAT.combatants.map((c) =>
+      '<div class="combat-manage-row"><div><strong>' + esc(c.name) + '</strong><span>' + (c.entity_type === "monster" ? "Monstro" : "Personagem") + ' · HP ' + esc(c.hp_current ?? 0) + '/' + esc(c.hp_max ?? 0) + '</span></div><button type="button" class="combat-manage-remove" data-remove-managed="' + esc(c.id) + '">Remover</button></div>'
+    ).join("") +
+    '</div></div>';
+  document.body.appendChild(modal);
+  modal.querySelector("[data-close]").addEventListener("click", () => modal.remove());
+  modal.querySelectorAll("[data-remove-managed]").forEach((button) => button.addEventListener("click", async () => {
+    try { await removeCombatant(button.dataset.removeManaged); } finally { modal.remove(); }
+  }));
+}
+
 function openMonsterPicker() {
   const select = document.createElement("div");
   select.className = "combat-modal";
@@ -1185,6 +1201,7 @@ function render() {
     : "";
   const masterActions = isMaster()
     ? '<button class="combat-icon-action combat-dice-button" id="combat-reroll" title="Rolar iniciativa novamente"><span>🎲</span><small>Iniciativa</small></button>' +
+      '<button class="combat-icon-action" id="combat-manage" title="Gerenciar participantes"><span>☷</span><small>Gerenciar</small></button>' +
       '<button class="combat-icon-action" id="combat-next" title="Próximo turno"><span>›</span><small>Próximo</small></button>' +
       '<button class="combat-icon-action combat-icon-action--danger" id="combat-end" title="Encerrar combate"><span>×</span><small>Encerrar</small></button>'
     : "";
@@ -1232,6 +1249,7 @@ function render() {
 
   root.querySelector("#combat-add-char")?.addEventListener("click", () => openCharacterPicker());
   root.querySelector("#combat-add-monster")?.addEventListener("click", () => openMonsterPicker());
+  root.querySelector("#combat-manage")?.addEventListener("click", () => openCombatantManager());
   root.querySelector("#combat-reroll")?.addEventListener("click", async (event) => {
     const button = event.currentTarget;
     button.classList.add("is-rolling");
@@ -1266,6 +1284,13 @@ function setupRealtime() {
   if (!COMBAT.supabase || !COMBAT.campaignId) return;
   if (COMBAT.channel) COMBAT.supabase.removeChannel(COMBAT.channel);
   COMBAT.channel = COMBAT.supabase.channel("aeriom-combat-" + COMBAT.campaignId)
+    .on("postgres_changes", { event: "*", schema: "public", table: "campaign_system_settings", filter: "campaign_id=eq." + COMBAT.campaignId }, async () => {
+      await loadSystemSettings();
+      if (COMBAT.settings.combat_atmosphere_enabled === false) window.AERIOM_DICE?.setCombatAtmosphereEnabled?.(false);
+      else if (COMBAT.session) window.AERIOM_DICE?.setCombatAtmosphereEnabled?.(true);
+      if (COMBAT.session) await setCombatMusic(true);
+      render();
+    })
     .on("postgres_changes", { event: "*", schema: "public", table: "combat_sessions", filter: "campaign_id=eq." + COMBAT.campaignId }, async () => {
       await loadActiveCombat();
       await loadLootStatus();
