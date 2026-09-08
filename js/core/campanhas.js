@@ -994,15 +994,69 @@ function createCampaignCard(campaign) {
     const editButton = document.createElement("button");
     editButton.type = "button";
     editButton.className = "button button--secondary campaign-card__edit";
-    editButton.textContent = "Editar";
+    editButton.setAttribute("aria-label", "Editar campanha");
+    editButton.innerHTML = '<span aria-hidden="true">✎</span><span>Editar</span>';
     editButton.addEventListener("click", () => openEditCampaignModal(campaign));
-    actions.appendChild(editButton);
+
+    const deleteButton = document.createElement("button");
+    deleteButton.type = "button";
+    deleteButton.className = "campaign-card__delete";
+    deleteButton.setAttribute("aria-label", "Excluir campanha " + campaign.name);
+    deleteButton.title = "Excluir campanha";
+    deleteButton.innerHTML = '<span aria-hidden="true">⌫</span>';
+    deleteButton.addEventListener("click", () => deleteCampaign(campaign));
+    actions.append(editButton, deleteButton);
   }
 
   footer.append(details, actions);
   content.append(head, title, description, footer);
   article.append(cover, content);
   return article;
+}
+
+async function deleteCampaign(campaign) {
+  if (!campaign || campaign.role !== "master") {
+    showToast("Somente o Mestre pode excluir esta campanha.", "error");
+    return;
+  }
+
+  const confirmed = window.confirm(
+    'Excluir a campanha "' + campaign.name + '"? Essa ação remove a mesa e os dados vinculados a ela e não pode ser desfeita.'
+  );
+  if (!confirmed) return;
+
+  try {
+    const { error } = await state.supabase
+      .from("campaigns")
+      .delete()
+      .eq("id", campaign.id);
+
+    if (error) {
+      throw normalizeError(error, {
+        file: "js/core/campanhas.js",
+        function: "deleteCampaign",
+        table: "campaigns",
+        operation: "delete"
+      });
+    }
+
+    state.campaigns = state.campaigns.filter(
+      (item) => item.id !== campaign.id
+    );
+
+    if (state.selectedCampaign?.id === campaign.id) {
+      state.selectedCampaign = null;
+    }
+
+    renderCampaigns();
+    showToast("Campanha excluída.", "success");
+  } catch (error) {
+    log("error", "Não foi possível excluir a campanha.", error);
+    showToast(
+      error?.message || "Não foi possível excluir a campanha.",
+      "error"
+    );
+  }
 }
 
 function getFilteredCampaigns() {
