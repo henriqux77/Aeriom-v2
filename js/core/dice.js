@@ -28,9 +28,8 @@
 const DICE_AUDIO_CONFIG = Object.freeze({
   storageKey: "aeriom:dice:sound",
   defaultEnabled: true,
-  defaultVolume: 0.58
+  defaultVolume: 0.52
 });
-
 
 const diceAudio = {
   context: null,
@@ -40,19 +39,15 @@ const diceAudio = {
   initialized: false
 };
 
-
 function loadDiceAudioPreferences() {
   try {
     const raw = localStorage.getItem(DICE_AUDIO_CONFIG.storageKey);
     if (!raw) return;
     const value = JSON.parse(raw);
     if (typeof value.enabled === "boolean") diceAudio.enabled = value.enabled;
-    if (Number.isFinite(value.volume)) {
-      diceAudio.volume = Math.max(0, Math.min(1, value.volume));
-    }
+    if (Number.isFinite(value.volume)) diceAudio.volume = Math.max(0, Math.min(1, value.volume));
   } catch {}
 }
-
 
 function saveDiceAudioPreferences() {
   try {
@@ -62,7 +57,6 @@ function saveDiceAudioPreferences() {
     }));
   } catch {}
 }
-
 
 function ensureDiceAudio() {
   if (!diceAudio.enabled) return false;
@@ -75,9 +69,7 @@ function ensureDiceAudio() {
       diceAudio.masterGain.gain.value = diceAudio.volume;
       diceAudio.masterGain.connect(diceAudio.context.destination);
     }
-    if (diceAudio.context.state === "suspended") {
-      void diceAudio.context.resume();
-    }
+    if (diceAudio.context.state === "suspended") void diceAudio.context.resume();
     diceAudio.initialized = true;
     return true;
   } catch (error) {
@@ -86,95 +78,189 @@ function ensureDiceAudio() {
   }
 }
 
-
-function audioTone({
-  frequency,
-  duration = 0.08,
-  type = "triangle",
-  start = 0,
-  gain = 0.14,
-  glideTo = null
-}) {
-  if (!ensureDiceAudio()) return;
+function audioBuffer({ duration = 0.12, generator }) {
   const ctx = diceAudio.context;
-  const osc = ctx.createOscillator();
-  const g = ctx.createGain();
-  const now = ctx.currentTime + start;
-  osc.type = type;
-  osc.frequency.setValueAtTime(frequency, now);
-  if (glideTo !== null) osc.frequency.exponentialRampToValueAtTime(Math.max(30, glideTo), now + duration);
-  g.gain.setValueAtTime(0.0001, now);
-  g.gain.exponentialRampToValueAtTime(Math.max(0.0001, gain), now + Math.min(0.012, duration * 0.25));
-  g.gain.exponentialRampToValueAtTime(0.0001, now + duration);
-  osc.connect(g);
-  g.connect(diceAudio.masterGain);
-  osc.start(now);
-  osc.stop(now + duration + 0.02);
-}
-
-
-function audioNoise({
-  duration = 0.12,
-  start = 0,
-  gain = 0.07,
-  cutoff = 2600
-} = {}) {
-  if (!ensureDiceAudio()) return;
-  const ctx = diceAudio.context;
-  const buffer = ctx.createBuffer(1, Math.max(1, Math.floor(ctx.sampleRate * duration)), ctx.sampleRate);
+  const length = Math.max(1, Math.floor(ctx.sampleRate * duration));
+  const buffer = ctx.createBuffer(1, length, ctx.sampleRate);
   const data = buffer.getChannelData(0);
-  for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / data.length);
+  generator(data, ctx.sampleRate);
+  return buffer;
+}
+
+function playBuffer(buffer, { start = 0, gain = 0.1, attack = 0.004, release = 0.06, filter = null } = {}) {
+  if (!ensureDiceAudio()) return;
+  const ctx = diceAudio.context;
   const source = ctx.createBufferSource();
-  const filter = ctx.createBiquadFilter();
   const g = ctx.createGain();
   const now = ctx.currentTime + start;
-  filter.type = "lowpass";
-  filter.frequency.value = cutoff;
-  g.gain.setValueAtTime(0.0001, now);
-  g.gain.exponentialRampToValueAtTime(Math.max(0.0001, gain), now + 0.008);
-  g.gain.exponentialRampToValueAtTime(0.0001, now + duration);
-  source.buffer = buffer;
-  source.connect(filter);
-  filter.connect(g);
+  if (filter) {
+    const biquad = ctx.createBiquadFilter();
+    biquad.type = filter.type || "lowpass";
+    biquad.frequency.value = filter.frequency || 2500;
+    if (filter.Q) biquad.Q.value = filter.Q;
+    source.connect(biquad);
+    biquad.connect(g);
+  } else {
+    source.connect(g);
+  }
   g.connect(diceAudio.masterGain);
+  g.gain.setValueAtTime(0.0001, now);
+  g.gain.exponentialRampToValueAtTime(Math.max(0.0001, gain), now + Math.max(0.001, attack));
+  g.gain.exponentialRampToValueAtTime(0.0001, now + Math.max(attack + 0.005, release));
+  source.buffer = buffer;
   source.start(now);
+  source.stop(now + Math.max(release, buffer.duration) + 0.02);
 }
 
+function makeBreathNoise(duration, cutoff = 3600) {
+  return audioBuffer({
+    duration,
+    generator(data) {
+      let last = 0;
+      for (let i = 0; i < data.length; i++) {
+        const white = Math.random() * 2 - 1;
+        last = last * 0.72 + white * 0.28;
+        const envelope = Math.pow(1 - i / data.length, 1.8);
+        data[i] = last * envelope;
+      }
+    }
+  });
+}
 
-function playDiceShake(die) {
+function makeImpact(duration = 0.08, body = 0.42) {
+  return audioBuffer({
+    duration,
+    generator(data, sampleRate) {
+      for (let i = 0; i < data.length; i++) {
+        const t = i / sampleRate;
+        const env = Math.exp(-t * (18 + body * 16));
+        const click = (Math.random() * 2 - 1) * Math.exp(-t * 58);
+        const low = Math.sin(2 * Math.PI * (105 - 35 * t) * t) * Math.exp(-t * 24);
+        data[i] = (click * 0.72 + low * 0.48) * env;
+      }
+    }
+  });
+}
+
+function makeWoodenRoll(duration = 0.16) {
+  return audioBuffer({
+    duration,
+    generator(data, sampleRate) {
+      let last = 0;
+      for (let i = 0; i < data.length; i++) {
+        const t = i / sampleRate;
+        const white = Math.random() * 2 - 1;
+        last = last * 0.78 + white * 0.22;
+        const grain = Math.sin(2 * Math.PI * 90 * t) * 0.10;
+        data[i] = (last * 0.32 + grain) * Math.exp(-t * 10);
+      }
+    }
+  });
+}
+
+function makeMetalClatter(duration = 0.11) {
+  return audioBuffer({
+    duration,
+    generator(data, sampleRate) {
+      const freqs = [680, 1110, 1470, 1880];
+      for (let i = 0; i < data.length; i++) {
+        const t = i / sampleRate;
+        const env = Math.exp(-t * 24);
+        let v = 0;
+        freqs.forEach((f, n) => {
+          v += Math.sin(2 * Math.PI * (f + n * 7) * t + n * 0.7) * (0.025 + n * 0.006);
+        });
+        v += (Math.random() * 2 - 1) * 0.18 * Math.exp(-t * 44);
+        data[i] = v * env;
+      }
+    }
+  });
+}
+
+function playDiceRollSound(die) {
   if (!ensureDiceAudio()) return;
-  const intensity = die >= 20 ? 1.0 : 0.82;
-  audioNoise({ duration: 0.10, gain: 0.045 * intensity, start: 0.00, cutoff: 1800 });
-  audioTone({ frequency: 190, duration: 0.055, type: "triangle", gain: 0.09 * intensity, start: 0.03, glideTo: 130 });
-  audioNoise({ duration: 0.08, gain: 0.035 * intensity, start: 0.105, cutoff: 2200 });
-  audioTone({ frequency: 145, duration: 0.07, type: "triangle", gain: 0.08 * intensity, start: 0.14, glideTo: 95 });
+  const scale = die >= 20 ? 1.0 : die >= 10 ? 0.92 : 0.78;
+  const duration = die >= 20 ? 0.56 : die >= 12 ? 0.48 : 0.40;
+  const events = die >= 20 ? 8 : die >= 12 ? 6 : 5;
+  for (let i = 0; i < events; i++) {
+    const t = (duration * i) / events + (Math.random() * 0.022);
+    const metallic = die >= 20 && i % 3 === 1;
+    playBuffer(metallic ? makeMetalClatter(0.085) : makeImpact(0.055 + Math.random() * 0.045, 0.35 + Math.random() * 0.35), {
+      start: t,
+      gain: (0.085 - i * 0.004) * scale,
+      attack: 0.002,
+      release: 0.045 + Math.random() * 0.035,
+      filter: { type: "lowpass", frequency: metallic ? 4300 : 2800 }
+    });
+  }
+  playBuffer(makeWoodenRoll(0.18), {
+    start: duration * 0.55,
+    gain: 0.045 * scale,
+    attack: 0.012,
+    release: 0.14,
+    filter: { type: "lowpass", frequency: 1900 }
+  });
 }
-
 
 function playDiceResultSound(classification, die) {
   if (!ensureDiceAudio()) return;
   if (classification === "critical") {
-    audioTone({ frequency: 523.25, duration: 0.16, type: "sine", gain: 0.11, start: 0 });
-    audioTone({ frequency: 783.99, duration: 0.20, type: "sine", gain: 0.10, start: 0.075 });
-    audioTone({ frequency: 1046.5, duration: 0.28, type: "sine", gain: 0.08, start: 0.15 });
+    playBuffer(makeImpact(0.14, 0.82), {
+      start: 0,
+      gain: 0.20,
+      attack: 0.001,
+      release: 0.10,
+      filter: { type: "lowpass", frequency: 2200 }
+    });
+    playBuffer(makeMetalClatter(0.18), {
+      start: 0.055,
+      gain: 0.11,
+      attack: 0.002,
+      release: 0.16,
+      filter: { type: "bandpass", frequency: 2200, Q: 1.1 }
+    });
+    playBuffer(makeImpact(0.12, 0.65), {
+      start: 0.16,
+      gain: 0.13,
+      attack: 0.001,
+      release: 0.09,
+      filter: { type: "lowpass", frequency: 1800 }
+    });
     return;
   }
   if (classification === "critical-failure") {
-    audioTone({ frequency: 170, duration: 0.22, type: "sawtooth", gain: 0.10, start: 0, glideTo: 72 });
-    audioTone({ frequency: 82, duration: 0.28, type: "sine", gain: 0.08, start: 0.11, glideTo: 48 });
+    playBuffer(makeImpact(0.18, 1.0), {
+      start: 0,
+      gain: 0.18,
+      attack: 0.001,
+      release: 0.13,
+      filter: { type: "lowpass", frequency: 1500 }
+    });
+    playBuffer(makeMetalClatter(0.12), {
+      start: 0.065,
+      gain: 0.07,
+      attack: 0.002,
+      release: 0.10,
+      filter: { type: "bandpass", frequency: 1200, Q: 0.9 }
+    });
     return;
   }
-  const base = die >= 20 ? 240 : 210;
-  audioTone({ frequency: base, duration: 0.12, type: "triangle", gain: 0.10, start: 0, glideTo: base * 0.72 });
-  audioTone({ frequency: base * 1.55, duration: 0.08, type: "sine", gain: 0.045, start: 0.055 });
+  playBuffer(makeImpact(0.10, 0.58), {
+    gain: 0.13,
+    attack: 0.001,
+    release: 0.08,
+    filter: { type: "lowpass", frequency: 1800 }
+  });
 }
-
 
 function playDiceClick() {
-  if (!ensureDiceAudio()) return;
-  audioTone({ frequency: 280, duration: 0.045, type: "square", gain: 0.035, start: 0 });
+  playBuffer(makeImpact(0.035, 0.22), {
+    gain: 0.035,
+    attack: 0.001,
+    release: 0.028,
+    filter: { type: "lowpass", frequency: 2200 }
+  });
 }
-
 
 function setDiceAudioEnabled(enabled) {
   diceAudio.enabled = Boolean(enabled);
@@ -182,7 +268,6 @@ function setDiceAudioEnabled(enabled) {
   if (diceAudio.enabled) ensureDiceAudio();
   renderDiceAudioSettings();
 }
-
 
 function setDiceAudioVolume(volume) {
   const value = Number(volume);
@@ -192,17 +277,16 @@ function setDiceAudioVolume(volume) {
   renderDiceAudioSettings();
 }
 
-
 function createDiceAudioSettings() {
   let root = document.getElementById("dice-audio-settings");
   if (root) return root;
-  const anchor = document.querySelector(".dice-history__toolbar") || document.querySelector(".dice-panel__header");
+  const anchor = document.getElementById("campaign-mobile-actions");
   if (!anchor) return null;
   root = document.createElement("div");
   root.id = "dice-audio-settings";
   root.className = "dice-audio-settings";
-  root.innerHTML = '<button type="button" class="dice-audio-settings__toggle" aria-expanded="false" aria-controls="dice-audio-settings-panel">🔊 Sons</button><div id="dice-audio-settings-panel" class="dice-audio-settings__panel" hidden><label><span>Sons das rolagens</span><input id="dice-audio-enabled" type="checkbox"></label><label><span>Volume</span><input id="dice-audio-volume" type="range" min="0" max="1" step="0.01"></label></div>';
-  anchor.appendChild(root);
+  root.innerHTML = '<button type="button" class="dice-audio-settings__toggle" aria-expanded="false" aria-controls="dice-audio-settings-panel">🔊 Sons da mesa</button><div id="dice-audio-settings-panel" class="dice-audio-settings__panel" hidden><label><span>Efeitos das rolagens</span><input id="dice-audio-enabled" type="checkbox"></label><label><span>Volume</span><input id="dice-audio-volume" type="range" min="0" max="1" step="0.01"></label></div>';
+  anchor.prepend(root);
   const toggle = root.querySelector(".dice-audio-settings__toggle");
   const panel = root.querySelector(".dice-audio-settings__panel");
   toggle.addEventListener("click", () => {
@@ -217,7 +301,6 @@ function createDiceAudioSettings() {
   return root;
 }
 
-
 function renderDiceAudioSettings() {
   const root = document.getElementById("dice-audio-settings");
   if (!root) return;
@@ -226,7 +309,6 @@ function renderDiceAudioSettings() {
   if (enabled) enabled.checked = diceAudio.enabled;
   if (volume) volume.value = String(diceAudio.volume);
 }
-
 
 loadDiceAudioPreferences();
 
@@ -1686,7 +1768,7 @@ async function roll(
     }
 
 
-    playDiceShake(die);
+    playDiceRollSound(die);
 
     const local =
       rollLocal(
@@ -1736,7 +1818,7 @@ async function roll(
       rollData
     );
 
-    window.setTimeout(() => playDiceResultSound(rollData.classification, die), 230);
+    window.setTimeout(() => playDiceResultSound(rollData.classification, die), 260);
 
 
     dispatchDiceEvent(
@@ -3935,6 +4017,7 @@ function bindCampaignEvents() {
     "aeriom:campaignready",
     () => {
 
+      createDiceAudioSettings();
       initializeFromCampaign();
 
     }
@@ -4484,6 +4567,7 @@ function start() {
   bindHistory();
 
   bindCampaignEvents();
+  createDiceAudioSettings();
 
   bindKeyboard();
 
