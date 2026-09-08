@@ -226,3 +226,25 @@
   .combat-actionbar--compact .combat-icon-action span{font-size:16px}
   .combat-actionbar--compact .combat-icon-action small{font-size:5.5px}
 }
+
+.combat-action-tabs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;touch-action:pan-x}
+.combat-action-tabs::-webkit-scrollbar{display:none}
+.combat-action-tabs button{flex:0 0 auto;min-height:38px;padding:0 12px;border:1px solid rgba(255,255,255,.06);border-radius:10px;background:rgba(255,255,255,.015);color:rgba(255,255,255,.48);font-size:8px;font-weight:800}
+.combat-action-tabs button.is-active{border-color:rgba(216,182,95,.3);background:rgba(216,182,95,.055);color:#dfc781}
+.combat-action-pages{min-height:0}
+.combat-action-page-label{margin:8px 0 5px;color:rgba(255,255,255,.28);font-size:7px;letter-spacing:.1em;text-transform:uppercase}
+.combat-action-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.combat-action-tile{display:grid;grid-template-columns:30px minmax(0,1fr);gap:8px;align-items:center;min-width:0;min-height:62px;padding:8px;border:1px solid rgba(255,255,255,.06);border-radius:11px;background:rgba(255,255,255,.014);color:rgba(255,255,255,.82);text-align:left}
+.combat-action-tile.is-selected{border-color:rgba(216,182,95,.38);background:rgba(216,182,95,.05)}
+.combat-action-tile__icon{display:grid;place-items:center;width:30px;height:30px;border-radius:9px;background:rgba(0,0,0,.16);border:1px solid rgba(255,255,255,.05);font-size:15px}
+.combat-action-tile__body{min-width:0}
+.combat-action-tile__body strong{display:block;font-size:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.combat-action-tile__body small{display:block;margin-top:3px;font-size:7px;line-height:1.3;color:rgba(255,255,255,.34);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.combat-modal__card--action{width:min(620px,100%);max-height:calc(100vh - 92px);overflow:auto}
+.combat-modal__card--action .combat-quick-sheet{overflow:visible}
+@media(max-width:600px){
+  .combat-modal__card--action{max-height:calc(100vh - 86px);border-radius:18px 18px 10px 10px}
+  .combat-action-grid{grid-template-columns:1fr}
+  .combat-action-tile{min-height:54px}
+  .combat-action-tile__body small{-webkit-line-clamp:1}
+}
