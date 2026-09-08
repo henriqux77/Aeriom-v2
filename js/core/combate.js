@@ -272,7 +272,7 @@ async function loadActiveCombat() {
 
 async function getCharacters() {
   const { data, error } = await COMBAT.supabase.from("campaign_characters")
-    .select("character_id,characters(id,name,hp_current,hp_max,defense,movement,initiative,attributes)")
+    .select("character_id,characters(id,name,hp_current,hp_max,defense,movement,initiative,attributes,race,class,power,origin,racial_ability,class_bonus,techniques,conditions,skill_modifiers,natural_profile,movement_profile,power_type,resistances,senses,creation_state)")
     .eq("campaign_id", COMBAT.campaignId).eq("is_present", true);
   if (error) throw error;
   return (data || []).map((row) => row.characters).filter(Boolean);
@@ -337,7 +337,31 @@ async function addCharacter(character) {
     defense: character.defense,
     movement: character.movement,
     resource_state: setTurnResourceDefaults(),
-    action_data: { attack_die: die, attack_bonus: 0 }
+    action_data: {
+      attack_die: die,
+      attack_bonus: 0,
+      initiative_die: die,
+      character_profile: {
+        id: character.id,
+        name: character.name,
+        race: character.race,
+        class: character.class,
+        power: character.power,
+        origin: character.origin,
+        racial_ability: character.racial_ability,
+        class_bonus: character.class_bonus,
+        attributes: character.attributes || {},
+        skill_modifiers: character.skill_modifiers || {},
+        techniques: character.techniques || [],
+        conditions: character.conditions || [],
+        natural_profile: character.natural_profile || "",
+        movement_profile: character.movement_profile || {},
+        power_type: character.power_type || "",
+        resistances: character.resistances || [],
+        senses: character.senses || [],
+        creation_state: character.creation_state || {}
+      }
+    }
   }).select("*").single();
   if (error) throw error;
   COMBAT.combatants.push(data);
