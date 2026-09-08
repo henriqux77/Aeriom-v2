@@ -2234,6 +2234,13 @@ async function heartbeatPresence(){
   const {error}=await state.supabase.rpc("touch_campaign_presence",{p_campaign_id:state.campaignId});
   if(error) log("warn","Falha ao atualizar presença.",error);
 }
+function markPresenceOffline(){
+  if(!state.supabase||!state.campaignId||!state.user)return;
+  try{
+    const promise=state.supabase.rpc("mark_campaign_presence_offline",{p_campaign_id:state.campaignId});
+    if(promise?.catch)promise.catch(()=>{});
+  }catch{}
+}
 
 function startPresence(){
   if(!(state.memberPresence instanceof Map)) state.memberPresence=new Map();
@@ -2245,6 +2252,8 @@ function startPresence(){
   document.addEventListener("visibilitychange",handlePresenceVisibility);
   window.removeEventListener("pageshow",handlePresencePageShow);
   window.addEventListener("pageshow",handlePresencePageShow);
+  window.removeEventListener("pagehide",handlePresencePageHide);
+  window.addEventListener("pagehide",handlePresencePageHide);
 }
 async function handlePresenceVisibility(){
   if(document.visibilityState==="visible") await pulsePresenceOnce();
@@ -2256,10 +2265,15 @@ async function pulsePresenceOnce(){
   renderMembers();
 }
 function handlePresencePageShow(){void pulsePresenceOnce();}
+function handlePresencePageHide(){markPresenceOffline();}
 
 
 function stopPresence(){
   if(state.presenceTimer){clearInterval(state.presenceTimer);state.presenceTimer=null;}
+  window.removeEventListener("visibilitychange",handlePresenceVisibility);
+  window.removeEventListener("pageshow",handlePresencePageShow);
+  window.removeEventListener("pagehide",handlePresencePageHide);
+  markPresenceOffline();
 }
 
 function createMemberCard(
