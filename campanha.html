@@ -4542,6 +4542,14 @@
 
     APP.initialized = true;
     hookCampaignTabs();
+    window.addEventListener("aeriom:timeline:refresh", async () => {
+      try {
+        await loadTimeline();
+        if (APP.activeTab === "timeline") renderTimelineFeed("all");
+      } catch (error) {
+        console.warn("[AERION][TIMELINE] Falha ao atualizar logs.", error);
+      }
+    });
     installDiceHistoryFix();
     setupMobileActionsMenu();
     installInviteOverride();
