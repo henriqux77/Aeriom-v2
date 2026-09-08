@@ -4895,3 +4895,6 @@ textarea:focus-visible {
   .campaign-card__actions{width:100%;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) 40px}
   .campaign-card__actions .campaign-card__open,.campaign-card__actions .campaign-card__edit{width:100%;min-width:0}
 }
+
+.campaign-card__delete{border-color:rgba(113,149,214,.28);background:rgba(86,123,190,.05);color:rgba(151,180,232,.95)}
+.campaign-card__delete:hover{background:rgba(86,123,190,.12);border-color:rgba(113,149,214,.55);color:#b7cef4}
