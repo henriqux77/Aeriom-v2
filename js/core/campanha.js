@@ -2231,11 +2231,7 @@ async function loadMemberPresence(){
 
 async function heartbeatPresence(){
   if(!state.supabase||!state.campaignId||!state.user) return;
-  const {error}=await state.supabase.from("campaign_presence").upsert({
-    campaign_id:state.campaignId,
-    user_id:state.user.id,
-    last_seen_at:new Date().toISOString()
-  },{onConflict:"campaign_id,user_id"});
+  const {error}=await state.supabase.rpc("touch_campaign_presence",{p_campaign_id:state.campaignId});
   if(error) log("warn","Falha ao atualizar presença.",error);
 }
 
