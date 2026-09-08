@@ -578,29 +578,39 @@ async function applyDamage(id, amount, metadata = {}) {
   return damage;
 }
 
-async function executeAction(source, targetId, actionName, actionCost, manualDamageFormula, manualDie, manualBonus) {
+async function executeAction(source, targetId, actionMeta, actionCost, manualDamageFormula, manualDie, manualBonus) {
   if (!COMBAT.session || !source || !playerCanAct(source)) return;
   if (source.id !== currentCombatant()?.id && !isMaster()) return;
 
   const resources = resourcesFor(source);
-  if (!resources[actionCost]) {
+  const cost = actionCost || actionMeta?.cost || "main";
+  if (!resources[cost]) {
     alert("Essa ação já foi usada neste turno.");
     return;
   }
 
   const target = targetId ? COMBAT.combatants.find((c) => c.id === targetId) : null;
   const data = actionData(source);
-  const selected = data.actions.find((entry) => Array.isArray(entry) && entry[0] === actionName);
-  const selectedText = Array.isArray(selected) ? String(selected[1] || "") : "";
-  const formulaMatch = selectedText.match(/(\d+d\d+(?:[+-]\d+)?)/i);
-  const damageFormula = manualDamageFormula || formulaMatch?.[1] || "";
-
-  const attackDie = Number(manualDie) || data.attackDie;
-  const attackBonus = Number.isFinite(Number(manualBonus)) ? Number(manualBonus) : data.attackBonus;
+  const meta = actionMeta || {};
+  const attackDie = Number(manualDie) || Number(meta.attackDie) || data.attackDie;
+  const attackBonus = Number.isFinite(Number(manualBonus)) ? Number(manualBonus) : Number(meta.attackBonus ?? data.attackBonus);
+  const damageFormula = String(manualDamageFormula || meta.damageFormula || "").trim();
 
   let attackResult = null;
   let hit = true;
-  if (target) {
+  let contest = null;
+
+  if (target && meta.type === "contest") {
+    const attackerRoll = safeRoll(attackDie);
+    const targetProfile = target.entity_type === "character" ? characterProfile(target) : null;
+    const targetDie = targetProfile
+      ? attrDie(targetProfile, meta.defenseAttribute || "vigor", 8)
+      : Number(target.action_data?.defense_die) || 20;
+    const defenderRoll = safeRoll(targetDie);
+    attackResult = { die: attackDie, result: attackerRoll, total: attackerRoll + attackBonus, bonus: attackBonus };
+    contest = { targetDie, result: defenderRoll, total: defenderRoll };
+    hit = attackResult.total >= contest.total;
+  } else if (target && meta.type === "attack") {
     const rolled = safeRoll(attackDie);
     attackResult = { die: attackDie, result: rolled, total: rolled + attackBonus, bonus: attackBonus };
     hit = attackResult.total >= Number(target.defense ?? 0);
@@ -609,9 +619,9 @@ async function executeAction(source, targetId, actionName, actionCost, manualDam
   let damageResult = null;
   if (hit && damageFormula) damageResult = rollFormula(damageFormula);
 
-  const resourceState = { ...resources, [actionCost]: false };
+  const resourceState = { ...resources, [cost]: false };
   await updateCombatant(source.id, { resource_state: resourceState });
-  if (COMBAT.session) await COMBAT.supabase.from("combat_sessions").update({
+  await COMBAT.supabase.from("combat_sessions").update({
     turn_state: resourceState,
     last_action_at: new Date().toISOString(),
     updated_at: new Date().toISOString()
@@ -619,48 +629,57 @@ async function executeAction(source, targetId, actionName, actionCost, manualDam
 
   if (attackResult) {
     window.AERIOM_DICE?.playResultEffect?.(
-      attackResult.result === 20 && attackDie === 20
-        ? "critical"
-        : attackResult.result === 1 && attackDie === 20
-          ? "critical-failure"
-          : "normal",
+      attackResult.result === 20 && attackDie === 20 ? "critical" :
+      attackResult.result === 1 && attackDie === 20 ? "critical-failure" : "normal",
       attackDie
     );
   }
 
+  const extra = {
+    hit,
+    critical: Boolean(attackResult && attackResult.result === 20 && attackDie === 20),
+    rolls: attackResult ? [attackResult.result] : [],
+    target_roll: contest?.result || null,
+    target_die: contest?.targetDie || null,
+    target_total: contest?.total || null,
+    damage_rolls: damageResult?.rolls || []
+  };
+
   if (target && hit && damageResult) {
     await applyDamage(target.id, damageResult.total, {
       sourceId: source.id,
-      actionCost,
-      actionName,
+      actionCost: cost,
+      actionName: meta.name || "Ação",
       rollDie: attackDie,
-      rollResult: attackResult.result,
-      attackTotal: attackResult.total,
-      defense: target.defense,
+      rollResult: attackResult?.result,
+      attackTotal: attackResult?.total,
+      defense: meta.type === "contest" ? contest?.total : target.defense,
       damageFormula,
-      extra: { damage_rolls: damageResult.rolls, critical: attackResult.result === 20 && attackDie === 20 }
-    });
-  } else {
-    await insertCombatEvent({
-      event_type: target ? (hit ? "action" : "attack_missed") : "action",
-      source_combatant_id: source.id,
-      target_combatant_id: target?.id || null,
-      action_cost: actionCost,
-      action_name: actionName || "Ação",
-      roll_die: attackDie || null,
-      roll_result: attackResult?.result || null,
-      attack_total: attackResult?.total || null,
-      defense_value: target?.defense || null,
-      damage_formula: damageFormula || null,
-      damage_result: damageResult?.total || null,
-      metadata: {
-        hit,
-        critical: attackResult?.result === 20 && attackDie === 20,
-        rolls: attackResult?.result ? [attackResult.result] : [],
-        damage_rolls: damageResult?.rolls || []
-      }
+      extra
     });
   }
+
+  if (target && hit && meta.conditionOnSuccess) {
+    const conditions = Array.isArray(target.conditions) ? target.conditions.slice() : [];
+    if (!conditions.includes(meta.conditionOnSuccess)) conditions.push(meta.conditionOnSuccess);
+    await updateCombatant(target.id, { conditions });
+    extra.condition = meta.conditionOnSuccess;
+  }
+
+  await insertCombatEvent({
+    event_type: target ? (hit ? "action" : "attack_missed") : "action",
+    source_combatant_id: source.id,
+    target_combatant_id: target?.id || null,
+    action_cost: cost,
+    action_name: meta.name || "Ação",
+    roll_die: attackDie || null,
+    roll_result: attackResult?.result || null,
+    attack_total: attackResult?.total || null,
+    defense_value: meta.type === "contest" ? contest?.total || null : target?.defense || null,
+    damage_formula: damageFormula || null,
+    damage_result: damageResult?.total || null,
+    metadata: extra
+  });
 
   render();
 }
@@ -669,29 +688,21 @@ function openActionModal(sourceId) {
   const source = COMBAT.combatants.find((c) => c.id === sourceId);
   if (!source || !playerCanAct(source) || (source.id !== currentCombatant()?.id && !isMaster())) return;
 
-  const data = actionData(source);
-  const actions = data.actions.length
-    ? data.actions
-    : [["Ataque", "Ataque básico"], ["Movimento", "Mover-se"]];
-
+  const available = allCombatActions(source);
+  const actions = [...available.standard, ...available.racial];
   const modal = document.createElement("div");
   modal.className = "combat-modal";
   modal.innerHTML =
     '<div class="combat-modal__card combat-modal__card--action" role="dialog" aria-modal="true">' +
-      '<div class="combat-modal__head">' +
-        '<div><span class="campaign-panel__eyebrow">Seu turno</span><h3>' + esc(source.name) + '</h3></div>' +
-        '<button type="button" class="combat-modal__close" data-close aria-label="Fechar">×</button>' +
-      '</div>' +
+      '<div class="combat-modal__head"><div><span class="campaign-panel__eyebrow">Seu turno</span><h3>' + esc(source.name) + '</h3></div><button type="button" class="combat-modal__close" data-close aria-label="Fechar">×</button></div>' +
       '<div class="combat-quick-sheet">' +
-        '<div class="combat-quick-sheet__label">Escolha uma ação</div>' +
+        '<div class="combat-quick-sheet__label">Ações rápidas</div>' +
         '<div class="combat-action-list">' +
           actions.map((action, index) => {
-            const name = Array.isArray(action) ? action[0] : String(action);
-            const text = Array.isArray(action) ? action[1] : "";
-            const formula = String(text || "").match(/(\d+d\d+(?:[+-]\d+)?)/i)?.[1] || "";
-            const key = ACTIONS[index % ACTIONS.length]?.value || "main";
-            return '<button type="button" class="combat-action-card ' + (index === 0 ? "is-selected" : "") + '" data-action="' + esc(name) + '" data-cost="' + key + '" data-damage="' + esc(formula) + '">' +
-              '<span class="combat-action-card__icon">🎲</span><span class="combat-action-card__body"><strong>' + esc(name) + '</strong><small>' + esc(text || "Ação disponível") + '</small></span><span class="combat-action-card__arrow">›</span>' +
+            const icon = action.icon || "🎲";
+            const type = action.racial ? "racial" : "standard";
+            return '<button type="button" class="combat-action-card ' + (index === 0 ? "is-selected" : "") + '" data-action-id="' + esc(action.id) + '" data-action-index="' + index + '" data-type="' + type + '">' +
+              '<span class="combat-action-card__icon">' + icon + '</span><span class="combat-action-card__body"><strong>' + esc(action.name) + '</strong><small>' + esc(action.description || "Ação disponível") + (action.damageFormula ? " · " + esc(action.damageFormula) : "") + '</small></span><span class="combat-action-card__arrow">›</span>' +
             '</button>';
           }).join("") +
         '</div>' +
@@ -699,9 +710,9 @@ function openActionModal(sourceId) {
           COMBAT.combatants.filter((c) => c.id !== source.id && !c.is_defeated).map((c) => '<option value="' + esc(c.id) + '">' + esc(c.name) + ' · DEF ' + esc(c.defense ?? "-") + '</option>').join("") +
         '</select></label>' +
         '<details class="combat-advanced"><summary>Ajustes avançados</summary><div class="combat-form__grid">' +
-          '<label><span>Dado de ataque</span><input name="die" type="number" min="1" max="100" value="' + esc(data.attackDie) + '"></label>' +
-          '<label><span>Bônus</span><input name="bonus" type="number" value="' + esc(data.attackBonus) + '"></label>' +
-          '<label><span>Dano</span><input name="damage" placeholder="1d8+2"></label>' +
+          '<label><span>Dado de ataque</span><input name="die" type="number" min="4" max="20" value=""></label>' +
+          '<label><span>Bônus</span><input name="bonus" type="number" value=""></label>' +
+          '<label><span>Dano</span><input name="damage" placeholder="automático"></label>' +
           '<label><span>Custo</span><select name="cost">' + ACTIONS.map((item) => '<option value="' + item.value + '">' + item.label + '</option>').join("") + '</select></label>' +
         '</div></details>' +
         '<div class="combat-quick-sheet__footer"><span class="combat-quick-roll"><span>🎲</span> Rolar e resolver</span><button type="button" class="campaign-button campaign-button--secondary" data-close>Cancelar</button><button type="button" class="campaign-button campaign-button--primary" data-execute>Executar</button></div>' +
@@ -713,30 +724,39 @@ function openActionModal(sourceId) {
   modal.querySelectorAll("[data-close]").forEach((button) => button.addEventListener("click", close));
   modal.addEventListener("click", (event) => { if (event.target === modal) close(); });
 
-  const cards = Array.from(modal.querySelectorAll("[data-action]"));
-  let selected = cards[0] || null;
+  const cards = Array.from(modal.querySelectorAll("[data-action-id]"));
+  let selected = actions[0] || null;
+  const syncAdvanced = () => {
+    const die = modal.querySelector('[name="die"]');
+    const bonus = modal.querySelector('[name="bonus"]');
+    const damage = modal.querySelector('[name="damage"]');
+    const cost = modal.querySelector('[name="cost"]');
+    if (!selected) return;
+    die.value = selected.attackDie || "";
+    bonus.value = selected.attackBonus ?? "";
+    damage.value = selected.damageFormula || "";
+    cost.value = selected.cost || "main";
+  };
   cards.forEach((card) => card.addEventListener("click", () => {
     cards.forEach((item) => item.classList.remove("is-selected"));
     card.classList.add("is-selected");
-    selected = card;
-    const advancedDamage = modal.querySelector('[name="damage"]');
-    const advancedCost = modal.querySelector('[name="cost"]');
-    if (advancedDamage && card.dataset.damage) advancedDamage.value = card.dataset.damage;
-    if (advancedCost) advancedCost.value = card.dataset.cost || "main";
+    selected = actions.find((item) => item.id === card.dataset.actionId) || selected;
+    syncAdvanced();
   }));
+  syncAdvanced();
 
   modal.querySelector("[data-execute]")?.addEventListener("click", async () => {
     if (!selected) return;
     const targetId = modal.querySelector('[name="target_id"]')?.value || "";
-    const advancedDamage = modal.querySelector('[name="damage"]')?.value.trim() || selected.dataset.damage || "";
-    const advancedCost = modal.querySelector('[name="cost"]')?.value || selected.dataset.cost || "main";
-    const die = modal.querySelector('[name="die"]')?.value || data.attackDie;
-    const bonus = modal.querySelector('[name="bonus"]')?.value || data.attackBonus;
+    const damage = modal.querySelector('[name="damage"]')?.value.trim() || "";
+    const cost = modal.querySelector('[name="cost"]')?.value || selected.cost || "main";
+    const die = modal.querySelector('[name="die"]')?.value || selected.attackDie || "";
+    const bonus = modal.querySelector('[name="bonus"]')?.value || selected.attackBonus || 0;
     const button = modal.querySelector("[data-execute]");
     button.disabled = true;
     try {
-      window.AERIOM_DICE?.playRollEffect?.(Number(die));
-      await executeAction(source, targetId, selected.dataset.action, advancedCost, advancedDamage, die, bonus);
+      window.AERIOM_DICE?.playRollEffect?.(Number(die) || 20);
+      await executeAction(source, targetId, selected, cost, damage, die, bonus);
       close();
     } catch (error) {
       alert(error?.message || "Não foi possível executar a ação.");
