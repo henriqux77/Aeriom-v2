@@ -696,7 +696,10 @@ async function awardCombatXP(defeatedCombatant) {
     const current = await COMBAT.supabase.from("characters").select("xp_total").eq("id", participant.character_id).maybeSingle();
     const nextXp = Number(current.data?.xp_total || 0) + Number(monster.xp_reward);
     const updated = await COMBAT.supabase.from("characters").update({ xp_total: nextXp, updated_at: new Date().toISOString() }).eq("id", participant.character_id);
-    if (!updated.error) awards.push({ characterId: participant.character_id, amount: monster.xp_reward });
+    if (!updated.error) {
+      participant.action_data = { ...(participant.action_data || {}), character_profile: { ...(participant.action_data?.character_profile || {}), xp_total: nextXp } };
+      awards.push({ characterId: participant.character_id, amount: monster.xp_reward, totalXp: nextXp });
+    }
   }
   return awards;
 }
