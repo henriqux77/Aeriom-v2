@@ -277,6 +277,7 @@ function stopCombatAtmosphere() {
 }
 
 function startCombatAtmosphere() {
+  if (diceAudio.atmosphereSource) return;
   if (!diceAudio.combatAtmosphere || !ensureDiceAudio()) return;
   stopCombatAtmosphere();
   const ctx = diceAudio.context;
@@ -4460,6 +4461,8 @@ function exposeApi() {
       setAudioEnabled: setDiceAudioEnabled,
       setAudioVolume: setDiceAudioVolume,
       getAudioSettings: () => ({ enabled: diceAudio.enabled, volume: diceAudio.volume, combatAtmosphere: diceAudio.combatAtmosphere }),
+      playRollEffect: (die = 20) => playDiceRollSound(Number(die) || 20),
+      playResultEffect: (classification = "normal", die = 20) => playDiceResultSound(classification, Number(die) || 20),
       startCombatAtmosphere,
       stopCombatAtmosphere,
       setCombatAtmosphereEnabled,
