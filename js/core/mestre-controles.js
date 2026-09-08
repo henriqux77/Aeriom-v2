@@ -6,32 +6,44 @@ const MANA=[["azul","Azul","Mana comum / normal","🔵"],["roxa","Roxa","Mana Ne
 const PERMS=[["edit_concept","Editar conceito e informações básicas"],["edit_appearance","Editar aparência"],["edit_attributes","Alterar atributos"],["edit_skills","Alterar perícias"],["edit_powers","Editar Poder e Mana"],["edit_techniques","Alterar técnicas"],["edit_inventory","Alterar inventário"],["edit_equipment","Alterar equipamentos"]];
 const TYPES=[["chapter","Capítulo / Arco"],["session","Sessão"],["event","Acontecimento"],["npc","NPC"],["location","Local"],["faction","Facção"],["mission","Missão"],["diary","Diário do Mestre"]];
 const $=id=>document.getElementById(id); const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c])); const toast=(message,type="warning")=>window.dispatchEvent(new CustomEvent("aerion:toast",{detail:{message,type}}));
-let sb=null,user=null,campaignId=null,chars=[];
+let sb=null,user=null,campaignId=null,chars=[],masterBooted=false,masterBooting=false;
 
 async function boot(){
-  sb=await getSupabase();
-  const a=await sb.auth.getUser();
-  user=a.data?.user||null;
-  const readContext=()=>window.AERIOM_CAMPAIGN?.getContext?.()||{};
-  const initial=readContext();
-  campaignId=new URLSearchParams(location.search).get("campaign")||initial.campaignId||initial.campaign?.id;
-  if(!user||!campaignId)return false;
-  let role=String(initial.membership?.role||"").toLowerCase();
-  if(role!=="master"){
-    const m=await sb.from("campaign_members").select("role").eq("campaign_id",campaignId).eq("user_id",user.id).maybeSingle();
-    if(m.error)throw m.error;
-    role=String(m.data?.role||"").toLowerCase();
-  }
-  if(role!=="master")return false;
-  injectNav();
-  injectPanel();
-  await refresh();
-  return true;
+  if(masterBooted||masterBooting)return masterBooted;
+  masterBooting=true;
+  try{
+    sb=sb||await getSupabase();
+    const a=await sb.auth.getUser();
+    user=a.data?.user||null;
+    const readContext=()=>window.AERIOM_CAMPAIGN?.getContext?.()||{};
+    const initial=readContext();
+    campaignId=new URLSearchParams(location.search).get("campaign")||initial.campaignId||initial.campaign?.id;
+    if(!user||!campaignId)return false;
+    let role=String(initial.membership?.role||"").toLowerCase();
+    if(role!=="master"){
+      const m=await sb.from("campaign_members").select("role").eq("campaign_id",campaignId).eq("user_id",user.id).maybeSingle();
+      if(m.error)throw m.error;
+      role=String(m.data?.role||"").toLowerCase();
+    }
+    if(role!=="master")return false;
+    injectNav();
+    injectPanel();
+    await refresh();
+    masterBooted=true;
+    return true;
+  }finally{masterBooting=false;}
 }
 async function bootWhenReady(){
-  for(let i=0;i<50;i++){
-    try{ if(await boot()) return; }catch(e){ console.warn("[AERION][MASTER] init retry",e); }
-    await new Promise(r=>setTimeout(r,250));
+  if(masterBooted||masterBooting)return;
+  for(let i=0;i<6;i++){
+    try{
+      if(await boot()) return;
+    }catch(e){
+      const code=e?.code||e?.details?.code;
+      console.warn("[AERION][MASTER] init attempt failed",e);
+      if(code==="42501") break;
+    }
+    await new Promise(r=>setTimeout(r,Math.min(4000,300*Math.pow(2,i))));
   }
 }
 window.addEventListener("aeriom:campaign:ready",()=>setTimeout(bootWhenReady,0));
