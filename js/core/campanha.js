@@ -1335,6 +1335,8 @@ async function loadMembers() {
 
   state.memberProfiles.clear();
 
+  await loadMemberPresence();
+
 
   const ids =
     state.members
@@ -2188,218 +2190,87 @@ function renderMembers() {
    MEMBER CARD
    ============================================================ */
 
+function formatLastAccess(value){
+  if(!value) return "Último acesso: nunca";
+  const d=new Date(value);
+  if(!Number.isFinite(d.getTime())) return "Último acesso: desconhecido";
+  const diff=Math.max(0,Date.now()-d.getTime());
+  if(diff<60*1000) return "Online agora";
+  if(diff<2*60*1000) return "Online há 1 min";
+  const mins=Math.floor(diff/60000);
+  if(mins<60) return `Último acesso há ${mins} min`;
+  const hours=Math.floor(mins/60);
+  if(hours<24) return `Último acesso há ${hours} h`;
+  return "Último acesso em "+d.toLocaleString("pt-BR",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"});
+}
+
+function isMemberOnline(userId){
+  const p=state.memberPresence.get(String(userId));
+  if(!p?.last_seen_at) return false;
+  return Date.now()-new Date(p.last_seen_at).getTime() < 75*1000;
+}
+
+async function loadMemberPresence(){
+  if(!state.supabase||!state.campaignId) return;
+  const {data,error}=await state.supabase.from("campaign_presence").select("user_id,last_seen_at").eq("campaign_id",state.campaignId);
+  if(error){log("warn","Presença dos membros não pôde ser carregada.",error);return;}
+  state.memberPresence.clear();
+  array(data).forEach(row=>state.memberPresence.set(String(row.user_id),row));
+}
+
+async function heartbeatPresence(){
+  if(!state.supabase||!state.campaignId||!state.user) return;
+  const {error}=await state.supabase.from("campaign_presence").upsert({
+    campaign_id:state.campaignId,
+    user_id:state.user.id,
+    last_seen_at:new Date().toISOString()
+  },{onConflict:"campaign_id,user_id"});
+  if(error) log("warn","Falha ao atualizar presença.",error);
+}
+
+function startPresence(){
+  if(state.presenceTimer) clearInterval(state.presenceTimer);
+  void heartbeatPresence();
+  state.presenceTimer=window.setInterval(async()=>{await heartbeatPresence();await loadMemberPresence();renderMembers();},30000);
+}
+
+function stopPresence(){
+  if(state.presenceTimer){clearInterval(state.presenceTimer);state.presenceTimer=null;}
+}
+
 function createMemberCard(
   member
 ) {
-
-  const article =
-    document.createElement(
-      "article"
-    );
-
-
-  article.className =
-    "campaign-member-card";
-
-
-  const profile =
-    state.memberProfiles.get(
-      member.userId
-    ) || null;
-
-
-  const isCurrentUser =
-    Boolean(
-      state.user &&
-      member.userId ===
-        state.user.id
-    );
-
-
-  const name =
-    isCurrentUser
-
-      ? getDisplayName()
-
-      : (
-          text(
-            profile?.display_name
-          ) ||
-
-          (
-            member.role ===
-              "master"
-
-              ? "Mestre da campanha"
-
-              : "Aventureiro"
-          )
-        );
-
-
-  const avatar =
-    document.createElement(
-      "div"
-    );
-
-
-  avatar.className =
-    "campaign-member-card__avatar";
-
-
-  const initial =
-    document.createElement(
-      "span"
-    );
-
-
-  initial.textContent =
-    name
-      .charAt(
-        0
-      )
-      .toUpperCase() ||
-    "?";
-
-
-  avatar.appendChild(
-    initial
-  );
-
-  const memberAvatarPath =
-    text(
-      isCurrentUser
-        ? state.profile?.avatar_path
-        : profile?.avatar_path
-    );
-
-  if (memberAvatarPath && state.supabase) {
-    void resolveStorageUrl(
-      CONFIG.AVATAR_BUCKET,
-      memberAvatarPath
-    ).then((avatarUrl) => {
-      if (!avatarUrl) return;
-
-      const image =
-        document.createElement("img");
-
-      image.src = avatarUrl;
-      image.alt = "";
-      image.loading = "lazy";
-      image.decoding = "async";
-      image.referrerPolicy = "no-referrer";
-
-      image.addEventListener(
-        "error",
-        () => image.remove(),
-        {once:true}
-      );
-
-      avatar.replaceChildren(image);
-
-      if (member.userId === state.user?.id) {
-        const online =
-          document.createElement("span");
-
-        online.className =
-          "campaign-member-card__online";
-
-        online.setAttribute(
-          "aria-hidden",
-          "true"
-        );
-
-        avatar.appendChild(online);
-      }
-    }).catch(() => {});
+  const article=document.createElement("article");
+  article.className="campaign-member-card";
+  const profile=state.memberProfiles.get(member.userId)||null;
+  const isCurrentUser=Boolean(state.user&&member.userId===state.user.id);
+  const name=isCurrentUser?getDisplayName():(text(profile?.display_name)||(member.role==="master"?"Mestre da campanha":"Aventureiro"));
+  const avatar=document.createElement("div");
+  avatar.className="campaign-member-card__avatar";
+  const initial=document.createElement("span");
+  initial.textContent=name.charAt(0).toUpperCase()||"?";
+  avatar.appendChild(initial);
+  const memberAvatarPath=text(isCurrentUser?state.profile?.avatar_path:profile?.avatar_path);
+  const online=isMemberOnline(member.userId);
+  if(online){const dot=document.createElement("span");dot.className="campaign-member-card__online";dot.setAttribute("aria-label","Online");avatar.appendChild(dot);}
+  if(memberAvatarPath&&state.supabase){
+    void resolveStorageUrl(CONFIG.AVATAR_BUCKET,memberAvatarPath).then((avatarUrl)=>{
+      if(!avatarUrl)return;
+      const image=document.createElement("img");image.src=avatarUrl;image.alt="";image.loading="lazy";image.decoding="async";image.referrerPolicy="no-referrer";
+      image.addEventListener("load",()=>{initial.hidden=true;},{once:true});
+      image.addEventListener("error",()=>{}, {once:true});
+      avatar.prepend(image);
+    }).catch(()=>{});
   }
-
-
-  if (
-    member.userId ===
-      state.user?.id
-  ) {
-
-    const online =
-      document.createElement(
-        "span"
-      );
-
-
-    online.className =
-      "campaign-member-card__online";
-
-
-    online.setAttribute(
-      "aria-hidden",
-      "true"
-    );
-
-
-    avatar.appendChild(
-      online
-    );
-
-  }
-
-
-  const info =
-    document.createElement(
-      "div"
-    );
-
-
-  info.className =
-    "campaign-member-card__info";
-
-
-  const nameElement =
-    document.createElement(
-      "span"
-    );
-
-
-  nameElement.className =
-    "campaign-member-card__name";
-
-
-  nameElement.textContent =
-    isCurrentUser
-      ? `${name} (você)`
-      : name;
-
-
-  const role =
-    document.createElement(
-      "span"
-    );
-
-
-  role.className =
-    "campaign-member-card__role";
-
-
-  role.textContent =
-    member.role ===
-      "master"
-      ? "Mestre"
-      : "Jogador";
-
-
-  info.append(
-    nameElement,
-    role
-  );
-
-
-  article.append(
-    avatar,
-    info
-  );
-
-
+  const info=document.createElement("div");
+  info.className="campaign-member-card__info";
+  const nameElement=document.createElement("span");nameElement.className="campaign-member-card__name";nameElement.textContent=isCurrentUser?`${name} (você)`:name;
+  const role=document.createElement("span");role.className="campaign-member-card__role";role.textContent=member.role==="master"?"Mestre":"Jogador";
+  const presence=document.createElement("span");presence.className="campaign-member-card__presence";presence.textContent=formatLastAccess(state.memberPresence.get(member.userId)?.last_seen_at);presence.classList.toggle("is-online",online);
+  info.append(nameElement,role,presence);
+  article.append(avatar,info);
   return article;
-
 }
 
 
@@ -3920,6 +3791,8 @@ async function initializeCampaign(
     );
 
 
+    startPresence();
+
     log(
       "info",
       "Mesa carregada com sucesso.",
@@ -4009,6 +3882,8 @@ async function initializeCampaign(
    ============================================================ */
 
 function destroyCampaign() {
+
+  stopPresence();
 
   removeRealtime();
 
