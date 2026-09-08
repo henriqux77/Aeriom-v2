@@ -489,3 +489,5 @@ body.aeriom-page--book{
 @media(prefers-reduced-motion:reduce){
   .book-index button,.book-card,.book-search input{transition:none}
 }
+.book-status{display:inline-flex;align-items:center;margin:.35rem .5rem .5rem 0;padding:.25rem .5rem;border:1px solid rgba(216,182,95,.18);border-radius:99px;color:rgba(216,182,95,.85);font-size:.66rem;letter-spacing:.08em}
+.book-chapter__eyebrow{display:inline-block}
