@@ -12,7 +12,21 @@ const COMBAT = {
   events: [],
   channel: null,
   initialized: false,
-  loading: false
+  loading: false,
+  settings: {
+    combat_music_path: null,
+    combat_music_enabled: false,
+    combat_music_volume: 0.35,
+    combat_atmosphere_enabled: true,
+    dice_sfx_enabled: true,
+    combat_animations: "full",
+    show_damage_numbers: true,
+    show_combat_log: true,
+    xp_enabled: true,
+    loot_enabled: true
+  },
+  music: null,
+  pendingLoot: null
 };
 
 const ACTIONS = [
@@ -256,6 +270,51 @@ async function loadOwnCharacterIds() {
     return;
   }
   COMBAT.ownCharacterIds = new Set((data || []).map((row) => row.id));
+}
+
+async function loadSystemSettings() {
+  const { data, error } = await COMBAT.supabase.from("campaign_system_settings")
+    .select("*").eq("campaign_id", COMBAT.campaignId).maybeSingle();
+  if (!error && data) COMBAT.settings = { ...COMBAT.settings, ...data };
+  if (COMBAT.settings.combat_atmosphere_enabled === false) window.AERIOM_DICE?.setCombatAtmosphereEnabled?.(false);
+}
+
+async function setCombatMusic(active) {
+  if (!COMBAT.settings.combat_music_enabled || !COMBAT.settings.combat_music_path) {
+    if (COMBAT.music) { COMBAT.music.pause(); COMBAT.music = null; }
+    return;
+  }
+  try {
+    const { data, error } = await COMBAT.supabase.storage.from("campaign-assets")
+      .createSignedUrl(COMBAT.settings.combat_music_path, 3600);
+    if (error || !data?.signedUrl) return;
+    if (!COMBAT.music || COMBAT.music.dataset.path !== COMBAT.settings.combat_music_path) {
+      COMBAT.music?.pause();
+      const audio = new Audio(data.signedUrl);
+      audio.loop = true;
+      audio.volume = Math.max(0, Math.min(1, Number(COMBAT.settings.combat_music_volume) || 0.35));
+      audio.dataset.path = COMBAT.settings.combat_music_path;
+      COMBAT.music = audio;
+    }
+    if (active) {
+      try { await COMBAT.music.play(); } catch {}
+    } else {
+      COMBAT.music.pause();
+    }
+  } catch {}
+}
+
+async function loadLootStatus() {
+  if (!COMBAT.user?.id || !COMBAT.session) return;
+  const { data } = await COMBAT.supabase.from("combat_loot_claims")
+    .select("monster_combatant_id").eq("combat_id", COMBAT.session.id).eq("user_id", COMBAT.user.id);
+  COMBAT.pendingLoot = COMBAT.events.find((event) =>
+    event.event_type === "defeated" &&
+    event.metadata?.loot_available &&
+    !(data || []).some((claim) => claim.monster_combatant_id === event.target_combatant_id) &&
+    event.metadata?.killer_character_id &&
+    COMBAT.ownCharacterIds.has(event.metadata.killer_character_id)
+  ) || null;
 }
 
 async function loadMonsters() {
@@ -899,6 +958,7 @@ function render() {
   if (!COMBAT.session) {
     document.body.classList.remove("aeriom-combat-active");
     window.AERIOM_DICE?.stopCombatAtmosphere?.();
+    void setCombatMusic(false);
     root.innerHTML =
       '<div class="combat-empty"><div class="combat-empty__icon">⚔</div><span class="campaign-panel__eyebrow">Combate</span><h2>Nenhum combate ativo</h2><p>O Mestre inicia o encontro e a mesa acompanha tudo em tempo real.</p>' +
       (isMaster() ? '<button class="campaign-button campaign-button--primary" id="combat-start">Iniciar combate</button>' : '') +
@@ -908,7 +968,8 @@ function render() {
   }
 
   document.body.classList.add("aeriom-combat-active");
-  window.AERIOM_DICE?.startCombatAtmosphere?.();
+  if (COMBAT.settings.combat_atmosphere_enabled !== false) window.AERIOM_DICE?.startCombatAtmosphere?.();
+  void setCombatMusic(true);
 
   const current = currentCombatant();
   const currentResources = resourcesFor(current);
@@ -1026,8 +1087,9 @@ async function init() {
   try {
     await refreshContext();
     if (!COMBAT.supabase || !COMBAT.campaignId || !COMBAT.user) return;
-    await Promise.all([loadMonsters(), loadOwnCharacterIds()]);
+    await Promise.all([loadMonsters(), loadOwnCharacterIds(), loadSystemSettings()]);
     await loadActiveCombat();
+    await loadLootStatus();
     setupRealtime();
     render();
     COMBAT.initialized = true;
