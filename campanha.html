@@ -3304,6 +3304,29 @@
           detail: { campaignId: APP.campaignId, count: Number(data) || 0 }
         }));
 
+        try {
+          const { data: profile } = await APP.supabase
+            .from("profiles")
+            .select("display_name")
+            .eq("id", APP.user?.id)
+            .maybeSingle();
+
+          await APP.supabase.from("timeline_events").insert({
+            campaign_id: APP.campaignId,
+            actor_id: APP.user?.id || null,
+            event_type: "action",
+            title: "Histórico de rolagens limpo",
+            description: (profile?.display_name || "Mestre") + " limpou o histórico de rolagens.",
+            metadata: {
+              source: "dice",
+              action: "clear_history",
+              rolls_removed: Number(data) || 0
+            }
+          });
+        } catch (logError) {
+          console.warn("[AERION][DICE] Não foi possível registrar o log da limpeza.", logError);
+        }
+
         toast("Histórico de rolagens limpo.", "success");
       } catch (error) {
         console.error("[AERION][DICE] secure clear", error);
