@@ -1999,3 +1999,61 @@
   }
 
 }
+
+/* ============================================================
+   ÁUDIO DAS ROLAGENS
+   ============================================================ */
+.dice-audio-settings{
+  position:relative;
+  display:inline-flex;
+  align-items:center;
+}
+.dice-audio-settings__toggle{
+  min-height:34px;
+  padding:0 12px;
+  border:1px solid var(--dice-border);
+  border-radius:9px;
+  background:rgba(255,255,255,.015);
+  color:var(--dice-text-soft);
+  cursor:pointer;
+  font:inherit;
+  font-size:9px;
+  font-weight:800;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+}
+.dice-audio-settings__toggle:hover{
+  border-color:var(--dice-border-strong);
+  background:rgba(216,182,95,.035);
+  color:var(--dice-text);
+}
+.dice-audio-settings__panel{
+  position:absolute;
+  right:0;
+  bottom:calc(100% + 8px);
+  z-index:20;
+  width:min(230px,calc(100vw - 40px));
+  padding:12px;
+  border:1px solid var(--dice-border-strong);
+  border-radius:12px;
+  background:#11100e;
+  box-shadow:0 18px 50px rgba(0,0,0,.42);
+}
+.dice-audio-settings__panel label{
+  display:grid;
+  gap:7px;
+  margin:0 0 10px;
+  color:var(--dice-text-soft);
+  font-size:9px;
+  font-weight:700;
+}
+.dice-audio-settings__panel label:last-child{margin-bottom:0}
+.dice-audio-settings__panel input[type="range"]{width:100%}
+@media(max-width:700px){
+  .dice-audio-settings__toggle{min-height:40px}
+  .dice-audio-settings__panel{
+    position:fixed;
+    right:14px;
+    bottom:82px;
+  }
+}
