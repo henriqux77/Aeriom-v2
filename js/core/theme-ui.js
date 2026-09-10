@@ -1,5 +1,5 @@
 import { getAvailableThemes, applyCampaignTheme } from "./theme.js";
-import "./mesa-experience.js";
+import "./mesa-experience-guard.js";
 (() => {
   "use strict";
   const caveBg=new URL("../../assets/themes/cave/background.webp", import.meta.url).href;
@@ -17,6 +17,7 @@ import "./mesa-experience.js";
   }
   async function select(id){
     const c=ctx();if(!c?.supabase||!c.campaignId)return;
+    if(String(c?.membership?.role||"").toLowerCase()!=="master")return;
     try{const r=await c.supabase.from("campaigns").update({theme:id}).eq("id",c.campaignId);if(r.error)throw r.error;if(c.campaign)c.campaign.theme=id;applyCampaignTheme(id,id==="cave"?caveBg:null);render();}catch(e){console.error("[AERION][THEME]",e)}
   }
   async function sync(){render();const theme=String(ctx()?.campaign?.theme||document.documentElement.dataset.theme||"default");await applyCampaignTheme(theme,null);}
