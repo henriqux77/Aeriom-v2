@@ -3091,3 +3091,12 @@
     border-radius:18px!important;
   }
 }
+
+.aeriom-mobile-bottom-nav{display:none}
+@media(max-width:760px){
+  .aeriom-mobile-bottom-nav{position:fixed;left:10px;right:10px;bottom:10px;z-index:450;display:grid;grid-template-columns:repeat(5,1fr);gap:4px;padding:6px;border:1px solid rgba(216,182,95,.16);border-radius:16px;background:rgba(12,10,9,.92);box-shadow:0 18px 45px rgba(0,0,0,.5);backdrop-filter:blur(12px)}
+  .aeriom-mobile-bottom-nav button{min-width:0;border:0;border-radius:11px;padding:7px 2px;background:transparent;color:rgba(255,255,255,.42);display:grid;place-items:center;gap:3px;cursor:pointer}
+  .aeriom-mobile-bottom-nav button span{font-size:17px;line-height:1}.aeriom-mobile-bottom-nav button small{font-size:6.5px;letter-spacing:.04em}
+  .aeriom-mobile-bottom-nav button.is-active{background:rgba(216,182,95,.09);color:#e3c36d}
+  .campaign-content,.campaign-workspace{padding-bottom:88px}
+}
