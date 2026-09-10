@@ -1,4 +1,5 @@
 import { getAvailableThemes, applyCampaignTheme } from "./theme.js";
+import "./campaign-live-media.js";
 
 (() => {
   "use strict";
@@ -20,17 +21,12 @@ import { getAvailableThemes, applyCampaignTheme } from "./theme.js";
   const isMaster = () => String(ctx()?.membership?.role || "").toLowerCase() === "master";
 
   function getCurrentTheme() {
-    return String(
-      ctx()?.campaign?.theme ||
-      document.documentElement.dataset.theme ||
-      "default"
-    );
+    return String(ctx()?.campaign?.theme || document.documentElement.dataset.theme || "default");
   }
 
   function render() {
     const root = $("campaign-theme-selector");
     if (!root) return;
-
     const current = getCurrentTheme();
     root.replaceChildren();
 
@@ -40,15 +36,14 @@ import { getAvailableThemes, applyCampaignTheme } from "./theme.js";
       button.className = "campaign-theme-option" + (theme.id === current ? " is-active" : "");
       button.dataset.themeId = theme.id;
       button.disabled = !isMaster();
-      button.title = isMaster()
-        ? `Usar tema ${theme.name}`
-        : "Somente o Mestre pode alterar a atmosfera da mesa.";
+      button.title = isMaster() ? `Usar tema ${theme.name}` : "Somente o Mestre pode alterar a atmosfera da mesa.";
 
       const preview = document.createElement("div");
       preview.className = "campaign-theme-option__preview";
       const image = THEME_IMAGES[theme.id];
       if (image) {
-        preview.style.backgroundImage = `linear-gradient(rgba(0,0,0,.24),rgba(0,0,0,.48)),url(\"${image.replaceAll("\"", "\\\"")}\")`;
+        const safeImage = image.replaceAll("\"", "\\\"");
+        preview.style.backgroundImage = `linear-gradient(rgba(0,0,0,.24),rgba(0,0,0,.5)),url("${safeImage}")`;
       }
 
       const copy = document.createElement("div");
@@ -69,14 +64,9 @@ import { getAvailableThemes, applyCampaignTheme } from "./theme.js";
     if (!isMaster() || !c?.supabase || !c.campaignId) return;
 
     try {
-      const result = await c.supabase
-        .from("campaigns")
-        .update({ theme: id })
-        .eq("id", c.campaignId);
-
+      const result = await c.supabase.from("campaigns").update({ theme: id }).eq("id", c.campaignId);
       if (result.error) throw result.error;
       if (c.campaign) c.campaign.theme = id;
-
       await applyCampaignTheme(id, THEME_IMAGES[id] || null);
       render();
     } catch (error) {
