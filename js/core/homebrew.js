@@ -18,7 +18,7 @@ function fillSource(x){
   $("hb-source-meta").textContent=x?(x.status+" · "+x.visibility+" · "+new Date(x.updated_at).toLocaleString("pt-BR")):"";
   $("hb-source-name").value=x?.name||"";$("hb-source-slug").value=x?.slug||"";$("hb-source-description").value=x?.description||"";
   $("hb-source-visibility").value=x?.visibility||"private";$("hb-source-status").value=x?.status||"draft";$("hb-source-version").value=x?.version||"1.0.0";
-  $("hb-source-delete").hidden=!x;
+  $("hb-source-delete").hidden=!x;$("hb-source-share").hidden=!x||x.status!=="published"||x.visibility==="private";
 }
 async function loadSources(){
   const r=await S.sb.from("homebrew_sources").select("*").order("updated_at",{ascending:false});if(r.error)throw r.error;S.sources=r.data||[];renderSources();
@@ -32,15 +32,71 @@ async function loadContent(){
 }
 function renderContent(){
   const root=$("hb-content-list");root.innerHTML="";
-  if(!S.content.length){const e=document.createElement("div");e.className="hb-empty";e.textContent="Este livro ainda não possui entradas.";root.appendChild(e);return;}
-  S.content.forEach(x=>{const row=document.createElement("article");row.className="hb-content-row";const t=document.createElement("div");t.textContent=TYPES[x.content_type]||x.content_type;t.style.color="var(--hb-accent)";const c=document.createElement("div");const h=document.createElement("strong");h.textContent=x.title;const sm=document.createElement("small");sm.textContent=x.status+" · "+x.slug+(x.summary?" · "+x.summary:"");c.append(h,sm);const actions=document.createElement("div");const edit=document.createElement("button");edit.className="hb-btn";edit.textContent="Editar";edit.onclick=()=>openEditor(x);actions.appendChild(edit);row.append(t,c,actions);root.appendChild(row);});
+  const q=String($("hb-content-search")?.value||"").trim().toLowerCase();
+  const filter=String($("hb-content-filter")?.value||"");
+  const content=S.content.filter(x=>
+    (!filter||x.content_type===filter) &&
+    (!q||String(x.title||"").toLowerCase().includes(q)||String(x.summary||"").toLowerCase().includes(q)||String(x.slug||"").toLowerCase().includes(q))
+  );
+  if(!content.length){const e=document.createElement("div");e.className="hb-empty";e.textContent=S.content.length?"Nenhum conteúdo corresponde ao filtro.":"Este livro ainda não possui entradas.";root.appendChild(e);return;}
+  const groups={};
+  content.forEach(x=>(groups[x.content_type]??=[]).push(x));
+  Object.entries(groups).forEach(([type,items])=>{
+    const section=document.createElement("section");section.className="hb-content-group";
+    const head=document.createElement("div");head.className="hb-group-title";head.innerHTML="<span>"+(TYPES[type]||type).toUpperCase()+"</span><b>"+items.length+"</b>";
+    section.appendChild(head);
+    items.forEach(x=>{
+      const row=document.createElement("article");row.className="hb-content-row";
+      const badge=document.createElement("div");badge.className="hb-entry-icon";badge.textContent=type==="class"?"⚔":type==="race"?"◇":type==="monster"?"☠":type==="item"||type==="equipment"?"◆":type==="recipe"?"✦":"•";
+      const c=document.createElement("div");const h=document.createElement("strong");h.textContent=x.title;const sm=document.createElement("small");sm.textContent=x.status+" · "+x.slug+(x.summary?" · "+x.summary:"");c.append(h,sm);
+      const actions=document.createElement("div");const edit=document.createElement("button");edit.className="hb-btn";edit.textContent="Editar";edit.onclick=()=>openEditor(x);actions.appendChild(edit);row.append(badge,c,actions);section.appendChild(row);
+    });
+    root.appendChild(section);
+  });
 }
-function resetEditor(){S.editing=null;$("hb-content-title-display").textContent="Nova entrada";$("hb-content-type").value="race";$("hb-content-status").value="draft";$("hb-content-title").value="";$("hb-content-slug").value="";$("hb-content-summary").value="";$("hb-content-body").value="";$("hb-content-tags").value="";$("hb-content-data").value="{}";$("hb-content-note").value="";}
+function resetEditor(){S.editing=null;$("hb-content-title-display").textContent="Nova entrada";$("hb-content-type").value="race";$("hb-content-status").value="draft";$("hb-content-title").value="";$("hb-content-slug").value="";$("hb-content-summary").value="";$("hb-content-body").value="";$("hb-content-tags").value="";$("hb-content-data").value="{}";$("hb-content-note").value="";renderStructuredFields({});}
 function openEditor(x){
-  if(!x)resetEditor();else{S.editing=x.id;$("hb-content-title-display").textContent="Editar entrada";$("hb-content-type").value=x.content_type;$("hb-content-status").value=x.status;$("hb-content-title").value=x.title;$("hb-content-slug").value=x.slug;$("hb-content-summary").value=x.summary||"";$("hb-content-body").value=x.content||"";$("hb-content-tags").value=Array.isArray(x.tags)?x.tags.join(", "):"";$("hb-content-data").value=JSON.stringify(x.data||{},null,2);$("hb-content-note").value="";}
+  if(!x)resetEditor();else{S.editing=x.id;$("hb-content-title-display").textContent="Editar entrada";$("hb-content-type").value=x.content_type;$("hb-content-status").value=x.status;$("hb-content-title").value=x.title;$("hb-content-slug").value=x.slug;$("hb-content-summary").value=x.summary||"";$("hb-content-body").value=x.content||"";$("hb-content-tags").value=Array.isArray(x.tags)?x.tags.join(", "):"";$("hb-content-data").value=JSON.stringify(x.data||{},null,2);$("hb-content-note").value="";renderStructuredFields(x.data||{});}
   $("hb-editor-modal").hidden=false;
 }
 function closeEditor(){$("hb-editor-modal").hidden=true;}
+function fieldHtml(label,key,value,type="text",placeholder=""){return '<label>'+label+'<input data-structured-key="'+key+'" type="'+type+'" value="'+String(value??"").replace(/"/g,'&quot;')+'" placeholder="'+placeholder+'"></label>';}
+function textareaHtml(label,key,value,placeholder=""){return '<label>'+label+'<textarea data-structured-key="'+key+'" rows="3" placeholder="'+placeholder+'">'+String(value??"").replace(/</g,"&lt;")+'</textarea></label>';}
+function renderStructuredFields(data={}){
+  const root=$("hb-structured-fields");if(!root)return;
+  const type=$("hb-content-type")?.value||"race";root.innerHTML="";
+  const d=data&&typeof data==="object"?data:{};
+  const common='<div class="hb-structured-heading"><span>FORMATO DO SISTEMA</span><small>Preencha estes campos. O AERION salva tudo de forma estruturada para poder usar este conteúdo dentro das fichas e campanhas.</small></div>';
+  let body="";
+  if(type==="race"||type==="subrace"||type==="animalha"){
+    body='<div class="hb-two">'+fieldHtml("Imagem (URL)","image_url",d.image_url)+fieldHtml("Tamanho","size",d.size||"Médio")+'</div><div class="hb-three">'+fieldHtml("Vida","hp",d.hp,"number")+fieldHtml("Defesa","defense",d.defense,"number")+fieldHtml("Movimento","movement",d.movement,"number")+'</div>'+textareaHtml("Habilidades","abilities",Array.isArray(d.abilities)?d.abilities.join(", "):d.abilities,"Uma por vírgula")+textareaHtml("Resistências","resistances",Array.isArray(d.resistances)?d.resistances.join(", "):d.resistances,"Uma por vírgula")+textareaHtml("Sentidos","senses",Array.isArray(d.senses)?d.senses.join(", "):d.senses,"Uma por vírgula");
+  }else if(type==="class"){
+    body='<div class="hb-three">'+fieldHtml("Mana","mana",d.mana,"number")+fieldHtml("Slots","slots",d.slots,"number")+fieldHtml("Peso máximo","weight",d.weight,"number")+'</div>'+textareaHtml("Itens iniciais","starting_items",Array.isArray(d.starting_items)?d.starting_items.join("\n"):d.starting_items,"Um item por linha")+textareaHtml("Perícias treinadas","trained_skills",Array.isArray(d.trained_skills)?d.trained_skills.join("\n"):d.trained_skills,"Uma perícia por linha")+textareaHtml("Observação dos itens","item_note",d.item_note,"Ex.: pode trocar o arco por arma de duas mãos");
+  }else if(type==="item"||type==="equipment"){
+    body='<div class="hb-three">'+fieldHtml("Raridade","rarity",d.rarity||"Comum")+fieldHtml("Custo","cost",d.cost,"number")+fieldHtml("Peso","weight",d.weight,"number")+'</div>'+fieldHtml("Slots","slots",d.slots,"number")+textareaHtml("Efeitos","effects",d.effects)+textareaHtml("Materiais / Receita","crafting_materials",Array.isArray(d.crafting_materials)?d.crafting_materials.join("\n"):d.crafting_materials);
+  }else if(type==="power"||type==="technique"){
+    body='<div class="hb-three">'+fieldHtml("Custo de Mana","mana_cost",d.mana_cost,"number")+fieldHtml("Ação","action",d.action)+fieldHtml("Alcance","range",d.range)+'</div>'+textareaHtml("Efeito","effect",d.effect)+textareaHtml("Requisitos","requirements",d.requirements);
+  }else if(type==="monster"){
+    body='<div class="hb-three">'+fieldHtml("Vida","hp",d.hp,"number")+fieldHtml("Defesa","defense",d.defense,"number")+fieldHtml("ND / Grau","difficulty",d.difficulty)+'</div>'+textareaHtml("Partes obtidas","loot_parts",Array.isArray(d.loot_parts)?d.loot_parts.join("\n"):d.loot_parts,"Carne, órgão especial, defesa, glândula, sangue, ossos, ingrediente raro…")+textareaHtml("Habilidades","abilities",d.abilities);
+  }else if(type==="recipe"){
+    body=textareaHtml("Ingredientes","ingredients",Array.isArray(d.ingredients)?d.ingredients.join("\n"):d.ingredients,"Um ingrediente por linha")+textareaHtml("Efeitos ao comer","effects",d.effects)+fieldHtml("Dificuldade","difficulty",d.difficulty);
+  }else{
+    body=textareaHtml("Dados principais","effect",d.effect)+fieldHtml("Ícone","icon",d.icon||"✦");
+  }
+  root.innerHTML=common+body;
+  root.querySelectorAll("[data-structured-key]").forEach(el=>el.addEventListener("input",syncStructuredData));
+}
+function syncStructuredData(){
+  const base=readData();
+  $("hb-structured-fields")?.querySelectorAll("[data-structured-key]").forEach(el=>{
+    let v=el.value;
+    if(["abilities","resistances","senses"].includes(el.dataset.structuredKey))v=v.split(",").map(x=>x.trim()).filter(Boolean);
+    else if(["starting_items","trained_skills","crafting_materials","ingredients","loot_parts"].includes(el.dataset.structuredKey))v=v.split("\n").map(x=>x.trim()).filter(Boolean);
+    else if(["hp","defense","movement","mana","slots","weight","cost","mana_cost"].includes(el.dataset.structuredKey)&&v!=="")v=Number(v);
+    base[el.dataset.structuredKey]=v;
+  });
+  $("hb-content-data").value=JSON.stringify(base,null,2);
+}
 function readData(){try{const v=JSON.parse($("hb-content-data").value||"{}");if(!v||Array.isArray(v)||typeof v!=="object")throw new Error();return v;}catch(e){throw new Error("Os dados estruturados precisam ser um JSON de objeto válido.");}}
 async function saveSource(){
   const name=$("hb-source-name").value.trim();if(!name)throw new Error("Informe o nome do livro.");
@@ -52,6 +108,7 @@ async function deleteSource(){const x=source();if(!x)return;if(!confirm("Excluir
 async function revisionVersion(id){const r=await S.sb.from("homebrew_content_revisions").select("version").eq("content_id",id).order("version",{ascending:false}).limit(1);if(r.error)throw r.error;return Number(r.data?.[0]?.version||0)+1;}
 async function saveContent(){
   const src=source();if(!src)throw new Error("Selecione um livro.");
+  syncStructuredData();
   const title=$("hb-content-title").value.trim();if(!title)throw new Error("Informe o título da entrada.");
   const payload={source_id:src.id,owner_id:S.user.id,content_type:$("hb-content-type").value,status:$("hb-content-status").value,title,slug:slug($("hb-content-slug").value||title),summary:$("hb-content-summary").value.trim()||null,content:$("hb-content-body").value.trim()||null,tags:$("hb-content-tags").value.split(",").map(x=>x.trim()).filter(Boolean),data:readData()};
   let r;
@@ -95,7 +152,11 @@ function bind(){
   $("hb-source-slug").oninput=()=>{$("hb-source-slug").dataset.manual="1";};
   $("hb-source-save").onclick=()=>saveSource().catch(e=>toast(e.message,"error"));
   $("hb-source-delete").onclick=()=>deleteSource().catch(e=>toast(e.message,"error"));
+  $("hb-source-share").onclick=()=>{const x=source();if(!x)return;const url=new URL("./homebrew.html?book="+encodeURIComponent(x.id),location.href).href;navigator.clipboard?.writeText(url).then(()=>toast("Link de compartilhamento copiado.","success")).catch(()=>window.prompt("Copie o link:",url));};
   $("hb-new-content").onclick=()=>openEditor();
+  $("hb-content-type").addEventListener("change",()=>renderStructuredFields(readData()));
+  $("hb-content-search").addEventListener("input",renderContent);
+  $("hb-content-filter").addEventListener("change",renderContent);
   $("hb-content-save").onclick=()=>saveContent().catch(e=>toast(e.message,"error"));
   $("hb-content-close").onclick=closeEditor;$("hb-content-cancel").onclick=closeEditor;
   $("hb-refresh-campaigns").onclick=()=>loadCampaigns().catch(e=>toast(e.message,"error"));
