@@ -1021,6 +1021,26 @@
         <button
           class="campaign-nav-item"
           type="button"
+          data-campaign-tab="knowledge"
+        >
+
+          <span
+            class="campaign-nav-item__icon"
+            aria-hidden="true"
+          >
+            🧠
+          </span>
+
+          <span>
+            Conhecimento
+          </span>
+
+        </button>
+
+
+        <button
+          class="campaign-nav-item"
+          type="button"
           data-campaign-tab="kitchen"
         >
 
@@ -2386,6 +2406,81 @@
               class="campaign-timeline"
             ></div>
 
+          </section>
+
+
+          <!-- ================================================
+               CONHECIMENTO
+               ================================================ -->
+
+          <section
+            id="campaign-panel-knowledge"
+            class="campaign-panel"
+            data-campaign-panel="knowledge"
+            hidden
+            aria-labelledby="campaign-knowledge-title"
+          >
+
+            <div class="campaign-panel__heading">
+              <div>
+                <p class="campaign-panel__eyebrow">Inteligência da campanha</p>
+                <h1 id="campaign-knowledge-title">Conhecimento</h1>
+                <p>Organize NPCs, locais, pistas, quests, facções, itens, eventos e segredos em uma rede viva de informações.</p>
+              </div>
+              <div class="aeriom-knowledge-heading-actions">
+                <button class="campaign-button campaign-button--secondary" type="button" data-knowledge-focus-all>⌁ Organizar</button>
+                <button class="campaign-button campaign-button--primary" type="button" data-aeriom-add-node>＋ Criar conhecimento</button>
+              </div>
+            </div>
+
+            <div class="aeriom-knowledge-dashboard">
+              <div class="aeriom-knowledge-stats">
+                <article><span>ENTIDADES</span><strong id="knowledge-stat-nodes">0</strong><small>NPCs, lugares, pistas...</small></article>
+                <article><span>CONEXÕES</span><strong id="knowledge-stat-edges">0</strong><small>Relações entre informações</small></article>
+                <article><span>SEGREDOS</span><strong id="knowledge-stat-private">0</strong><small>Visíveis só para quem deve saber</small></article>
+              </div>
+
+              <div class="aeriom-knowledge-toolbar">
+                <input id="knowledge-search" type="search" placeholder="Buscar conhecimento…">
+                <select id="knowledge-type-filter">
+                  <option value="">Todos os tipos</option>
+                  <option value="npc">NPCs</option>
+                  <option value="location">Locais</option>
+                  <option value="quest">Quests</option>
+                  <option value="clue">Pistas</option>
+                  <option value="faction">Facções</option>
+                  <option value="item">Itens</option>
+                  <option value="event">Eventos</option>
+                  <option value="note">Notas</option>
+                </select>
+              </div>
+
+              <div class="aeriom-knowledge-section">
+                <div class="aeriom-knowledge-section__head">
+                  <div><span>REDE VISUAL</span><h2>Mapa de relações</h2></div>
+                  <small>Arraste entidades, aproxime com zoom e conecte duas para criar uma relação.</small>
+                </div>
+                <div class="aerion-mind-map-board" id="aerion-mind-map-board">
+                  <div class="aerion-mind-map-empty" id="aerion-mind-map-empty">
+                    <strong>Nenhuma informação ainda</strong>
+                    <span>Crie sua primeira entidade para começar a construir o mundo.</span>
+                    <button type="button" class="aeriom-mini-button" data-mind-add>＋ Criar conhecimento</button>
+                  </div>
+                  <div class="aerion-mind-map-world" id="aerion-mind-map-world">
+                    <svg class="aerion-mind-map-svg" id="aerion-mind-map-svg" aria-hidden="true"></svg>
+                    <div id="aerion-mind-map-nodes"></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="aeriom-knowledge-section">
+                <div class="aeriom-knowledge-section__head">
+                  <div><span>ARQUIVO</span><h2>Todas as entidades</h2></div>
+                  <small>Abra qualquer entidade para ver a informação completa.</small>
+                </div>
+                <div id="knowledge-archive-grid" class="aeriom-knowledge-archive-grid"></div>
+              </div>
+            </div>
           </section>
 
 
