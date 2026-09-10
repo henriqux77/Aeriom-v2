@@ -644,3 +644,28 @@
     transition:none !important;
   }
 }
+
+
+/* Transição ultra fluida para troca de card */
+.race-card.aerion-carousel-card,
+.class-card.aerion-carousel-card{
+  transition:
+    transform .18s cubic-bezier(.2,.75,.3,1),
+    opacity .13s linear !important;
+}
+
+@media(max-width:700px){
+  .race-card.aerion-carousel-card,
+  .class-card.aerion-carousel-card{
+    transition:
+      transform .15s cubic-bezier(.2,.75,.3,1),
+      opacity .10s linear !important;
+  }
+}
+
+@media(prefers-reduced-motion:reduce){
+  .race-card.aerion-carousel-card,
+  .class-card.aerion-carousel-card{
+    transition:none !important;
+  }
+}
