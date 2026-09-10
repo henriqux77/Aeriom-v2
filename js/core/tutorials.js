@@ -14,9 +14,9 @@ import "./supabase.js";
       {eyebrow:"FINALIZAÇÃO",title:"Revise e salve",text:"Complete aparência, atributos e demais etapas e salve a ficha.",example:"A ficha passa a acompanhar a campanha."}
     ]},
     {id:"campaign",icon:"⚔",title:"Campanha",desc:"Aprenda as ferramentas da mesa.",steps:[
-      {eyebrow:"COMBATE",title:"Combate",text:"Iniciativa, turnos, combatentes, dano, loot e XP ficam no módulo de combate.",example:"O Mestre conduz e os jogadores acompanham.",target:"[data-campaign-tab='combat']"},
-      {eyebrow:"MAPA",title:"Mapa físico",text:"Use mapas para locais e marcadores do mundo.",example:"Esconda um templo e revele o pin quando o grupo descobrir o local.",target:"[data-campaign-tab='maps']"},
-      {eyebrow:"CONHECIMENTO",title:"Conhecimento",text:"Organize NPCs, locais, pistas, quests, facções, itens e relações.",example:"Mira → conhece → Mina Abandonada.",target:"[data-campaign-tab='knowledge']"},
+      {eyebrow:"COMBATE",title:"Abra o combate",text:"Clique no botão abaixo. O tutorial espera sua ação e só então continua.",example:"O Mestre conduz o combate; os jogadores acompanham.",target:"[data-campaign-tab='combat']",requireClick:true},
+      {eyebrow:"MAPA",title:"Abra Mapas & Regiões",text:"Clique para entrar na área de mapas.",example:"Os mapas cuidam do espaço físico da aventura.",target:"[data-campaign-tab='maps']",requireClick:true},
+      {eyebrow:"CONHECIMENTO",title:"Abra Conhecimento",text:"Clique para entrar na central de informações.",example:"Mira → conhece → Mina Abandonada.",target:"[data-campaign-tab='knowledge']",requireClick:true},
       {eyebrow:"HISTÓRICO",title:"Histórico",text:"A linha do tempo registra acontecimentos da mesa.",example:"Registre uma descoberta importante.",target:"[data-campaign-tab='timeline']"}
     ]},
     {id:"knowledge",icon:"🧠",title:"Conhecimento",desc:"Construa a inteligência do mundo.",steps:[
@@ -30,7 +30,7 @@ import "./supabase.js";
       {eyebrow:"COMPARTILHAR",title:"Compartilhe",text:"Use o compartilhamento para distribuir seu conteúdo.",example:"Envie o link para seu grupo."}
     ]}
   ];
-  const state={active:null,index:0};
+  const state={active:null,index:0,waiting:false,targetCleanup:null};
   const $=id=>document.getElementById(id);
   const esc=v=>String(v??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
   const saved=()=>{try{return JSON.parse(localStorage.getItem("aeriom.tutorial.progress")||"null")}catch{return null}};
@@ -39,7 +39,7 @@ import "./supabase.js";
     if($("tutorial-overlay"))return;
     if(!new URLSearchParams(location.search).has("tutorial"))return;
     const wrap=document.createElement("div");
-    wrap.innerHTML='<div id="tutorial-overlay" class="tutorial-overlay" hidden><div class="tutorial-backdrop"></div><div id="tutorial-highlight" class="tutorial-highlight"></div><div id="tutorial-arrow" class="tutorial-arrow">➜</div><section id="tutorial-card" class="tutorial-card"><div class="tutorial-card__progress"><span id="tutorial-progress">1/1</span><button id="tutorial-close">×</button></div><p id="tutorial-card-eyebrow" class="tutorial-eyebrow"></p><h2 id="tutorial-card-title"></h2><p id="tutorial-card-text"></p><div id="tutorial-example" class="tutorial-example"></div><div class="tutorial-card__actions"><button id="tutorial-prev" class="tutorial-secondary">Anterior</button><button id="tutorial-next" class="tutorial-primary">Próximo</button></div></section></div>';
+    wrap.innerHTML='<div id="tutorial-overlay" class="tutorial-overlay" hidden><div class="tutorial-backdrop"></div><div id="tutorial-highlight" class="tutorial-highlight"></div><div id="tutorial-arrow" class="tutorial-arrow">➜</div><section id="tutorial-card" class="tutorial-card"><div class="tutorial-card__progress"><span id="tutorial-progress">1/1</span><button id="tutorial-close">×</button></div><p id="tutorial-card-eyebrow" class="tutorial-eyebrow"></p><h2 id="tutorial-card-title"></h2><p id="tutorial-card-text"></p><div id="tutorial-example" class="tutorial-example"></div><div class="tutorial-card__actions"><button id="tutorial-skip" class="tutorial-secondary tutorial-skip">Pular tutorial</button><button id="tutorial-prev" class="tutorial-secondary">Anterior</button><button id="tutorial-next" class="tutorial-primary">Próximo</button></div></section></div>';
     document.body.appendChild(wrap.firstElementChild);
   }
   function renderList(){ $("tutorial-list").innerHTML=tutorials.map(t=>'<button class="tutorial-tile" type="button" data-tutorial="'+t.id+'"><span>'+t.icon+'</span><h3>'+esc(t.title)+'</h3><p>'+esc(t.desc)+'</p></button>').join(""); $("tutorial-list").querySelectorAll("[data-tutorial]").forEach(b=>b.onclick=()=>start(b.dataset.tutorial,0)); }
@@ -53,18 +53,36 @@ import "./supabase.js";
     location.href=url.href;
     return true;
   }
-  function focusTarget(selector){const h=$("tutorial-highlight"),a=$("tutorial-arrow"),el=target(selector);if(!el){h.style.display="none";a.style.display="none";return}el.scrollIntoView({behavior:"smooth",block:"center"});setTimeout(()=>{const r=el.getBoundingClientRect();h.style.display="block";h.style.left=Math.max(8,r.left-6)+"px";h.style.top=Math.max(8,r.top-6)+"px";h.style.width=Math.max(40,r.width+12)+"px";h.style.height=Math.max(36,r.height+12)+"px";a.style.display="block";a.style.left=Math.min(window.innerWidth-56,Math.max(12,r.right+10))+"px";a.style.top=Math.max(12,r.top+r.height/2-20)+"px"},160)}
-  function renderStep(){const t=tutorials.find(x=>x.id===state.active),s=t?.steps[state.index];if(!s)return;$("tutorial-progress").textContent=(state.index+1)+"/"+t.steps.length;$("tutorial-card-eyebrow").textContent=s.eyebrow;$("tutorial-card-title").textContent=s.title;$("tutorial-card-text").textContent=s.text;$("tutorial-example").innerHTML="<strong>Exemplo</strong><br>"+esc(s.example);$("tutorial-prev").disabled=state.index===0;$("tutorial-next").textContent=state.index===t.steps.length-1?"Concluir":"Próximo";$("tutorial-next").dataset.go=s.href||"";save();focusTarget(s.target)}
+  function focusTarget(selector, requireClick=false){
+    const h=$("tutorial-highlight"),a=$("tutorial-arrow"),el=target(selector);
+    if(state.targetCleanup){state.targetCleanup();state.targetCleanup=null}
+    if(!el){h.style.display="none";a.style.display="none";return}
+    el.scrollIntoView({behavior:"smooth",block:"center"});
+    setTimeout(()=>{
+      const r=el.getBoundingClientRect();
+      h.style.display="block";h.style.left=Math.max(8,r.left-6)+"px";h.style.top=Math.max(8,r.top-6)+"px";h.style.width=Math.max(40,r.width+12)+"px";h.style.height=Math.max(36,r.height+12)+"px";
+      a.style.display="block";a.textContent=requireClick?"👆":"➜";a.style.left=Math.min(window.innerWidth-56,Math.max(12,r.right+10))+"px";a.style.top=Math.max(12,r.top+r.height/2-20)+"px";
+      if(requireClick){
+        const handler=()=>{if(state.waiting){state.waiting=false;state.targetCleanup?.();state.targetCleanup=null;setTimeout(()=>nextStep(),120)}};
+        el.addEventListener("click",handler,{once:true});
+        state.targetCleanup=()=>el.removeEventListener("click",handler);
+        state.waiting=true;
+      }
+    },160)
+  }
+  function renderStep(){const t=tutorials.find(x=>x.id===state.active),s=t?.steps[state.index];if(!s)return;$("tutorial-progress").textContent=(state.index+1)+"/"+t.steps.length;$("tutorial-card-eyebrow").textContent=s.eyebrow;$("tutorial-card-title").textContent=s.title;$("tutorial-card-text").textContent=s.text;$("tutorial-example").innerHTML="<strong>Exemplo</strong><br>"+esc(s.example);$("tutorial-prev").disabled=state.index===0;$("tutorial-next").textContent=state.index===t.steps.length-1?"Concluir":(s.requireClick?"Aguardar ação":"Próximo");$("tutorial-next").disabled=!!s.requireClick;$("tutorial-next").dataset.go=s.href||"";save();focusTarget(s.target,!!s.requireClick)}
   function start(id,index){state.active=id;state.index=index||0;$("tutorial-overlay").hidden=false;renderStep()}
-  function close(){state.active=null;$("tutorial-overlay").hidden=true;$("tutorial-highlight").style.display="none";$("tutorial-arrow").style.display="none"}
+  function close(){state.active=null;state.waiting=false;state.targetCleanup?.();state.targetCleanup=null;localStorage.removeItem("aeriom.tutorial.progress");$("tutorial-overlay").hidden=true;$("tutorial-highlight").style.display="none";$("tutorial-arrow").style.display="none";if(location.search.includes("tutorial=")){const u=new URL(location.href);u.searchParams.delete("tutorial");u.searchParams.delete("tutorialStep");history.replaceState({},document.title,u.href)}}
   function bind(){
     ensureGuideUi();
     const params=new URLSearchParams(location.search),resumeId=params.get("tutorial"),resumeStep=Number(params.get("tutorialStep")||0);
     if(resumeId&&tutorials.some(t=>t.id===resumeId)) start(resumeId,resumeStep);
     renderList();
-    $("tutorial-next").onclick=()=>{const t=tutorials.find(x=>x.id===state.active);if(!t)return;const s=t.steps[state.index];if(s.href&&state.index<t.steps.length-1){if(navigateStep(s))return}if(state.index<t.steps.length-1){state.index++;renderStep()}else{localStorage.removeItem("aeriom.tutorial.progress");close()}};
+    function nextStep(){const t=tutorials.find(x=>x.id===state.active);if(!t)return;const s=t.steps[state.index];if(s.href&&state.index<t.steps.length-1){if(navigateStep(s))return}if(s.requireClick)return;if(state.index<t.steps.length-1){state.index++;renderStep()}else{close()}}
+    $("tutorial-next").onclick=nextStep;
     $("tutorial-prev").onclick=()=>{if(state.index>0){state.index--;renderStep()}};
     $("tutorial-close").onclick=close;
+    $("tutorial-skip").onclick=()=>{localStorage.removeItem("aeriom.tutorial.progress");close()};
     $("tutorial-continue").onclick=()=>{const s=saved();if(s&&tutorials.some(t=>t.id===s.id))start(s.id,s.index);else start("first-steps",0)};
     window.addEventListener("resize",()=>{const t=tutorials.find(x=>x.id===state.active),s=t?.steps[state.index];if(s)focusTarget(s.target)});
   }
