@@ -183,7 +183,26 @@ function realtime(){
     .subscribe(status=>{$("hb-connection").textContent=status==="SUBSCRIBED"?"Online":"Realtime: "+status;});
   S.channels.push(ch);
 }
+function openMobileMenu(){
+  const sidebar=document.querySelector(".hb-sidebar");
+  const backdrop=$("hb-mobile-menu-backdrop");
+  const button=$("hb-mobile-menu-button");
+  sidebar?.classList.add("is-open");
+  backdrop?.classList.add("is-open");
+  button?.setAttribute("aria-expanded","true");
+}
+function closeMobileMenu(){
+  const sidebar=document.querySelector(".hb-sidebar");
+  const backdrop=$("hb-mobile-menu-backdrop");
+  const button=$("hb-mobile-menu-button");
+  sidebar?.classList.remove("is-open");
+  backdrop?.classList.remove("is-open");
+  button?.setAttribute("aria-expanded","false");
+}
 function bind(){
+  $("hb-mobile-menu-button")?.addEventListener("click",openMobileMenu);
+  $("hb-mobile-menu-backdrop")?.addEventListener("click",closeMobileMenu);
+  document.querySelectorAll(".hb-sidebar nav a").forEach(a=>a.addEventListener("click",closeMobileMenu));
   $("hb-new-source").onclick=()=>openEditor();
   $("hb-empty-new").onclick=()=>$("hb-new-source").click();
   $("hb-source-name").oninput=()=>{if(!$("hb-source-slug").dataset.manual)$("hb-source-slug").value=slug($("hb-source-name").value);};
