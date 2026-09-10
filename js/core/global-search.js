@@ -3,26 +3,25 @@ import { getSupabase } from "./supabase.js";
 (() => {
   "use strict";
   const $=s=>document.querySelector(s);
-  const esc=v=>String(v??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-  const path=location.pathname.split("/").pop()||"";
+  const esc=v=>String(v??"").replace(/[&<>\"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
   const state={rows:[],loading:false};
   function ensureUI(){
     if($("#aeriom-global-search"))return;
     const b=document.createElement("button");
-    b.id="aeriom-global-search-trigger";b.className="aeriom-global-search-trigger";b.type="button";b.innerHTML="⌕ <span>Buscar no AERIOM</span>";b.title="Busca global";
-    (document.querySelector(".campaigns-topbar__left,.campaign-topbar__left,.hb-topbar-left,.aeriom-topbar__left")||document.body).appendChild(b);
+    b.id="aeriom-global-search-trigger";b.className="aeriom-global-search-trigger";b.type="button";b.innerHTML="⌕ <span>Buscar no AERIOM</span>";b.title="Busca global · Ctrl K";
+    (document.querySelector(".campaign-topbar__right,.campaigns-topbar__right,.hb-top-actions,.aeriom-topbar__right")||document.body).prepend(b);
     const o=document.createElement("div");o.id="aeriom-global-search";o.className="aeriom-global-search";o.hidden=true;
     o.innerHTML='<div class="aeriom-global-search__backdrop"></div><section class="aeriom-global-search__dialog"><header><div><span>BUSCA GLOBAL</span><h2>Pesquisar no AERIOM</h2></div><button type="button" data-search-close>×</button></header><input id="aeriom-global-search-input" type="search" placeholder="NPC, personagem, quest, nota, Homebrew…"><div id="aeriom-global-search-status" class="aeriom-global-search__status">Digite para pesquisar.</div><div id="aeriom-global-search-results" class="aeriom-global-search__results"></div></section>';
     document.body.appendChild(o);
     b.addEventListener("click",open);o.querySelector("[data-search-close]").onclick=close;o.querySelector(".aeriom-global-search__backdrop").onclick=close;
     o.querySelector("#aeriom-global-search-input").addEventListener("input",render);
+    document.addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="k"){e.preventDefault();open();}});
   }
   async function load(){
     if(state.loading)return;state.loading=true;
     try{
       const sb=await getSupabase();const u=await sb.auth.getUser();if(u.error||!u.data.user)return;
-      const datasets=[];
-      const campaignId=window.AERIOM_CAMPAIGN?.getContext?.()?.campaignId;
+      const datasets=[];const campaignId=window.AERIOM_CAMPAIGN?.getContext?.()?.campaignId;
       if(campaignId){
         const [n,m,t,c]=await Promise.all([
           sb.from("knowledge_nodes").select("id,title,content,node_type,campaign_id").eq("campaign_id",campaignId),
