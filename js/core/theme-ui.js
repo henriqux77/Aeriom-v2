@@ -1,5 +1,6 @@
 import { getAvailableThemes, applyCampaignTheme } from "./theme.js";
 import "./campaign-live-media.js";
+import "../core/campaign-ui-repair.js";
 
 (() => {
   "use strict";
