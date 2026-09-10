@@ -669,3 +669,106 @@
     transition:none !important;
   }
 }
+
+
+/* =========================================================
+   CLASSES v5 — card compacto + área livre para controles
+   ========================================================= */
+.class-grid{
+  --carousel-card-width:min(290px,72vw);
+  --carousel-card-height:305px;
+  min-height:calc(var(--carousel-card-height) + 54px) !important;
+}
+
+.class-card.aerion-carousel-card{
+  min-height:305px !important;
+  height:305px !important;
+  padding:12px 58px 12px 58px !important;
+  justify-content:space-between !important;
+  gap:8px !important;
+}
+
+.class-card.aerion-carousel-card .class-icon{
+  height:108px !important;
+  flex:0 0 108px !important;
+  border-radius:14px !important;
+  font-size:46px !important;
+}
+
+.class-card.aerion-carousel-card .class-body{
+  min-width:0;
+}
+
+.class-card.aerion-carousel-card .class-body strong{
+  font-size:17px !important;
+}
+
+.class-card.aerion-carousel-card .class-body p{
+  display:-webkit-box !important;
+  -webkit-line-clamp:3;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+}
+
+.class-card.aerion-carousel-card aside{
+  padding-top:7px !important;
+  gap:4px;
+}
+
+.class-card.aerion-carousel-card .check{
+  top:9px !important;
+  right:10px !important;
+}
+
+.class-grid .aerion-carousel-nav{
+  top:54% !important;
+}
+
+@media(max-width:700px){
+  .class-grid{
+    --carousel-card-width:min(290px,72vw);
+    --carousel-card-height:305px;
+  }
+
+  .class-card.aerion-carousel-card{
+    min-height:305px !important;
+    height:305px !important;
+    padding-left:54px !important;
+    padding-right:54px !important;
+  }
+
+  .class-card.aerion-carousel-card .class-icon{
+    height:100px !important;
+    flex-basis:100px !important;
+    font-size:44px !important;
+  }
+}
+
+@media(max-width:390px){
+  .class-grid{
+    --carousel-card-width:76vw;
+    --carousel-card-height:290px;
+  }
+
+  .class-card.aerion-carousel-card{
+    min-height:290px !important;
+    height:290px !important;
+    padding-left:48px !important;
+    padding-right:48px !important;
+  }
+
+  .class-card.aerion-carousel-card .class-icon{
+    height:88px !important;
+    flex-basis:88px !important;
+    font-size:40px !important;
+  }
+
+  .class-card.aerion-carousel-card .class-body strong{
+    font-size:16px !important;
+  }
+
+  .class-card.aerion-carousel-card .class-body p{
+    font-size:7px !important;
+    -webkit-line-clamp:2;
+  }
+}
