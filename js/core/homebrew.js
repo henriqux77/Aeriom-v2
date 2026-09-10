@@ -8,10 +8,18 @@ function toast(message,type){const el=$("hb-toast");el.textContent=String(messag
 function source(){return S.sources.find(x=>x.id===S.sourceId)||null;}
 function openWorkspace(show){$("hb-welcome").hidden=show;$("hb-source-editor").hidden=show;}
 function renderSources(){
-  $("hb-source-count").textContent=S.sources.length;
-  $("hb-empty-sources").hidden=S.sources.length>0;
   const root=$("hb-source-list");root.innerHTML="";
-  S.sources.forEach(x=>{const b=document.createElement("button");b.type="button";b.className="hb-source"+(x.id===S.sourceId?" active":"");b.innerHTML="<strong></strong><small></small>";b.querySelector("strong").textContent=x.name;b.querySelector("small").textContent=x.version+" · "+x.status;b.onclick=()=>selectSource(x.id);root.appendChild(b);});
+  const content=S.content||[];
+  $("hb-source-count").textContent=content.length;
+  $("hb-empty-sources").hidden=content.length>0;
+  const iconFor=t=>t==="class"?"⚔":t==="race"||t==="subrace"||t==="animalha"?"◇":t==="monster"?"☠":t==="recipe"?"✦":t==="item"||t==="equipment"?"◆":t==="power"||t==="technique"?"✧":"•";
+  content.slice(0,40).forEach(x=>{
+    const b=document.createElement("button");b.type="button";b.className="hb-source"+(x.id===S.editing?" active":"");b.innerHTML="<strong></strong><small></small>";
+    b.querySelector("strong").textContent=iconFor(x.content_type)+"  "+x.title;
+    b.querySelector("small").textContent=(TYPES[x.content_type]||x.content_type)+" · "+(x.status||"draft");
+    b.onclick=()=>openEditor(x);
+    root.appendChild(b);
+  });
 }
 function fillSource(x){
   $("hb-source-title-display").textContent=x?x.name:"Novo livro";
@@ -34,7 +42,7 @@ async function loadSources(){
   await loadAllContent();
 }
 async function loadAllContent(){
-  if(!S.sources.length){S.content=[];renderContent();return;}
+  if(!S.sources.length){S.content=[];renderSources();renderContent();return;}
   const all=[];
   for(const x of S.sources){
     const r=await S.sb.from("homebrew_content").select("*").eq("source_id",x.id).order("sort_order").order("updated_at",{ascending:false});
