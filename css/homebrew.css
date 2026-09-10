@@ -147,3 +147,89 @@
   .hb-public-shell>header{padding:20px}
   .hb-public-shell>header h1{font-size:24px}
 }
+
+
+/* =========================================================
+   HOME BREW — navegação móvel
+   ========================================================= */
+.hb-topbar-left{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  min-width:0;
+}
+
+.hb-back,
+.hb-menu-button{
+  width:40px;
+  height:40px;
+  flex:0 0 40px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  border:1px solid var(--hb-line);
+  border-radius:9px;
+  background:rgba(255,255,255,.025);
+  color:var(--hb-text);
+  text-decoration:none;
+  font:inherit;
+  font-size:20px;
+  line-height:1;
+  cursor:pointer;
+}
+
+.hb-back:hover,
+.hb-menu-button:hover{
+  color:var(--hb-accent);
+  border-color:rgba(215,164,92,.35);
+  background:rgba(215,164,92,.06);
+}
+
+.hb-menu-button{display:none}
+
+.hb-mobile-menu-backdrop{
+  display:none;
+  position:fixed;
+  inset:0;
+  z-index:90;
+  border:0;
+  background:rgba(0,0,0,.55);
+  backdrop-filter:blur(2px);
+  cursor:pointer;
+}
+
+@media(max-width:1000px){
+  .hb-shell{position:relative}
+  .hb-sidebar{
+    position:fixed;
+    inset:0 auto 0 0;
+    z-index:100;
+    width:min(280px,84vw);
+    transform:translateX(-105%);
+    transition:transform 220ms ease;
+    background:#0d0b0a;
+    box-shadow:18px 0 50px rgba(0,0,0,.5);
+  }
+  .hb-sidebar.is-open{transform:translateX(0)}
+  .hb-menu-button{display:inline-flex}
+  .hb-mobile-menu-backdrop.is-open{display:block}
+  .hb-topbar-left > div{min-width:0}
+  .hb-topbar-left .hb-back{display:inline-flex}
+}
+
+@media(max-width:650px){
+  .hb-topbar{
+    padding:16px;
+    gap:12px;
+  }
+  .hb-topbar-left{width:100%}
+  .hb-top-actions{
+    width:100%;
+    justify-content:space-between;
+  }
+  .hb-top-actions .hb-btn{flex:1}
+}
+
+@media(min-width:1001px){
+  .hb-back{display:none}
+}
