@@ -76,14 +76,16 @@ import "./supabase.js";
   function bind(){
     ensureGuideUi();
     const params=new URLSearchParams(location.search),resumeId=params.get("tutorial"),resumeStep=Number(params.get("tutorialStep")||0);
-    if(resumeId&&tutorials.some(t=>t.id===resumeId)) start(resumeId,resumeStep);
-    renderList();
-    function nextStep(){const t=tutorials.find(x=>x.id===state.active);if(!t)return;const s=t.steps[state.index];if(s.href&&state.index<t.steps.length-1){if(navigateStep(s))return}if(s.requireClick)return;if(state.index<t.steps.length-1){state.index++;renderStep()}else{close()}}
-    $("tutorial-next").onclick=nextStep;
-    $("tutorial-prev").onclick=()=>{if(state.index>0){state.index--;renderStep()}};
-    $("tutorial-close").onclick=close;
-    $("tutorial-skip").onclick=()=>{localStorage.removeItem("aeriom.tutorial.progress");close()};
-    $("tutorial-continue").onclick=()=>{const s=saved();if(s&&tutorials.some(t=>t.id===s.id))start(s.id,s.index);else start("first-steps",0)};
+    if($("tutorial-list")) renderList();
+    if($("tutorial-next")){
+      if(resumeId&&tutorials.some(t=>t.id===resumeId)) start(resumeId,resumeStep);
+      function nextStep(){const t=tutorials.find(x=>x.id===state.active);if(!t)return;const s=t.steps[state.index];if(s.href&&state.index<t.steps.length-1){if(navigateStep(s))return}if(s.requireClick)return;if(state.index<t.steps.length-1){state.index++;renderStep()}else{close()}}
+      $("tutorial-next").onclick=nextStep;
+      $("tutorial-prev").onclick=()=>{if(state.index>0){state.index--;renderStep()}};
+      $("tutorial-close").onclick=close;
+      $("tutorial-skip").onclick=()=>{localStorage.removeItem("aeriom.tutorial.progress");close()};
+      $("tutorial-continue")?.addEventListener("click",()=>{const s=saved();if(s&&tutorials.some(t=>t.id===s.id))start(s.id,s.index);else start("first-steps",0)});
+    }
     window.addEventListener("resize",()=>{const t=tutorials.find(x=>x.id===state.active),s=t?.steps[state.index];if(s)focusTarget(s.target)});
   }
   if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",bind,{once:true});else bind();
