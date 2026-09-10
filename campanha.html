@@ -3887,6 +3887,7 @@
           </div>
           ${isMaster() ? `
             <div class="aeriom-modal-actions">
+              <button class="campaign-button campaign-button--secondary" type="button" data-create-knowledge>🧠 Conhecimento</button>
               <button class="campaign-button campaign-button--secondary" type="button" data-edit-pin>Editar</button>
               <button class="campaign-button campaign-button--secondary" type="button" data-toggle-pin>
                 ${pin.is_hidden ? "Revelar aos jogadores" : "Ocultar dos jogadores"}
@@ -3899,6 +3900,24 @@
     modal.classList.add("is-open");
     modal.querySelectorAll("[data-modal-close]").forEach((b) =>
       b.addEventListener("click", () => modal.classList.remove("is-open")));
+
+    modal.querySelector("[data-create-knowledge]")?.addEventListener("click", async () => {
+      try {
+        const created = await APP.supabase.from("aerion_mind_nodes").insert({
+          campaign_id:APP.campaignId,created_by:APP.user.id,title:pin.title,
+          content:pin.description||null,node_type:"location",color:"#8b6f36",
+          pos_x:35,pos_y:35,visibility:"public"
+        }).select("*").single();
+        if(created.error) throw created.error;
+        const up = await APP.supabase.from("map_pins").update({
+          metadata:{...(pin.metadata||{}),knowledge_node_id:created.data.id}
+        }).eq("id",pin.id);
+        if(up.error) throw up.error;
+        modal.classList.remove("is-open");
+        toast("Local conectado ao Conhecimento.","success");
+        setActiveTab("knowledge");
+      } catch(error) { toast(error?.message||"Não foi possível conectar ao Conhecimento.","error"); }
+    });
 
     modal.querySelector("[data-edit-pin]")
       ?.addEventListener("click", () => openPinEditor(pin));
