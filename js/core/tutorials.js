@@ -4,12 +4,12 @@ import "./supabase.js";
   "use strict";
   const tutorials = [
     {id:"first-steps",icon:"✦",title:"Primeiros passos",desc:"Entenda o AERIOM do começo ao fim.",steps:[
-      {eyebrow:"COMECE AQUI",title:"Crie ou entre em uma campanha",text:"Na página de Campanhas você reúne a mesa, cria uma aventura e acessa os recursos da campanha.",example:"Crie uma campanha chamada As Ruínas de Aster e entre nela.",target:"a[href='./campanhas.html']"},
+      {eyebrow:"COMECE AQUI",title:"Crie ou entre em uma campanha",text:"Na página de Campanhas você reúne a mesa, cria uma aventura e acessa os recursos da campanha.",example:"Crie uma campanha chamada As Ruínas de Aster e entre nela.",target:"a[href='./campanhas.html']",href:"./campanhas.html"},
       {eyebrow:"DENTRO DA CAMPANHA",title:"Use o menu lateral",text:"Mapa mostra o mundo físico. Conhecimento organiza informações. Histórico registra acontecimentos.",example:"Mapa = onde. Conhecimento = o quê, quem e por quê. Histórico = o que aconteceu.",target:".campaign-sidebar"},
       {eyebrow:"PRONTO",title:"Continue aprendendo",text:"Escolha outro tutorial para aprender fichas, combate, mapas, Conhecimento, Mural e Homebrew.",example:"Você pode sair e voltar depois."}
     ]},
     {id:"character",icon:"♜",title:"Criar personagem",desc:"Monte sua ficha passo a passo.",steps:[
-      {eyebrow:"FICHA",title:"Escolha a raça",text:"O AERIOM usa um carrossel para escolher a raça e recalcula os valores derivados.",example:"Troque de raça e observe Vida e Defesa.",target:"a[href='./fichas.html']"},
+      {eyebrow:"FICHA",title:"Escolha a raça",text:"O AERIOM usa um carrossel para escolher a raça e recalcula os valores derivados.",example:"Troque de raça e observe Vida e Defesa.",target:"body",href:"./fichas.html"},
       {eyebrow:"CLASSE",title:"Escolha a classe",text:"Cada classe mostra itens iniciais e perícias treinadas.",example:"Compare Guerreiro, Monge, Controlador e Curandeiro."},
       {eyebrow:"FINALIZAÇÃO",title:"Revise e salve",text:"Complete aparência, atributos e demais etapas e salve a ficha.",example:"A ficha passa a acompanhar a campanha."}
     ]},
