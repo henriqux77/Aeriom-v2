@@ -37,13 +37,22 @@ import "./supabase.js";
   function save(){localStorage.setItem("aeriom.tutorial.progress",JSON.stringify({id:state.active,index:state.index}))}
   function renderList(){ $("tutorial-list").innerHTML=tutorials.map(t=>'<button class="tutorial-tile" type="button" data-tutorial="'+t.id+'"><span>'+t.icon+'</span><h3>'+esc(t.title)+'</h3><p>'+esc(t.desc)+'</p></button>').join(""); $("tutorial-list").querySelectorAll("[data-tutorial]").forEach(b=>b.onclick=()=>start(b.dataset.tutorial,0)); }
   function target(selector){if(!selector)return null;return document.querySelector(selector)}
-  function focusTarget(selector){const h=$("tutorial-highlight"),a=$("tutorial-arrow"),el=target(selector);if(!el){h.style.display="none";a.style.display="none";return}el.scrollIntoView({behavior:"smooth",block:"center"});setTimeout(()=>{const r=el.getBoundingClientRect();h.style.display="block";h.style.left=Math.max(8,r.left-6)+"px";h.style.top=Math.max(8,r.top-6)+"px";h.style.width=Math.max(40,r.width+12)+"px";h.style.height=Math.max(36,r.height+12)+"px";a.style.display="block";a.style.left=Math.min(window.innerWidth-56,Math.max(12,r.right+10))+"px";a.style.top=Math.max(12,r.top+r.height/2-20)+"px"},180)}
-  function renderStep(){const t=tutorials.find(x=>x.id===state.active),s=t?.steps[state.index];if(!s)return;$("tutorial-progress").textContent=(state.index+1)+"/"+t.steps.length;$("tutorial-card-eyebrow").textContent=s.eyebrow;$("tutorial-card-title").textContent=s.title;$("tutorial-card-text").textContent=s.text;$("tutorial-example").innerHTML="<strong>Exemplo</strong><br>"+esc(s.example);$("tutorial-prev").disabled=state.index===0;$("tutorial-next").textContent=state.index===t.steps.length-1?"Concluir":"Próximo";save();focusTarget(s.target)}
+  function samePageTarget(step){if(step.target)return target(step.target);return null}
+  function navigateStep(step){
+    if(!step.href)return false;
+    const url=new URL(step.href,location.href);
+    url.searchParams.set("tutorial",state.active);
+    url.searchParams.set("tutorialStep",String(state.index));
+    location.href=url.href;
+    return true;
+  }
+  function focusTarget(selector){const h=$("tutorial-highlight"),a=$("tutorial-arrow"),el=target(selector);if(!el){h.style.display="none";a.style.display="none";return}el.scrollIntoView({behavior:"smooth",block:"center"});setTimeout(()=>{const r=el.getBoundingClientRect();h.style.display="block";h.style.left=Math.max(8,r.left-6)+"px";h.style.top=Math.max(8,r.top-6)+"px";h.style.width=Math.max(40,r.width+12)+"px";h.style.height=Math.max(36,r.height+12)+"px";a.style.display="block";a.style.left=Math.min(window.innerWidth-56,Math.max(12,r.right+10))+"px";a.style.top=Math.max(12,r.top+r.height/2-20)+"px"},160)}
+  function renderStep(){const t=tutorials.find(x=>x.id===state.active),s=t?.steps[state.index];if(!s)return;$("tutorial-progress").textContent=(state.index+1)+"/"+t.steps.length;$("tutorial-card-eyebrow").textContent=s.eyebrow;$("tutorial-card-title").textContent=s.title;$("tutorial-card-text").textContent=s.text;$("tutorial-example").innerHTML="<strong>Exemplo</strong><br>"+esc(s.example);$("tutorial-prev").disabled=state.index===0;$("tutorial-next").textContent=state.index===t.steps.length-1?"Concluir":"Próximo";$("tutorial-next").dataset.go=s.href||"";save();focusTarget(s.target)}
   function start(id,index){state.active=id;state.index=index||0;$("tutorial-overlay").hidden=false;renderStep()}
   function close(){state.active=null;$("tutorial-overlay").hidden=true;$("tutorial-highlight").style.display="none";$("tutorial-arrow").style.display="none"}
   function bind(){
     renderList();
-    $("tutorial-next").onclick=()=>{const t=tutorials.find(x=>x.id===state.active);if(!t)return;if(state.index<t.steps.length-1){state.index++;renderStep()}else{localStorage.removeItem("aeriom.tutorial.progress");close()}};
+    $("tutorial-next").onclick=()=>{const t=tutorials.find(x=>x.id===state.active);if(!t)return;const s=t.steps[state.index];if(s.href&&!samePageTarget(s)&&state.index<t.steps.length-1){if(navigateStep(s))return}if(state.index<t.steps.length-1){state.index++;renderStep()}else{localStorage.removeItem("aeriom.tutorial.progress");close()}};
     $("tutorial-prev").onclick=()=>{if(state.index>0){state.index--;renderStep()}};
     $("tutorial-close").onclick=close;
     $("tutorial-continue").onclick=()=>{const s=saved();if(s&&tutorials.some(t=>t.id===s.id))start(s.id,s.index);else start("first-steps",0)};
