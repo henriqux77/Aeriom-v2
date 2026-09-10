@@ -21,10 +21,26 @@
     {id:'d10',label:'D10',sides:10}, {id:'d12',label:'D12',sides:12}, {id:'d20a',label:'D20',sides:20}, {id:'d20b',label:'D20',sides:20}
   ];
   const CLASSES = {
-    guerreiro:{id:'guerreiro',name:'Guerreiro',role:'Combatente',icon:'⚔',mana:50,slots:16,weight:40,skillCount:5,description:'Especialista em combate físico, armas e presença no campo de batalha.'},
-    feiticeiro:{id:'feiticeiro',name:'Feiticeiro',role:'Mágico',icon:'✦',mana:100,slots:12,weight:25,skillCount:5,description:'Especialista em controle, canalização e manipulação de Mana.'},
-    curandeiro:{id:'curandeiro',name:'Curandeiro',role:'Suporte',icon:'✚',mana:80,slots:14,weight:30,skillCount:4,description:'Especialista em suporte, recuperação e uso de Mana sobre aliados.'},
-    monge:{id:'monge',name:'Monge',role:'Marcial',icon:'◈',mana:30,slots:10,weight:20,skillCount:6,description:'Transforma Mana em capacidade corporal, mobilidade e força física.'}
+    guerreiro:{id:'guerreiro',name:'Guerreiro',role:'Combatente',icon:'⚔',mana:50,slots:16,weight:40,skillCount:5,
+      description:'Especialista em combate físico, armas e presença no campo de batalha.',
+      startingItems:['Espada ou Machado','Arco ou Besta','Proteção básica'],
+      itemNote:'Pode trocar o arco/besta por uma arma de duas mãos.',
+      trainedSkills:['Atletismo','Tática','Pontaria','Sobrevivência','Ofício / Crafting']},
+    feiticeiro:{id:'feiticeiro',name:'Controlador',role:'Mágico',icon:'✦',mana:100,slots:12,weight:25,skillCount:5,
+      description:'Especialista em controle, canalização e manipulação de Mana.',
+      startingItems:['Canalizador de Mana (pulseira básica)'],
+      itemNote:'Equipamento inicial focado em canalização manual.',
+      trainedSkills:['Conhecimento','Ofício / Crafting','Percepção','Investigação','Intuição']},
+    curandeiro:{id:'curandeiro',name:'Curandeiro',role:'Suporte',icon:'✚',mana:80,slots:14,weight:30,skillCount:4,
+      description:'Especialista em suporte, recuperação e uso de Mana sobre aliados.',
+      startingItems:['Livro de poções','Canalizador de Mana (anel básico)'],
+      itemNote:'Preparado para suporte e recuperação.',
+      trainedSkills:['Medicina','Conhecimento','Intuição','Percepção']},
+    monge:{id:'monge',name:'Monge',role:'Marcial',icon:'◈',mana:30,slots:10,weight:20,skillCount:6,
+      description:'Transforma Mana em capacidade corporal, mobilidade e força física.',
+      startingItems:['Armas básicas (facas e adagas)','Bastão Bo'],
+      itemNote:'Pode lutar com armas básicas e canalizar Mana através do corpo.',
+      trainedSkills:['Acrobacia','Atletismo','Furtividade','Intuição','Tática','Sobrevivência']}
   };
   const SKILLS = [
     ['acrobacia','Acrobacia','agilidade','Equilíbrio, saltos e movimentos difíceis.'],['atletismo','Atletismo','forca','Corrida, escalada, natação e feitos físicos.'],
