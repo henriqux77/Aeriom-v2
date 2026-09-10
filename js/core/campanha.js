@@ -2674,6 +2674,8 @@ function validTab(
 
     "timeline",
 
+    "knowledge",
+
     "kitchen",
 
     "maps",
