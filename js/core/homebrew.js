@@ -20,16 +20,32 @@ function fillSource(x){
   $("hb-source-visibility").value=x?.visibility||"private";$("hb-source-status").value=x?.status||"draft";$("hb-source-version").value=x?.version||"1.0.0";
   $("hb-source-delete").hidden=!x;$("hb-source-share").hidden=!x||x.status!=="published"||x.visibility==="private";
 }
+async function ensureWorkspaceSource(){
+  if(S.sourceId && source()) return source();
+  if(S.sources[0]){S.sourceId=S.sources[0].id;return source();}
+  const payload={owner_id:S.user.id,name:"AERION Homebrew",slug:"aerion-homebrew",description:"Conteúdo criado pelo usuário para o AERION.",visibility:"private",status:"draft",version:"1.0.0"};
+  const r=await S.sb.from("homebrew_sources").insert(payload).select().single();if(r.error)throw r.error;
+  S.sources=[r.data];S.sourceId=r.data.id;return r.data;
+}
 async function loadSources(){
-  const r=await S.sb.from("homebrew_sources").select("*").order("updated_at",{ascending:false});if(r.error)throw r.error;S.sources=r.data||[];renderSources();
-  if(S.sourceId&&S.sources.some(x=>x.id===S.sourceId))return selectSource(S.sourceId);
-  if(S.sources[0])return selectSource(S.sources[0].id);
-  openWorkspace(true);fillSource(null);
+  const r=await S.sb.from("homebrew_sources").select("*").order("updated_at",{ascending:false});if(r.error)throw r.error;S.sources=r.data||[];
+  if(S.sourceId&&S.sources.some(x=>x.id===S.sourceId)){}else if(S.sources[0])S.sourceId=S.sources[0].id;
+  openWorkspace(false);fillSource(source()||null);
+  await loadAllContent();
 }
-async function selectSource(id){S.sourceId=id;renderSources();const x=source();if(!x){openWorkspace(true);return;}openWorkspace(false);fillSource(x);await loadContent();}
-async function loadContent(){
-  const x=source();if(!x)return;const r=await S.sb.from("homebrew_content").select("*").eq("source_id",x.id).order("sort_order").order("updated_at",{ascending:false});if(r.error)throw r.error;S.content=r.data||[];renderContent();
+async function loadAllContent(){
+  if(!S.sources.length){S.content=[];renderContent();return;}
+  const all=[];
+  for(const x of S.sources){
+    const r=await S.sb.from("homebrew_content").select("*").eq("source_id",x.id).order("sort_order").order("updated_at",{ascending:false});
+    if(r.error)throw r.error;
+    (r.data||[]).forEach(item=>all.push({...item,homebrew_source:x}));
+  }
+  S.content=all;
+  renderContent();
 }
+async function selectSource(id){S.sourceId=id;renderSources();const x=source();if(!x){openWorkspace(false);await loadAllContent();return;}openWorkspace(false);fillSource(x);await loadAllContent();}
+async function loadContent(){return loadAllContent();}
 function renderContent(){
   const root=$("hb-content-list");root.innerHTML="";
   const q=String($("hb-content-search")?.value||"").trim().toLowerCase();
@@ -99,15 +115,15 @@ function syncStructuredData(){
 }
 function readData(){try{const v=JSON.parse($("hb-content-data").value||"{}");if(!v||Array.isArray(v)||typeof v!=="object")throw new Error();return v;}catch(e){throw new Error("Os dados estruturados precisam ser um JSON de objeto válido.");}}
 async function saveSource(){
-  const name=$("hb-source-name").value.trim();if(!name)throw new Error("Informe o nome do livro.");
-  const payload={name,slug:slug($("hb-source-slug").value||name),description:$("hb-source-description").value.trim()||null,visibility:$("hb-source-visibility").value,status:$("hb-source-status").value,version:$("hb-source-version").value.trim()||"1.0.0"};
-  let r=S.sourceId?await S.sb.from("homebrew_sources").update(payload).eq("id",S.sourceId).select().single():await S.sb.from("homebrew_sources").insert({...payload,owner_id:S.user.id}).select().single();
-  if(r.error)throw r.error;if(!S.sourceId)S.sourceId=r.data.id;await loadSources();toast("Livro salvo.","success");
+  const name=$("hb-source-name").value.trim()||"AERION Homebrew";
+  const payload={name,slug:slug($("hb-source-slug").value||name),description:$("hb-source-description").value.trim()||"Conteúdo Homebrew do AERION.",visibility:$("hb-source-visibility").value,status:$("hb-source-status").value,version:$("hb-source-version").value.trim()||"1.0.0"};
+  const r=S.sourceId?await S.sb.from("homebrew_sources").update(payload).eq("id",S.sourceId).select().single():await S.sb.from("homebrew_sources").insert({...payload,owner_id:S.user.id}).select().single();
+  if(r.error)throw r.error;if(!S.sourceId)S.sourceId=r.data.id;await loadSources();toast("Configurações salvas.","success");
 }
 async function deleteSource(){const x=source();if(!x)return;if(!confirm("Excluir o livro "+x.name+" e todo o conteúdo?"))return;const r=await S.sb.from("homebrew_sources").delete().eq("id",x.id);if(r.error)throw r.error;S.sourceId=null;await loadSources();toast("Livro excluído.","success");}
 async function revisionVersion(id){const r=await S.sb.from("homebrew_content_revisions").select("version").eq("content_id",id).order("version",{ascending:false}).limit(1);if(r.error)throw r.error;return Number(r.data?.[0]?.version||0)+1;}
 async function saveContent(){
-  const src=source();if(!src)throw new Error("Selecione um livro.");
+  const src=await ensureWorkspaceSource();
   syncStructuredData();
   const title=$("hb-content-title").value.trim();if(!title)throw new Error("Informe o título da entrada.");
   const payload={source_id:src.id,owner_id:S.user.id,content_type:$("hb-content-type").value,status:$("hb-content-status").value,title,slug:slug($("hb-content-slug").value||title),summary:$("hb-content-summary").value.trim()||null,content:$("hb-content-body").value.trim()||null,tags:$("hb-content-tags").value.split(",").map(x=>x.trim()).filter(Boolean),data:readData()};
@@ -129,7 +145,7 @@ async function loadCampaignBooks(c){
 function renderCampaigns(){
   const root=$("hb-campaign-list");root.innerHTML="";
   if(!S.campaigns.length){root.innerHTML='<div class="hb-empty">Você não é Mestre de nenhuma campanha.</div>';return;}
-  S.campaigns.forEach(c=>{const card=document.createElement("article");card.className="hb-content-row";const info=document.createElement("div");const h=document.createElement("strong");h.textContent=c.name;const sm=document.createElement("small");sm.textContent=c.books.length+" livro(s) anexado(s)";info.append(h,sm);const btn=document.createElement("button");btn.className="hb-btn";btn.textContent="＋ Anexar";btn.onclick=()=>attach(c);const chips=document.createElement("div");(c.books||[]).forEach(b=>{const d=document.createElement("span");d.className="hb-source";d.style.display="inline-block";d.style.width="auto";d.textContent=(b.homebrew_sources?.name||"Livro")+" ×";d.onclick=()=>removeAttachment(b.id);chips.appendChild(d)});card.append(info,btn,chips);root.appendChild(card);});
+  S.campaigns.forEach(c=>{const card=document.createElement("article");card.className="hb-content-row";const info=document.createElement("div");const h=document.createElement("strong");h.textContent=c.name;const sm=document.createElement("small");sm.textContent=c.books.length+" livro(s) anexado(s)";info.append(h,sm);const btn=document.createElement("button");btn.className="hb-btn";btn.textContent="＋ Adicionar";btn.onclick=()=>attach(c);const chips=document.createElement("div");(c.books||[]).forEach(b=>{const d=document.createElement("span");d.className="hb-source";d.style.display="inline-block";d.style.width="auto";d.textContent=(b.homebrew_sources?.name||"Livro")+" ×";d.onclick=()=>removeAttachment(b.id);chips.appendChild(d)});card.append(info,btn,chips);root.appendChild(card);});
 }
 async function attach(c){
   const available=S.sources.filter(x=>x.status==="published"&&x.visibility!=="private");if(!available.length)return toast("Publique um livro e deixe-o não privado para anexá-lo.","error");
@@ -160,7 +176,7 @@ function realtime(){
   S.channels.push(ch);
 }
 function bind(){
-  $("hb-new-source").onclick=()=>{S.sourceId=null;renderSources();fillSource(null);openWorkspace(false);$("hb-content-list").innerHTML="";};
+  $("hb-new-source").onclick=()=>openEditor();
   $("hb-empty-new").onclick=()=>$("hb-new-source").click();
   $("hb-source-name").oninput=()=>{if(!$("hb-source-slug").dataset.manual)$("hb-source-slug").value=slug($("hb-source-name").value);};
   $("hb-source-slug").oninput=()=>{$("hb-source-slug").dataset.manual="1";};
