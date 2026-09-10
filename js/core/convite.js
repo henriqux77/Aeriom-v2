@@ -775,60 +775,6 @@ async function generateInvite(
     }
 
 
-    const {
-      data:
-        membership,
-      error:
-        membershipError
-    } =
-      await supabase
-        .from(
-          "campaign_members"
-        )
-        .select(
-          "role"
-        )
-        .eq(
-          "campaign_id",
-          campaignId
-        )
-        .eq(
-          "user_id",
-          userId
-        )
-        .maybeSingle();
-
-
-    if (
-      membershipError
-    ) {
-
-      throw membershipError;
-
-    }
-
-
-    if (
-      String(
-        membership?.role ||
-        ""
-      ).toLowerCase() !==
-      "master"
-    ) {
-
-      const error =
-        new Error(
-          "master_required"
-        );
-
-      error.code =
-        "42501";
-
-      throw error;
-
-    }
-
-
     log(
       "info",
       "Solicitando novo convite.",
