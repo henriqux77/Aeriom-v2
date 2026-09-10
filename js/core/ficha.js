@@ -78,17 +78,30 @@
   function currentCharacterId(){var p=new URLSearchParams(window.location.search);return p.get('id')||p.get('draft')||'unassigned';}
   function storageKey(){return characterStorageKey(currentCharacterId());}
   function normalizeGender(value){var v=txt(value).toLowerCase();return v==='feminino'?'Feminino':v==='masculino'?'Masculino':'';}
-  function getAgeRange(){var a=window.AERIONPersonagemAssets;if(!a||typeof a.getAgeRange!=='function')return{min:1,max:999};return a.getAgeRange(state.race,state.animalha);}
+  function getAgeRange(){if(String(state.race||'').indexOf('homebrew:')===0){var hb=window.AERION_HOMEBREW||{};var hr=(hb.races||[]).find(function(x){return 'homebrew:'+x.id===state.race;});var d=hr?.data||{};if(Number.isFinite(Number(d.age_min))||Number.isFinite(Number(d.age_max)))return{min:num(d.age_min,1),max:num(d.age_max,999)};}var a=window.AERIONPersonagemAssets;if(!a||typeof a.getAgeRange!=='function')return{min:1,max:999};return a.getAgeRange(state.race,state.animalha);}
   function validAge(){var n=num(state.age,-1),r=getAgeRange();return n>=r.min&&n<=r.max;}
   function calculateDerived(){
-    var racial=window.AERION_RACIAL_RULES && window.AERION_RACIAL_RULES.calculate ? window.AERION_RACIAL_RULES.calculate(state) : null;
+    var hb=window.AERION_HOMEBREW||{};
+    var racial;
+    if(String(state.race||'').indexOf('homebrew:')===0){
+      var hr=(hb.races||[]).find(function(x){return 'homebrew:'+x.id===state.race;});
+      if(hr){
+        var d=hr.data||{};
+        racial={hp:Math.max(1,num(d.hp,10)),defense:Math.max(1,num(d.defense,10)),movement:num(d.movement,9),mods:d.mods||{},size:d.size||'Médio',resistances:Array.isArray(d.resistances)?d.resistances:[],senses:Array.isArray(d.senses)?d.senses:[],abilities:Array.isArray(d.abilities)?d.abilities:[]};
+      }
+    }
+    if(!racial) racial=window.AERION_RACIAL_RULES && window.AERION_RACIAL_RULES.calculate ? window.AERION_RACIAL_RULES.calculate(state) : null;
     if(racial){
       state.derivedStats=Object.assign({},state.derivedStats,racial,{hpMax:num(racial.hp,10),defense:num(racial.defense,10),movement:num(racial.movement,9),racialModifiers:racial.mods||{},abilities:racial.abilities||[],resistances:racial.resistances||[],senses:racial.senses||[]});
       state.hp.max=Math.max(1,num(racial.hp,10)); state.hp.current=Math.min(Math.max(0,num(state.hp.current,state.hp.max)),state.hp.max);
       state.defense=Math.max(1,num(racial.defense,10)); state.movement=Math.max(0,num(racial.movement,9));
     }
     var k=CLASSES[state.class];
-    if(k){state.mana.max=k.mana;state.mana.current=Math.min(Math.max(0,num(state.mana.current,k.mana)),k.mana);}else{state.mana.max=0;state.mana.current=0;}
+    if(String(state.class||'').indexOf('homebrew:')===0){
+      var hc=(hb.classes||[]).find(function(x){return 'homebrew:'+x.id===state.class;});
+      if(hc){k=Object.assign({},hc.data||{},{id:state.class,name:hc.title||'Classe Homebrew',mana:num(hc.data?.mana,0),slots:num(hc.data?.slots,0),weight:num(hc.data?.weight,0),skillCount:Array.isArray(hc.data?.trained_skills)?hc.data.trained_skills.length:0,description:hc.summary||hc.content||'Classe Homebrew'});}
+    }
+    if(k){state.mana.max=num(k.mana,0);state.mana.current=Math.min(Math.max(0,num(state.mana.current,k.mana)),k.mana);}else{state.mana.max=0;state.mana.current=0;}
   }
   function computeCompletion(){
     state.completedSteps[0]=!!(txt(state.name)&&txt(state.gender));
@@ -103,10 +116,10 @@
   function reset(){state=DEFAULT();calculateDerived();computeCompletion();localStorage.removeItem(storageKey());saveLocal(true);renderRequest();}
   function load(){try{var raw=localStorage.getItem(storageKey());if(raw){var saved=JSON.parse(raw),d=DEFAULT();state=Object.assign(d,saved,{gender:normalizeGender(saved.gender),appearance:Object.assign({},d.appearance,saved.appearance||{}),mana:Object.assign({},d.mana,saved.mana||{},{unlocked:Array.from(new Set(['azul',...(saved.mana?.unlocked||[])]))}),hp:Object.assign({},d.hp,saved.hp||{}),derivedStats:Object.assign({},d.derivedStats,saved.derivedStats||{})});}}catch(e){state=DEFAULT();}calculateDerived();computeCompletion();}
   function setState(partial){state=Object.assign({},state,clone(partial),{gender:normalizeGender(partial.gender===undefined?state.gender:partial.gender),appearance:Object.assign({},state.appearance,partial.appearance||{}),mana:Object.assign({},state.mana,partial.mana||{},{unlocked:Array.from(new Set(['azul',...(partial.mana?.unlocked||state.mana.unlocked||[])]))}),hp:Object.assign({},state.hp,partial.hp||{}),derivedStats:Object.assign({},state.derivedStats,partial.derivedStats||{})});calculateDerived();computeCompletion();saveLocal(false);renderRequest();}
-  function selectRace(v){state.race=txt(v);state.animalha='';state.animalhaCategory='';state.appearance.coatTone='';var a=window.AERIONPersonagemAssets;var h=a&&a.getRaceHeight?a.getRaceHeight(state.race):null;if(h)state.appearance.height=Math.round((num(h.min,150)+num(h.max,200))/2);calculateDerived();if(state.hp&&state.hp.max)state.hp.current=state.hp.max;commit('aerion:race:selected');}
+  function selectRace(v){state.race=txt(v);state.animalha='';state.animalhaCategory='';state.appearance.coatTone='';var h=null;if(state.race.indexOf('homebrew:')===0){var hb=window.AERION_HOMEBREW||{};var hr=(hb.races||[]).find(function(x){return 'homebrew:'+x.id===state.race;});if(hr&&hr.data)h={min:num(hr.data.height_min,150),max:num(hr.data.height_max,200)};}if(!h){var a=window.AERIONPersonagemAssets;h=a&&a.getRaceHeight?a.getRaceHeight(state.race):null;}if(h)state.appearance.height=Math.round((num(h.min,150)+num(h.max,200))/2);calculateDerived();if(state.hp&&state.hp.max)state.hp.current=state.hp.max;commit('aerion:race:selected');}
   function selectAnimalCategory(v){state.animalhaCategory=txt(v);state.animalha='';state.appearance.coatTone='';commit('aerion:animalha:category');}
   function selectAnimal(v){state.animalha=txt(v);calculateDerived();if(state.hp&&state.hp.max)state.hp.current=state.hp.max;commit('aerion:animalha:selected');}
-  function selectClass(v){var k=CLASSES[txt(v)];if(!k)return false;state.class=k.id;state.mana.max=k.mana;state.mana.current=k.mana;commit('aerion:class:selected');return true;}
+  function selectClass(v){var id=txt(v),k=CLASSES[id];if(!k&&id.indexOf('homebrew:')===0){var hb=window.AERION_HOMEBREW||{};var hc=(hb.classes||[]).find(function(x){return 'homebrew:'+x.id===id;});if(hc){k=Object.assign({},hc.data||{},{id:id,name:hc.title||'Classe Homebrew',mana:num(hc.data?.mana,0)});}}if(!k)return false;state.class=k.id;state.mana.max=num(k.mana,0);state.mana.current=state.mana.max;commit('aerion:class:selected');return true;}
   function selectGender(v){var g=normalizeGender(v);if(!g)return false;state.gender=g;commit('aerion:gender:selected');return true;}
   function assignDie(a,d){if(!ATTRIBUTES.some(function(x){return x.id===a;})||!DICE.some(function(x){return x.id===d;}))return false;Object.keys(state.assignedDice).forEach(function(k){if(k!==a&&state.assignedDice[k]===d)delete state.assignedDice[k];});state.assignedDice[a]=d;commit('aerion:attributes:update');return true;}
   function removeDie(a){delete state.assignedDice[a];commit('aerion:attributes:update');}
