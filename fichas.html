@@ -165,7 +165,15 @@
   </div>
 </article>
 <article class="power-custom"><span>OUTRO PODER</span><h3>Criação própria</h3><label>Nome<input data-power="customPower" maxlength="120" placeholder="Nome do poder"></label><label>Descrição<textarea data-power="customDescription" rows="4" maxlength="1200" placeholder="Explique a ideia, aparência ou limitações."></textarea></label></article>
-<article class="mana-card"><div class="mana-orb"><div class="mana-flame" aria-hidden="true"><span></span><i></i><b></b></div><strong class="mana-orb-value" id="mana-value">0</strong><span>MAX</span></div><div class="mana-copy"><span>RESERVA DA CLASSE</span><h3>Mana</h3><p id="mana-class-label">Escolha uma classe.</p></div><div class="mana-mini"><span>ATUAL</span><input id="mana-current" data-mana="current" type="number" min="0" inputmode="numeric"></div><div class="mana-colors"><div class="mana-colors__head"><span>COR DA MANA</span><small id="mana-colors-help">Na criação, somente Azul está liberada.</small></div><div id="mana-colors-grid" class="mana-colors__grid"></div></div></article>
+<article class="mana-card"><div class="mana-orb"><div class="mana-flame" aria-hidden="true"><span></span><i></i><b></b></div><strong class="mana-orb-value" id="mana-value">0</strong><span>MAX</span></div><div class="mana-copy"><span>RESERVA DA CLASSE</span><h3>Mana</h3><p id="mana-class-label">Escolha uma classe.</p></div><div class="mana-mini"><span>ATUAL</span><input id="mana-current" data-mana="current" type="number" min="0" inputmode="numeric"></div><div class="mana-colors"><div class="mana-colors__head"><span>COR DA MANA</span><small id="mana-colors-help">Na criação, somente Azul está liberada.</small></div><div id="mana-colors-grid" class="mana-colors__grid"></div></div>
+<div class="mana-channeling-card">
+  <div><span>CANALIZAÇÃO MANUAL</span><h3>Seu canalizador</h3><p>Escolha o equipamento inicial da classe. O AERIOM usará isso como base para a progressão de canalização.</p></div>
+  <div id="mana-channeler-options" class="mana-channeler-options">
+    <button type="button" data-channeler="none">Sem canalizador</button>
+    <button type="button" data-channeler="ring">💍 Anel básico</button>
+    <button type="button" data-channeler="bracelet">📿 Pulseira básica</button>
+  </div>
+</div></article>
 </div><div id="power-summary" class="context-card" hidden></div>
 </section>
 <section class="creation-panel" data-panel="skills" hidden>
