@@ -9,7 +9,8 @@ import { getSupabase } from "./supabase.js";
     campaignId: null,
     current: null,
     observer: null,
-    masterCardReady: false
+    masterCardReady: false,
+    started: false
   };
 
   const $ = id => document.getElementById(id);
@@ -201,6 +202,8 @@ import { getSupabase } from "./supabase.js";
   }
 
   async function start() {
+    if (state.started) return;
+    state.started = true;
     injectStyles();
     state.campaignId = campaignId();
     if (!state.campaignId) return;
