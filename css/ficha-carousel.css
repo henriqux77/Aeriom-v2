@@ -592,3 +592,55 @@
     animation:none !important;
   }
 }
+
+
+/* =========================================================
+   PERFORMANCE v4 — transição mais leve, especialmente mobile
+   ========================================================= */
+.race-card.aerion-carousel-card,
+.class-card.aerion-carousel-card{
+  transition:
+    transform .34s cubic-bezier(.22,.72,.28,1),
+    opacity .24s ease;
+  filter:none !important;
+}
+
+.race-card.aerion-carousel-card:not(.is-selected),
+.class-card.aerion-carousel-card:not(.is-selected){
+  filter:none !important;
+}
+
+.race-card.aerion-carousel-card:not(.is-selected) .race-art,
+.class-card.aerion-carousel-card:not(.is-selected) .class-icon{
+  filter:none !important;
+}
+
+.aerion-carousel-nav{
+  transition:transform .14s ease, border-color .14s ease, box-shadow .14s ease;
+}
+
+.aerion-carousel-nav:hover{
+  transform:translateY(-50%) scale(1.045);
+}
+
+@media(max-width:700px){
+  .card-grid.races,
+  .class-grid{
+    perspective:900px;
+    --carousel-gap:min(100px, 21vw);
+  }
+
+  .race-card.aerion-carousel-card,
+  .class-card.aerion-carousel-card{
+    transition:
+      transform .29s cubic-bezier(.22,.72,.28,1),
+      opacity .20s ease;
+  }
+}
+
+@media(prefers-reduced-motion:reduce){
+  .race-card.aerion-carousel-card,
+  .class-card.aerion-carousel-card{
+    transition:none !important;
+  }
+}
