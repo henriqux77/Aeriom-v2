@@ -260,3 +260,156 @@
     scroll-behavior: auto !important;
   }
 }
+
+
+/* Ajuste visual v2 — cartões verticais */
+.race-card.aerion-carousel-card,
+.class-card.aerion-carousel-card{
+  display:flex !important;
+  flex-direction:column !important;
+  align-items:stretch !important;
+  justify-content:flex-end !important;
+  text-align:left;
+  padding:14px !important;
+  overflow:hidden;
+  min-height:350px !important;
+  height:350px !important;
+  box-sizing:border-box;
+  border-radius:18px !important;
+}
+
+.card-grid.races,
+.class-grid{
+  --carousel-card-width:min(300px, 74vw);
+  --carousel-card-height:350px;
+  min-height:calc(var(--carousel-card-height) + 52px) !important;
+  padding-bottom:42px !important;
+}
+
+.race-card.aerion-carousel-card .race-art{
+  width:100% !important;
+  height:205px !important;
+  flex:0 0 205px !important;
+  margin:0 0 12px !important;
+  border-radius:14px !important;
+  background:rgba(255,255,255,.035) !important;
+  display:grid !important;
+  place-items:center !important;
+}
+
+.race-card.aerion-carousel-card .race-art img{
+  width:100% !important;
+  height:100% !important;
+  object-fit:contain !important;
+  transform:scale(1) !important;
+}
+
+.race-card.aerion-carousel-card .required-badge,
+.class-card.aerion-carousel-card .required-badge{
+  display:inline-flex !important;
+  width:max-content;
+  margin-bottom:5px;
+}
+
+.race-card.aerion-carousel-card strong,
+.class-card.aerion-carousel-card .class-body strong{
+  font-size:18px !important;
+  line-height:1.05;
+}
+
+.race-card.aerion-carousel-card small,
+.class-card.aerion-carousel-card .class-body p{
+  font-size:8px !important;
+  line-height:1.45;
+  margin-top:5px !important;
+}
+
+.race-card.aerion-carousel-card .check,
+.class-card.aerion-carousel-card .check{
+  position:absolute !important;
+  top:12px !important;
+  right:12px !important;
+  width:24px;
+  height:24px;
+  display:grid;
+  place-items:center;
+  border-radius:50%;
+  background:rgba(0,0,0,.38);
+}
+
+.class-card.aerion-carousel-card{
+  justify-content:space-between !important;
+  gap:12px !important;
+}
+
+.class-card.aerion-carousel-card .class-icon{
+  width:100% !important;
+  height:135px !important;
+  flex:0 0 135px !important;
+  display:grid !important;
+  place-items:center !important;
+  border-radius:15px !important;
+  font-size:54px !important;
+  margin:0 !important;
+}
+
+.class-card.aerion-carousel-card .class-body{
+  display:block;
+  width:100%;
+}
+
+.class-card.aerion-carousel-card .class-body > span:not(.required-badge){
+  font-size:8px !important;
+}
+
+.class-card.aerion-carousel-card aside{
+  width:100%;
+  padding:10px 0 0 !important;
+  border-left:0 !important;
+  border-top:1px solid var(--fx-line);
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  align-items:center;
+  text-align:center;
+}
+
+.class-card.aerion-carousel-card aside b{
+  font-size:17px !important;
+}
+
+.class-card.aerion-carousel-card aside em{
+  font-size:7px !important;
+}
+
+@media(max-width:700px){
+  .card-grid.races,
+  .class-grid{
+    --carousel-card-width:min(300px,74vw);
+    --carousel-card-height:350px;
+  }
+}
+
+@media(max-width:390px){
+  .card-grid.races,
+  .class-grid{
+    --carousel-card-width:78vw;
+    --carousel-card-height:325px;
+  }
+
+  .race-card.aerion-carousel-card,
+  .class-card.aerion-carousel-card{
+    min-height:325px !important;
+    height:325px !important;
+  }
+
+  .race-card.aerion-carousel-card .race-art{
+    height:180px !important;
+    flex-basis:180px !important;
+  }
+
+  .class-card.aerion-carousel-card .class-icon{
+    height:115px !important;
+    flex-basis:115px !important;
+    font-size:46px !important;
+  }
+}
