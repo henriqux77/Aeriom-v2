@@ -3887,7 +3887,7 @@
           </div>
           ${isMaster() ? `
             <div class="aeriom-modal-actions">
-              <button class="campaign-button campaign-button--secondary" type="button" data-create-knowledge>🧠 Conhecimento</button>
+              <button class="campaign-button campaign-button--secondary" type="button" data-create-knowledge>🧠 Abrir conhecimento</button>
               <button class="campaign-button campaign-button--secondary" type="button" data-edit-pin>Editar</button>
               <button class="campaign-button campaign-button--secondary" type="button" data-toggle-pin>
                 ${pin.is_hidden ? "Revelar aos jogadores" : "Ocultar dos jogadores"}
@@ -3903,10 +3903,12 @@
 
     modal.querySelector("[data-create-knowledge]")?.addEventListener("click", async () => {
       try {
+        const existing=pin.metadata?.knowledge_node_id;
+        if(existing){ modal.classList.remove("is-open"); setActiveTab("knowledge"); return; }
         const created = await APP.supabase.from("aerion_mind_nodes").insert({
           campaign_id:APP.campaignId,created_by:APP.user.id,title:pin.title,
           content:pin.description||null,node_type:"location",color:"#8b6f36",
-          pos_x:35,pos_y:35,visibility:"public"
+          pos_x:36,pos_y:36,visibility:"public"
         }).select("*").single();
         if(created.error) throw created.error;
         const up = await APP.supabase.from("map_pins").update({
