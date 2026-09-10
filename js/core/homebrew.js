@@ -137,6 +137,20 @@ async function attach(c){
   const r=await S.sb.from("homebrew_campaign_sources").insert({campaign_id:c.id,source_id:x.id,attached_by:S.user.id});if(r.error)throw r.error;await loadCampaigns();toast("Livro anexado.","success");
 }
 async function removeAttachment(id){const r=await S.sb.from("homebrew_campaign_sources").delete().eq("id",id);if(r.error)throw r.error;await loadCampaigns();toast("Livro removido.","success");}
+async function openPublicBook(bookId){
+  const view=$("hb-public-view");if(!view)return;
+  const src=await S.sb.from("homebrew_sources").select("id,name,slug,description,version,visibility,status,updated_at").eq("id",bookId).eq("status","published").maybeSingle();
+  if(src.error||!src.data||src.data.visibility==="private"){view.innerHTML='<div class="hb-welcome"><strong>⚠</strong><h2>Livro não disponível</h2><p>Este conteúdo é privado ou não está publicado.</p></div>';view.hidden=false;document.querySelector(".hb-main")?.classList.add("hb-main-public");return;}
+  const cr=await S.sb.from("homebrew_content").select("id,title,content_type,summary,content,tags,data").eq("source_id",bookId).eq("status","published").order("sort_order").order("updated_at",{ascending:false});
+  if(cr.error)throw cr.error;
+  view.innerHTML='<div class="hb-public-shell"><div class="hb-public-back"><a href="./homebrew.html">← Abrir Homebrew</a></div><header><span>HOME BREW PUBLICADO</span><h1>'+String(src.data.name).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))+'</h1><p>'+String(src.data.description||'Seu livro de regras do AERION.').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))+'</p><small>Versão '+src.data.version+'</small></header><div class="hb-public-entries"></div></div>';
+  const root=view.querySelector(".hb-public-entries");
+  (cr.data||[]).forEach(x=>{const card=document.createElement("article");card.className="hb-public-entry";card.innerHTML='<span class="hb-public-type">'+(TYPES[x.content_type]||x.content_type)+'</span><h2></h2><p class="hb-public-summary"></p>';card.querySelector("h2").textContent=x.title;card.querySelector(".hb-public-summary").textContent=x.summary||"";const body=document.createElement("div");body.className="hb-public-body";body.textContent=x.content||"";card.appendChild(body);const d=x.data||{};if(d.image_url){const im=document.createElement("img");im.src=d.image_url;im.alt=x.title;im.loading="lazy";im.className="hb-public-image";card.prepend(im);}if(Array.isArray(d.starting_items)&&d.starting_items.length){const b=document.createElement("div");b.className="hb-public-list";b.innerHTML="<strong>Itens iniciais</strong><ul>"+d.starting_items.map(i=>"<li></li>").join("")+"</ul>";d.starting_items.forEach((i,n)=>b.querySelectorAll("li")[n].textContent=i);card.appendChild(b);}if(Array.isArray(d.trained_skills)&&d.trained_skills.length){const b=document.createElement("div");b.className="hb-public-list";b.innerHTML="<strong>Perícias treinadas</strong><ul>"+d.trained_skills.map(i=>"<li></li>").join("")+"</ul>";d.trained_skills.forEach((i,n)=>b.querySelectorAll("li")[n].textContent=i);card.appendChild(b);}root.appendChild(card);});
+  document.querySelector(".hb-sidebar")?.setAttribute("hidden","");
+  document.querySelector(".hb-grid")?.setAttribute("hidden","");
+  view.hidden=false;
+}
+
 function realtime(){
   const ch=S.sb.channel("aeriom-homebrew")
     .on("postgres_changes",{event:"*",schema:"public",table:"homebrew_sources"},()=>loadSources().catch(e=>toast(e.message,"error")))
@@ -162,7 +176,7 @@ function bind(){
   $("hb-refresh-campaigns").onclick=()=>loadCampaigns().catch(e=>toast(e.message,"error"));
 }
 async function boot(){
-  try{S.sb=await getSupabase();const u=await S.sb.auth.getUser();if(u.error)throw u.error;S.user=u.data.user;if(!S.user){location.replace("./index.html");return;}bind();await loadSources();await loadCampaigns();realtime();}
+  try{S.sb=await getSupabase();const u=await S.sb.auth.getUser();if(u.error)throw u.error;S.user=u.data.user;const bookId=new URLSearchParams(location.search).get("book");if(bookId){await openPublicBook(bookId);return;}if(!S.user){location.replace("./index.html");return;}bind();await loadSources();await loadCampaigns();realtime();}
   catch(e){$("hb-connection").textContent="Erro";toast(e.message||"Falha ao iniciar o Homebrew","error");console.error("[AERIOM][HOMEBREW]",e);}
 }
 boot();
