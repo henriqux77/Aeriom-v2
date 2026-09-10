@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#090807"><title>AERIOM — Tutoriais</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="./css/aeriom.css"><link rel="stylesheet" href="./css/tutorials.css"></head>
+<body class="aeriom-page aeriom-page--tutorials">
+<div class="tutorial-shell">
+<header class="tutorial-topbar"><a class="tutorial-back" href="./campanhas.html">←</a><div><p>AERIOM</p><h1>Central de Tutoriais</h1><span>Aprenda o site fazendo junto.</span></div></header>
+<main class="tutorial-main">
+<section class="tutorial-hero"><div><p class="tutorial-eyebrow">GUIA INTERATIVO</p><h2>Descubra como usar o AERIOM</h2><p>Escolha um tutorial e o AERIOM vai acompanhar você passo a passo, explicar cada função, mostrar exemplos e apontar para onde você precisa ir.</p></div><button id="tutorial-continue" class="tutorial-primary">▶ Continuar de onde parei</button></section>
+<section class="tutorial-grid" id="tutorial-list"></section>
+</main>
+</div>
+<div id="tutorial-overlay" class="tutorial-overlay" hidden><div class="tutorial-backdrop"></div><div id="tutorial-highlight" class="tutorial-highlight"></div><div id="tutorial-arrow" class="tutorial-arrow">➜</div><section id="tutorial-card" class="tutorial-card"><div class="tutorial-card__progress"><span id="tutorial-progress">1/1</span><button id="tutorial-close" aria-label="Fechar">×</button></div><p id="tutorial-card-eyebrow" class="tutorial-eyebrow"></p><h2 id="tutorial-card-title"></h2><p id="tutorial-card-text"></p><div id="tutorial-example" class="tutorial-example"></div><div class="tutorial-card__actions"><button id="tutorial-prev" class="tutorial-secondary">Anterior</button><button id="tutorial-next" class="tutorial-primary">Próximo</button></div></section></div>
+<script type="module" src="./js/core/tutorials.js?v=20260910-1"></script></body></html>
