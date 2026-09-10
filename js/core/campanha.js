@@ -1881,6 +1881,12 @@ async function renderUser() {
    UI — CAMPAIGN
    ============================================================ */
 
+function ensureMobileBottomNav(){
+  if(document.getElementById("aeriom-mobile-bottom-nav"))return;
+  const nav=document.createElement("nav");nav.id="aeriom-mobile-bottom-nav";nav.className="aeriom-mobile-bottom-nav";nav.setAttribute("aria-label","Atalhos da mesa");
+  [["overview","⌂","Início"],["maps","⌖","Mapa"],["knowledge","🧠","Conhec."],["combat","⚔","Combate"],["mural","▤","Mural"]].forEach(([tab,icon,label])=>{const b=document.createElement("button");b.type="button";b.dataset.bottomTab=tab;b.innerHTML="<span>"+icon+"</span><small>"+label+"</small>";b.addEventListener("click",()=>setActiveTab(tab));nav.appendChild(b)});document.body.appendChild(nav)
+}
+function syncMobileBottomNav(tab){document.querySelectorAll("#aeriom-mobile-bottom-nav [data-bottom-tab]").forEach(b=>b.classList.toggle("is-active",b.dataset.bottomTab===tab))}
 function bindTableHud() {
   if (state.tableHudBound) return;
   state.tableHudBound = true;
@@ -2744,6 +2750,9 @@ function setActiveTab(
 
   state.activeTab =
     next;
+
+  ensureMobileBottomNav();
+  syncMobileBottomNav(next);
 
 
   getElements(
