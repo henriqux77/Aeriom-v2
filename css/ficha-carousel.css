@@ -413,3 +413,182 @@
     font-size:46px !important;
   }
 }
+
+
+/* =========================================================
+   CARROSSEL v3 — acabamento visual
+   ========================================================= */
+.card-grid.races,
+.class-grid{
+  --carousel-card-width:min(300px,74vw);
+  --carousel-card-height:350px;
+  --carousel-accent:rgba(227,195,109,.95);
+  --carousel-accent-soft:rgba(227,195,109,.24);
+  --carousel-surface:#17140f;
+  --carousel-surface-deep:#0c0a08;
+  position:relative !important;
+  min-height:calc(var(--carousel-card-height) + 58px) !important;
+}
+
+/* O card central é uma peça sólida; os laterais funcionam como "cartas" visuais. */
+.race-card.aerion-carousel-card,
+.class-card.aerion-carousel-card{
+  background:
+    radial-gradient(circle at 50% 8%, rgba(255,222,154,.11), transparent 36%),
+    linear-gradient(180deg, #211c13 0%, #14110c 58%, #0c0a08 100%) !important;
+  border:1px solid rgba(227,195,109,.27) !important;
+  box-shadow:
+    0 22px 48px rgba(0,0,0,.38),
+    inset 0 1px 0 rgba(255,255,255,.05),
+    inset 0 -24px 50px rgba(0,0,0,.16) !important;
+}
+
+.race-card.aerion-carousel-card.is-selected,
+.class-card.aerion-carousel-card.is-selected{
+  border-color:rgba(227,195,109,.72) !important;
+  box-shadow:
+    0 26px 60px rgba(0,0,0,.48),
+    0 0 0 1px rgba(227,195,109,.12),
+    0 0 34px rgba(227,195,109,.12),
+    inset 0 1px 0 rgba(255,255,255,.07),
+    inset 0 -30px 60px rgba(0,0,0,.18) !important;
+}
+
+/* brilho sutil atrás do cartão selecionado */
+.race-card.aerion-carousel-card.is-selected::before,
+.class-card.aerion-carousel-card.is-selected::before{
+  content:"";
+  position:absolute;
+  inset:-2px;
+  border-radius:inherit;
+  background:linear-gradient(135deg, rgba(255,232,168,.16), transparent 35%, transparent 68%, rgba(227,195,109,.10));
+  pointer-events:none;
+  z-index:0;
+}
+
+.race-card.aerion-carousel-card > *,
+.class-card.aerion-carousel-card > *{
+  position:relative;
+  z-index:1;
+}
+
+/* LATERAIS: sem nome, sem descrição e sem metadados.
+   Apenas a imagem permanece visível para criar profundidade. */
+.race-card.aerion-carousel-card:not(.is-selected) > div:not(.race-art),
+.class-card.aerion-carousel-card:not(.is-selected) .class-body,
+.class-card.aerion-carousel-card:not(.is-selected) aside{
+  opacity:0 !important;
+  visibility:hidden !important;
+  pointer-events:none !important;
+}
+
+.race-card.aerion-carousel-card:not(.is-selected) .race-art{
+  opacity:.96;
+}
+
+.class-card.aerion-carousel-card:not(.is-selected) .class-icon{
+  opacity:.88;
+}
+
+/* efeito de "carta destacada" */
+.race-card.aerion-carousel-card .race-art{
+  background:
+    radial-gradient(circle at 50% 25%, rgba(255,235,186,.10), transparent 55%),
+    linear-gradient(180deg, rgba(255,255,255,.035), rgba(0,0,0,.12)) !important;
+  border:1px solid rgba(255,255,255,.05);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.04),
+    inset 0 -18px 28px rgba(0,0,0,.14);
+}
+
+.race-card.aerion-carousel-card.is-selected .race-art{
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.055),
+    inset 0 -18px 28px rgba(0,0,0,.16),
+    0 0 22px rgba(227,195,109,.08);
+}
+
+/* animação de destaque ao trocar de item */
+.race-card.aerion-carousel-card.is-selected .race-art img,
+.class-card.aerion-carousel-card.is-selected .class-icon{
+  animation: aerion-carousel-float 4.8s ease-in-out infinite;
+}
+
+@keyframes aerion-carousel-float{
+  0%,100%{transform:translateY(0) scale(1.015);}
+  50%{transform:translateY(-5px) scale(1.035);}
+}
+
+.aerion-carousel-nav{
+  width:48px !important;
+  height:48px !important;
+  border-color:rgba(227,195,109,.25) !important;
+  background:
+    radial-gradient(circle at 35% 28%, rgba(255,255,255,.07), transparent 42%),
+    linear-gradient(180deg, #1b1711, #0f0c09) !important;
+  box-shadow:
+    0 12px 28px rgba(0,0,0,.35),
+    0 0 0 1px rgba(0,0,0,.35),
+    inset 0 1px 0 rgba(255,255,255,.04) !important;
+  color:#f5e8c7 !important;
+}
+
+.aerion-carousel-nav:hover{
+  border-color:rgba(227,195,109,.6) !important;
+  box-shadow:
+    0 14px 32px rgba(0,0,0,.40),
+    0 0 24px rgba(227,195,109,.12),
+    inset 0 1px 0 rgba(255,255,255,.05) !important;
+}
+
+.aerion-carousel-meta{
+  background:
+    linear-gradient(180deg, rgba(33,28,20,.96), rgba(12,10,8,.96)) !important;
+  border-color:rgba(227,195,109,.18) !important;
+  box-shadow:
+    0 10px 24px rgba(0,0,0,.35),
+    0 0 18px rgba(227,195,109,.07) !important;
+  color:#f6e9cb !important;
+}
+
+.aerion-carousel-dots i{
+  background:rgba(255,255,255,.22) !important;
+}
+
+.aerion-carousel-dots i.is-active{
+  background:#e3c36d !important;
+  box-shadow:0 0 10px rgba(227,195,109,.45);
+}
+
+/* indicador de borda do card ativo */
+.race-card.aerion-carousel-card.is-selected::after,
+.class-card.aerion-carousel-card.is-selected::after{
+  content:"";
+  position:absolute;
+  inset:8px;
+  border-radius:13px;
+  border:1px solid rgba(227,195,109,.07);
+  pointer-events:none;
+  z-index:1;
+}
+
+@media(max-width:700px){
+  .race-card.aerion-carousel-card,
+  .class-card.aerion-carousel-card{
+    background:
+      radial-gradient(circle at 50% 8%, rgba(255,222,154,.10), transparent 38%),
+      linear-gradient(180deg, #211c13 0%, #15120d 60%, #0d0a08 100%) !important;
+  }
+
+  .aerion-carousel-nav{
+    width:44px !important;
+    height:44px !important;
+  }
+}
+
+@media(prefers-reduced-motion:reduce){
+  .race-card.aerion-carousel-card.is-selected .race-art img,
+  .class-card.aerion-carousel-card.is-selected .class-icon{
+    animation:none !important;
+  }
+}
