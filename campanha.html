@@ -4443,17 +4443,6 @@
       const userId = authData?.user?.id;
       if (!userId) throw new Error("Sua sessão expirou. Faça login novamente.");
 
-      const { data: membership, error: memberError } = await APP.supabase
-        .from("campaign_members")
-        .select("role")
-        .eq("campaign_id", APP.campaignId)
-        .eq("user_id", userId)
-        .maybeSingle();
-      if (memberError) throw memberError;
-      if (String(membership?.role || "").toLowerCase() !== "master") {
-        throw new Error("Somente o Mestre da campanha pode gerar convites.");
-      }
-
       const { data, error } = await APP.supabase.rpc("generate_campaign_invite", {
         p_campaign_id: APP.campaignId,
         p_max_uses: 1
