@@ -1,0 +1,262 @@
+/* AERION — seleção de Raça/Classe em carrossel 3D */
+.card-grid.races,
+.class-grid{
+  --carousel-gap: clamp(112px, 12vw, 190px);
+  --carousel-card-width: min(340px, 72vw);
+  --carousel-card-height: 430px;
+  position: relative !important;
+  display: block !important;
+  width: 100%;
+  min-height: calc(var(--carousel-card-height) + 36px);
+  margin: 18px 0 6px;
+  padding: 18px 0 40px;
+  overflow: hidden;
+  isolation: isolate;
+  perspective: 1200px;
+  perspective-origin: 50% 48%;
+  touch-action: pan-y;
+  overscroll-behavior-x: contain;
+}
+
+.card-grid.races::before,
+.class-grid::before{
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 20px;
+  width: min(560px, 68%);
+  height: 42px;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(0,0,0,.18), rgba(0,0,0,0) 72%);
+  filter: blur(8px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.race-card.aerion-carousel-card,
+.class-card.aerion-carousel-card{
+  position: absolute !important;
+  left: 50%;
+  top: 18px;
+  width: var(--carousel-card-width);
+  min-height: var(--carousel-card-height);
+  height: auto;
+  margin: 0 !important;
+  transform-origin: 50% 72%;
+  transition:
+    transform .62s cubic-bezier(.22,.78,.28,1),
+    opacity .42s ease,
+    filter .42s ease,
+    box-shadow .42s ease;
+  will-change: transform, opacity, filter;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  z-index: 1;
+}
+
+.race-card.aerion-carousel-card:hover,
+.class-card.aerion-carousel-card:hover{
+  filter: brightness(1.035);
+}
+
+.race-card.aerion-carousel-card.is-selected,
+.class-card.aerion-carousel-card.is-selected{
+  cursor: default;
+  box-shadow:
+    0 22px 55px rgba(0,0,0,.20),
+    0 5px 16px rgba(0,0,0,.10);
+}
+
+.race-card.aerion-carousel-card:focus-visible,
+.class-card.aerion-carousel-card:focus-visible{
+  outline: 3px solid rgba(230,125,45,.75);
+  outline-offset: 5px;
+}
+
+.aerion-carousel-nav{
+  position: absolute !important;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 46px;
+  height: 46px;
+  display: grid !important;
+  place-items: center;
+  border: 1px solid rgba(255,255,255,.18);
+  border-radius: 50%;
+  background: rgba(20,18,18,.86);
+  color: #fff;
+  box-shadow: 0 10px 28px rgba(0,0,0,.20);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  font-size: 25px;
+  line-height: 1;
+  cursor: pointer;
+  z-index: 50;
+  transition: transform .18s ease, background .18s ease, opacity .18s ease;
+}
+
+.aerion-carousel-nav:hover{
+  transform: translateY(-50%) scale(1.08);
+  background: rgba(20,18,18,.96);
+}
+
+.aerion-carousel-nav:active{
+  transform: translateY(-50%) scale(.95);
+}
+
+.aerion-carousel-nav:focus-visible{
+  outline: 3px solid rgba(230,125,45,.72);
+  outline-offset: 3px;
+}
+
+.aerion-carousel-nav.prev{left: 10px;}
+.aerion-carousel-nav.next{right: 10px;}
+
+.aerion-carousel-meta{
+  position: absolute;
+  left: 50%;
+  bottom: 1px;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 88px;
+  justify-content: center;
+  padding: 7px 13px;
+  border-radius: 999px;
+  background: rgba(16,14,14,.78);
+  color: rgba(255,255,255,.92);
+  border: 1px solid rgba(255,255,255,.12);
+  box-shadow: 0 8px 20px rgba(0,0,0,.16);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .10em;
+  text-transform: uppercase;
+  z-index: 60;
+  pointer-events: none;
+}
+
+.aerion-carousel-dots{
+  position: absolute;
+  left: 50%;
+  bottom: 26px;
+  display: flex;
+  gap: 5px;
+  transform: translateX(-50%);
+  z-index: 59;
+  pointer-events: none;
+}
+
+.aerion-carousel-dots i{
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.35);
+  transition: width .25s ease, background .25s ease, transform .25s ease;
+}
+
+.aerion-carousel-dots i.is-active{
+  width: 18px;
+  border-radius: 999px;
+  background: currentColor;
+}
+
+.card-grid.races .race-card.aerion-carousel-card .race-art{
+  overflow: hidden;
+  border-radius: inherit;
+}
+
+.card-grid.races .race-card.aerion-carousel-card .race-art img{
+  transform: scale(1.02);
+  transition: transform .6s ease;
+}
+
+.card-grid.races .race-card.aerion-carousel-card.is-selected .race-art img{
+  transform: scale(1.045);
+}
+
+.class-grid .class-card.aerion-carousel-card .class-icon{
+  transition: transform .6s cubic-bezier(.22,.78,.28,1);
+}
+
+.class-grid .class-card.aerion-carousel-card.is-selected .class-icon{
+  transform: scale(1.05) translateY(-2px);
+}
+
+/* O carrossel continua utilizável quando há filtro de busca. */
+.card-grid.races.is-filtered .aerion-carousel-nav,
+.card-grid.races.is-filtered .aerion-carousel-meta,
+.card-grid.races.is-filtered .aerion-carousel-dots{
+  display: none !important;
+}
+
+@media (max-width: 760px){
+  .card-grid.races,
+  .class-grid{
+    --carousel-card-width: min(290px, 76vw);
+    --carousel-card-height: 405px;
+    min-height: calc(var(--carousel-card-height) + 34px);
+    margin-top: 14px;
+    padding-top: 10px;
+  }
+
+  .race-card.aerion-carousel-card,
+  .class-card.aerion-carousel-card{
+    top: 10px;
+  }
+
+  .race-card.aerion-carousel-card,
+  .class-card.aerion-carousel-card{
+    min-height: var(--carousel-card-height);
+  }
+
+  .aerion-carousel-nav{
+    width: 42px;
+    height: 42px;
+    font-size: 22px;
+  }
+
+  .aerion-carousel-nav.prev{left: 4px;}
+  .aerion-carousel-nav.next{right: 4px;}
+
+  .aerion-carousel-meta{
+    bottom: 0;
+  }
+
+  .aerion-carousel-dots{
+    bottom: 24px;
+  }
+}
+
+@media (max-width: 430px){
+  .card-grid.races,
+  .class-grid{
+    --carousel-card-width: 78vw;
+    --carousel-card-height: 385px;
+  }
+
+  .aerion-carousel-nav{
+    width: 38px;
+    height: 38px;
+    font-size: 20px;
+  }
+
+  .card-grid.races::before,
+  .class-grid::before{
+    width: 76%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce){
+  .race-card.aerion-carousel-card,
+  .class-card.aerion-carousel-card,
+  .aerion-carousel-nav,
+  .aerion-carousel-dots i{
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
