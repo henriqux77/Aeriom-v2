@@ -35,6 +35,13 @@ import "./supabase.js";
   const esc=v=>String(v??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
   const saved=()=>{try{return JSON.parse(localStorage.getItem("aeriom.tutorial.progress")||"null")}catch{return null}};
   function save(){localStorage.setItem("aeriom.tutorial.progress",JSON.stringify({id:state.active,index:state.index}))}
+  function ensureGuideUi(){
+    if($("tutorial-overlay"))return;
+    if(!new URLSearchParams(location.search).has("tutorial"))return;
+    const wrap=document.createElement("div");
+    wrap.innerHTML='<div id="tutorial-overlay" class="tutorial-overlay" hidden><div class="tutorial-backdrop"></div><div id="tutorial-highlight" class="tutorial-highlight"></div><div id="tutorial-arrow" class="tutorial-arrow">➜</div><section id="tutorial-card" class="tutorial-card"><div class="tutorial-card__progress"><span id="tutorial-progress">1/1</span><button id="tutorial-close">×</button></div><p id="tutorial-card-eyebrow" class="tutorial-eyebrow"></p><h2 id="tutorial-card-title"></h2><p id="tutorial-card-text"></p><div id="tutorial-example" class="tutorial-example"></div><div class="tutorial-card__actions"><button id="tutorial-prev" class="tutorial-secondary">Anterior</button><button id="tutorial-next" class="tutorial-primary">Próximo</button></div></section></div>';
+    document.body.appendChild(wrap.firstElementChild);
+  }
   function renderList(){ $("tutorial-list").innerHTML=tutorials.map(t=>'<button class="tutorial-tile" type="button" data-tutorial="'+t.id+'"><span>'+t.icon+'</span><h3>'+esc(t.title)+'</h3><p>'+esc(t.desc)+'</p></button>').join(""); $("tutorial-list").querySelectorAll("[data-tutorial]").forEach(b=>b.onclick=()=>start(b.dataset.tutorial,0)); }
   function target(selector){if(!selector)return null;return document.querySelector(selector)}
   function samePageTarget(step){if(step.target)return target(step.target);return null}
@@ -51,8 +58,11 @@ import "./supabase.js";
   function start(id,index){state.active=id;state.index=index||0;$("tutorial-overlay").hidden=false;renderStep()}
   function close(){state.active=null;$("tutorial-overlay").hidden=true;$("tutorial-highlight").style.display="none";$("tutorial-arrow").style.display="none"}
   function bind(){
+    ensureGuideUi();
+    const params=new URLSearchParams(location.search),resumeId=params.get("tutorial"),resumeStep=Number(params.get("tutorialStep")||0);
+    if(resumeId&&tutorials.some(t=>t.id===resumeId)) start(resumeId,resumeStep);
     renderList();
-    $("tutorial-next").onclick=()=>{const t=tutorials.find(x=>x.id===state.active);if(!t)return;const s=t.steps[state.index];if(s.href&&!samePageTarget(s)&&state.index<t.steps.length-1){if(navigateStep(s))return}if(state.index<t.steps.length-1){state.index++;renderStep()}else{localStorage.removeItem("aeriom.tutorial.progress");close()}};
+    $("tutorial-next").onclick=()=>{const t=tutorials.find(x=>x.id===state.active);if(!t)return;const s=t.steps[state.index];if(s.href&&state.index<t.steps.length-1){if(navigateStep(s))return}if(state.index<t.steps.length-1){state.index++;renderStep()}else{localStorage.removeItem("aeriom.tutorial.progress");close()}};
     $("tutorial-prev").onclick=()=>{if(state.index>0){state.index--;renderStep()}};
     $("tutorial-close").onclick=close;
     $("tutorial-continue").onclick=()=>{const s=saved();if(s&&tutorials.some(t=>t.id===s.id))start(s.id,s.index);else start("first-steps",0)};
