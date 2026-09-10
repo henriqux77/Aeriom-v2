@@ -1,4 +1,5 @@
 import { getAvailableThemes, applyCampaignTheme } from "./theme.js";
+import "./mesa-experience.js";
 (() => {
   "use strict";
   const caveBg=new URL("../../assets/themes/cave/background.webp", import.meta.url).href;
