@@ -3,28 +3,28 @@ import "./supabase.js";
 (() => {
   "use strict";
   const tutorials = [
-    {id:"first-steps",icon:"✦",title:"Primeiros passos",desc:"Entenda o AERIOM do começo ao fim.",steps:[
+    {id:"first-steps",level:"basic",icon:"✦",title:"Primeiros passos",desc:"Entenda o AERIOM do começo ao fim.",steps:[
       {eyebrow:"COMECE AQUI",title:"Crie ou entre em uma campanha",text:"Na página de Campanhas você reúne a mesa, cria uma aventura e acessa os recursos da campanha.",example:"Crie uma campanha chamada As Ruínas de Aster e entre nela.",target:"a[href='./campanhas.html']",href:"./campanhas.html"},
       {eyebrow:"DENTRO DA CAMPANHA",title:"Use o menu lateral",text:"Mapa mostra o mundo físico. Conhecimento organiza informações. Histórico registra acontecimentos.",example:"Mapa = onde. Conhecimento = o quê, quem e por quê. Histórico = o que aconteceu.",target:".campaign-sidebar"},
       {eyebrow:"PRONTO",title:"Continue aprendendo",text:"Escolha outro tutorial para aprender fichas, combate, mapas, Conhecimento, Mural e Homebrew.",example:"Você pode sair e voltar depois."}
     ]},
-    {id:"character",icon:"♜",title:"Criar personagem",desc:"Monte sua ficha passo a passo.",steps:[
+    {id:"character",level:"basic",icon:"♜",title:"Criar personagem",desc:"Monte sua ficha passo a passo.",steps:[
       {eyebrow:"FICHA",title:"Escolha a raça",text:"O AERIOM usa um carrossel para escolher a raça e recalcula os valores derivados.",example:"Troque de raça e observe Vida e Defesa.",target:"body",href:"./fichas.html"},
       {eyebrow:"CLASSE",title:"Escolha a classe",text:"Cada classe mostra itens iniciais e perícias treinadas.",example:"Compare Guerreiro, Monge, Controlador e Curandeiro."},
       {eyebrow:"FINALIZAÇÃO",title:"Revise e salve",text:"Complete aparência, atributos e demais etapas e salve a ficha.",example:"A ficha passa a acompanhar a campanha."}
     ]},
-    {id:"campaign",icon:"⚔",title:"Campanha",desc:"Aprenda as ferramentas da mesa.",steps:[
+    {id:"campaign",level:"intermediate",icon:"⚔",title:"Campanha",desc:"Aprenda as ferramentas da mesa.",steps:[
       {eyebrow:"COMBATE",title:"Abra o combate",text:"Clique no botão abaixo. O tutorial espera sua ação e só então continua.",example:"O Mestre conduz o combate; os jogadores acompanham.",target:"[data-campaign-tab='combat']",requireClick:true},
       {eyebrow:"MAPA",title:"Abra Mapas & Regiões",text:"Clique para entrar na área de mapas.",example:"Os mapas cuidam do espaço físico da aventura.",target:"[data-campaign-tab='maps']",requireClick:true},
       {eyebrow:"CONHECIMENTO",title:"Abra Conhecimento",text:"Clique para entrar na central de informações.",example:"Mira → conhece → Mina Abandonada.",target:"[data-campaign-tab='knowledge']",requireClick:true},
       {eyebrow:"HISTÓRICO",title:"Histórico",text:"A linha do tempo registra acontecimentos da mesa.",example:"Registre uma descoberta importante.",target:"[data-campaign-tab='timeline']"}
     ]},
-    {id:"knowledge",icon:"🧠",title:"Conhecimento",desc:"Construa a inteligência do mundo.",steps:[
+    {id:"knowledge",level:"advanced",icon:"🧠",title:"Conhecimento",desc:"Construa a inteligência do mundo.",steps:[
       {eyebrow:"ENTIDADE",title:"Crie conhecimento",text:"Uma entidade pode ser NPC, local, pista, quest, facção, item, evento ou nota.",example:"NPC: Mira, a ferreira.",target:"[data-campaign-tab='knowledge']"},
       {eyebrow:"RELAÇÃO",title:"Relacione entidades",text:"Use Relacionar, escolha duas entidades e informe o significado da relação.",example:"Mira → protege → Oficina Real."},
       {eyebrow:"SEGREDO",title:"Controle o que é revelado",text:"Use visibilidade para manter informações restritas.",example:"A identidade do vilão pode ficar invisível para os jogadores."}
     ]},
-    {id:"homebrew",icon:"✦",title:"Homebrew",desc:"Crie conteúdo próprio para o sistema.",steps:[
+    {id:"homebrew",level:"advanced",icon:"✦",title:"Homebrew",desc:"Crie conteúdo próprio para o sistema.",steps:[
       {eyebrow:"CRIAR",title:"Escolha o tipo",text:"Crie raças, classes, poderes, técnicas, itens, monstros, receitas ou regras.",example:"Uma classe pode registrar Mana, itens iniciais e perícias.",target:"a[href='./homebrew.html']"},
       {eyebrow:"PUBLICAR",title:"Publique",text:"Ao publicar, o conteúdo pode ser usado onde o AERIOM oferece suporte.",example:"Uma raça publicada pode aparecer na criação de personagem."},
       {eyebrow:"COMPARTILHAR",title:"Compartilhe",text:"Use o compartilhamento para distribuir seu conteúdo.",example:"Envie o link para seu grupo."}
@@ -42,7 +42,7 @@ import "./supabase.js";
     wrap.innerHTML='<div id="tutorial-overlay" class="tutorial-overlay" hidden><div class="tutorial-backdrop"></div><div id="tutorial-highlight" class="tutorial-highlight"></div><div id="tutorial-arrow" class="tutorial-arrow">➜</div><section id="tutorial-card" class="tutorial-card"><div class="tutorial-card__progress"><span id="tutorial-progress">1/1</span><button id="tutorial-close">×</button></div><p id="tutorial-card-eyebrow" class="tutorial-eyebrow"></p><h2 id="tutorial-card-title"></h2><p id="tutorial-card-text"></p><div id="tutorial-example" class="tutorial-example"></div><div class="tutorial-card__actions"><button id="tutorial-skip" class="tutorial-secondary tutorial-skip">Pular tutorial</button><button id="tutorial-prev" class="tutorial-secondary">Anterior</button><button id="tutorial-next" class="tutorial-primary">Próximo</button></div></section></div>';
     document.body.appendChild(wrap.firstElementChild);
   }
-  function renderList(){ $("tutorial-list").innerHTML=tutorials.map(t=>'<button class="tutorial-tile" type="button" data-tutorial="'+t.id+'"><span>'+t.icon+'</span><h3>'+esc(t.title)+'</h3><p>'+esc(t.desc)+'</p></button>').join(""); $("tutorial-list").querySelectorAll("[data-tutorial]").forEach(b=>b.onclick=()=>start(b.dataset.tutorial,0)); }
+  function renderList(){ $("tutorial-list").innerHTML=tutorials.map(t=>'<button class="tutorial-tile tutorial-tile--'+t.level+'" type="button" data-tutorial="'+t.id+'"><span>'+t.icon+'</span><em>'+({"basic":"BÁSICO","intermediate":"INTERMEDIÁRIO","advanced":"AVANÇADO"}[t.level]||"GUIA")+'</em><h3>'+esc(t.title)+'</h3><p>'+esc(t.desc)+'</p></button>').join(""); $("tutorial-list").querySelectorAll("[data-tutorial]").forEach(b=>b.onclick=()=>start(b.dataset.tutorial,0)); }
   function target(selector){if(!selector)return null;return document.querySelector(selector)}
   function samePageTarget(step){if(step.target)return target(step.target);return null}
   function navigateStep(step){
