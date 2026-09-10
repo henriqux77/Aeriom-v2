@@ -73,10 +73,29 @@ function renderContent(){
       const row=document.createElement("article");row.className="hb-content-row";
       const badge=document.createElement("div");badge.className="hb-entry-icon";badge.textContent=type==="class"?"⚔":type==="race"?"◇":type==="monster"?"☠":type==="item"||type==="equipment"?"◆":type==="recipe"?"✦":"•";
       const c=document.createElement("div");const h=document.createElement("strong");h.textContent=x.title;const sm=document.createElement("small");sm.textContent=x.status+" · "+x.slug+(x.summary?" · "+x.summary:"");c.append(h,sm);
-      const actions=document.createElement("div");const edit=document.createElement("button");edit.className="hb-btn";edit.textContent="Editar";edit.onclick=()=>openEditor(x);actions.appendChild(edit);row.append(badge,c,actions);section.appendChild(row);
+      const actions=document.createElement("div");
+      const preview=document.createElement("button");preview.className="hb-btn";preview.textContent="Pré-visualizar";preview.onclick=()=>previewContent(x);
+      const duplicate=document.createElement("button");duplicate.className="hb-btn";duplicate.textContent="Duplicar";duplicate.onclick=()=>duplicateContent(x).catch(e=>toast(e.message||"Não foi possível duplicar.","error"));
+      const edit=document.createElement("button");edit.className="hb-btn";edit.textContent="Editar";edit.onclick=()=>openEditor(x);
+      actions.append(preview,duplicate,edit);row.append(badge,c,actions);section.appendChild(row);
     });
     root.appendChild(section);
   });
+}
+function previewContent(x){
+  const m=document.createElement("div");m.className="hb-preview-modal";m.innerHTML='<div class="hb-preview-backdrop"></div><section class="hb-preview-card"><header><div><span>PRÉ-VISUALIZAÇÃO</span><h2></h2><small></small></div><button type="button" data-close>×</button></header><div class="hb-preview-body"></div></section>';
+  m.querySelector("h2").textContent=x.title;m.querySelector("small").textContent=TYPES[x.content_type]||x.content_type;
+  const body=m.querySelector(".hb-preview-body");body.innerHTML="<p></p>";body.querySelector("p").textContent=x.summary||x.content||"Sem descrição.";
+  const d=x.data||{};if(d.image_url){const im=document.createElement("img");im.src=d.image_url;im.alt=x.title;im.loading="lazy";body.prepend(im)}
+  const pre=document.createElement("pre");pre.textContent=JSON.stringify(d,null,2);pre.hidden=!Object.keys(d).length;body.append(pre);
+  document.body.appendChild(m);const close=()=>m.remove();m.querySelector("[data-close]").onclick=close;m.querySelector(".hb-preview-backdrop").onclick=close;
+}
+async function duplicateContent(x){
+  const src=source();if(!src)throw new Error("Selecione uma fonte.");
+  const payload={source_id:src.id,owner_id:S.user.id,content_type:x.content_type,status:"draft",title:x.title+" — Cópia",slug:slug(x.slug+"-copia-"+Date.now()),summary:x.summary,content:x.content,tags:x.tags||[],data:x.data||{},sort_order:Number(x.sort_order||0)+1};
+  const r=await S.sb.from("homebrew_content").insert(payload).select("*").single();if(r.error)throw r.error;
+  await S.sb.from("homebrew_content_revisions").insert({content_id:r.data.id,version:1,snapshot:r.data,changed_by:S.user.id,change_note:"Duplicado de "+x.title});
+  await loadAllContent();toast("Conteúdo duplicado como rascunho.","success");
 }
 function resetEditor(){S.editing=null;$("hb-content-title-display").textContent="Nova entrada";$("hb-content-type").value="race";$("hb-content-status").value="draft";$("hb-content-title").value="";$("hb-content-slug").value="";$("hb-content-summary").value="";$("hb-content-body").value="";$("hb-content-tags").value="";$("hb-content-data").value="{}";$("hb-content-note").value="";renderStructuredFields({});}
 function openEditor(x){
