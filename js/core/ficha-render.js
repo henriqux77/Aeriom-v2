@@ -175,4 +175,5 @@ var card=$('#elemental-master-card'),m=s.elementalMaster||{};if(card){var elemen
   window.addEventListener('aerion:ficha:update',e=>e.detail?.state&&render(e.detail.state));
   window.addEventListener('aerion:ficha:filter-race',()=>{var s=api()?.getState?.();if(s)renderRaces(s);});
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{var s=api()?.getState?.();if(s)render(s);},{once:true});else{var s=api()?.getState?.();if(s)render(s);}
+  window.addEventListener('aerion:homebrew:ready',function(){renderRequest();});
 })();
