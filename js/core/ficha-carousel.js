@@ -258,8 +258,10 @@
     activeIndex[type] = index;
 
     const id = cfg.getId(items[index]);
-    if (type === 'race') cfg.select(id);
-    else cfg.select(id);
+    cfg.select(id);
+    // Atualiza o carrossel imediatamente após a seleção.
+    // O render global da ficha continua acontecendo em paralelo, sem segurar a animação.
+    render(type);
   }
 
   function selectByCard(type, index) {
@@ -269,6 +271,7 @@
     const i = Math.max(0, Math.min(index, items.length - 1));
     activeIndex[type] = i;
     cfg.select(cfg.getId(items[i]));
+    render(type);
   }
 
   function onCarouselClick(event) {
