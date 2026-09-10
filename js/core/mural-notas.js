@@ -30,10 +30,11 @@ import { getSupabase } from "./supabase.js";
       const card=document.createElement("article");card.className="aerion-mural-card";
       card.innerHTML=(p.imageUrl?'<img src="'+esc(p.imageUrl)+'" alt="">':"")+
         '<div class="aerion-mural-card__body"><span class="aerion-mural-card__type">'+esc(p.post_type)+'</span><h3>'+esc(p.title)+'</h3><p>'+esc(p.content)+'</p><small>'+new Date(p.updated_at||p.created_at).toLocaleString("pt-BR")+'</small></div>'+
-        (isMaster()?'<div class="aerion-mural-card__actions"><button type="button" data-edit>✎</button><button type="button" data-delete>🗑</button></div>':"");
+        '<div class="aerion-mural-card__actions"><button type="button" data-knowledge title="Adicionar ao conhecimento">🧠</button>'+(isMaster()?'<button type="button" data-edit>✎</button><button type="button" data-delete>🗑</button>':"")+'</div>';
       card.addEventListener("click",e=>{if(e.target.closest("button"))return;editor(p)});
       card.querySelector("[data-edit]")?.addEventListener("click",e=>{e.stopPropagation();editor(p)});
       card.querySelector("[data-delete]")?.addEventListener("click",async e=>{e.stopPropagation();if(!confirm("Excluir esta nota do mural?"))return;const r=await state.sb.from("mural_posts").delete().eq("id",p.id);if(r.error)return toast(r.error.message,"error");await load();render();toast("Nota removida.","success")});
+      card.querySelector("[data-knowledge]")?.addEventListener("click",async e=>{e.stopPropagation();try{const {data,error}=await state.sb.from("aerion_mind_nodes").insert({campaign_id:state.campaignId,created_by:state.user.id,title:p.title,content:p.content,node_type:p.post_type==="clue"?"clue":"note",color:"#8b6f36",pos_x:35+Math.random()*20,pos_y:35+Math.random()*20,visibility:"public"}).select("*").single();if(error)throw error;toast("Nota adicionada ao Conhecimento.","success");window.dispatchEvent(new CustomEvent("aeriom:knowledge:refresh",{detail:{nodeId:data.id}}));}catch(err){toast(err?.message||"Não foi possível adicionar ao Conhecimento.","error")}});
       root.appendChild(card)
     })
   }
