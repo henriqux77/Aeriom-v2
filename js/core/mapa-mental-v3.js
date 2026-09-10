@@ -47,7 +47,7 @@ import { getSupabase } from "./supabase.js";
       .on("postgres_changes",{event:"*",schema:"public",table:"knowledge_edges",filter:"campaign_id=eq."+S.campaignId},async()=>{try{await load();render()}catch(e){console.warn("[AERION][KNOWLEDGE] realtime edges",e)}})
       .subscribe();
   }
-  async function init(){if(!(await ready()))return;setup();subscribeKnowledge();document.getElementById("knowledge-search")?.addEventListener("input",render);document.getElementById("knowledge-type-filter")?.addEventListener("change",render);document.querySelector("[data-knowledge-focus-all]")?.addEventListener("click",()=>{S.zoom=1;S.panX=0;S.panY=0;apply()});window.addEventListener("aeriom:knowledge:refresh",()=>load().then(render).catch(()=>{}));await load();render()}
+  async function init(){if(!(await ready()))return;setup();subscribeKnowledge();document.getElementById("knowledge-search")?.addEventListener("input",render);document.getElementById("knowledge-type-filter")?.addEventListener("change",render);document.querySelector("[data-knowledge-focus-all]")?.addEventListener("click",()=>{S.zoom=1;S.panX=0;S.panY=0;apply()});document.querySelector("[data-aeriom-add-node]")?.addEventListener("click",()=>editor());window.addEventListener("aeriom:knowledge:refresh",()=>load().then(render).catch(()=>{}));await load();render()}
   function trigger(){setTimeout(init,50)}
   window.addEventListener("aeriom:campaign:ready",trigger);
   window.addEventListener("aeriom:campaigntabchange",e=>{if(e.detail?.tab==="knowledge")trigger()});
