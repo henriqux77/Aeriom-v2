@@ -17,6 +17,8 @@ create table if not exists public.campaign_atmosphere_settings (
   ambient_enabled boolean not null default false,
   show_live_media boolean not null default true,
   show_map_overlay boolean not null default true,
+  background_source text not null default 'theme',
+  background_url text,
   updated_by uuid references auth.users(id) on delete set null,
   updated_at timestamptz not null default now(),
   constraint campaign_atmosphere_valid_preset check (preset in ('default','forest','cave','volcano','castle','coast','ruins')),
@@ -31,7 +33,8 @@ create table if not exists public.campaign_atmosphere_settings (
   constraint campaign_atmosphere_blur check (blur between 0 and 18),
   constraint campaign_atmosphere_density check (ui_density in ('compact','comfortable','spacious')),
   constraint campaign_atmosphere_sidebar check (sidebar_mode in ('full','minimal')),
-  constraint campaign_atmosphere_scene check (scene_mode in ('standard','immersive','cinematic'))
+  constraint campaign_atmosphere_scene check (scene_mode in ('standard','immersive','cinematic')),
+  constraint campaign_atmosphere_background_source check (background_source in ('theme','campaign','custom'))
 );
 
 alter table public.campaign_atmosphere_settings enable row level security;
