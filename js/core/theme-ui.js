@@ -2,6 +2,7 @@ import { getAvailableThemes, getTheme, applyCampaignTheme } from "./theme.js";
 import "./campaign-live-media.js";
 import "./campaign-ui-repair.js";
 import "./mestre-controles-v2.js";
+import "./mestre-controles-compact.js";
 
 (() => {
   "use strict";
@@ -32,7 +33,6 @@ import "./mestre-controles-v2.js";
     const surface = vars["--theme-surface"] || "#11100e";
     const danger = vars["--theme-danger"] || "#c87979";
     const mana = vars["--theme-mana"] || "#3f72b7";
-
     root.style.setProperty("--campaign-bg", bg);
     root.style.setProperty("--campaign-surface", surface);
     root.style.setProperty("--campaign-surface-2", surface);
@@ -52,8 +52,7 @@ import "./mestre-controles-v2.js";
     if (!path || !c?.supabase) return null;
     try {
       const { data, error } = await c.supabase.storage.from("campaign-covers").createSignedUrl(path, 3600);
-      if (error || !data?.signedUrl) return null;
-      return data.signedUrl;
+      return error || !data?.signedUrl ? null : data.signedUrl;
     } catch {
       return null;
     }
@@ -78,10 +77,7 @@ import "./mestre-controles-v2.js";
       c.campaign.theme = result.data.theme || "default";
       c.campaign.backgroundPath = result.data.background_path || null;
     }
-    await applyCampaignVisuals(result.data.theme || "default", {
-      theme: result.data.theme || "default",
-      backgroundPath: result.data.background_path || null
-    });
+    await applyCampaignVisuals(result.data.theme || "default", { theme: result.data.theme || "default", backgroundPath: result.data.background_path || null });
   }
 
   function getCurrentTheme() {
@@ -100,12 +96,10 @@ import "./mestre-controles-v2.js";
       button.dataset.themeId = theme.id;
       button.disabled = !isMaster();
       button.title = isMaster() ? `Usar tema ${theme.name}` : "Somente o Mestre pode alterar a atmosfera da mesa.";
-
       const preview = document.createElement("div");
       preview.className = "campaign-theme-option__preview";
       const image = THEME_IMAGES[theme.id];
-      if (image) preview.style.backgroundImage = `linear-gradient(rgba(0,0,0,.2),rgba(0,0,0,.55)),url("${String(image).replaceAll('"', '\\"')}")`;
-
+      if (image) preview.style.backgroundImage = `linear-gradient(rgba(0,0,0,.2),rgba(0,0,0,.55)),url("${String(image).replaceAll('"','\\"')}")`;
       const copy = document.createElement("div");
       const strong = document.createElement("strong");
       strong.textContent = theme.name;
@@ -139,7 +133,7 @@ import "./mestre-controles-v2.js";
     const cid = campaignId();
     if (!c?.supabase || !cid || window.__AERIOM_CAMPAIGN_THEME_CHANNEL__) return;
     window.__AERIOM_CAMPAIGN_THEME_CHANNEL__ = c.supabase.channel(`campaign-theme:${cid}`)
-      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "campaigns", filter: `id=eq.${cid}` }, payload => {
+      .on("postgres_changes", { event:"UPDATE", schema:"public", table:"campaigns", filter:`id=eq.${cid}` }, payload => {
         const next = payload.new || {};
         if (c.campaign) {
           c.campaign.theme = next.theme || "default";
@@ -173,6 +167,6 @@ import "./mestre-controles-v2.js";
     if (event.detail?.tab === "theme") setTimeout(() => void sync(), 30);
   });
 
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", () => { void sync(); }, { once: true });
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", () => { void sync(); }, { once:true });
   else void sync();
 })();
