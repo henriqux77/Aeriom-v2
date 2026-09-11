@@ -6,7 +6,7 @@
     const link = document.createElement("link");
     link.id = "aeriom-campaign-repair-css";
     link.rel = "stylesheet";
-    link.href = "./css/campaign-repair.css?v=20260910-06";
+    link.href = "./css/campaign-repair.css?v=20260911-stable";
     document.head.appendChild(link);
   }
 
@@ -26,9 +26,11 @@
   function loadAtmosphere() {
     if (window.__AERIOM_ATMOSPHERE_BOOT__) return;
     window.__AERIOM_ATMOSPHERE_BOOT__ = true;
-    import("./atmosphere-ui.js?v=20260910-01").catch(error => {
-      window.__AERIOM_ATMOSPHERE_BOOT__ = false;
-      console.error("[AERIOM][ATMOSPHERE BOOT]", error);
+    Promise.allSettled([
+      import("./atmosphere-ui.js?v=20260911-stable"),
+      import("./campaign-atmosphere-patch.js?v=20260911-stable")
+    ]).then(results => {
+      results.filter(r => r.status === "rejected").forEach(r => console.error("[AERIOM][ATMOSPHERE BOOT]", r.reason));
     });
   }
 
