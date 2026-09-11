@@ -39,15 +39,17 @@ create table if not exists public.campaign_atmosphere_settings (
 
 alter table public.campaign_atmosphere_settings enable row level security;
 
+create index if not exists campaign_atmosphere_updated_by_idx on public.campaign_atmosphere_settings(updated_by);
+
 drop policy if exists "campaign_atmosphere_select_member" on public.campaign_atmosphere_settings;
 drop policy if exists "campaign_atmosphere_insert_master" on public.campaign_atmosphere_settings;
 drop policy if exists "campaign_atmosphere_update_master" on public.campaign_atmosphere_settings;
 drop policy if exists "campaign_atmosphere_delete_master" on public.campaign_atmosphere_settings;
 
-create policy "campaign_atmosphere_select_member" on public.campaign_atmosphere_settings for select to authenticated using (aeriom_private.is_campaign_member(campaign_id));
-create policy "campaign_atmosphere_insert_master" on public.campaign_atmosphere_settings for insert to authenticated with check (aeriom_private.is_campaign_master(campaign_id) and updated_by = auth.uid());
-create policy "campaign_atmosphere_update_master" on public.campaign_atmosphere_settings for update to authenticated using (aeriom_private.is_campaign_master(campaign_id)) with check (aeriom_private.is_campaign_master(campaign_id) and updated_by = auth.uid());
-create policy "campaign_atmosphere_delete_master" on public.campaign_atmosphere_settings for delete to authenticated using (aeriom_private.is_campaign_master(campaign_id));
+create policy "campaign_atmosphere_select_member" on public.campaign_atmosphere_settings for select to authenticated using ((select aeriom_private.is_campaign_member(campaign_id)));
+create policy "campaign_atmosphere_insert_master" on public.campaign_atmosphere_settings for insert to authenticated with check ((select aeriom_private.is_campaign_master(campaign_id)) and updated_by = (select auth.uid()));
+create policy "campaign_atmosphere_update_master" on public.campaign_atmosphere_settings for update to authenticated using ((select aeriom_private.is_campaign_master(campaign_id))) with check ((select aeriom_private.is_campaign_master(campaign_id)) and updated_by = (select auth.uid()));
+create policy "campaign_atmosphere_delete_master" on public.campaign_atmosphere_settings for delete to authenticated using ((select aeriom_private.is_campaign_master(campaign_id)));
 
 grant select, insert, update, delete on public.campaign_atmosphere_settings to authenticated;
 
