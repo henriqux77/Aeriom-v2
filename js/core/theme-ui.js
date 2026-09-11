@@ -1,7 +1,7 @@
 import { getAvailableThemes, getTheme, applyCampaignTheme } from "./theme.js";
 import "./campaign-live-media.js";
 import "./campaign-ui-repair.js";
-import "./mestre-controles-repair.js";
+import "./mestre-controles-v2.js";
 
 (() => {
   "use strict";
@@ -43,7 +43,6 @@ import "./mestre-controles-repair.js";
     root.style.setProperty("--campaign-theme-accent-light", accentLight);
     root.style.setProperty("--campaign-theme-accent-dark", accentDark);
     root.style.setProperty("--campaign-theme-mana", mana);
-    root.style.setProperty("--campaign-theme-bg-image", `url("${String(THEME_IMAGES[themeId] || THEME_IMAGES.default).replaceAll('"', '\\"')}")`);
     root.dataset.theme = themeId;
   }
 
@@ -67,7 +66,6 @@ import "./mestre-controles-repair.js";
     const customBackground = await resolveCampaignBackground(campaign);
     const background = customBackground || THEME_IMAGES[themeId] || THEME_IMAGES.default;
     await applyCampaignTheme(themeId, background);
-    document.documentElement.style.setProperty("--campaign-theme-bg-image", `url("${String(background).replaceAll('"', '\\"')}")`);
   }
 
   async function loadCampaignVisualState() {
