@@ -1,5 +1,19 @@
 /* AERIOM campaign layout repair. Uses the native campaign DOM; no duplicate UI. */
 
+.campaign-app {
+  background:
+    linear-gradient(180deg, rgba(0,0,0,.28), rgba(0,0,0,.72)),
+    var(--campaign-theme-bg-image, none),
+    var(--campaign-bg) !important;
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+}
+
+.campaign-main {
+  background: transparent !important;
+}
+
 .campaign-sidebar__brand {
   padding: 18px 16px 14px;
 }
@@ -10,9 +24,7 @@
   border-radius: 22px;
 }
 
-.campaign-sidebar__campaign {
-  gap: 12px;
-}
+.campaign-sidebar__campaign { gap: 12px; }
 
 /* The previous master markup contained one nested duplicate Campaign card. */
 .aeriom-master-grid > .aeriom-master-card > .aeriom-master-list + .aeriom-master-card {
@@ -21,7 +33,7 @@
 
 .aeriom-master-grid {
   grid-template-columns: minmax(0, 1fr) !important;
-  gap: 16px !important;
+  gap: 10px !important;
 }
 
 .aeriom-master-card {
@@ -38,10 +50,7 @@
   display: none;
 }
 
-/* Search belongs to the command area, not beside the campaign title. */
-.campaign-topbar__right {
-  gap: 14px;
-}
+.campaign-topbar__right { gap: 14px; }
 
 .aeriom-global-search-trigger {
   flex: 0 0 auto;
@@ -60,36 +69,33 @@
   letter-spacing: .04em;
 }
 
+.campaign-theme-selector {
+  grid-template-columns: repeat(3, minmax(0,1fr));
+  gap: 9px;
+}
+
+.campaign-theme-option {
+  min-width: 0;
+  overflow: hidden;
+  border-radius: 12px;
+  background: rgba(255,255,255,.018);
+}
+
+.campaign-theme-option__preview {
+  min-height: 96px;
+  background-size: cover;
+  background-position: center;
+}
+
 @media (max-width: 900px) {
-  .campaign-main {
-    width: 100%;
-    margin-left: 0;
-  }
-
-  .campaign-content {
-    padding: 18px 14px 28px;
-  }
-
-  .campaign-table-hud {
-    margin: 0 14px;
-  }
-
-  .aeriom-master-grid {
-    gap: 12px !important;
-  }
-
+  .campaign-main { width: 100%; margin-left: 0; }
+  .campaign-content { padding: 18px 14px 28px; }
+  .campaign-table-hud { margin: 0 14px; }
+  .aeriom-master-grid { gap: 10px !important; }
   .aeriom-quick-actions,
-  .aeriom-mana-campaign-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .campaign-theme-selector {
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-  }
-
-  .campaign-topbar__right {
-    gap: 8px;
-  }
+  .aeriom-mana-campaign-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .campaign-theme-selector { grid-template-columns: repeat(2,minmax(0,1fr)) !important; }
+  .campaign-topbar__right { gap: 8px; }
 }
 
 @media (max-width: 650px) {
@@ -98,73 +104,23 @@
     min-height: 62px;
     padding: 0 12px 0 58px;
   }
-
-  .campaign-topbar__left {
-    min-width: 0;
-    max-width: 48%;
-  }
-
-  .campaign-topbar__title {
-    max-width: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    font-size: 15px;
-  }
-
+  .campaign-topbar__left { min-width: 0; max-width: 48%; }
+  .campaign-topbar__title { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 15px; }
   .campaign-session-status,
-  .campaign-user__content {
-    display: none;
-  }
-
-  .campaign-user__avatar {
-    width: 34px;
-    height: 34px;
-  }
-
-  .campaign-table-hud {
-    display: none;
-  }
-
-  .campaign-content {
-    padding: 14px 10px 24px;
-  }
-
-  .campaign-sidebar__brand {
-    padding-top: 14px;
-  }
-
-  .campaign-brand {
-    width: 76px;
-    height: 76px;
-  }
-
-  .aeriom-master-card__head {
-    gap: 10px;
-  }
-
-  .aeriom-master-card__head > div {
-    min-width: 0;
-  }
-
-  .aeriom-master-actions {
-    width: 100%;
-  }
-
-  .aeriom-master-actions .aeriom-master-button {
-    flex: 1 1 100%;
-  }
-
-  .aeriom-master-form .aeriom-master-row {
-    grid-template-columns: 1fr !important;
-  }
-
+  .campaign-user__content { display: none; }
+  .campaign-user__avatar { width: 34px; height: 34px; }
+  .campaign-table-hud { display: none; }
+  .campaign-content { padding: 14px 10px 24px; }
+  .campaign-sidebar__brand { padding-top: 14px; }
+  .campaign-brand { width: 76px; height: 76px; }
+  .aeriom-master-card__head { gap: 8px; }
+  .aeriom-master-card__head > div { min-width: 0; }
+  .aeriom-master-actions { width: 100%; }
+  .aeriom-master-actions .aeriom-master-button { flex: 1 1 100%; }
+  .aeriom-master-form .aeriom-master-row { grid-template-columns: 1fr !important; }
   .aeriom-quick-actions,
   .aeriom-mana-campaign-grid,
-  .campaign-theme-selector {
-    grid-template-columns: 1fr !important;
-  }
-
+  .campaign-theme-selector { grid-template-columns: 1fr !important; }
   #aeriom-global-search-trigger {
     position: fixed;
     top: 12px;
@@ -177,11 +133,7 @@
     justify-content: center;
     border-radius: 12px !important;
   }
-
-  #aeriom-global-search-trigger::after {
-    display: none;
-  }
-
+  #aeriom-global-search-trigger::after { display: none; }
   .aeriom-global-search__dialog {
     width: calc(100vw - 18px) !important;
     max-height: calc(100dvh - 36px) !important;
@@ -192,7 +144,5 @@
 }
 
 @media (min-width: 651px) {
-  .campaign-topbar__right #aeriom-global-search-trigger {
-    order: 1;
-  }
+  .campaign-topbar__right #aeriom-global-search-trigger { order: 1; }
 }
