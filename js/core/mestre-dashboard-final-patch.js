@@ -4,8 +4,6 @@
   const STYLE = "./css/mestre-dashboard-final.css?v=20260912-final3";
   const $ = sel => document.querySelector(sel);
   const $$ = sel => [...document.querySelectorAll(sel)];
-  const ctx = () => window.AERIOM_CAMPAIGN?.getContext?.() || {};
-  const cid = () => new URLSearchParams(location.search).get("campaign") || ctx()?.campaignId || ctx()?.campaign?.id || null;
   const text = v => String(v ?? "").trim();
 
   function css() {
@@ -19,9 +17,7 @@
 
   function removeDuplicateHeroes(root) {
     const shells = $$("#campaign-panel-master-controls .aeriom-master-redesign-shell");
-    shells.slice(1).forEach((node, index) => {
-      if (index > -1) node.remove();
-    });
+    shells.slice(1).forEach(node => node.remove());
     const heroes = $$("#campaign-panel-master-controls .aeriom-master-redesign-hero");
     heroes.slice(1).forEach(node => node.remove());
     const headings = $$("#campaign-panel-master-controls > .campaign-panel__heading");
@@ -32,19 +28,14 @@
     const root = $("#campaign-panel-master-controls");
     if (!root) return;
     const p = root.querySelector(".aeriom-master-redesign-hero p");
-    if (p && text(p.textContent).toLowerCase() === "teste") {
-      p.classList.add("is-placeholder-description");
-    }
+    if (p && text(p.textContent).toLowerCase() === "teste") p.classList.add("is-placeholder-description");
   }
 
   function addGuideButtons() {
     const guide = $("#campaign-panel-master-controls .aeriom-master-redesign-guide");
     if (!guide) return;
     const existing = new Set($$("button", guide).map(b => b.dataset.redesignTarget));
-    const extras = [
-      ["content", "▤", "Conteúdo"],
-      ["theme", "✦", "Aparência"]
-    ];
+    const extras = [["content", "▤", "Conteúdo"], ["theme", "✦", "Aparência"]];
     extras.forEach(([id, icon, label]) => {
       if (existing.has(id)) return;
       const b = document.createElement("button");
@@ -57,8 +48,7 @@
           tab?.click();
           return;
         }
-        const target = document.querySelector(".aeriom-master-redesign-anchor[data-redesign-anchor=content]");
-        target?.scrollIntoView({ behavior: "smooth", block: "start" });
+        document.querySelector(".aeriom-master-redesign-anchor[data-redesign-anchor=content]")?.scrollIntoView({ behavior: "smooth", block: "start" });
       });
       guide.appendChild(b);
     });
@@ -73,12 +63,9 @@
     const root = $("#campaign-panel-master-controls");
     const list = root?.querySelector("#aeriom-master-characters");
     const viewport = root?.querySelector(".aeriom-master-carousel__viewport");
-    if (!list || !viewport) return;
-    if (viewport.dataset.finalCarousel === "1") return;
+    if (!list || !viewport || viewport.dataset.finalCarousel === "1") return;
     viewport.dataset.finalCarousel = "1";
-
-    const arrows = root.querySelectorAll(".aeriom-master-carousel__arrow");
-    arrows.forEach((button, index) => {
+    root.querySelectorAll(".aeriom-master-carousel__arrow").forEach((button, index) => {
       button.addEventListener("click", event => {
         event.preventDefault();
         event.stopImmediatePropagation();
@@ -92,7 +79,6 @@
     const buttons = $$("#campaign-panel-master-controls .aeriom-mana-manager button, #campaign-panel-master-controls .aeriom-master-repair-mana button, #campaign-panel-master-controls [data-mana-id]");
     buttons.forEach(button => {
       const id = text(button.dataset.manaId || button.dataset.mana || "").toLowerCase();
-      if (!id) return;
       if (["azul", "roxa", "dourada", "branca"].includes(id)) button.classList.add("aeriom-mana-fire", id);
     });
   }
@@ -110,17 +96,21 @@
   }
 
   let timer = 0;
+  let started = false;
   const schedule = () => {
     clearTimeout(timer);
     timer = setTimeout(run, 80);
   };
 
-  window.addEventListener("aeriom:campaign:ready", schedule);
-  window.addEventListener("aeriom:campaigntabchange", schedule);
-  window.addEventListener("aeriom:master:refresh", schedule);
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", run, { once: true });
-  else schedule();
+  function boot() {
+    if (started) return;
+    started = true;
+    window.addEventListener("aeriom:campaign:ready", schedule);
+    window.addEventListener("aeriom:campaigntabchange", schedule);
+    window.addEventListener("aeriom:master:refresh", schedule);
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", run, { once: true });
+    else schedule();
+  }
 
-  const observer = new MutationObserver(schedule);
-  observer.observe(document.body, { childList: true, subtree: true });
+  boot();
 })();
