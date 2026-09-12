@@ -22,25 +22,21 @@
       "./campaign-theme-runtime-clean.js?v=20260912-theme-runtime1",
       "./campaign-theme-guard.js?v=20260912-theme-guard1",
       "./campaign-atmosphere-fix.js?v=20260912-atmosphere-fix1",
-      "./campaign-cinematic-clean.js?v=20260912-cinematic-lazy1",
-      "./campaign-cover-fix.js?v=20260912-cover-lazy1"
+      "./campaign-cinematic-clean.js?v=20260912-cinematic-lazy1"
     ]
   };
 
   async function loadGroup(group) {
-    if (loaded.get(group)) return;
+    if (loaded.get(group)) return true;
     if (importing.has(group)) return importing.get(group);
-
     const list = modules[group];
-    if (!list) return;
+    if (!list) return false;
 
     const task = Promise.allSettled(list.map(spec => import(spec))).then(results => {
       const failed = results.filter(result => result.status === "rejected");
-      if (failed.length) {
-        failed.forEach(result => console.error("[AERIOM][FEATURE LOAD]", result.reason));
-      }
+      if (failed.length) failed.forEach(result => console.error("[AERIOM][FEATURE LOAD]", result.reason));
       if (!failed.length) loaded.set(group, true);
-      return !failed.length;
+      return failed.length === 0;
     }).finally(() => importing.delete(group));
 
     importing.set(group, task);
@@ -54,24 +50,24 @@
   function onTabChange(event) {
     const tab = event.detail?.tab || currentTab();
     if (tab === "master-controls") void loadGroup("master");
-    if (tab === "theme") void loadGroup("theme");
+    else if (tab === "theme") void loadGroup("theme");
   }
 
   window.addEventListener("aeriom:campaigntabchange", onTabChange);
   window.addEventListener("aeriom:campaign:ready", () => {
     const tab = currentTab();
     if (tab === "master-controls") void loadGroup("master");
-    if (tab === "theme") void loadGroup("theme");
+    else if (tab === "theme") void loadGroup("theme");
   });
 
-  if (document.readyState !== "loading") {
+  const boot = () => {
     const tab = currentTab();
     if (tab === "master-controls") void loadGroup("master");
-    if (tab === "theme") void loadGroup("theme");
-  }
+    else if (tab === "theme") void loadGroup("theme");
+  };
 
-  window.AERIOM_FEATURES = Object.freeze({
-    loadMaster: () => loadGroup("master"),
-    loadTheme: () => loadGroup("theme")
-  });
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot, { once: true });
+  else boot();
+
+  window.AERIOM_FEATURES = Object.freeze({ loadMaster: () => loadGroup("master"), loadTheme: () => loadGroup("theme") });
 })();
