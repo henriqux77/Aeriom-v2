@@ -6,13 +6,15 @@ import { getSupabase } from "./supabase.js";
   if (window.__AERIOM_LIVE_MEDIA_STARTED__) return;
   window.__AERIOM_LIVE_MEDIA_STARTED__ = true;
 
+  const BUCKET = "campaign-assets";
   const state = {
     supabase: null,
     channel: null,
     campaignId: null,
     current: null,
     masterCardReady: false,
-    started: false
+    started: false,
+    renderToken: 0
   };
 
   const $ = id => document.getElementById(id);
@@ -61,7 +63,6 @@ import { getSupabase } from "./supabase.js";
     if (!stage) return;
     stage.classList.remove("is-open");
     stage.querySelector("[data-live-content]")?.replaceChildren();
-    stage.querySelector("[data-live-upload-content]")?.replaceChildren();
   }
 
   function youtubeEmbed(url) {
@@ -74,12 +75,29 @@ import { getSupabase } from "./supabase.js";
     } catch { return null; }
   }
 
-  function render(media) {
+  function looksLikeHttpUrl(value) {
+    return /^https?:\/\//i.test(String(value || ""));
+  }
+
+  async function resolveSourceUrl(value) {
+    const source = String(value || "").trim();
+    if (!source) return "";
+    if (looksLikeHttpUrl(source)) return source;
+    if (!state.supabase) return "";
+
+    const signed = await state.supabase.storage.from(BUCKET).createSignedUrl(source, 60 * 60);
+    if (signed.error) throw signed.error;
+    return signed.data?.signedUrl || "";
+  }
+
+  async function render(media) {
     state.current = media || null;
+    const token = ++state.renderToken;
     const stage = ensureStage();
-    const root = stage.querySelector("[data-live-content]") || stage.querySelector("[data-live-upload-content]");
-    const title = stage.querySelector("[data-live-title]") || stage.querySelector("[data-live-upload-title]");
+    const root = stage.querySelector("[data-live-content]");
+    const title = stage.querySelector("[data-live-title]");
     if (!root || !title) return;
+
     root.replaceChildren();
     title.textContent = media?.title || "";
     if (!media?.active || !media?.source_url) {
@@ -87,8 +105,25 @@ import { getSupabase } from "./supabase.js";
       return;
     }
 
+    let sourceUrl = "";
+    try {
+      sourceUrl = await resolveSourceUrl(media.source_url);
+    } catch (error) {
+      console.error("[AERIOM][LIVE MEDIA] source resolution failed", error);
+    }
+    if (token !== state.renderToken) return;
+
+    if (!sourceUrl) {
+      const notice = document.createElement("div");
+      notice.className = "aeriom-live-media-stage__notice";
+      notice.textContent = "Não foi possível carregar a mídia transmitida.";
+      root.appendChild(notice);
+      stage.classList.add("is-open");
+      return;
+    }
+
     if (media.media_type === "video") {
-      const embed = youtubeEmbed(media.source_url);
+      const embed = youtubeEmbed(sourceUrl);
       if (embed) {
         const iframe = document.createElement("iframe");
         iframe.src = embed;
@@ -97,7 +132,7 @@ import { getSupabase } from "./supabase.js";
         root.appendChild(iframe);
       } else {
         const video = document.createElement("video");
-        video.src = media.source_url;
+        video.src = sourceUrl;
         video.controls = true;
         video.playsInline = true;
         video.autoplay = Boolean(media.autoplay);
@@ -109,7 +144,7 @@ import { getSupabase } from "./supabase.js";
       }
     } else if (media.media_type === "audio") {
       const audio = document.createElement("audio");
-      audio.src = media.source_url;
+      audio.src = sourceUrl;
       audio.controls = true;
       audio.autoplay = Boolean(media.autoplay);
       audio.loop = Boolean(media.loop);
@@ -119,7 +154,7 @@ import { getSupabase } from "./supabase.js";
       if (promise?.catch) promise.catch(() => showAutoplayNotice(root));
     } else {
       const image = document.createElement("img");
-      image.src = media.source_url;
+      image.src = sourceUrl;
       image.alt = media.title || "Transmissão da mesa";
       root.appendChild(image);
     }
@@ -138,7 +173,7 @@ import { getSupabase } from "./supabase.js";
     if (!cid || !state.supabase) return;
     const result = await state.supabase.from("campaign_live_media").select("*").eq("campaign_id", cid).maybeSingle();
     if (result.error) throw result.error;
-    render(result.data || null);
+    await render(result.data || null);
   }
 
   function formMarkup() {
@@ -201,7 +236,7 @@ import { getSupabase } from "./supabase.js";
     state.supabase = await getSupabase();
     ensureStage();
     await loadState();
-    state.channel = state.supabase.channel(`campaign-live-media:${state.campaignId}`).on("postgres_changes", { event: "*", schema: "public", table: "campaign_live_media", filter: `campaign_id=eq.${state.campaignId}` }, payload => render(payload.eventType === "DELETE" ? null : payload.new || null)).subscribe();
+    state.channel = state.supabase.channel(`campaign-live-media:${state.campaignId}`).on("postgres_changes", { event: "*", schema: "public", table: "campaign_live_media", filter: `campaign_id=eq.${state.campaignId}` }, payload => { void render(payload.eventType === "DELETE" ? null : payload.new || null); }).subscribe();
     ensureMasterCard();
   }
 
