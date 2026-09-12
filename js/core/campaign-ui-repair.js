@@ -31,6 +31,7 @@
       import("./campaign-atmosphere-patch.js?v=20260911-gallery2"),
       import("./campaign-atmosphere-controls.js?v=20260911-controls1"),
       import("./campaign-theme-visuals.js?v=20260911-themevisuals1"),
+      import("./campaign-theme-instant.js?v=20260911-themeinstant1"),
       import("./campaign-cinematic-v2.js?v=20260911-cinematic2")
     ]).then(results => {
       results.filter(r => r.status === "rejected").forEach(r => console.error("[AERIOM][ATMOSPHERE BOOT]", r.reason));
