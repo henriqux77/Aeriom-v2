@@ -1,5 +1,5 @@
 /* AERIOM — entrypoint visual do Controle do Mestre */
-import "./campaign-ui-repair.js?v=20260912-master-shell3";
+import "./campaign-ui-repair.js?v=20260912-master-shell4";
 import "./campaign-live-media.js?v=20260912-live5";
 import "./campaign-live-media-upload.js?v=20260912-live-upload3";
 import "./mestre-controles-compact.js?v=20260912-master-redesign2";
