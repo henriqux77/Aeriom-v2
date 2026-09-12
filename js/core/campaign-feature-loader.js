@@ -1,0 +1,77 @@
+(() => {
+  "use strict";
+
+  if (window.__AERIOM_CAMPAIGN_FEATURE_LOADER__) return;
+  window.__AERIOM_CAMPAIGN_FEATURE_LOADER__ = true;
+
+  const loaded = new Map();
+  const importing = new Map();
+
+  const modules = {
+    master: [
+      "./mestre-controles-compact.js?v=20260912-master-redesign2",
+      "./mestre-dashboard-redesign.js?v=20260912-master4",
+      "./mestre-dashboard-redesign-patch.js?v=20260912-master3",
+      "./mestre-dashboard-final-patch.js?v=20260912-final5",
+      "./mestre-dashboard-final-cleanup.js?v=20260912-cleanup1",
+      "./campaign-live-media.js?v=20260912-live6",
+      "./campaign-live-media-upload.js?v=20260912-live-upload3"
+    ],
+    theme: [
+      "./atmosphere-ui.js?v=20260912-atmosphere-lazy1",
+      "./campaign-theme-runtime-clean.js?v=20260912-theme-runtime1",
+      "./campaign-theme-guard.js?v=20260912-theme-guard1",
+      "./campaign-atmosphere-fix.js?v=20260912-atmosphere-fix1",
+      "./campaign-cinematic-clean.js?v=20260912-cinematic-lazy1",
+      "./campaign-cover-fix.js?v=20260912-cover-lazy1"
+    ]
+  };
+
+  async function loadGroup(group) {
+    if (loaded.get(group)) return;
+    if (importing.has(group)) return importing.get(group);
+
+    const list = modules[group];
+    if (!list) return;
+
+    const task = Promise.allSettled(list.map(spec => import(spec))).then(results => {
+      const failed = results.filter(result => result.status === "rejected");
+      if (failed.length) {
+        failed.forEach(result => console.error("[AERIOM][FEATURE LOAD]", result.reason));
+      }
+      if (!failed.length) loaded.set(group, true);
+      return !failed.length;
+    }).finally(() => importing.delete(group));
+
+    importing.set(group, task);
+    return task;
+  }
+
+  function currentTab() {
+    return document.documentElement.dataset.campaignTab || document.querySelector("[data-campaign-tab].is-active")?.dataset.campaignTab || "overview";
+  }
+
+  function onTabChange(event) {
+    const tab = event.detail?.tab || currentTab();
+    if (tab === "master-controls") void loadGroup("master");
+    if (tab === "theme") void loadGroup("theme");
+  }
+
+  window.addEventListener("aeriom:campaigntabchange", onTabChange);
+  window.addEventListener("aeriom:campaign:ready", () => {
+    const tab = currentTab();
+    if (tab === "master-controls") void loadGroup("master");
+    if (tab === "theme") void loadGroup("theme");
+  });
+
+  if (document.readyState !== "loading") {
+    const tab = currentTab();
+    if (tab === "master-controls") void loadGroup("master");
+    if (tab === "theme") void loadGroup("theme");
+  }
+
+  window.AERIOM_FEATURES = Object.freeze({
+    loadMaster: () => loadGroup("master"),
+    loadTheme: () => loadGroup("theme")
+  });
+})();
