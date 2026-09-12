@@ -11,27 +11,22 @@
     ruins: "./assets/themes/aeriom/ruins.svg"
   });
 
-  let observer = null;
   let lastHost = null;
   let controlsBoundHost = null;
-
   const context = () => window.AERIOM_CAMPAIGN?.getContext?.() || {};
   const isMaster = () => String(context()?.membership?.role || "").toLowerCase() === "master";
   const campaignId = () => new URLSearchParams(location.search).get("campaign") || context()?.campaignId || context()?.campaign?.id || null;
 
   function dispatch(settings = {}) {
-    window.dispatchEvent(new CustomEvent("aeriom:atmospherechange", {
-      detail: { campaignId: campaignId(), settings: { ...settings } }
-    }));
+    window.dispatchEvent(new CustomEvent("aeriom:atmospherechange", { detail: { campaignId: campaignId(), settings: { ...settings } } }));
   }
 
   function currentSettings(host) {
     const value = name => host.querySelector(`[data-atm-range="${name}"]`)?.value;
     const selected = name => host.querySelector(`[data-atm-select="${name}"]`)?.value;
     const checked = name => host.querySelector(`[data-cin-toggle="${name}"]`)?.checked;
-    const preset = document.documentElement.dataset.theme || "default";
-    const s = {
-      preset,
+    return {
+      preset: document.documentElement.dataset.theme || "default",
       intensity: Number(value("intensity") ?? 55),
       surface_opacity: Number(value("surface_opacity") ?? 88),
       vignette: Number(value("vignette") ?? 42),
@@ -45,7 +40,6 @@
       particle_density: Number(value("particle_density") ?? 12),
       animation_speed: Number(value("animation_speed") ?? 62) / 100
     };
-    return s;
   }
 
   function paintImages(host) {
@@ -57,18 +51,15 @@
       node.style.backgroundPosition = "center";
       node.style.backgroundRepeat = "no-repeat";
     });
-
     const active = host.querySelector("[data-atm-theme].is-active");
     const id = active?.dataset.atmTheme || document.documentElement.dataset.theme || "default";
-    const image = IMAGES[id] || IMAGES.default;
     const hero = host.querySelector(".aeriom-atmosphere__hero");
-    if (hero) hero.style.setProperty("--aeriom-theme-image", `url(${JSON.stringify(image)})`);
+    if (hero) hero.style.setProperty("--aeriom-theme-image", `url(${JSON.stringify(IMAGES[id] || IMAGES.default)})`);
   }
 
   function bindControls(host) {
     if (!host || controlsBoundHost === host) return;
     controlsBoundHost = host;
-
     host.addEventListener("input", event => {
       if (!isMaster() || !event.target?.matches?.("[data-atm-range]")) return;
       const f = event.target.dataset.atmRange;
@@ -77,36 +68,27 @@
       if (out) out.textContent = f === "animation_speed" ? `${Math.round(v)}%` : f === "blur" ? `${Math.round(v)}px` : `${Math.round(v)}%`;
       dispatch(currentSettings(host));
     }, true);
-
     host.addEventListener("change", event => {
       if (!isMaster()) return;
-      if (event.target?.matches?.("[data-cin-toggle]")) dispatch(currentSettings(host));
-      if (event.target?.matches?.("[data-atm-select]")) dispatch(currentSettings(host));
-      if (event.target?.matches?.("[data-atm-theme]")) setTimeout(() => { paintImages(host); dispatch(currentSettings(host)); }, 50);
+      if (event.target?.matches?.("[data-cin-toggle], [data-atm-select]")) dispatch(currentSettings(host));
+      if (event.target?.matches?.("[data-atm-theme]")) window.setTimeout(() => { paintImages(host); dispatch(currentSettings(host)); }, 50);
     }, true);
   }
 
   function enhance() {
     const host = document.getElementById("campaign-theme-selector");
     if (!host) return;
+    if (host !== lastHost) {
+      controlsBoundHost = null;
+      bindControls(host);
+      lastHost = host;
+    }
     paintImages(host);
-    bindControls(host);
-    lastHost = host;
   }
 
-  function observe() {
-    if (observer) return;
-    observer = new MutationObserver(() => {
-      const host = document.getElementById("campaign-theme-selector");
-      if (host !== lastHost || host?.querySelector("[data-theme-image]")) enhance();
-    });
-    observer.observe(document.body, { childList: true, subtree: true });
-  }
-
-  observe();
-  window.addEventListener("aeriom:campaign:ready", () => setTimeout(enhance, 250));
-  window.addEventListener("aeriom:campaigntabchange", event => { if (event.detail?.tab === "theme") setTimeout(enhance, 100); });
-  window.addEventListener("aeriom:atmospherechange", () => setTimeout(enhance, 30));
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", () => setTimeout(enhance, 300), { once: true });
-  else setTimeout(enhance, 300);
+  window.addEventListener("aeriom:campaign:ready", () => window.setTimeout(enhance, 250));
+  window.addEventListener("aeriom:campaigntabchange", event => { if (event.detail?.tab === "theme") window.setTimeout(enhance, 100); });
+  window.addEventListener("aeriom:atmospherechange", () => window.setTimeout(enhance, 30));
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", () => window.setTimeout(enhance, 300), { once: true });
+  else window.setTimeout(enhance, 300);
 })();
