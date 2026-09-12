@@ -15,14 +15,16 @@
       "./mestre-dashboard-final-patch.js?v=20260912-final5",
       "./mestre-dashboard-final-cleanup.js?v=20260912-cleanup1",
       "./campaign-live-media.js?v=20260912-live6",
-      "./campaign-live-media-upload.js?v=20260912-live-upload3"
+      "./campaign-live-media-upload.js?v=20260912-live-upload3",
+      "./campaign-layout-stabilizer.js?v=20260912-layout1"
     ],
     theme: [
       "./atmosphere-ui.js?v=20260912-atmosphere-lazy1",
       "./campaign-theme-runtime-clean.js?v=20260912-theme-runtime1",
       "./campaign-theme-guard.js?v=20260912-theme-guard1",
       "./campaign-atmosphere-fix.js?v=20260912-atmosphere-fix1",
-      "./campaign-cinematic-clean.js?v=20260912-cinematic-lazy1"
+      "./campaign-cinematic-clean.js?v=20260912-cinematic-lazy1",
+      "./campaign-layout-stabilizer.js?v=20260912-layout1"
     ]
   };
 
