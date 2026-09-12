@@ -1,14 +1,10 @@
-/* AERIOM — entrypoint visual do Controle do Mestre */
-import "./campaign-ui-repair.js?v=20260912-master-shell4";
-import "./campaign-live-media.js?v=20260912-live5";
-import "./campaign-live-media-upload.js?v=20260912-live-upload3";
-import "./mestre-controles-compact.js?v=20260912-master-redesign2";
-import "./mestre-dashboard-redesign.js?v=20260912-master3";
-import "./mestre-dashboard-redesign-patch.js?v=20260912-master3";
-import "./mestre-dashboard-final-patch.js?v=20260912-final5";
-import "./mestre-dashboard-final-cleanup.js?v=20260912-cleanup1";
+/* AERIOM — entrypoint visual do Controle do Mestre
+ * MODO DE RECUPERAÇÃO: manter somente o shell estável enquanto
+ * os módulos pesados do dashboard são reestruturados.
+ */
+import "./campaign-ui-repair.js?v=20260912-master-shell5";
 
 (() => {
   "use strict";
-  window.AERIOM_THEME_UI = Object.freeze({ version: "2026-09-12-master-final5" });
+  window.AERIOM_THEME_UI = Object.freeze({ version: "2026-09-12-safe-boot1" });
 })();
