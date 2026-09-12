@@ -16,9 +16,7 @@
     document.head.appendChild(link);
   }
 
-  function text(value) {
-    return String(value || "").trim();
-  }
+  const text = value => String(value || "").trim();
 
   function addCardSemanticClasses(host) {
     host.querySelectorAll(":scope > .aeriom-master-grid > .aeriom-master-card").forEach(card => {
@@ -34,11 +32,6 @@
     });
   }
 
-  function campaignTitle() {
-    const c = context()?.campaign || {};
-    return text(c.name) || text(document.querySelector("#campaign-master-controls-title")?.textContent) || "Campanha";
-  }
-
   function campaignDescription() {
     const c = context()?.campaign || {};
     return text(c.description) || "Tudo o que você precisa para criar histórias inesquecíveis.";
@@ -46,7 +39,7 @@
 
   function campaignImage() {
     const c = context()?.campaign || {};
-    return text(c.coverUrl) || text(c.backgroundUrl) || "./assets/themes/aeriom/default.svg";
+    return text(c.coverUrl) || text(c.backgroundUrl) || "./assets/themes/aeriom/forest.svg";
   }
 
   function countPresentCharacters(host) {
@@ -72,7 +65,11 @@
     }
     const image = campaignImage().replaceAll('"', "\\\"");
     hero.style.backgroundImage = `linear-gradient(180deg,rgba(4,7,10,.08),rgba(4,7,10,.88)),url("${image}")`;
-    hero.innerHTML = `<div class="aeriom-master-redesign-hero__content"><div class="aeriom-master-redesign-crumb"><span>⌂</span><span>Campanha</span><span>›</span><strong>Controle do Mestre</strong></div><div class="aeriom-master-redesign-kicker">✦ MESA DO MESTRE</div><h1>Controle do Mestre</h1><p>${campaignDescription()}</p><div class="aeriom-master-redesign-quote">“Grandes aventuras começam com um grande mestre.”</div></div>`;
+    if (!hero.querySelector(".aeriom-master-redesign-hero__content")) {
+      hero.innerHTML = `<div class="aeriom-master-redesign-hero__content"><div class="aeriom-master-redesign-crumb"><span>⌂</span><span>Campanha</span><span>›</span><strong>Controle do Mestre</strong></div><div class="aeriom-master-redesign-kicker">✦ MESA DO MESTRE</div><h1>Controle do Mestre</h1><p></p><div class="aeriom-master-redesign-quote">“Grandes aventuras começam com um grande mestre.”</div></div>`;
+    }
+    const p = hero.querySelector("p");
+    if (p) p.textContent = campaignDescription();
   }
 
   function ensureStats(host) {
@@ -83,12 +80,15 @@
       host.insertBefore(stats, host.querySelector(":scope > .aeriom-master-grid") || null);
     }
     const characters = countPresentCharacters(host);
+    const values = [String(characters), "—", "—", "—", "—"];
+    const existing = [...stats.querySelectorAll(".aeriom-master-redesign-stat")];
+    if (existing.length === 5 && existing[0].querySelector(".aeriom-master-redesign-stat__value")?.textContent === values[0]) return;
     stats.replaceChildren(
-      makeStat("♟", "Aventureiros", characters, "Na campanha"),
-      makeStat("♙", "NPCs", "—", "Cadastrados"),
-      makeStat("⌖", "Locais", "—", "Mapeados"),
-      makeStat("▤", "Missões", "—", "Ativas"),
-      makeStat("◷", "Última sessão", "—", "Agendada")
+      makeStat("♟", "Aventureiros", values[0], "Na campanha"),
+      makeStat("♙", "NPCs", values[1], "Cadastrados"),
+      makeStat("⌖", "Locais", values[2], "Mapeados"),
+      makeStat("▤", "Missões", values[3], "Ativas"),
+      makeStat("◷", "Última sessão", values[4], "Agendada")
     );
   }
 
@@ -101,28 +101,39 @@
     addCardSemanticClasses(host);
   }
 
-  function start() {
-    injectCss();
-    enhance();
-    const host = root();
-    if (!host || host.dataset.masterRedesignObserved === "1") return;
-    host.dataset.masterRedesignObserved = "1";
+  let observer = null;
+  let enhancing = false;
+
+  function startObserver(host) {
+    if (!host || observer) return;
     let queued = false;
-    const observer = new MutationObserver(() => {
-      if (queued) return;
+    observer = new MutationObserver(() => {
+      if (enhancing || queued) return;
       queued = true;
       requestAnimationFrame(() => {
         queued = false;
-        enhance();
+        if (!host.isConnected) return;
+        observer.disconnect();
+        enhancing = true;
+        try { enhance(); } finally {
+          enhancing = false;
+          observer.observe(host, { childList:true, subtree:true });
+        }
       });
     });
     observer.observe(host, { childList:true, subtree:true });
   }
 
+  function start() {
+    injectCss();
+    enhance();
+    startObserver(root());
+  }
+
   window.addEventListener("aeriom:campaign:ready", () => setTimeout(start, 120));
   window.addEventListener("aeriom:campaigntabchange", event => {
     if (event.detail?.tab === "master-controls") setTimeout(start, 80);
-    if (event.detail?.tab === "overview") setTimeout(enhance, 120);
+    else setTimeout(enhance, 120);
   });
   window.addEventListener("aeriom:master:refresh", () => setTimeout(enhance, 80));
 
