@@ -27,9 +27,10 @@
     if (window.__AERIOM_ATMOSPHERE_BOOT__) return;
     window.__AERIOM_ATMOSPHERE_BOOT__ = true;
     Promise.allSettled([
-      import("./atmosphere-ui.js?v=20260911-stable"),
-      import("./campaign-atmosphere-patch.js?v=20260911-stable"),
-      import("./campaign-cinematic.js?v=20260911-cinematic1")
+      import("./atmosphere-ui.js?v=20260911-atmosphere4"),
+      import("./campaign-atmosphere-patch.js?v=20260911-gallery2"),
+      import("./campaign-atmosphere-controls.js?v=20260911-controls1"),
+      import("./campaign-cinematic-v2.js?v=20260911-cinematic2")
     ]).then(results => {
       results.filter(r => r.status === "rejected").forEach(r => console.error("[AERIOM][ATMOSPHERE BOOT]", r.reason));
     });
