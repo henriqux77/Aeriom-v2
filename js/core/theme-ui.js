@@ -3,8 +3,9 @@
  */
 import "./campaign-interaction-repair.js?v=20260912-interaction1";
 import "./campaign-feature-loader.js?v=20260912-features1";
+import "./campaign-ui-polish.js?v=20260912-ui-polish2";
 
 (() => {
   "use strict";
-  window.AERIOM_THEME_UI = Object.freeze({ version: "2026-09-12-safe-lazy1" });
+  window.AERIOM_THEME_UI = Object.freeze({ version: "2026-09-12-safe-lazy2" });
 })();
