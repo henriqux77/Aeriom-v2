@@ -19,7 +19,7 @@
       #campaign-overview-description{display:none!important}
       #campaign-panel-master-controls .aeriom-master-redesign-hero__content > p{display:none!important}
 
-      /* Uploads — esconder o controle nativo e usar o botão visual do AERIOM. */
+      /* Uploads — controles visuais do AERIOM, sem o input HTML cru. */
       .aeriom-file-native-hidden{
         position:absolute!important;
         width:1px!important;
@@ -27,7 +27,8 @@
         opacity:0!important;
         pointer-events:none!important;
       }
-      .aeriom-file-picker{
+      .aeriom-file-picker,
+      .aeriom-file-picker-button{
         display:flex!important;
         align-items:center!important;
         justify-content:center!important;
@@ -45,17 +46,16 @@
         letter-spacing:.06em!important;
         cursor:pointer!important;
         transition:.18s ease!important;
+        text-decoration:none!important;
       }
-      .aeriom-file-picker:hover{border-color:rgba(216,182,95,.52)!important;transform:translateY(-1px)}
-      .aeriom-file-picker::before{content:"↥";font-size:15px;line-height:1}
+      .aeriom-file-picker:hover,
+      .aeriom-file-picker-button:hover{border-color:rgba(216,182,95,.52)!important;transform:translateY(-1px)}
+      .aeriom-file-picker::before,
+      .aeriom-file-picker-button::before{content:"↥";font-size:15px;line-height:1}
+      .aeriom-file-picker-host{display:grid!important;gap:6px!important}
       .aeriom-file-name{display:block!important;margin-top:5px!important;color:rgba(255,255,255,.38)!important;font-size:7px!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important}
-
-      #campaign-background-file.aeriom-file-native-hidden + *{margin-top:0}
-      #aeriom-live-media-card .aeriom-live-upload-field > label.aeriom-file-picker{justify-content:center}
       #aeriom-live-media-card .aeriom-live-upload-field{display:grid;gap:6px}
-
-      /* Banner/capa do Controle do Mestre */
-      #aeriom-master-controls-root .aeriom-master-upload .aeriom-file-picker{margin-top:2px}
+      #aeriom-master-controls-root .aeriom-master-upload .aeriom-file-picker-button{margin-top:2px}
 
       /* A Mana deixa de ocupar um card próprio: ela vive no gerenciamento da ficha. */
       #campaign-panel-master-controls .aeriom-master-grid > .aeriom-master-card.is-mana{display:none!important}
@@ -69,27 +69,47 @@
     input.classList.add("aeriom-file-native-hidden");
 
     const id = input.id;
-    let label = id ? document.querySelector(`label[for="${CSS.escape(id)}"]`) : null;
-    if (!label && input.closest("label")) label = input.closest("label");
+    const directLabel = id ? document.querySelector(`label[for="${CSS.escape(id)}"]`) : null;
+    const parentLabel = input.closest("label");
+    const labelContainsInput = !!parentLabel;
+    let nameHost = input.parentElement;
 
-    if (label) {
-      label.classList.add("aeriom-file-picker");
-      label.textContent = "Escolher arquivo";
+    if (labelContainsInput) {
+      const host = parentLabel;
+      host.classList.add("aeriom-file-picker-host");
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "aeriom-file-picker-button";
+      button.textContent = "Escolher arquivo";
+      button.addEventListener("click", event => {
+        event.preventDefault();
+        input.click();
+      });
+      host.insertBefore(button, input);
+      nameHost = host;
+    } else if (directLabel) {
+      directLabel.classList.add("aeriom-file-picker");
+      directLabel.textContent = "Escolher arquivo";
+      nameHost = directLabel.parentElement || input.parentElement;
     } else {
-      label = document.createElement("label");
-      label.className = "aeriom-file-picker";
-      label.htmlFor = id;
-      label.textContent = "Escolher arquivo";
-      input.parentElement?.insertBefore(label, input);
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "aeriom-file-picker-button";
+      button.textContent = "Escolher arquivo";
+      button.addEventListener("click", event => {
+        event.preventDefault();
+        input.click();
+      });
+      input.parentElement?.insertBefore(button, input);
     }
 
-    let name = input.parentElement?.querySelector(`.aeriom-file-name[data-for="${CSS.escape(id || "")}"]`);
+    let name = nameHost?.querySelector(`.aeriom-file-name[data-for="${CSS.escape(id || "file")}"]`);
     if (!name) {
       name = document.createElement("span");
       name.className = "aeriom-file-name";
       name.dataset.for = id || "file";
       name.textContent = "Nenhum arquivo selecionado.";
-      label.insertAdjacentElement("afterend", name);
+      nameHost?.appendChild(name);
     }
     input.addEventListener("change", () => {
       const file = input.files?.[0];
