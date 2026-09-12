@@ -1,0 +1,85 @@
+/* AERIOM — Controle do Mestre: redesign baseado na referência, sem substituir a lógica existente. */
+#campaign-panel-master-controls{--md-gold:#d8b65f;--md-gold2:#f0d48a;--md-bg:#08090b;--md-panel:#0d1115;--md-panel2:#12171d;--md-border:rgba(216,182,95,.14);--md-text:#f1eee8;--md-muted:rgba(241,238,232,.48)}
+#campaign-panel-master-controls .aeriom-master-redesign-shell{display:grid;gap:12px}
+#campaign-panel-master-controls .aeriom-master-redesign-hero{position:relative;min-height:245px;display:flex;align-items:flex-end;overflow:hidden;border:1px solid rgba(216,182,95,.16);border-radius:18px;background:#0a0c0f center/cover no-repeat;box-shadow:0 22px 60px rgba(0,0,0,.28)}
+#campaign-panel-master-controls .aeriom-master-redesign-hero:before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(5,7,10,.04) 0%,rgba(5,7,10,.12) 30%,rgba(5,7,10,.86) 100%),radial-gradient(circle at 72% 20%,rgba(231,205,135,.12),transparent 28%);pointer-events:none}
+#campaign-panel-master-controls .aeriom-master-redesign-hero__content{position:relative;z-index:1;width:100%;padding:22px 22px 20px}
+#campaign-panel-master-controls .aeriom-master-redesign-crumb{display:flex;align-items:center;gap:7px;margin-bottom:26px;color:rgba(255,255,255,.55);font-size:8px}
+#campaign-panel-master-controls .aeriom-master-redesign-crumb strong{color:rgba(255,255,255,.82)}
+#campaign-panel-master-controls .aeriom-master-redesign-kicker{color:#e4c875;font-size:7px;font-weight:900;letter-spacing:.16em;text-transform:uppercase;margin-bottom:8px}
+#campaign-panel-master-controls .aeriom-master-redesign-hero h1{margin:0;font:600 clamp(30px,5vw,54px)/1 Cinzel,Georgia,serif;color:#f5f1e9;letter-spacing:.02em;text-shadow:0 5px 22px rgba(0,0,0,.55)}
+#campaign-panel-master-controls .aeriom-master-redesign-hero p{margin:8px 0 0;max-width:700px;color:rgba(255,255,255,.65);font-size:11px;line-height:1.45}
+#campaign-panel-master-controls .aeriom-master-redesign-quote{margin-top:11px;color:rgba(245,238,220,.64);font:italic 10px Georgia,serif}
+#campaign-panel-master-controls .aeriom-master-redesign-guide{display:flex;align-items:stretch;gap:7px;overflow-x:auto;padding:2px;scrollbar-width:none}
+#campaign-panel-master-controls .aeriom-master-redesign-guide::-webkit-scrollbar{display:none}
+#campaign-panel-master-controls .aeriom-master-redesign-guide button{flex:0 0 auto;display:flex;align-items:center;gap:7px;min-height:38px;padding:0 12px;border:1px solid rgba(255,255,255,.07);border-radius:10px;background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.015));color:rgba(255,255,255,.6);font-size:8px;font-weight:800;cursor:pointer;transition:.18s ease}
+#campaign-panel-master-controls .aeriom-master-redesign-guide button:hover{transform:translateY(-1px);border-color:rgba(216,182,95,.22);color:#eee}
+#campaign-panel-master-controls .aeriom-master-redesign-guide button.is-active{border-color:rgba(216,182,95,.34);background:linear-gradient(180deg,rgba(216,182,95,.11),rgba(216,182,95,.045));color:#f0d48a;box-shadow:inset 0 -2px 0 rgba(216,182,95,.5)}
+#campaign-panel-master-controls .aeriom-master-redesign-stats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+#campaign-panel-master-controls .aeriom-master-redesign-stat{display:flex;align-items:center;gap:9px;min-width:0;padding:10px 11px;border:1px solid rgba(255,255,255,.07);border-radius:12px;background:linear-gradient(145deg,rgba(255,255,255,.026),rgba(255,255,255,.01))}
+#campaign-panel-master-controls .aeriom-master-redesign-stat__icon{width:34px;height:34px;display:grid;place-items:center;flex:0 0 34px;border:1px solid rgba(216,182,95,.16);border-radius:10px;background:rgba(216,182,95,.05);color:#e8c976;font-size:15px}
+#campaign-panel-master-controls .aeriom-master-redesign-stat__value{display:block;color:#f0ede7;font:600 17px/1 Cinzel,serif}
+#campaign-panel-master-controls .aeriom-master-redesign-stat__label{display:block;margin-top:3px;color:rgba(255,255,255,.55);font-size:8px;font-weight:700}
+#campaign-panel-master-controls .aeriom-master-redesign-stat__sub{margin-top:2px;color:rgba(255,255,255,.3);font-size:6px}
+#campaign-panel-master-controls .aeriom-master-redesign-workspace{display:contents}
+#campaign-panel-master-controls .aeriom-master-grid{display:grid!important;grid-template-columns:minmax(0,1.15fr) minmax(300px,.85fr)!important;gap:10px!important;align-items:start}
+#campaign-panel-master-controls .aeriom-master-grid>.aeriom-master-card{min-width:0}
+#campaign-panel-master-controls .aeriom-master-grid>.aeriom-master-card.is-config{grid-column:1;grid-row:1/span 2}
+#campaign-panel-master-controls .aeriom-master-grid>.aeriom-master-card.is-quick{grid-column:2;grid-row:1}
+#campaign-panel-master-controls .aeriom-master-grid>.aeriom-master-card.is-sheet{grid-column:1/span 2;grid-row:3}
+#campaign-panel-master-controls .aeriom-master-grid>.aeriom-master-card.is-mana{grid-column:1/span 2;grid-row:4}
+#campaign-panel-master-controls .aeriom-master-grid>.aeriom-master-card.is-live{grid-column:1/span 2;grid-row:5}
+#campaign-panel-master-controls .aeriom-master-grid>.aeriom-master-card.is-sessions{grid-column:1;grid-row:6}
+#campaign-panel-master-controls .aeriom-master-grid>.aeriom-master-card.is-tools{grid-column:2;grid-row:6}
+#campaign-panel-master-controls .aeriom-master-card{padding:14px;border:1px solid rgba(255,255,255,.07);border-radius:15px;background:linear-gradient(145deg,rgba(255,255,255,.024),rgba(255,255,255,.008));box-shadow:0 15px 35px rgba(0,0,0,.12)}
+#campaign-panel-master-controls .aeriom-master-card__head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px}
+#campaign-panel-master-controls .aeriom-master-card h3{margin:1px 0 4px;color:#efebe4;font:500 17px Cinzel,serif}
+#campaign-panel-master-controls .aeriom-master-card p{color:rgba(255,255,255,.42);font-size:8px;line-height:1.45}
+#campaign-panel-master-controls .aeriom-master-form{gap:9px}
+#campaign-panel-master-controls .aeriom-master-field>span{color:rgba(255,255,255,.42);font-size:7px}
+#campaign-panel-master-controls .aeriom-master-field input,#campaign-panel-master-controls .aeriom-master-field textarea,#campaign-panel-master-controls .aeriom-master-field select{min-height:40px;border-color:rgba(255,255,255,.08);background:rgba(255,255,255,.018);color:#eee;border-radius:10px}
+#campaign-panel-master-controls .aeriom-master-row{gap:8px}
+#campaign-panel-master-controls .aeriom-master-upload{padding:10px;background:rgba(255,255,255,.012);border-color:rgba(255,255,255,.06);border-radius:12px}
+#campaign-panel-master-controls .aeriom-master-upload-preview{min-height:115px;border-radius:10px}
+#campaign-panel-master-controls .aeriom-master-button{min-height:38px;border-color:rgba(255,255,255,.08);border-radius:9px;font-size:8px}
+#campaign-panel-master-controls .aeriom-master-button--primary{background:linear-gradient(180deg,rgba(216,182,95,.18),rgba(216,182,95,.06));border-color:rgba(216,182,95,.35);color:#f0d48a}
+#campaign-panel-master-controls .aeriom-quick-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin-top:4px}
+#campaign-panel-master-controls .aeriom-quick-actions .aeriom-master-button{min-height:48px}
+#campaign-panel-master-controls .aeriom-master-rail{display:grid;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.06)}
+#campaign-panel-master-controls .aeriom-master-rail button{display:grid;grid-template-columns:26px minmax(0,1fr);gap:8px;align-items:center;width:100%;padding:9px;border:1px solid rgba(255,255,255,.055);border-radius:9px;background:rgba(255,255,255,.012);color:rgba(255,255,255,.64);text-align:left;cursor:pointer}
+#campaign-panel-master-controls .aeriom-master-rail button:hover{border-color:rgba(216,182,95,.2);color:#eee}
+#campaign-panel-master-controls .aeriom-master-rail__icon{width:26px;height:26px;display:grid;place-items:center;border-radius:8px;background:rgba(216,182,95,.07);color:#d9ba69}
+#campaign-panel-master-controls .aeriom-master-rail strong{display:block;font-size:8px}
+#campaign-panel-master-controls .aeriom-master-rail small{display:block;margin-top:2px;color:rgba(255,255,255,.29);font-size:6px}
+#campaign-panel-master-controls .aeriom-master-carousel{position:relative;display:grid;grid-template-columns:34px minmax(0,1fr) 34px;gap:7px;align-items:center}
+#campaign-panel-master-controls .aeriom-master-carousel__viewport{min-width:0;overflow:hidden}
+#campaign-panel-master-controls #aeriom-master-characters{display:flex!important;gap:9px!important;overflow-x:auto!important;scroll-snap-type:x mandatory;scrollbar-width:none;padding:2px!important}
+#campaign-panel-master-controls #aeriom-master-characters::-webkit-scrollbar{display:none}
+#campaign-panel-master-controls #aeriom-master-characters .aeriom-master-character{display:grid;grid-template-columns:58px minmax(110px,1fr);gap:9px;align-items:center;flex:0 0 min(240px,72vw);scroll-snap-align:start;padding:10px;border:1px solid rgba(255,255,255,.07);border-radius:12px;background:linear-gradient(145deg,rgba(255,255,255,.025),rgba(255,255,255,.008))}
+#campaign-panel-master-controls #aeriom-master-characters .aeriom-master-character__avatar{width:58px;height:72px;border-radius:10px}
+#campaign-panel-master-controls .aeriom-master-carousel__arrow{width:34px;height:34px;border:1px solid rgba(216,182,95,.16);border-radius:50%;background:rgba(216,182,95,.05);color:#e3c672;cursor:pointer;font-size:15px}
+#campaign-panel-master-controls .aeriom-master-carousel__dots{display:flex;justify-content:center;gap:5px;margin-top:8px}
+#campaign-panel-master-controls .aeriom-master-carousel__dots i{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.18)}
+#campaign-panel-master-controls .aeriom-master-carousel__dots i.is-active{background:#d8b65f;box-shadow:0 0 8px rgba(216,182,95,.4)}
+#campaign-panel-master-controls .aeriom-mana-manager{display:grid;gap:8px}
+#campaign-panel-master-controls .aeriom-mana-global{display:flex;flex-wrap:wrap;gap:7px;padding:10px;border:1px solid rgba(255,255,255,.06);border-radius:12px;background:rgba(255,255,255,.012)}
+#campaign-panel-master-controls .aeriom-mana-global span{align-self:center;margin-right:auto;color:rgba(255,255,255,.52);font-size:8px;font-weight:800}
+#campaign-panel-master-controls .aeriom-mana-global button,#campaign-panel-master-controls .aeriom-mana-row button{min-height:32px;padding:0 9px;border:1px solid rgba(255,255,255,.07);border-radius:9px;background:rgba(255,255,255,.015);color:rgba(255,255,255,.58);font-size:7px;font-weight:800;cursor:pointer}
+#campaign-panel-master-controls .aeriom-mana-global button:hover,#campaign-panel-master-controls .aeriom-mana-row button:hover{border-color:rgba(216,182,95,.2);color:#eee}
+#campaign-panel-master-controls .aeriom-mana-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:9px;align-items:center;padding:9px 10px;border:1px solid rgba(255,255,255,.06);border-radius:11px;background:rgba(255,255,255,.012)}
+#campaign-panel-master-controls .aeriom-mana-row__identity strong{display:block;color:#eee;font:500 12px Cinzel,serif}
+#campaign-panel-master-controls .aeriom-mana-row__identity small{display:block;margin-top:3px;color:rgba(255,255,255,.33);font-size:7px}
+#campaign-panel-master-controls .aeriom-mana-row__buttons{display:flex;flex-wrap:wrap;gap:4px;justify-content:flex-end}
+#campaign-panel-master-controls .aeriom-mana-dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:4px;vertical-align:middle}
+#campaign-panel-master-controls .aeriom-mana-dot.azul{background:#5d9de0}.aeriom-mana-dot.roxa{background:#a978e1}.aeriom-mana-dot.dourada{background:#e4be5f}.aeriom-mana-dot.branca{background:#eee}
+#campaign-panel-master-controls .aeriom-mana-row button.is-unlocked{border-color:rgba(216,182,95,.25);color:#e8c976;background:rgba(216,182,95,.045)}
+#campaign-panel-master-controls .aeriom-mana-row button.is-selected{box-shadow:inset 0 -2px 0 #d8b65f}
+#campaign-panel-master-controls .aeriom-mana-note{color:rgba(255,255,255,.32);font-size:7px;margin-top:3px}
+#campaign-panel-master-controls .aeriom-live-media-card{grid-column:1/span 2;margin-top:0!important;padding:14px!important;border-radius:15px!important;background:linear-gradient(145deg,rgba(255,255,255,.024),rgba(255,255,255,.008))!important;border:1px solid rgba(255,255,255,.07)!important}
+#campaign-panel-master-controls .aeriom-live-media-card .aeriom-master-card__head{margin-bottom:10px}
+#campaign-panel-master-controls .aeriom-live-media-grid{grid-template-columns:150px minmax(0,1fr)!important}
+#campaign-panel-master-controls .aeriom-live-media-card input,#campaign-panel-master-controls .aeriom-live-media-card select{min-height:40px;border:1px solid rgba(255,255,255,.08);border-radius:10px;background:rgba(255,255,255,.018);color:#eee}
+#campaign-panel-master-controls .aeriom-master-redesign-anchor{scroll-margin-top:12px}
+#campaign-panel-master-controls .aeriom-master-redesign-hidden-heading{display:none!important}
+@media(max-width:900px){#campaign-panel-master-controls .aeriom-master-redesign-stats{grid-template-columns:repeat(3,minmax(0,1fr))}#campaign-panel-master-controls .aeriom-master-grid{grid-template-columns:1fr!important}#campaign-panel-master-controls .aeriom-master-grid>.aeriom-master-card{grid-column:1!important;grid-row:auto!important}#campaign-panel-master-controls .aeriom-quick-actions{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:620px){#campaign-panel-master-controls .aeriom-master-redesign-hero{min-height:220px}.aeriom-master-redesign-hero__content{padding:18px!important}.aeriom-master-redesign-hero h1{font-size:31px!important}.aeriom-master-redesign-stats{grid-template-columns:repeat(2,minmax(0,1fr))!important}.aeriom-master-redesign-stat:last-child{grid-column:1/-1}.aeriom-live-media-grid{grid-template-columns:1fr!important}.aeriom-mana-row{grid-template-columns:1fr!important}.aeriom-mana-row__buttons{justify-content:flex-start!important}.aeriom-master-redesign-guide button{min-height:36px;padding:0 10px}.aeriom-master-card{padding:12px!important}}
