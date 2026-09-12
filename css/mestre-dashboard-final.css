@@ -1,0 +1,65 @@
+/* AERIOM — final refinement for Mestre dashboard */
+#campaign-panel-master-controls .aeriom-master-redesign-shell{gap:0}
+#campaign-panel-master-controls>.campaign-panel__heading{display:none!important}
+#campaign-panel-master-controls .aeriom-master-redesign-shell>.aeriom-master-redesign-hero{border-radius:18px 18px 12px 12px;min-height:260px}
+#campaign-panel-master-controls .aeriom-master-redesign-hero__content{padding:22px 24px 20px}
+#campaign-panel-master-controls .aeriom-master-redesign-hero p.is-placeholder-description{display:none!important}
+#campaign-panel-master-controls .aeriom-master-redesign-guide{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:7px;margin-top:8px;overflow:visible}
+#campaign-panel-master-controls .aeriom-master-redesign-guide button{justify-content:center;min-width:0;padding:0 8px;white-space:nowrap}
+#campaign-panel-master-controls .aeriom-master-grid>.aeriom-master-card.is-config{display:grid;grid-template-columns:minmax(0,1fr) 190px;column-gap:14px;align-items:start}
+#campaign-panel-master-controls .aeriom-master-grid>.aeriom-master-card.is-config>.aeriom-master-card__head{grid-column:1/-1}
+#campaign-panel-master-controls .aeriom-master-grid>.aeriom-master-card.is-config>.aeriom-master-form{grid-column:1;min-width:0}
+#campaign-panel-master-controls .aeriom-master-grid>.aeriom-master-card.is-config>.aeriom-master-form>.aeriom-master-rail{grid-column:2;grid-row:1/8;align-self:stretch;margin:0;padding:0 0 0 12px;border:0;border-left:1px solid rgba(255,255,255,.06)}
+#campaign-panel-master-controls .aeriom-master-rail{gap:7px}
+#campaign-panel-master-controls .aeriom-master-rail button{min-height:52px;padding:9px 10px}
+#campaign-panel-master-controls .aeriom-master-rail__icon{width:32px;height:32px}
+#campaign-panel-master-controls .aeriom-master-grid>.aeriom-master-card.is-content{display:none!important}
+
+/* Portrait player-sheet cards */
+#campaign-panel-master-controls .aeriom-master-carousel{grid-template-columns:38px minmax(0,1fr) 38px;gap:8px}
+#campaign-panel-master-controls .aeriom-master-carousel__viewport{overflow:hidden}
+#campaign-panel-master-controls #aeriom-master-characters{display:flex!important;gap:12px!important;overflow-x:auto!important;scroll-snap-type:x mandatory!important;padding:4px!important}
+#campaign-panel-master-controls #aeriom-master-characters .aeriom-master-character{display:flex!important;flex-direction:column!important;justify-content:flex-start!important;align-items:stretch!important;gap:9px!important;flex:0 0 min(210px,68vw)!important;padding:10px!important;border-radius:15px!important;text-align:left!important;scroll-snap-align:start!important}
+#campaign-panel-master-controls #aeriom-master-characters .aeriom-master-character__avatar{width:100%!important;height:210px!important;aspect-ratio:3/4!important;flex:none!important;border-radius:12px!important}
+#campaign-panel-master-controls #aeriom-master-characters .aeriom-master-character strong{font-size:15px!important;line-height:1.2}
+#campaign-panel-master-controls #aeriom-master-characters .aeriom-master-character small{font-size:8px!important}
+#campaign-panel-master-controls #aeriom-master-characters .aeriom-master-character .aeriom-master-actions{width:100%;margin-top:auto}
+#campaign-panel-master-controls #aeriom-master-characters .aeriom-master-character .aeriom-master-actions button{width:100%;min-height:36px}
+#campaign-panel-master-controls .aeriom-master-carousel__arrow{width:38px;height:38px;font-size:20px;touch-action:manipulation}
+
+/* Mana */
+#campaign-panel-master-controls .aeriom-mana-manager{gap:10px}
+#campaign-panel-master-controls .aeriom-mana-global{justify-content:flex-start}
+#campaign-panel-master-controls .aeriom-mana-row{grid-template-columns:minmax(150px,1fr) auto auto}
+#campaign-panel-master-controls .aeriom-mana-fire{position:relative;overflow:hidden}
+#campaign-panel-master-controls .aeriom-mana-fire::after{content:"";position:absolute;left:50%;bottom:2px;width:11px;height:16px;border-radius:60% 60% 45% 45%;transform:translateX(-50%) rotate(1deg);background:currentColor;opacity:.58;filter:blur(1px);animation:aeriomManaFlame 1.15s ease-in-out infinite alternate;pointer-events:none}
+#campaign-panel-master-controls .aeriom-mana-fire.azul::after{color:#5d9de0;box-shadow:0 0 10px rgba(93,157,224,.65)}
+#campaign-panel-master-controls .aeriom-mana-fire.roxa::after{color:#a978e1;box-shadow:0 0 10px rgba(169,120,225,.65)}
+#campaign-panel-master-controls .aeriom-mana-fire.dourada::after{color:#e4be5f;box-shadow:0 0 10px rgba(228,190,95,.65)}
+#campaign-panel-master-controls .aeriom-mana-fire.branca::after{color:#eee;box-shadow:0 0 10px rgba(238,238,238,.55)}
+@keyframes aeriomManaFlame{0%{height:11px;width:8px;transform:translateX(-50%) scale(.9) rotate(-5deg);opacity:.4}50%{height:19px;width:12px;transform:translateX(-50%) scale(1) rotate(6deg);opacity:.72}100%{height:14px;width:9px;transform:translateX(-50%) scale(.94) rotate(-2deg);opacity:.5}}
+
+/* Live media upload */
+#campaign-panel-master-controls .aeriom-live-media-grid{grid-template-columns:150px minmax(0,1fr)!important}
+#campaign-panel-master-controls .aeriom-live-upload-field{grid-column:2;display:grid;gap:5px}
+#campaign-panel-master-controls .aeriom-live-upload-field label{color:rgba(255,255,255,.42);font-size:7px;font-weight:900;letter-spacing:.12em;text-transform:uppercase}
+#campaign-panel-master-controls #aeriom-live-file{width:100%;min-height:40px;padding:8px;border:1px dashed rgba(216,182,95,.18);border-radius:10px;background:rgba(255,255,255,.014);color:rgba(255,255,255,.66);font-size:8px}
+#campaign-panel-master-controls #aeriom-live-file-name{font-size:7px;color:rgba(255,255,255,.36)}
+
+@media(max-width:900px){
+  #campaign-panel-master-controls .aeriom-master-redesign-guide{grid-template-columns:repeat(4,minmax(0,1fr))}
+  #campaign-panel-master-controls .aeriom-master-grid>.aeriom-master-card.is-config{grid-template-columns:1fr}
+  #campaign-panel-master-controls .aeriom-master-grid>.aeriom-master-card.is-config>.aeriom-master-form>.aeriom-master-rail{grid-column:auto;grid-row:auto;margin-top:10px;padding:10px 0 0;border:0;border-top:1px solid rgba(255,255,255,.06)}
+}
+@media(max-width:620px){
+  #campaign-panel-master-controls .aeriom-master-redesign-guide{grid-template-columns:repeat(2,minmax(0,1fr))}
+  #campaign-panel-master-controls .aeriom-master-redesign-hero{min-height:230px}
+  #campaign-panel-master-controls .aeriom-master-redesign-hero__content{padding:18px 16px 16px}
+  #campaign-panel-master-controls .aeriom-master-redesign-hero h1{font-size:34px}
+  #campaign-panel-master-controls #aeriom-master-characters .aeriom-master-character{flex-basis:min(190px,76vw)!important}
+  #campaign-panel-master-controls #aeriom-master-characters .aeriom-master-character__avatar{height:185px!important}
+  #campaign-panel-master-controls .aeriom-mana-row{grid-template-columns:1fr}
+  #campaign-panel-master-controls .aeriom-mana-row__buttons{justify-content:flex-start}
+  #campaign-panel-master-controls .aeriom-live-media-grid{grid-template-columns:1fr!important}
+  #campaign-panel-master-controls .aeriom-live-upload-field{grid-column:auto}
+}
