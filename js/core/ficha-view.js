@@ -2,52 +2,46 @@ import { getSupabase } from "./supabase.js";
 (() => {
   "use strict";
   const $ = (id) => document.getElementById(id);
-  const esc = (v) => String(v ?? "").replace(/[&<>"]/g, (c) => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"' : "&quot;" }[c]));
-  const attrDefs = [
-    ["forca","Força"],["agilidade","Agilidade"],["percepcao","Percepção"],["vigor","Vigor"],
-    ["intelecto","Intelecto"],["presenca","Presença"],["controle","Controle"],["precisao","Precisão"]
-  ];
-  const skillDefs = [
-    ["acrobacia","Acrobacia","agilidade"],["atletismo","Atletismo","forca"],["furtividade","Furtividade","agilidade"],["pontaria","Pontaria","agilidade"],
-    ["percepcao","Percepção","percepcao"],["investigacao","Investigação","intelecto"],["conhecimento","Conhecimento","intelecto"],["medicina","Medicina","intelecto"],
-    ["sobrevivencia","Sobrevivência","percepcao"],["persuasao","Persuasão","presenca"],["enganacao","Enganação","presenca"],["intuicao","Intuição","percepcao"],
-    ["tatica","Tática","intelecto"],["oficio","Ofício / Crafting","controle"]
-  ];
-  async function main(){
-    const sb=await getSupabase();
-    const auth=await sb.auth.getUser();
-    if(!auth.data?.user){ location.href="./index.html"; return; }
-    const p=new URLSearchParams(location.search);
-    const id=p.get("id"); const returnCampaign=p.get("returnCampaign");
-    if(!id) throw new Error("Ficha não informada.");
-    const q=await sb.from("characters").select("*").eq("id",id).eq("user_id",auth.data.user.id).maybeSingle();
-    if(q.error) throw q.error; if(!q.data) throw new Error("Ficha não encontrada.");
-    const row=q.data, s=row.creation_state||{}, d=s.derivedStats||{}, dice=s.assignedDice||{};
-    const set=(id,v)=>{const e=$(id);if(e)e.textContent=(v===undefined||v===null||v==="")?"—":v};
-    set("name",row.name||s.name||"Ficha sem nome");
-    set("meta",[row.race||s.race,row.class||s.class,row.power||s.primaryPower].filter(Boolean).join(" · ")||"Aventureiro");
-    set("hp",(row.hp_current??s.hp?.current??10)+"/"+(row.hp_max??s.hp?.max??10));
-    set("def",row.defense??s.defense??10); set("move",(row.movement??s.movement??9)+"m");
-    set("mana",(row.mana_current??s.mana?.current??0)+"/"+(row.mana_max??s.mana?.max??0));
-    set("race",row.race||s.race); set("class",row.class||s.class); set("power",row.power||s.primaryPower); set("parallel",row.parallelPower||s.parallelPower);
-    set("gender",row.gender||s.gender); set("origin",row.origin||s.origin); set("region",s.region); set("description",s.description||row.description);
-    set("height",s.appearance?.height ? s.appearance.height+" cm" : "—"); set("skin",s.appearance?.skinTone); set("hair",s.appearance?.hairColor); set("eyes",s.appearance?.eyeColor);
-    set("personality",s.personality); set("objective",s.objective); set("fear",s.fear); set("bond",s.importantBond); set("history",s.history);
-    const tags=$("race-tags"); const mods=row.racial_modifiers||d.racialModifiers||{};
-    if(tags) tags.innerHTML=Object.entries(mods).map(([k,v])=>"<span class=\"fv-tag\">"+esc(k)+" "+(Number(v)>0?"+":"")+esc(v)+"</span>").join("")||"<span class=\"fv-tag\">Sem modificadores</span>";
-    const master=s.elementalMaster||{};
-    const avatarPath=String(s.avatar||row.avatar_path||"").trim();
-    let avatarUrl=""; if(avatarPath){ const ar=await sb.storage.from("avatars").createSignedUrl(avatarPath,3600); avatarUrl=ar.data?.signedUrl||""; }
-    const av=$("avatar"); const ph=$("avatar-placeholder"); if(av && avatarUrl){av.src=avatarUrl;av.hidden=false;if(ph)ph.hidden=true;}
-    else if(ph){ph.hidden=false;ph.textContent=(row.name||s.name||"?").slice(0,1).toUpperCase();}
-    const attrs=$("attributes-list"); if(attrs){attrs.innerHTML=attrDefs.map(([id,name])=>"<div class=\"fv-list-item\"><b>"+name+"</b><small>"+esc(dice[id]||"—")+"</small></div>").join("");}
-    const skills=$("skills-list"); const sv=s.skills||{}; if(skills){skills.innerHTML=skillDefs.filter(x=>sv[x[0]]?.trained||sv[x[0]]?.bonus).map(x=>"<div class=\"fv-list-item\"><b>"+x[1]+"</b><small>"+(sv[x[0]]?.trained?"Treinada":"")+(sv[x[0]]?.bonus? " · Bônus "+sv[x[0]].bonus:"")+"</small></div>").join("")||"<div class=\"fv-list-item\"><small>Nenhuma perícia treinada.</small></div>";}
-    const tech=$("techniques-list"); if(tech) tech.innerHTML=(s.techniques||[]).map(x=>"<div class=\"fv-list-item\"><b>"+esc(x.name||"Técnica")+"</b><small>Nível "+esc(x.level||1)+" · XP "+esc(x.xp||0)+"</small></div>").join("")||"<div class=\"fv-list-item\"><small>Nenhuma técnica registrada.</small></div>";
-    const inv=$("inventory-list"); const inventory=s.inventory||s.equipment||[]; if(inv) inv.innerHTML=inventory.map(x=>"<div class=\"fv-list-item\"><b>"+esc(x.name||x.item||"Item")+"</b><small>"+esc(x.description||"")+"</small></div>").join("")||"<div class=\"fv-list-item\"><small>Inventário vazio.</small></div>";
-    const u=new URL("./fichas.html",location.href); u.searchParams.set("id",row.id); if(returnCampaign)u.searchParams.set("returnCampaign",returnCampaign); $("edit").onclick=()=>location.href=u.href;
-    $("back").href=returnCampaign?"./campanha.html?campaign="+encodeURIComponent(returnCampaign):"./minhas-fichas.html";
-    $("menu-toggle").onclick=()=>$( "menu").classList.toggle("is-open");
-    document.querySelectorAll(".fv-menu-item").forEach((b)=>b.addEventListener("click",()=>{$("menu").classList.remove("is-open"); const t=$(b.dataset.target); if(t)t.scrollIntoView({behavior:"smooth",block:"start"});}));
+  const esc = (v) => String(v ?? "").replace(/[&<>\"]/g, (c) => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"' : "&quot;" }[c]));
+  const attrDefs = [["forca","Força"],["agilidade","Agilidade"],["percepcao","Percepção"],["vigor","Vigor"],["intelecto","Intelecto"],["presenca","Presença"],["controle","Controle"],["precisao","Precisão"]];
+  const skillDefs = [["acrobacia","Acrobacia","agilidade"],["atletismo","Atletismo","forca"],["furtividade","Furtividade","agilidade"],["pontaria","Pontaria","agilidade"],["percepcao","Percepção","percepcao"],["investigacao","Investigação","intelecto"],["conhecimento","Conhecimento","intelecto"],["medicina","Medicina","intelecto"],["sobrevivencia","Sobrevivência","percepcao"],["persuasao","Persuasão","presenca"],["enganacao","Enganação","presenca"],["intuicao","Intuição","percepcao"],["tatica","Tática","intelecto"],["oficio","Ofício / Crafting","controle"]];
+  const MANA={azul:["Azul","#5d9de0","🔵"],roxa:["Roxa","#a978e1","🟣"],dourada:["Dourada","#e4be5f","🟡"],branca:["Branca","#eeeeee","⚪"]};
+  const MANA_ORDER=["azul","roxa","dourada","branca"];
+  function injectManaStyle(){if($("fv-mana-style"))return;const s=document.createElement("style");s.id="fv-mana-style";s.textContent=`.fv-mana-control{margin-top:12px;padding:14px;border:1px solid rgba(216,182,95,.18);border-radius:14px;background:linear-gradient(145deg,rgba(216,182,95,.055),rgba(255,255,255,.015))}.fv-mana-control__head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;margin-bottom:10px}.fv-mana-control__head strong{font:600 14px Cinzel,Georgia,serif;color:#e8c975}.fv-mana-control__head small{display:block;margin-top:3px;color:rgba(255,255,255,.42);font-size:8px}.fv-mana-options{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}.fv-mana-option{min-height:58px;border:1px solid rgba(255,255,255,.08);border-radius:11px;background:rgba(255,255,255,.018);color:rgba(255,255,255,.5);cursor:pointer;display:grid;place-items:center;gap:2px;transition:.16s ease}.fv-mana-option.is-selected{border-color:var(--mana);box-shadow:0 0 18px color-mix(in srgb,var(--mana) 20%,transparent),inset 0 -2px 0 var(--mana);color:#fff;background:color-mix(in srgb,var(--mana) 9%,transparent)}.fv-mana-option:hover{transform:translateY(-1px)}.fv-mana-option[disabled]{cursor:not-allowed;opacity:.25;filter:grayscale(1)}.fv-mana-option b{font-size:16px}.fv-mana-option span{font-size:8px;font-weight:800}.fv-mana-status{margin-top:8px;font-size:8px;color:rgba(255,255,255,.4)}@media(max-width:600px){.fv-mana-options{grid-template-columns:repeat(2,minmax(0,1fr))}}`;document.head.appendChild(s)}
+  async function renderMana(sb,row,campaignId){
+    injectManaStyle();
+    const target=$("power-section"); if(!target||$("fv-mana-control"))return;
+    const settings=await sb.from("campaign_character_settings").select("unlocked_manas,selected_mana").eq("campaign_id",campaignId).eq("character_id",row.id).maybeSingle();
+    if(settings.error)return;
+    const unlocked=new Set(Array.isArray(settings.data?.unlocked_manas)?settings.data.unlocked_manas:["azul"]); unlocked.add("azul");
+    let selected=MANA[selected=String(settings.data?.selected_mana||"azul")]?String(settings.data?.selected_mana||"azul"):"azul"; if(!unlocked.has(selected))selected="azul";
+    const box=document.createElement("div");box.id="fv-mana-control";box.className="fv-mana-control";
+    box.innerHTML=`<div class="fv-mana-control__head"><div><strong>✦ Afinidade de Mana</strong><small>As cores liberadas pelo Mestre ficam disponíveis aqui. Escolha qual está ativa.</small></div></div><div class="fv-mana-options">${MANA_ORDER.map(id=>{const [name,color,icon]=MANA[id],ok=unlocked.has(id);return`<button type="button" class="fv-mana-option ${selected===id?"is-selected":""}" data-fv-mana="${id}" style="--mana:${color}" ${ok?"":"disabled"} title="${ok?`Usar Mana ${name}`:`Mana ${name} bloqueada pelo Mestre`}"><b>${icon}</b><span>${name}</span></button>`}).join("")}</div><div class="fv-mana-status" id="fv-mana-status">Mana ativa: <strong>${MANA[selected][0]}</strong> • ${unlocked.size} cor(es) liberada(s)</div>`;
+    target.appendChild(box);
+    box.querySelectorAll("[data-fv-mana]").forEach(btn=>btn.addEventListener("click",async()=>{
+      const next=btn.dataset.fvMana;if(!unlocked.has(next)||next===selected)return;selected=next;
+      box.querySelectorAll("[data-fv-mana]").forEach(x=>x.classList.toggle("is-selected",x.dataset.fvMana===selected));
+      const status=$("fv-mana-status");if(status)status.innerHTML=`Mana ativa: <strong>${MANA[selected][0]}</strong> • ${unlocked.size} cor(es) liberada(s)`;
+      const r=await sb.from("campaign_character_settings").upsert({campaign_id:campaignId,character_id:row.id,unlocked_manas:[...unlocked],selected_mana:selected},{onConflict:"campaign_id,character_id"});
+      if(r.error){selected="azul";box.querySelectorAll("[data-fv-mana]").forEach(x=>x.classList.toggle("is-selected",x.dataset.fvMana===selected));if(status)status.textContent="Não foi possível salvar a afinidade.";}
+    }));
   }
-  main().catch((e)=>{console.error("[AERION][FICHA-VIEW]",e);const er=$("error");if(er){er.hidden=false;er.textContent=e?.message||"Não foi possível abrir a ficha.";}});
+  async function main(){
+    const sb=await getSupabase(); const auth=await sb.auth.getUser(); if(!auth.data?.user){location.href="./index.html";return;}
+    const p=new URLSearchParams(location.search); const id=p.get("id"); const returnCampaign=p.get("returnCampaign"); if(!id)throw new Error("Ficha não informada.");
+    const q=await sb.from("characters").select("*").eq("id",id).eq("user_id",auth.data.user.id).maybeSingle(); if(q.error)throw q.error;if(!q.data)throw new Error("Ficha não encontrada.");
+    const row=q.data,s=row.creation_state||{},d=s.derivedStats||{},dice=s.assignedDice||{};
+    const campaignId=returnCampaign||row.campaign_id||null;
+    const set=(id,v)=>{const e=$(id);if(e)e.textContent=(v===undefined||v===null||v==="")?"—":v};
+    set("name",row.name||s.name||"Ficha sem nome");set("meta",[row.race||s.race,row.class||s.class,row.power||s.primaryPower].filter(Boolean).join(" · ")||"Aventureiro");set("hp",(row.hp_current??s.hp?.current??10)+"/"+(row.hp_max??s.hp?.max??10));set("def",row.defense??s.defense??10);set("move",(row.movement??s.movement??9)+"m");set("mana",(row.mana_current??s.mana?.current??0)+"/"+(row.mana_max??s.mana?.max??0));set("race",row.race||s.race);set("class",row.class||s.class);set("power",row.power||s.primaryPower);set("parallel",row.parallelPower||s.parallelPower);set("gender",row.gender||s.gender);set("origin",row.origin||s.origin);set("region",s.region);set("description",s.description||row.description);set("height",s.appearance?.height?s.appearance.height+" cm":"—");set("skin",s.appearance?.skinTone);set("hair",s.appearance?.hairColor);set("eyes",s.appearance?.eyeColor);set("personality",s.personality);set("objective",s.objective);set("fear",s.fear);set("bond",s.importantBond);set("history",s.history);
+    const tags=$("race-tags"),mods=row.racial_modifiers||d.racialModifiers||{};if(tags)tags.innerHTML=Object.entries(mods).map(([k,v])=>"<span class=\"fv-tag\">"+esc(k)+" "+(Number(v)>0?"+":"")+esc(v)+"</span>").join("")||"<span class=\"fv-tag\">Sem modificadores</span>";
+    const avatarPath=String(s.avatar||row.avatar_path||"").trim();let avatarUrl="";if(avatarPath){const ar=await sb.storage.from("avatars").createSignedUrl(avatarPath,3600);avatarUrl=ar.data?.signedUrl||"";}const av=$("avatar"),ph=$("avatar-placeholder");if(av&&avatarUrl){av.src=avatarUrl;av.hidden=false;if(ph)ph.hidden=true}else if(ph){ph.hidden=false;ph.textContent=(row.name||s.name||"?").slice(0,1).toUpperCase()}
+    const attrs=$("attributes-list");if(attrs)attrs.innerHTML=attrDefs.map(([id,name])=>"<div class=\"fv-list-item\"><b>"+name+"</b><small>"+esc(dice[id]||"—")+"</small></div>").join("");
+    const skills=$("skills-list"),sv=s.skills||{};if(skills)skills.innerHTML=skillDefs.filter(x=>sv[x[0]]?.trained||sv[x[0]]?.bonus).map(x=>"<div class=\"fv-list-item\"><b>"+x[1]+"</b><small>"+(sv[x[0]]?.trained?"Treinada":"")+(sv[x[0]]?.bonus?" · Bônus "+sv[x[0]].bonus:"")+"</small></div>").join("")||"<div class=\"fv-list-item\"><small>Nenhuma perícia treinada.</small></div>";
+    const tech=$("techniques-list");if(tech)tech.innerHTML=(s.techniques||[]).map(x=>"<div class=\"fv-list-item\"><b>"+esc(x.name||"Técnica")+"</b><small>Nível "+esc(x.level||1)+" · XP "+esc(x.xp||0)+"</small></div>").join("")||"<div class=\"fv-list-item\"><small>Nenhuma técnica registrada.</small></div>";
+    const inv=$("inventory-list"),inventory=s.inventory||s.equipment||[];if(inv)inv.innerHTML=inventory.map(x=>"<div class=\"fv-list-item\"><b>"+esc(x.name||x.item||"Item")+"</b><small>"+esc(x.description||"")+"</small></div>").join("")||"<div class=\"fv-list-item\"><small>Inventário vazio.</small></div>";
+    if(campaignId)await renderMana(sb,row,campaignId);
+    const u=new URL("./fichas.html",location.href);u.searchParams.set("id",row.id);if(returnCampaign)u.searchParams.set("returnCampaign",returnCampaign);$("edit").onclick=()=>location.href=u.href;$("back").href=returnCampaign?"./campanha.html?campaign="+encodeURIComponent(returnCampaign):"./minhas-fichas.html";$("menu-toggle").onclick=()=>$("menu").classList.toggle("is-open");document.querySelectorAll(".fv-menu-item").forEach((b)=>b.addEventListener("click",()=>{$("menu").classList.remove("is-open");const t=$(b.dataset.target);if(t)t.scrollIntoView({behavior:"smooth",block:"start"})}));
+  }
+  main().catch((e)=>{console.error("[AERION][FICHA-VIEW]",e);const er=$("error");if(er){er.hidden=false;er.textContent=e?.message||"Não foi possível abrir a ficha."}});
 })();
