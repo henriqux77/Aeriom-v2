@@ -66,9 +66,7 @@ import { getSupabase } from "./supabase.js";
         button.textContent = "Enviando…";
         const upload = await sb.storage.from(BUCKET).upload(path, file, { upsert: false, contentType: file.type, cacheControl: "3600" });
         if (upload.error) throw upload.error;
-        const type = mediaType(file);
-        const title = $("aeriom-live-title")?.value.trim() || null;
-        const row = { campaign_id: campaign, media_type: type, source_url: path, title, active: true, autoplay: true, loop: false, volume: .7, updated_by: user?.id || null };
+        const row = { campaign_id: campaign, media_type: mediaType(file), source_url: path, title: $("aeriom-live-title")?.value.trim() || null, active: true, autoplay: true, loop: false, volume: .7, updated_by: user?.id || null };
         const result = await sb.from("campaign_live_media").upsert(row, { onConflict: "campaign_id" }).select("*").single();
         if (result.error) throw result.error;
         window.dispatchEvent(new CustomEvent("aeriom:live-media-refresh", { detail: { campaignId: campaign } }));
@@ -83,7 +81,7 @@ import { getSupabase } from "./supabase.js";
     }, true);
   }
 
-  async function stopPatch() {
+  function patchStop() {
     const button = $("aeriom-live-stop");
     if (!button || button.dataset.uploadStopBound === "1") return;
     button.dataset.uploadStopBound = "1";
@@ -106,18 +104,17 @@ import { getSupabase } from "./supabase.js";
     }, true);
   }
 
-  function start() {
-    sb = sb || getSupabase();
-    Promise.resolve(sb).catch(error => console.error("[AERIOM][LIVE MEDIA UPLOAD]", error));
+  async function start() {
+    try { sb = sb || await getSupabase(); } catch (error) { console.error("[AERIOM][LIVE MEDIA UPLOAD]", error); return; }
     injectInput();
     hijackPublish();
-    void stopPatch();
+    patchStop();
   }
 
-  const schedule = () => window.setTimeout(start, 100);
+  const schedule = () => window.setTimeout(() => void start(), 100);
   window.addEventListener("aeriom:campaign:ready", schedule);
   window.addEventListener("aeriom:campaigntabchange", schedule);
   window.addEventListener("aeriom:master:refresh", schedule);
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start, { once: true });
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", () => void start(), { once: true });
   else schedule();
 })();
