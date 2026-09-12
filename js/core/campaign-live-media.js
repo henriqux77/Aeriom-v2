@@ -3,12 +3,14 @@ import { getSupabase } from "./supabase.js";
 (() => {
   "use strict";
 
+  if (window.__AERIOM_LIVE_MEDIA_STARTED__) return;
+  window.__AERIOM_LIVE_MEDIA_STARTED__ = true;
+
   const state = {
     supabase: null,
     channel: null,
     campaignId: null,
     current: null,
-    observer: null,
     masterCardReady: false,
     started: false
   };
@@ -19,7 +21,7 @@ import { getSupabase } from "./supabase.js";
   const campaignId = () => new URLSearchParams(location.search).get("campaign") || ctx()?.campaignId || ctx()?.campaign?.id || null;
 
   function injectStyles() {
-    if (document.getElementById("aeriom-live-media-style")) return;
+    if ($("aeriom-live-media-style")) return;
     const style = document.createElement("style");
     style.id = "aeriom-live-media-style";
     style.textContent = `
@@ -42,8 +44,9 @@ import { getSupabase } from "./supabase.js";
   }
 
   function ensureStage() {
-    if ($("aeriom-live-media-stage")) return $("aeriom-live-media-stage");
-    const stage = document.createElement("div");
+    let stage = $("aeriom-live-media-stage");
+    if (stage) return stage;
+    stage = document.createElement("div");
     stage.id = "aeriom-live-media-stage";
     stage.className = "aeriom-live-media-stage";
     stage.innerHTML = '<div class="aeriom-live-media-stage__panel"><button type="button" class="aeriom-live-media-stage__close" aria-label="Fechar transmissão">×</button><div data-live-content></div><div class="aeriom-live-media-stage__title" data-live-title></div></div>';
@@ -58,6 +61,7 @@ import { getSupabase } from "./supabase.js";
     if (!stage) return;
     stage.classList.remove("is-open");
     stage.querySelector("[data-live-content]")?.replaceChildren();
+    stage.querySelector("[data-live-upload-content]")?.replaceChildren();
   }
 
   function youtubeEmbed(url) {
@@ -73,11 +77,11 @@ import { getSupabase } from "./supabase.js";
   function render(media) {
     state.current = media || null;
     const stage = ensureStage();
-    const root = stage.querySelector("[data-live-content]");
-    const title = stage.querySelector("[data-live-title]");
+    const root = stage.querySelector("[data-live-content]") || stage.querySelector("[data-live-upload-content]");
+    const title = stage.querySelector("[data-live-title]") || stage.querySelector("[data-live-upload-title]");
+    if (!root || !title) return;
     root.replaceChildren();
     title.textContent = media?.title || "";
-
     if (!media?.active || !media?.source_url) {
       stage.classList.remove("is-open");
       return;
@@ -119,7 +123,6 @@ import { getSupabase } from "./supabase.js";
       image.alt = media.title || "Transmissão da mesa";
       root.appendChild(image);
     }
-
     stage.classList.add("is-open");
   }
 
@@ -151,20 +154,8 @@ import { getSupabase } from "./supabase.js";
       setStatus("Informe uma URL HTTP/HTTPS válida.", true);
       return;
     }
-
     const user = ctx()?.user;
-    const result = await state.supabase.from("campaign_live_media").upsert({
-      campaign_id: state.campaignId,
-      media_type: type,
-      source_url: url,
-      title,
-      active: true,
-      autoplay: true,
-      loop: false,
-      volume: .7,
-      updated_by: user?.id || null
-    }, { onConflict: "campaign_id" }).select("*").single();
-
+    const result = await state.supabase.from("campaign_live_media").upsert({ campaign_id: state.campaignId, media_type: type, source_url: url, title, active: true, autoplay: true, loop: false, volume: .7, updated_by: user?.id || null }, { onConflict: "campaign_id" }).select("*").single();
     if (result.error) throw result.error;
     setStatus("Transmissão enviada para a mesa.");
   }
@@ -197,8 +188,8 @@ import { getSupabase } from "./supabase.js";
     if (state.current?.active) setStatus(`Ativa: ${state.current.title || state.current.media_type}`);
   }
 
-  function resetMasterCardFlag() {
-    if (!document.contains($("aeriom-live-media-card"))) state.masterCardReady = false;
+  function onTabChange(event) {
+    if (event.detail?.tab === "master-controls" || !event.detail?.tab) window.setTimeout(ensureMasterCard, 30);
   }
 
   async function start() {
@@ -210,27 +201,14 @@ import { getSupabase } from "./supabase.js";
     state.supabase = await getSupabase();
     ensureStage();
     await loadState();
-
-    state.channel = state.supabase.channel(`campaign-live-media:${state.campaignId}`)
-      .on("postgres_changes", {
-        event: "*",
-        schema: "public",
-        table: "campaign_live_media",
-        filter: `campaign_id=eq.${state.campaignId}`
-      }, payload => render(payload.eventType === "DELETE" ? null : payload.new || null))
-      .subscribe();
-
+    state.channel = state.supabase.channel(`campaign-live-media:${state.campaignId}`).on("postgres_changes", { event: "*", schema: "public", table: "campaign_live_media", filter: `campaign_id=eq.${state.campaignId}` }, payload => render(payload.eventType === "DELETE" ? null : payload.new || null)).subscribe();
     ensureMasterCard();
-    state.observer = new MutationObserver(() => { resetMasterCardFlag(); ensureMasterCard(); });
-    state.observer.observe(document.body, { childList: true, subtree: true });
   }
 
   window.addEventListener("aeriom:campaign:ready", () => void start().catch(error => console.error("[AERIOM][LIVE MEDIA]", error)));
-  window.addEventListener("aeriom:campaigntabchange", () => { window.setTimeout(ensureMasterCard, 30); });
+  window.addEventListener("aeriom:campaigntabchange", onTabChange);
+  window.addEventListener("aeriom:master:refresh", () => window.setTimeout(ensureMasterCard, 30));
 
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", () => { void start().catch(error => console.error("[AERIOM][LIVE MEDIA]", error)); }, { once: true });
-  } else {
-    void start().catch(error => console.error("[AERIOM][LIVE MEDIA]", error));
-  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", () => { void start().catch(error => console.error("[AERIOM][LIVE MEDIA]", error)); }, { once: true });
+  else void start().catch(error => console.error("[AERIOM][LIVE MEDIA]", error));
 })();
