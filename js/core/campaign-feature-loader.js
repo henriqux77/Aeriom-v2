@@ -12,9 +12,10 @@
       "./mestre-dashboard-redesign.js?v=20260912-master4",
       "./mestre-dashboard-redesign-patch.js?v=20260912-master3",
       "./mestre-dashboard-final-patch.js?v=20260912-final5",
-      "./mestre-dashboard-final-cleanup.js?v=20260912-cleanup1",
+      "./mestre-dashboard-final-cleanup.js?v=20260912-cleanup2",
       "./campaign-live-media.js?v=20260912-live7",
       "./campaign-live-media-upload.js?v=20260912-live-upload3",
+      "./mestre-ficha-mana.js?v=20260912-ficha-mana1",
       "./campaign-layout-stabilizer.js?v=20260912-layout2"
     ],
     theme: [
