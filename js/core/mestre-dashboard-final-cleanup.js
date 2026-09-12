@@ -7,16 +7,15 @@
   function cleanDuplicateHero(host) {
     const heroes = [...host.querySelectorAll(":scope > .aeriom-master-redesign-hero")];
     if (heroes.length > 1) heroes.slice(1).forEach(el => el.remove());
-    const hero = heroes[0];
-    if (!hero) return;
-    const p = hero.querySelector("p");
-    if (p && /^teste$/i.test(p.textContent.trim())) p.textContent = "Tudo o que você precisa para criar histórias inesquecíveis.";
+    // A descrição pertence à configuração da campanha, não ao banner.
+    heroes.forEach(hero => hero.querySelector(".aeriom-master-redesign-hero__content > p")?.remove());
   }
 
   function removeLegacyHero(host) {
     host.querySelectorAll(":scope > .aeriom-master-redesign-shell").forEach(shell => {
       const heroes = [...shell.querySelectorAll(":scope > .aeriom-master-redesign-hero")];
       if (heroes.length > 1) heroes.slice(1).forEach(el => el.remove());
+      heroes.forEach(hero => hero.querySelector(".aeriom-master-redesign-hero__content > p")?.remove());
     });
   }
 
