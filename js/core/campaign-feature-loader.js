@@ -16,6 +16,7 @@
       "./campaign-live-media.js?v=20260912-live7",
       "./campaign-live-media-upload.js?v=20260912-live-upload3",
       "./mestre-ficha-mana.js?v=20260912-ficha-mana1",
+      "./mestre-ficha-mana-fallback.js?v=20260912-ficha-mana-fallback1",
       "./campaign-layout-stabilizer.js?v=20260912-layout2"
     ],
     theme: [
