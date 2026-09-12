@@ -28,7 +28,8 @@
     window.__AERIOM_ATMOSPHERE_BOOT__ = true;
     Promise.allSettled([
       import("./atmosphere-ui.js?v=20260911-stable"),
-      import("./campaign-atmosphere-patch.js?v=20260911-stable")
+      import("./campaign-atmosphere-patch.js?v=20260911-stable"),
+      import("./campaign-cinematic.js?v=20260911-cinematic1")
     ]).then(results => {
       results.filter(r => r.status === "rejected").forEach(r => console.error("[AERIOM][ATMOSPHERE BOOT]", r.reason));
     });
