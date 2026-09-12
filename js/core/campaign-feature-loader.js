@@ -23,7 +23,8 @@
       "./atmosphere-ui.js?v=20260912-atmosphere-lazy2",
       "./campaign-theme-runtime-clean.js?v=20260912-theme-runtime1",
       "./campaign-cinematic-clean.js?v=20260912-cinematic-lazy1",
-      "./campaign-layout-stabilizer.js?v=20260912-layout2"
+      "./campaign-layout-stabilizer.js?v=20260912-layout2",
+      "./campaign-atmosphere-runtime.js?v=20260912-atmosphere-runtime1"
     ]
   };
 
