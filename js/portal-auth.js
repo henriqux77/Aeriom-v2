@@ -46,16 +46,12 @@ function displaySystem(user) {
 
 async function oauth(provider) {
   showMessage();
-  const buttons = { google: $('googleLogin'), discord: $('discordLogin'), github: $('githubLogin') };
-  const button = buttons[provider];
+  const button = $('discordLogin');
   if (button) button.disabled = true;
 
   const { error } = await supabase.auth.signInWithOAuth({
     provider,
-    options: {
-      redirectTo: `${window.location.origin}${window.location.pathname}`,
-      queryParams: provider === 'google' ? { access_type: 'offline', prompt: 'consent' } : undefined
-    }
+    options: { redirectTo: `${window.location.origin}${window.location.pathname}` }
   });
 
   if (error) {
@@ -132,9 +128,7 @@ $('forgotPassword')?.addEventListener('click', async () => {
   showMessage(error ? friendlyError(error) : 'Enviamos um link de recuperação para seu e-mail.', error ? 'error' : 'success');
 });
 
-$('googleLogin')?.addEventListener('click', () => oauth('google'));
 $('discordLogin')?.addEventListener('click', () => oauth('discord'));
-$('githubLogin')?.addEventListener('click', () => oauth('github'));
 
 $('logoutSystem')?.addEventListener('click', async (event) => {
   event.preventDefault();
