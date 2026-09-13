@@ -1,0 +1,10 @@
+.system-card--aeriom .card-visual{background-image:url('https://i.ibb.co/rRdgjMpJ/file-00000000b7b4820e98cac40fdb66c6a4-1.png')!important;background-color:#0a0e0d;background-repeat:no-repeat;background-position:center center;background-size:cover}
+.system-card--afterlife .card-visual{background-image:url('https://i.ibb.co/4gXCcjb0/file-00000000b7b4820e98cac40fdb66c6a4.png')!important;background-color:#0a0e0d;background-repeat:no-repeat;background-position:center center;background-size:cover}
+.system-card--aeriom,.system-card--afterlife{border-color:rgba(255,255,255,.12)!important;box-shadow:0 16px 45px rgba(0,0,0,.20)!important}
+.system-card--aeriom:hover{border-color:rgba(200,166,107,.46)!important;box-shadow:0 22px 55px rgba(0,0,0,.28)!important}
+.system-card--afterlife:hover{border-color:rgba(57,245,138,.42)!important;box-shadow:0 22px 55px rgba(0,0,0,.28)!important}
+.system-card--aeriom .card-cta{border-color:rgba(200,166,107,.42)!important;color:#ead7aa!important;background:rgba(200,166,107,.05)!important}
+.system-card--aeriom .card-info{border-color:rgba(200,166,107,.20)!important}
+.system-card--afterlife .card-cta{border-color:rgba(57,245,138,.42)!important;color:#9ff5bf!important;background:rgba(57,245,138,.05)!important}
+.system-card--afterlife .card-info{border-color:rgba(57,245,138,.18)!important}
+.system-card .card-visual:after{background:linear-gradient(0deg,rgba(4,8,6,.96) 0%,rgba(4,8,6,.52) 34%,transparent 75%)!important}
