@@ -17,6 +17,7 @@
     button.innerHTML = '<span aria-hidden="true"></span>';
     button.setAttribute('aria-expanded', 'false');
     button.setAttribute('aria-controls', 'sidebar');
+    button.setAttribute('aria-label', 'Abrir menu');
     return button;
   }
 
@@ -33,6 +34,12 @@
     return backdrop;
   }
 
+  function setButtonState(open) {
+    const button = ensureButton();
+    button?.setAttribute('aria-expanded', String(open));
+    button?.setAttribute('aria-label', open ? 'Fechar menu' : 'Abrir menu');
+  }
+
   function open() {
     const sidebar = $('sidebar');
     const button = ensureButton();
@@ -41,40 +48,46 @@
     sidebar.classList.add('is-open');
     backdrop.classList.add('is-open');
     document.body.classList.add('afterlife-sidebar-open');
-    button?.setAttribute('aria-expanded', 'true');
+    setButtonState(true);
   }
 
   function close() {
     const sidebar = $('sidebar');
     const backdrop = $('afterlifeSidebarBackdrop');
-    const button = ensureButton();
     sidebar?.classList.remove('is-open');
     backdrop?.classList.remove('is-open');
     document.body.classList.remove('afterlife-sidebar-open');
-    button?.setAttribute('aria-expanded', 'false');
+    setButtonState(false);
   }
 
   function toggle() {
-    const sidebar = $('sidebar');
     if (!isMobile()) return;
-    sidebar?.classList.contains('is-open') ? close() : open();
+    const sidebar = $('sidebar');
+    if (!sidebar) return;
+    if (sidebar.classList.contains('is-open')) close();
+    else open();
   }
 
   function boot() {
     const button = ensureButton();
     if (!button || button.dataset.afterlifeSidebarBound === '1') return;
     button.dataset.afterlifeSidebarBound = '1';
+
     button.addEventListener('click', (event) => {
       event.preventDefault();
       event.stopPropagation();
       toggle();
-    });
+    }, true);
 
-    document.querySelectorAll('.side-nav__item').forEach((item) => {
-      item.addEventListener('click', () => {
-        if (isMobile()) close();
-      });
-    });
+    document.addEventListener('click', (event) => {
+      if (!isMobile()) return;
+      const sidebar = $('sidebar');
+      const backdrop = $('afterlifeSidebarBackdrop');
+      if (!sidebar?.classList.contains('is-open')) return;
+      const target = event.target;
+      if (button.contains(target) || sidebar.contains(target) || backdrop?.contains(target)) return;
+      close();
+    }, true);
 
     document.addEventListener('keydown', (event) => {
       if (event.key === 'Escape') close();
