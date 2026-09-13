@@ -8,9 +8,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="./css/afterlife.css?v=20260913-6">
-<link rel="stylesheet" href="./css/ficha-criacao.css?v=20260913-6">
-<link rel="stylesheet" href="./css/ficha-criacao-v4.css?v=20260913-6">
+<link rel="stylesheet" href="./css/afterlife.css?v=20260913-7">
+<link rel="stylesheet" href="./css/ficha-criacao.css?v=20260913-7">
+<link rel="stylesheet" href="./css/ficha-criacao-v4.css?v=20260913-7">
 </head>
 <body class="character-builder">
 <div class="app-shell">
@@ -230,40 +230,24 @@
                   <div class="review-lines-v4"><p><b>Apelido</b><span id="finalNickname">—</span></p><p><b>Idade</b><span id="finalAge">—</span></p><p><b>Classe</b><span id="finalClass">Sobrevivente</span></p></div>
                 </div>
                 <div class="review-card-v4 review-card-v4--wide">
-                  <div class="review-title">APARÊNCIA</div>
-                  <div class="review-chip-row"><span id="finalSkin">Pele: Claro</span><span id="finalHair">Cabelo: Preto</span><span id="finalEyes">Olhos: Castanhos</span><span id="finalAppearanceSummary">1,70 m · 70 kg</span></div>
-                  <p id="finalAppearanceDetails">Sem características adicionais.</p>
-                </div>
-                <div class="review-card-v4 review-card-v4--wide">
                   <div class="review-title">ATRIBUTOS</div>
                   <div class="review-attribute-grid-v4" id="finalAttributes"></div>
-                  <div class="review-stat-strip"><span>HP <b id="finalHp">10</b></span><span>DEF <b id="finalDef">10</b></span><span>ESTAMINA <b id="finalStamina">6</b></span></div>
+                  <div class="review-stat-strip"><span>HP <b id="finalHp">10</b></span><span>DEF <b id="finalDef">10</b></span><span>EST <b id="finalStamina">6</b></span></div>
                 </div>
-                <div class="review-card-v4">
-                  <div class="review-title">CONCEITO</div>
-                  <div class="review-text-stack"><p><b>Personalidade</b><span id="finalPersonality">—</span></p><p><b>Objetivo</b><span id="finalObjective">—</span></p><p><b>Medo</b><span id="finalFear">—</span></p></div>
-                </div>
-                <div class="review-card-v4">
-                  <div class="review-title">HISTÓRIA</div><p id="finalHistory">—</p>
-                </div>
+                <div class="review-card-v4"><div class="review-title">APARÊNCIA</div><div class="review-text-stack"><p><b>Altura</b><span id="finalHeight">1,70 m</span></p><p><b>Peso</b><span id="finalWeight">70 kg</span></p><p><b>Estilo</b><span id="finalStyle">Sobrevivente</span></p></div></div>
+                <div class="review-card-v4"><div class="review-title">CONCEITO</div><div class="review-text-stack"><p><b>Objetivo</b><span id="finalObjective">—</span></p><p><b>Medo</b><span id="finalFear">—</span></p></div></div>
               </div>
             </article>
           </div>
           <button class="carousel-arrow carousel-next" id="nextStep" type="button" aria-label="Próxima etapa">›</button>
         </div>
 
-        <div class="carousel-footer-v4">
-          <div class="carousel-dots" id="carouselDots"></div>
-          <div class="footer-actions">
-            <a class="btn btn--ghost" href="./index.html">CANCELAR</a>
-            <button class="btn btn--ghost" id="backStep" type="button">← VOLTAR</button>
-            <button class="btn btn--primary" id="nextAction" type="button">CONTINUAR →</button>
-          </div>
-        </div>
+        <div class="builder-footer"><button class="btn btn--ghost" id="cancelBuilder" type="button">CANCELAR</button><button class="btn btn--ghost" id="backStep" type="button">← VOLTAR</button><button class="btn btn--primary" id="nextAction" type="button">CONTINUAR →</button></div>
       </section>
     </section>
   </main>
 </div>
-<script type="module" src="./js/ficha-criacao.js?v=20260913-6"></script>
+<script src="./js/main.js?v=20260913-7"></script>
+<script src="./js/ficha-criacao.js?v=20260913-7"></script>
 </body>
 </html>
