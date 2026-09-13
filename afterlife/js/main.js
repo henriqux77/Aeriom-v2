@@ -3,9 +3,15 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 (() => {
   'use strict';
 
-  const SUPABASE_URL = 'https://srmpaiawojkwlppoisns.supabase.co';
-  const SUPABASE_KEY = 'sb_publishable_m3bleT4vqCFGeFOgnEfeZg_VpCxprmm';
-  const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
+  const AFTERLIFE_SUPABASE_URL = 'https://srmpaiawojkwlppoisns.supabase.co';
+  const AFTERLIFE_SUPABASE_KEY = 'sb_publishable_m3bleT4vqCFGeFOgnEfeZg_VpCxprmm';
+  const AERIOM_SUPABASE_URL = 'https://kitlpowgcugvlxwhwhqv.supabase.co';
+  const AERIOM_SUPABASE_KEY = 'sb_publishable_WDlPiR0b8T6mlQfYMbwjGg_BGvQPZDW';
+
+  const supabase = createClient(AFTERLIFE_SUPABASE_URL, AFTERLIFE_SUPABASE_KEY, {
+    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+  });
+  const aeriom = createClient(AERIOM_SUPABASE_URL, AERIOM_SUPABASE_KEY, {
     auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
   });
 
@@ -13,28 +19,133 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
   const mobileMenu = document.getElementById('mobileMenu');
   const clock = document.getElementById('clock');
   const continueBtn = document.getElementById('continueBtn');
+  const profileChip = document.querySelector('.profile-chip');
   const profileCopy = document.querySelector('.profile-copy strong');
+  const profileAvatar = document.querySelector('.profile-avatar');
 
-  const boot = async () => {
-    const { data } = await supabase.auth.getSession();
-    if (!data.session?.user) {
-      const next = encodeURIComponent(`${location.pathname}${location.search}`);
-      location.replace(`./entrar.html?next=${next}`);
+  const ACCOUNT_STYLE = `
+    .afterlife-account-wrap{position:relative;z-index:50}
+    .afterlife-account-menu{position:absolute;right:0;top:calc(100% + 10px);width:270px;padding:10px;border:1px solid rgba(127,160,145,.22);border-radius:12px;background:rgba(5,11,9,.98);box-shadow:0 22px 60px rgba(0,0,0,.55);backdrop-filter:blur(18px);opacity:0;transform:translateY(-5px) scale(.98);pointer-events:none;transition:.18s ease}
+    .afterlife-account-wrap.is-open .afterlife-account-menu{opacity:1;transform:none;pointer-events:auto}
+    .afterlife-account-head{display:flex;align-items:center;gap:10px;padding:9px 9px 12px;border-bottom:1px solid rgba(127,160,145,.13)}
+    .afterlife-account-head img,.afterlife-account-head .fallback-avatar{width:44px;height:44px;border-radius:50%;object-fit:cover;display:grid;place-items:center;background:radial-gradient(circle at 50% 25%,#455b51,#121b17 62%,#07100c);border:1px solid rgba(255,255,255,.14);font-weight:800;color:#eff5f1}
+    .afterlife-account-head div:last-child{min-width:0;display:flex;flex-direction:column}
+    .afterlife-account-head strong{font-size:13px;color:#f2f6f3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .afterlife-account-head small{margin-top:3px;color:#8d9b94;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .afterlife-account-badge{display:inline-flex;align-items:center;gap:5px;margin-top:3px;color:#62e99c;font-size:9px}
+    .afterlife-account-badge i{width:6px;height:6px;border-radius:50%;background:#39f58a;box-shadow:0 0 9px rgba(57,245,138,.7)}
+    .afterlife-account-actions{display:grid;gap:4px;padding-top:8px}
+    .afterlife-account-actions a,.afterlife-account-actions button{width:100%;padding:10px 9px;border:0;border-radius:8px;background:transparent;color:#dce5df;text-align:left;text-decoration:none;font:600 11px Inter,system-ui;cursor:pointer}
+    .afterlife-account-actions a:hover,.afterlife-account-actions button:hover{background:rgba(57,245,138,.06);color:#fff}
+    .afterlife-account-actions .danger{color:#ff9e98}
+    .profile-avatar img{width:100%;height:100%;display:block;object-fit:cover;border-radius:50%}
+    @media(max-width:620px){.afterlife-account-menu{right:-4px;width:250px}.profile-copy{display:none}.profile-chip{padding:5px}.profile-caret{margin-left:0}}
+  `;
+
+  const addAccountStyles = () => {
+    if (document.getElementById('afterlife-account-style')) return;
+    const style = document.createElement('style');
+    style.id = 'afterlife-account-style';
+    style.textContent = ACCOUNT_STYLE;
+    document.head.appendChild(style);
+  };
+
+  const initial = (name) => String(name || 'A').trim().charAt(0).toUpperCase() || '?';
+  const escapeHtml = (value) => String(value ?? '').replace(/[&<>'"]/g, (char) => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','\"':'&quot;'}[char]));
+
+  const renderTopAvatar = (url, name) => {
+    if (!profileAvatar) return;
+    profileAvatar.replaceChildren();
+    if (!url) {
+      profileAvatar.textContent = initial(name);
       return;
     }
+    const img = document.createElement('img');
+    img.src = url;
+    img.alt = '';
+    img.referrerPolicy = 'no-referrer';
+    img.onerror = () => { profileAvatar.textContent = initial(name); };
+    profileAvatar.appendChild(img);
+  };
 
-    const user = data.session.user;
-    const displayName = user.user_metadata?.display_name || user.email?.split('@')[0] || 'Sobrevivente';
-    if (profileCopy) profileCopy.textContent = displayName;
+  const signedAvatar = async (path) => {
+    if (!path) return '';
+    const { data, error } = await aeriom.storage.from('avatars').createSignedUrl(path, 3600);
+    if (error) return '';
+    return data?.signedUrl || '';
+  };
+
+  const loadSharedProfile = async (user) => {
+    const fallback = user?.user_metadata?.display_name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Sobrevivente';
+    let name = fallback;
+    let avatarPath = '';
+    const { data } = await aeriom.from('profiles').select('display_name,avatar_path').eq('id', user.id).maybeSingle();
+    if (data?.display_name) name = data.display_name;
+    avatarPath = data?.avatar_path || '';
+    if (profileCopy) profileCopy.textContent = name;
+    const avatarUrl = await signedAvatar(avatarPath);
+    renderTopAvatar(avatarUrl, name);
+    return { name, email: user.email || '', avatarPath, avatarUrl };
+  };
+
+  const ensureAccountMenu = (profile) => {
+    if (!profileChip) return;
+    addAccountStyles();
+    if (profileChip.parentElement?.classList.contains('afterlife-account-wrap')) return;
+
+    const wrap = document.createElement('div');
+    wrap.className = 'afterlife-account-wrap';
+    profileChip.parentNode.insertBefore(wrap, profileChip);
+    wrap.appendChild(profileChip);
+
+    const menu = document.createElement('div');
+    menu.className = 'afterlife-account-menu';
+    menu.setAttribute('role', 'menu');
+    menu.innerHTML = `
+      <div class="afterlife-account-head">
+        ${profile.avatarUrl ? `<img src="${escapeHtml(profile.avatarUrl)}" alt="">` : `<span class="fallback-avatar">${escapeHtml(initial(profile.name))}</span>`}
+        <div>
+          <strong>${escapeHtml(profile.name)}</strong>
+          <small>${escapeHtml(profile.email)}</small>
+          <span class="afterlife-account-badge"><i></i> Perfil compartilhado</span>
+        </div>
+      </div>
+      <div class="afterlife-account-actions">
+        <a href="./perfil.html" role="menuitem">Editar perfil</a>
+        <a href="../index.html" role="menuitem">Trocar sistema</a>
+        <button class="danger" type="button" data-account-logout>Sair da conta</button>
+      </div>`;
+    wrap.appendChild(menu);
+
+    profileChip.addEventListener('click', (event) => {
+      event.stopPropagation();
+      wrap.classList.toggle('is-open');
+    });
+    menu.addEventListener('click', (event) => event.stopPropagation());
+    menu.querySelector('[data-account-logout]')?.addEventListener('click', async () => {
+      await aeriom.auth.signOut();
+      await supabase.auth.signOut();
+      location.replace('../index.html');
+    });
+    document.addEventListener('click', () => wrap.classList.remove('is-open'), { passive: true });
+  };
+
+  const boot = async () => {
+    const { data: aeriomSession } = await aeriom.auth.getSession();
+    const user = aeriomSession.session?.user;
+    if (!user) {
+      const next = encodeURIComponent(`${location.pathname}${location.search}`);
+      location.replace(`../index.html?next=${next}`);
+      return;
+    }
+    const profile = await loadSharedProfile(user);
+    ensureAccountMenu(profile);
     document.body.dataset.authenticated = 'true';
   };
 
   void boot();
 
-  mobileMenu?.addEventListener('click', () => {
-    sidebar?.classList.toggle('is-open');
-  });
-
+  mobileMenu?.addEventListener('click', () => sidebar?.classList.toggle('is-open'));
   document.querySelectorAll('.side-nav__item').forEach((item) => {
     item.addEventListener('click', () => {
       document.querySelectorAll('.side-nav__item').forEach((nav) => nav.classList.remove('is-active'));
@@ -45,35 +156,21 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
   const updateClock = () => {
     if (!clock) return;
-    const now = new Date();
-    clock.textContent = now.toLocaleTimeString('pt-BR', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false
-    });
+    clock.textContent = new Date().toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit',hour12:false});
   };
-
   updateClock();
   window.setInterval(updateClock, 1000);
 
-  continueBtn?.addEventListener('click', () => {
-    const target = document.getElementById('campanhas');
-    target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  });
+  continueBtn?.addEventListener('click', () => document.getElementById('campanhas')?.scrollIntoView({behavior:'smooth',block:'start'}));
 
   document.querySelectorAll('.btn').forEach((button) => {
     button.addEventListener('click', (event) => {
       const el = event.currentTarget;
-      if (!(el instanceof HTMLButtonElement)) return;
-      if (el.id === 'continueBtn') return;
-      if (el.dataset.feedback === 'done') return;
+      if (!(el instanceof HTMLButtonElement) || el.id === 'continueBtn' || el.dataset.feedback === 'done') return;
       el.dataset.feedback = 'done';
       const original = el.textContent;
       el.textContent = 'EM BREVE';
-      window.setTimeout(() => {
-        el.textContent = original;
-        delete el.dataset.feedback;
-      }, 950);
+      window.setTimeout(() => { el.textContent = original; delete el.dataset.feedback; }, 950);
     });
   });
 
