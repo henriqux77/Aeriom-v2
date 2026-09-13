@@ -16,7 +16,142 @@ import { getSupabase } from "./supabase.js";
     return new URLSearchParams(location.search).get("campaign") || context.campaignId || context.campaign?.id || null;
   }
 
+  function installMobileControlPolish() {
+    if (document.getElementById("aeriom-global-mobile-controls-style")) return;
+    const style = document.createElement("style");
+    style.id = "aeriom-global-mobile-controls-style";
+    style.textContent = `
+      /* Botão hambúrguer: mesmo acabamento da mesa, com morph para X. */
+      #campaigns-mobile-menu-button,
+      #campaign-mobile-menu-button,
+      #hb-mobile-menu-button,
+      [data-mobile-menu-trigger] {
+        position:relative!important;
+        display:grid!important;
+        place-items:center!important;
+        overflow:hidden!important;
+      }
+      #campaigns-mobile-menu-button > span,
+      #campaign-mobile-menu-button > span,
+      #hb-mobile-menu-button > span,
+      [data-mobile-menu-trigger] > span {
+        display:block!important;
+        width:22px!important;
+        height:16px!important;
+        position:relative!important;
+        font-size:0!important;
+        line-height:0!important;
+      }
+      #campaigns-mobile-menu-button > span::before,
+      #campaigns-mobile-menu-button > span::after,
+      #campaign-mobile-menu-button > span::before,
+      #campaign-mobile-menu-button > span::after,
+      #hb-mobile-menu-button > span::before,
+      #hb-mobile-menu-button > span::after,
+      [data-mobile-menu-trigger] > span::before,
+      [data-mobile-menu-trigger] > span::after {
+        content:"";
+        position:absolute;
+        left:0;
+        width:22px;
+        height:2px;
+        border-radius:999px;
+        background:currentColor;
+        transition:transform .28s cubic-bezier(.2,.8,.2,1),top .28s cubic-bezier(.2,.8,.2,1),opacity .2s ease;
+      }
+      #campaigns-mobile-menu-button > span::before,
+      #campaign-mobile-menu-button > span::before,
+      #hb-mobile-menu-button > span::before,
+      [data-mobile-menu-trigger] > span::before { top:1px; box-shadow:0 6px 0 currentColor,0 12px 0 currentColor; }
+      #campaigns-mobile-menu-button > span::after,
+      #campaign-mobile-menu-button > span::after,
+      #hb-mobile-menu-button > span::after,
+      [data-mobile-menu-trigger] > span::after { display:none; }
+      #campaigns-mobile-menu-button[aria-expanded="true"] > span::before,
+      #campaign-mobile-menu-button[aria-expanded="true"] > span::before,
+      #hb-mobile-menu-button[aria-expanded="true"] > span::before,
+      [data-mobile-menu-trigger][aria-expanded="true"] > span::before {
+        top:7px;
+        transform:rotate(45deg);
+        box-shadow:none;
+      }
+      #campaigns-mobile-menu-button[aria-expanded="true"] > span::after,
+      #campaign-mobile-menu-button[aria-expanded="true"] > span::after,
+      #hb-mobile-menu-button[aria-expanded="true"] > span::after,
+      [data-mobile-menu-trigger][aria-expanded="true"] > span::after {
+        display:block;
+        top:7px;
+        transform:rotate(-45deg);
+      }
+      #campaigns-mobile-menu-button[aria-expanded="true"] > span,
+      #campaign-mobile-menu-button[aria-expanded="true"] > span,
+      #hb-mobile-menu-button[aria-expanded="true"] > span,
+      [data-mobile-menu-trigger][aria-expanded="true"] > span { width:22px!important; }
+
+      /* A tela de criação de ficha não precisa do atalho de busca global. */
+      body.aeriom-page--character #aeriom-global-search-trigger { display:none!important; }
+
+      /* Em campanha, a barra antiga e as ações flutuantes não competem com o dock líquido. */
+      @media(max-width:760px){
+        .aeriom-page--campaign #aeriom-mobile-bottom-nav,
+        .aeriom-page--campaign .aeriom-mobile-bottom-nav,
+        .aeriom-page--campaign .campaign-mobile-actions { display:none!important; }
+      }
+
+      /* Botão de entrada na lista de campanhas. */
+      .aeriom-campaign-join-inline{
+        min-height:44px;
+        padding:0 18px;
+        border:1px solid rgba(216,182,95,.28);
+        border-radius:12px;
+        background:linear-gradient(135deg,rgba(216,182,95,.10),rgba(255,255,255,.018));
+        color:#e6c66f;
+        font:700 12px Inter,sans-serif;
+        cursor:pointer;
+        transition:transform .2s ease,border-color .2s ease,background .2s ease,box-shadow .2s ease;
+      }
+      .aeriom-campaign-join-inline:hover{
+        transform:translateY(-1px);
+        border-color:rgba(216,182,95,.48);
+        background:rgba(216,182,95,.14);
+        box-shadow:0 12px 26px rgba(0,0,0,.18);
+      }
+      @media(max-width:700px){
+        .aeriom-campaign-join-inline{ flex:1; min-width:0; }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  function installCampaignJoinButton() {
+    if (!document.body?.classList.contains("aeriom-page--campaigns")) return;
+    if ($("#aeriom-campaign-join-inline")) return;
+
+    const createButton = $("#campaigns-create-button");
+    const actions = createButton?.parentElement;
+    if (!createButton || !actions) return;
+
+    const join = document.createElement("button");
+    join.id = "aeriom-campaign-join-inline";
+    join.type = "button";
+    join.className = "aeriom-campaign-join-inline";
+    join.innerHTML = "<span aria-hidden=\"true\">↗</span> Entrar com código";
+    join.addEventListener("click", () => {
+      window.location.href = "./entrar.html";
+    });
+
+    actions.classList.add("aeriom-campaign-heading-actions");
+    actions.insertBefore(join, createButton);
+  }
+
   function ensureUI() {
+    installMobileControlPolish();
+    installCampaignJoinButton();
+
+    if (document.body?.classList.contains("aeriom-page--character")) {
+      return;
+    }
+
     if ($("#aeriom-global-search-trigger")) return;
 
     const button = document.createElement("button");
