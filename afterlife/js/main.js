@@ -1,20 +1,17 @@
 import './profile-global.js?v=20260913-10';
+import './afterlife-sidebar.js?v=20260913-1';
 
 (() => {
   'use strict';
 
-  const sidebar = document.getElementById('sidebar');
-  const mobileMenu = document.getElementById('mobileMenu');
   const clock = document.getElementById('clock');
   const continueBtn = document.getElementById('continueBtn');
 
   const boot = () => {
-    mobileMenu?.addEventListener('click', () => sidebar?.classList.toggle('is-open'));
-
     document.querySelectorAll('.side-nav__item').forEach(item => item.addEventListener('click', () => {
       document.querySelectorAll('.side-nav__item').forEach(nav => nav.classList.remove('is-active'));
       item.classList.add('is-active');
-      sidebar?.classList.remove('is-open');
+      document.getElementById('sidebar')?.classList.remove('is-open');
     }));
 
     const updateClock = () => {
