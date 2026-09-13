@@ -29,3 +29,6 @@ body:not(:has(.dashboard-hero)) .profile-chip{display:none!important}
 body:not(:has(.dashboard-hero)) .afterlife-global-profile-menu,body:not(:has(.dashboard-hero)) .afterlife-profile-menu,body:not(:has(.dashboard-hero)) .afterlife-profile-dropdown,body:not(:has(.dashboard-hero)) .afterlife-account-menu{display:none!important}
 
 @media(max-width:620px){.afterlife-global-profile-menu,.afterlife-profile-menu,.afterlife-profile-dropdown,.afterlife-account-menu{right:-6px!important;width:min(300px,calc(100vw - 24px))!important}.profile-copy strong{max-width:110px!important}}
+
+/* Logomarca nova enviada pelo usuário — substitui visualmente a marca antiga do menu lateral. */
+.brand__logo{display:block!important;width:165px!important;max-width:100%!important;height:auto!important;object-fit:contain!important;content:url("https://i.ibb.co/BH2Hqr3P/file-00000000b47c820e88b788de23f77e3e.png")!important}
