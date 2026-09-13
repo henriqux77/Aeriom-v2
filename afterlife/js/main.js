@@ -1,10 +1,35 @@
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
 (() => {
   'use strict';
+
+  const SUPABASE_URL = 'https://srmpaiawojkwlppoisns.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_m3bleT4vqCFGeFOgnEfeZg_VpCxprmm';
+  const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
+    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+  });
 
   const sidebar = document.getElementById('sidebar');
   const mobileMenu = document.getElementById('mobileMenu');
   const clock = document.getElementById('clock');
   const continueBtn = document.getElementById('continueBtn');
+  const profileCopy = document.querySelector('.profile-copy strong');
+
+  const boot = async () => {
+    const { data } = await supabase.auth.getSession();
+    if (!data.session?.user) {
+      const next = encodeURIComponent(`${location.pathname}${location.search}`);
+      location.replace(`./entrar.html?next=${next}`);
+      return;
+    }
+
+    const user = data.session.user;
+    const displayName = user.user_metadata?.display_name || user.email?.split('@')[0] || 'Sobrevivente';
+    if (profileCopy) profileCopy.textContent = displayName;
+    document.body.dataset.authenticated = 'true';
+  };
+
+  void boot();
 
   mobileMenu?.addEventListener('click', () => {
     sidebar?.classList.toggle('is-open');
