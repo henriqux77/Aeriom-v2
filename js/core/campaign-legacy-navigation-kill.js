@@ -1,11 +1,12 @@
 /* AERIOM — remove a navegação antiga da mesa.
- * Deve rodar na entrada da campanha, independentemente da aba atual.
- * Não usa MutationObserver nem intervalos permanentes.
+ * A barra antiga visível no mobile usa rótulos MESA/DADOS/COMBATE/MAPAS/MAPA-HISTÓRICO
+ * e não é a dock líquida. Este módulo remove os elementos legados e também detecta
+ * qualquer contêiner equivalente por conteúdo/posição, sem MutationObserver permanente.
  */
 (() => {
   "use strict";
-  if (window.__AERIOM_LEGACY_NAV_KILL__) return;
-  window.__AERIOM_LEGACY_NAV_KILL__ = true;
+  if (window.__AERIOM_LEGACY_NAV_KILL_V2__) return;
+  window.__AERIOM_LEGACY_NAV_KILL_V2__ = true;
 
   const OLD = [
     "#campaign-mobile-actions",
@@ -15,12 +16,41 @@
     "nav:has([data-bottom-tab])"
   ];
 
+  const OLD_LABELS = ["mesa", "dados", "combate", "mapas", "mapa / histórico"];
+
+  function normalize(value) {
+    return String(value || "").replace(/\s+/g, " ").trim().toLowerCase();
+  }
+
+  function isLegacyLabelBar(element) {
+    if (!element || element.id === "aeriom-liquid-mobile-dock") return false;
+    const text = normalize(element.textContent);
+    if (!text) return false;
+    const matches = OLD_LABELS.filter(label => text.includes(label));
+    if (matches.length < 4) return false;
+
+    const buttons = element.querySelectorAll("button");
+    if (buttons.length < 4 || buttons.length > 8) return false;
+
+    const rect = element.getBoundingClientRect();
+    const style = getComputedStyle(element);
+    const nearBottom = rect.bottom >= window.innerHeight - 170;
+    const compactHeight = rect.height > 45 && rect.height < 170;
+    const fixedish = style.position === "fixed" || style.position === "sticky" || nearBottom;
+    return compactHeight && fixedish;
+  }
+
   function removeOldNavigation() {
     OLD.forEach(selector => {
       document.querySelectorAll(selector).forEach(element => {
-        if (element.id === "aeriom-liquid-mobile-dock") return;
-        element.remove();
+        if (element.id !== "aeriom-liquid-mobile-dock") element.remove();
       });
+    });
+
+    document.querySelectorAll("body *").forEach(element => {
+      if (isLegacyLabelBar(element)) {
+        element.remove();
+      }
     });
   }
 
@@ -44,15 +74,16 @@
 
   function cleanupSoon() {
     removeOldNavigation();
-    window.setTimeout(removeOldNavigation, 50);
-    window.setTimeout(removeOldNavigation, 300);
-    window.setTimeout(removeOldNavigation, 1000);
+    window.setTimeout(removeOldNavigation, 0);
+    window.setTimeout(removeOldNavigation, 80);
+    window.setTimeout(removeOldNavigation, 250);
+    window.setTimeout(removeOldNavigation, 600);
+    window.setTimeout(removeOldNavigation, 1200);
   }
 
   document.addEventListener("click", event => {
-    if (event.target.closest("[data-campaign-tab], #campaign-mobile-actions-button")) {
-      window.setTimeout(removeOldNavigation, 0);
-      window.setTimeout(removeOldNavigation, 40);
+    if (event.target.closest("[data-campaign-tab], #campaign-mobile-actions-button, #aeriom-mobile-bottom-nav")) {
+      cleanupSoon();
     }
   }, true);
 
@@ -60,5 +91,9 @@
   window.addEventListener("aeriom:campaign:ready", cleanupSoon);
 
   installGuardStyle();
-  cleanupSoon();
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", cleanupSoon, { once: true });
+  } else {
+    cleanupSoon();
+  }
 })();
