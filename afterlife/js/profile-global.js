@@ -15,7 +15,7 @@ function loadCss() {
   if (document.querySelector('link[data-afterlife-profile-css]')) return;
   const link = document.createElement('link');
   link.rel = 'stylesheet';
-  link.href = './css/afterlife-profile-global.css?v=20260913-9';
+  link.href = './css/afterlife-profile-global.css?v=20260913-10';
   link.dataset.afterlifeProfileCss = '1';
   document.head.appendChild(link);
 }
@@ -31,11 +31,63 @@ function setAvatar(box, url, name) {
   img.src = url;
   img.alt = '';
   img.referrerPolicy = 'no-referrer';
+  img.loading = 'eager';
   img.onerror = () => {
     box.replaceChildren();
     box.textContent = initial(name);
   };
   box.appendChild(img);
+}
+
+function applyBrandLogo() {
+  const brand = document.querySelector('.brand__title');
+  if (!brand || brand.dataset.afterlifeLogoApplied === '1') return;
+  brand.dataset.afterlifeLogoApplied = '1';
+  brand.replaceChildren();
+  const img = document.createElement('img');
+  img.src = './assets/afterlife-logo.svg?v=20260913-1';
+  img.alt = 'AFTERLIFE — Sobrevivência além do fim';
+  img.decoding = 'async';
+  img.style.display = 'block';
+  img.style.width = '165px';
+  img.style.maxWidth = '100%';
+  img.style.height = 'auto';
+  img.style.objectFit = 'contain';
+  brand.appendChild(img);
+}
+
+function applyCombatAnimationFix() {
+  if (!document.body?.classList.contains('character-builder')) return;
+  if (document.getElementById('afterlife-combat-animation-fix')) return;
+
+  const style = document.createElement('style');
+  style.id = 'afterlife-combat-animation-fix';
+  style.textContent = `
+    /* O arco gira; o símbolo central permanece estático. */
+    .character-builder .combat-status-ring{animation:none!important;transform:none!important}
+    .character-builder .combat-status-ring::before{transform-origin:50% 50%!important}
+    .character-builder .combat-status-ring::before{animation:afterlifeGlobalStatusArcSpin 2.2s linear infinite!important}
+    .character-builder .combat-status-icon{transform:none!important}
+    @keyframes afterlifeGlobalStatusArcSpin{to{transform:rotate(360deg)}}
+  `;
+  document.head.appendChild(style);
+}
+
+function startCombatAnimationGuard() {
+  if (!document.body?.classList.contains('character-builder')) return;
+  const tryFix = () => applyCombatAnimationFix();
+  tryFix();
+  requestAnimationFrame(tryFix);
+  setTimeout(tryFix, 0);
+  setTimeout(tryFix, 50);
+  const observer = new MutationObserver(() => {
+    if (document.getElementById('afterlife-combat-animation-fix')) {
+      observer.disconnect();
+      return;
+    }
+    tryFix();
+  });
+  observer.observe(document.head, { childList: true });
 }
 
 function findElements() {
@@ -122,7 +174,7 @@ async function loadProfile() {
     currentProfile = data || { id: currentUser.id, display_name: name, avatar_path: null };
     if (data?.display_name) name = data.display_name;
 
-    // Garante que o registro global de perfil exista no banco para novas contas.
+    // Garante que toda conta autenticada tenha um registro no perfil compartilhado.
     if (!data) {
       const { data: created } = await sb.from('profiles').upsert({
         id: currentUser.id,
@@ -161,7 +213,7 @@ function bind() {
   if (!chip || !menu || chip.dataset.afterlifeProfileBound === '1') return;
   chip.dataset.afterlifeProfileBound = '1';
 
-  // Bloqueia listeners de perfil antigos/locais e deixa um único controlador global.
+  // Um único controlador global. Listeners antigos/locais não recebem o clique.
   chip.addEventListener('click', (event) => {
     event.preventDefault();
     event.stopPropagation();
@@ -197,11 +249,12 @@ function bindAuthListener() {
 
 async function boot() {
   loadCss();
+  applyBrandLogo();
+  startCombatAnimationGuard();
   if (!findElements()) return;
   bind();
   bindAuthListener();
   await loadProfile();
-
   clearInterval(refreshTimer);
   refreshTimer = setInterval(loadProfile, 120000);
 }
