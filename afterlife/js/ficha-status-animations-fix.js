@@ -1,3 +1,5 @@
+import './afterlife-sidebar.js?v=20260913-3';
+
 (() => {
   'use strict';
   if (!document.body.classList.contains('character-builder')) return;
@@ -24,53 +26,16 @@
     document.head.appendChild(style);
   };
 
-  const bindCharacterBurger = () => {
-    const button = document.getElementById('mobileMenu');
-    const sidebar = document.getElementById('sidebar');
-    if (!button || !sidebar || button.dataset.afterlifeCharacterBurgerBound === '1') return;
-    button.dataset.afterlifeCharacterBurgerBound = '1';
-    button.innerHTML = '<span aria-hidden="true"></span>';
-    button.setAttribute('aria-expanded', 'false');
-    button.setAttribute('aria-controls', 'sidebar');
-
-    const close = () => {
-      sidebar.classList.remove('is-open');
-      document.body.classList.remove('afterlife-sidebar-open','menu-open');
-      button.setAttribute('aria-expanded','false');
-    };
-    const toggle = () => {
-      const open = !sidebar.classList.contains('is-open');
-      sidebar.classList.toggle('is-open', open);
-      document.body.classList.toggle('afterlife-sidebar-open', open);
-      button.setAttribute('aria-expanded', String(open));
-    };
-
-    button.addEventListener('click', (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      event.stopImmediatePropagation?.();
-      toggle();
-    }, true);
-
-    document.querySelectorAll('.side-nav__item').forEach((item) => {
-      item.addEventListener('click', close, true);
-    });
-    document.addEventListener('keydown', (event) => {
-      if (event.key === 'Escape') close();
-    });
-    window.addEventListener('resize', () => {
-      if (window.innerWidth > 980) close();
-    }, { passive:true });
-  };
-
   const boot = () => {
     mount();
-    bindCharacterBurger();
     const observer = new MutationObserver(() => {
-      if (document.getElementById(STYLE_ID)) observer.disconnect();
-      bindCharacterBurger();
+      if (document.getElementById(STYLE_ID)) {
+        observer.disconnect();
+        return;
+      }
+      if (document.querySelector('.character-builder .combat-status-ring')) mount();
     });
-    observer.observe(document.documentElement, { childList:true, subtree:true });
+    observer.observe(document.head, { childList: true });
   };
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, { once: true });
