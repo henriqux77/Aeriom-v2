@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#050807">
+  <meta name="description" content="AFTERLIFE — sobrevivência além do fim.">
+  <title>AFTERLIFE — Painel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/afterlife.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <div class="brand__title"><span>A</span>FTERLIFE</div>
+        <div class="brand__tagline">SOBREVIVÊNCIA ALÉM DO FIM</div>
+      </div>
+
+      <nav class="side-nav" aria-label="Navegação Afterlife">
+        <a class="side-nav__item is-active" href="#inicio"><span class="icon">⌂</span><span>Início</span></a>
+        <a class="side-nav__item" href="#campanhas"><span class="icon">◈</span><span>Campanhas</span></a>
+        <a class="side-nav__item" href="#personagens"><span class="icon">●</span><span>Personagens</span></a>
+        <a class="side-nav__item" href="#mapa"><span class="icon">◇</span><span>Mapa Mundial</span></a>
+        <a class="side-nav__item" href="#inventario"><span class="icon">▣</span><span>Inventário</span></a>
+        <a class="side-nav__item" href="#manual"><span class="icon">▤</span><span>Manual</span></a>
+        <a class="side-nav__item" href="#comunidade"><span class="icon">◎</span><span>Comunidade</span></a>
+        <a class="side-nav__item" href="#noticias"><span class="icon">▥</span><span>Notícias</span></a>
+      </nav>
+
+      <div class="sidebar-spacer"></div>
+      <a class="side-nav__item" href="#configuracoes"><span class="icon">⚙</span><span>Configurações</span></a>
+
+      <div class="sidebar-quote">
+        <div>“NÃO É SOBRE<br>ESPERANÇA.<br>É SOBRE<br>ESCOLHAS.”</div>
+      </div>
+    </aside>
+
+    <main class="main" id="inicio">
+      <header class="topbar">
+        <button class="mobile-menu" id="mobileMenu" aria-label="Abrir menu">☰</button>
+        <div class="search-box">
+          <span class="search-icon">⌕</span>
+          <input type="search" placeholder="Buscar campanhas, personagens, itens..." aria-label="Busca global">
+          <kbd>Ctrl K</kbd>
+        </div>
+        <div class="top-actions">
+          <button class="top-icon" aria-label="Mapa">◎</button>
+          <button class="top-icon has-dot" aria-label="Notificações">♧</button>
+          <button class="top-icon" aria-label="Mensagens">✉</button>
+          <button class="profile-chip" aria-label="Perfil">
+            <span class="profile-avatar">H</span>
+            <span class="profile-copy"><strong>Henriqux77</strong><small><i></i> Online</small></span>
+            <span class="profile-caret">⌄</span>
+          </button>
+          <button class="top-icon" aria-label="Configurações">⚙</button>
+        </div>
+      </header>
+
+      <section class="hero">
+        <div class="hero__overlay"></div>
+        <div class="hero__content">
+          <div class="eyebrow">CONTINUAR CAMPANHA</div>
+          <h1>Tokyo: After the Fall</h1>
+          <div class="hero__location"><span>🇯🇵</span> Tóquio, Japão</div>
+          <p>Entre arranha-céus destruídos e segredos esquecidos, a sobrevivência tem outro significado.</p>
+          <div class="hero__actions">
+            <button class="btn btn--primary" id="continueBtn">CONTINUAR <span>→</span></button>
+          </div>
+          <div class="hero__meta"><span>♟ 4 sobreviventes</span><span>▣ Última sessão: 23 min atrás</span></div>
+        </div>
+        <div class="hero__motto">“O mundo mudou.<br>Você também vai.”</div>
+        <div class="hero__clock"><span>12 SET 2026</span><strong id="clock">00:45</strong></div>
+      </section>
+
+      <div class="content-grid">
+        <section class="panel campaigns-panel" id="campanhas">
+          <div class="panel-head"><h2>SUAS CAMPANHAS</h2><a href="#">Ver todas <span>→</span></a></div>
+          <div class="campaign-grid">
+            <article class="campaign-card campaign-card--active">
+              <div class="campaign-card__image image-tokyo"><span>EM ANDAMENTO</span></div>
+              <div class="campaign-card__body"><h3>Tokyo: After the Fall</h3><div class="muted">🇯🇵 Tóquio, Japão</div><div class="card-meta">♟ 4 jogadores</div><div class="card-meta">▣ Última sessão<br><b>23 min atrás</b></div><button class="btn btn--primary btn--small">CONTINUAR →</button></div>
+            </article>
+            <article class="campaign-card">
+              <div class="campaign-card__image image-seattle"></div>
+              <div class="campaign-card__body"><h3>Última Fronteira</h3><div class="muted">🇺🇸 Seattle, EUA</div><div class="card-meta">♟ 3 jogadores</div><div class="card-meta">▣ Última sessão<br><b>2 dias atrás</b></div><button class="btn btn--ghost btn--small">ABRIR →</button></div>
+            </article>
+            <article class="campaign-card">
+              <div class="campaign-card__image image-sp"><span></span></div>
+              <div class="campaign-card__body"><h3>Terra Quebrada</h3><div class="muted">🇧🇷 São Paulo, Brasil</div><div class="card-meta">♟ 3 jogadores</div><div class="card-meta">▣ Última sessão<br><b>5 dias atrás</b></div><button class="btn btn--ghost btn--small">ABRIR →</button></div>
+            </article>
+          </div>
+        </section>
+
+        <section class="panel character-panel" id="personagens">
+          <div class="panel-head"><h2>SEUS PERSONAGENS</h2><a href="#">Ver todos <span>→</span></a></div>
+          <div class="character-main">
+            <div class="character-avatar">K</div>
+            <div class="character-info"><h3>Kael Moretti</h3><p>Nível 3</p><div class="chips"><span>Mecânico</span><span>Brasileiro</span></div></div>
+          </div>
+          <div class="meter"><div class="meter__label"><span>PV</span><b>16 / 16</b></div><div class="meter__track hp"><i style="width:100%"></i></div></div>
+          <div class="meter"><div class="meter__label"><span>Estamina</span><b>78%</b></div><div class="meter__track stamina"><i style="width:78%"></i></div></div>
+          <div class="character-list"><button><span class="mini-avatar">Y</span><span><b>Yuna Sato</b><small>Nível 2</small></span><strong>›</strong></button><button><span class="mini-avatar">D</span><span><b>Diego Rivas</b><small>Nível 1</small></span><strong>›</strong></button></div>
+          <button class="btn btn--ghost btn--full">GERENCIAR PERSONAGENS →</button>
+        </section>
+
+        <section class="panel map-panel" id="mapa">
+          <div class="panel-head"><h2>MAPA MUNDIAL</h2><a href="#">Explorar <span>→</span></a></div>
+          <div class="world-map"><div class="map-glow"></div><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="dot d4"></span><span class="dot d5"></span></div>
+          <p>Explore o mundo, descubra regiões, recursos e novas ameaças.</p>
+          <button class="btn btn--ghost btn--full">ABRIR MAPA →</button>
+        </section>
+
+        <section class="panel news-panel" id="noticias">
+          <div class="panel-head"><h2>NOTÍCIAS E ATUALIZAÇÕES</h2><a href="#">Ver todas <span>→</span></a></div>
+          <div class="news-grid">
+            <article class="news-card"><div class="news-image news-green"></div><span class="news-tag">ATUALIZAÇÃO</span><small>12 set, 2026</small><h3>Atualização 0.2.1</h3><p>Novos itens, melhorias no inventário e ajustes de balanceamento.</p></article>
+            <article class="news-card"><div class="news-image news-red"></div><span class="news-tag news-tag--red">EVENTO</span><small>10 set, 2026</small><h3>Evento Global</h3><p>A atividade dos infectados aumentou na Ásia. Novos relatos surgem de Tóquio.</p></article>
+            <article class="news-card"><div class="news-image news-blue"></div><span class="news-tag news-tag--amber">MANUTENÇÃO</span><small>09 set, 2026</small><h3>Manutenção Programada</h3><p>Servidores serão atualizados amanhã às 03:00.</p></article>
+          </div>
+        </section>
+
+        <section class="panel community-panel" id="comunidade">
+          <div class="panel-head"><h2>COMUNIDADE EM DESTAQUE</h2><a href="#">Ver mais <span>→</span></a></div>
+          <div class="community-post"><div class="community-head"><span class="mini-avatar">R</span><div><b>Ravena K.</b><small>Há 2 horas</small></div><span class="post-pill">Arte</span></div><h3>Sobreviver também é criar</h3><p>Arte que fiz do meu personagem na campanha de Tóquio. O que acharam?</p><div class="post-stats">♥ 124 &nbsp;&nbsp; ♡ 27</div></div>
+        </section>
+
+        <section class="panel quick-panel">
+          <div class="panel-head"><h2>ACESSO RÁPIDO</h2></div>
+          <div class="quick-grid">
+            <button><span>＋</span><b>Criar Campanha</b></button>
+            <button><span>♙</span><b>Novo Personagem</b></button>
+            <button><span>▤</span><b>Ver Manual</b></button>
+            <button><span>♟</span><b>Comunidade</b></button>
+          </div>
+        </section>
+      </div>
+
+      <footer class="footer"><span>AFTERLIFE v0.1</span><span>A sobrevivência é apenas o começo.</span><span>Desenvolvido por <b>AERIOM</b></span></footer>
+    </main>
+  </div>
+  <script src="./js/main.js" defer></script>
+</body>
+</html>
