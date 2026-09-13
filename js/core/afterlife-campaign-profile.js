@@ -11,7 +11,7 @@ import { getSupabase } from "./supabase.js";
   const initial = (name) => String(name || "Aventureiro").trim().charAt(0).toUpperCase() || "A";
 
   function injectStyle() {
-    if ($("#aeriom-campaign-profile-style")) return;
+    if $("#aeriom-campaign-profile-style") return;
     const style = document.createElement("style");
     style.id = "aeriom-campaign-profile-style";
     style.textContent = `
@@ -74,8 +74,10 @@ import { getSupabase } from "./supabase.js";
 
     setAvatar($("#aeriomCampaignProfileAvatar"), avatarUrl, name);
     setAvatar($("#aeriomCampaignProfileLarge"), avatarUrl, name);
+    const triggerName = $("#aeriomCampaignProfileTriggerName");
     const nameA = $("#aeriomCampaignProfileName");
     const emailA = $("#aeriomCampaignProfileEmail");
+    if (triggerName) triggerName.textContent = name;
     if (nameA) nameA.textContent = name;
     if (emailA) emailA.textContent = user.email || "Conta AERIOM";
   }
