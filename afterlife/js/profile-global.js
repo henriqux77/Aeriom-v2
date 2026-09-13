@@ -58,34 +58,40 @@ function applyBrandLogo() {
 
 function applyCombatAnimationFix() {
   if (!document.body?.classList.contains('character-builder')) return;
-  if (document.getElementById('afterlife-combat-animation-fix')) return;
-
-  const style = document.createElement('style');
-  style.id = 'afterlife-combat-animation-fix';
-  style.textContent = `
-    /* O arco gira; o símbolo central permanece estático. */
-    .character-builder .combat-status-ring{animation:none!important;transform:none!important}
-    .character-builder .combat-status-ring::before{transform-origin:50% 50%!important}
-    .character-builder .combat-status-ring::before{animation:afterlifeGlobalStatusArcSpin 2.2s linear infinite!important}
-    .character-builder .combat-status-icon{transform:none!important}
-    @keyframes afterlifeGlobalStatusArcSpin{to{transform:rotate(360deg)}}
-  `;
-  document.head.appendChild(style);
+  let style = document.getElementById('afterlife-combat-animation-fix');
+  if (!style) {
+    style = document.createElement('style');
+    style.id = 'afterlife-combat-animation-fix';
+    style.textContent = `
+      /* O arco gira; o símbolo central permanece estático. */
+      .character-builder .combat-status-ring{animation:none!important;transform:none!important}
+      .character-builder .combat-status-ring::before{transform-origin:50% 50%!important;animation:afterlifeGlobalStatusArcSpin 2.2s linear infinite!important}
+      .character-builder .combat-status-icon{transform:none!important;animation:none!important}
+      @keyframes afterlifeGlobalStatusArcSpin{to{transform:rotate(360deg)}}
+    `;
+    document.head.appendChild(style);
+  } else {
+    // Sempre deixa o hotfix por último, depois do CSS dinâmico da ficha.
+    document.head.appendChild(style);
+  }
 }
 
 function startCombatAnimationGuard() {
   if (!document.body?.classList.contains('character-builder')) return;
-  const tryFix = () => applyCombatAnimationFix();
-  tryFix();
-  requestAnimationFrame(tryFix);
-  setTimeout(tryFix, 0);
-  setTimeout(tryFix, 50);
-  const observer = new MutationObserver(() => {
-    if (document.getElementById('afterlife-combat-animation-fix')) {
-      observer.disconnect();
-      return;
+  const run = () => applyCombatAnimationFix();
+  run();
+  setTimeout(run, 0);
+  setTimeout(run, 60);
+  setTimeout(run, 250);
+  let timer = 0;
+  const observer = new MutationObserver((records) => {
+    if (timer) clearTimeout(timer);
+    if (records.some((record) => Array.from(record.addedNodes).some((node) => node.nodeType === 1 && node.id !== 'afterlife-combat-animation-fix'))) {
+      timer = setTimeout(() => {
+        applyCombatAnimationFix();
+        observer.disconnect();
+      }, 0);
     }
-    tryFix();
   });
   observer.observe(document.head, { childList: true });
 }
@@ -174,7 +180,6 @@ async function loadProfile() {
     currentProfile = data || { id: currentUser.id, display_name: name, avatar_path: null };
     if (data?.display_name) name = data.display_name;
 
-    // Garante que toda conta autenticada tenha um registro no perfil compartilhado.
     if (!data) {
       const { data: created } = await sb.from('profiles').upsert({
         id: currentUser.id,
@@ -213,7 +218,6 @@ function bind() {
   if (!chip || !menu || chip.dataset.afterlifeProfileBound === '1') return;
   chip.dataset.afterlifeProfileBound = '1';
 
-  // Um único controlador global. Listeners antigos/locais não recebem o clique.
   chip.addEventListener('click', (event) => {
     event.preventDefault();
     event.stopPropagation();
