@@ -1,27 +1,147 @@
-/* AFTERLIFE — hotfix visual v10 */
-.character-builder #profileWrap{position:relative!important;z-index:120!important}
-.character-builder #profileChip{position:relative!important;z-index:121!important;cursor:pointer!important}
-.character-builder #profileAvatar,.character-builder #profileDropdownAvatar{position:relative!important;overflow:hidden!important;display:grid!important;place-items:center!important;box-sizing:border-box!important;border-radius:50%!important;flex:0 0 auto!important}
-.character-builder #profileAvatar{width:44px!important;height:44px!important;min-width:44px!important;max-width:44px!important;min-height:44px!important;max-height:44px!important}
-.character-builder #profileDropdownAvatar{width:48px!important;height:48px!important;min-width:48px!important;max-width:48px!important;min-height:48px!important;max-height:48px!important;border-radius:13px!important}
-.character-builder #profileAvatar img,.character-builder #profileDropdownAvatar img{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;min-width:0!important;min-height:0!important;max-width:100%!important;max-height:100%!important;object-fit:cover!important;display:block!important;border-radius:inherit!important}
-.character-builder .afterlife-profile-dropdown{position:absolute!important;top:calc(100% + 10px)!important;right:0!important;width:250px!important;max-width:min(250px,calc(100vw - 24px))!important;padding:10px!important;border:1px solid rgba(57,245,138,.18)!important;border-radius:14px!important;background:rgba(5,12,9,.98)!important;box-shadow:0 22px 60px rgba(0,0,0,.5)!important;backdrop-filter:blur(18px)!important;z-index:500!important}
-.character-builder .afterlife-profile-dropdown[hidden]{display:none!important}
-.character-builder .afterlife-profile-dropdown a,.character-builder .afterlife-profile-dropdown button{width:100%!important;box-sizing:border-box!important;display:flex!important;align-items:center!important;gap:10px!important;padding:11px 12px!important;border:0!important;border-radius:9px!important;background:transparent!important;color:#dfe8e2!important;text-decoration:none!important;font:600 10px/1.2 Inter,sans-serif!important;cursor:pointer!important;text-align:left!important}
-.character-builder .afterlife-profile-dropdown a:hover,.character-builder .afterlife-profile-dropdown button:hover{background:rgba(57,245,138,.07)!important;color:#39f58a!important}
-.character-builder .profile-dropdown-head{display:flex!important;align-items:center!important;gap:10px!important;padding:5px 5px 10px!important;margin-bottom:5px!important;border-bottom:1px solid rgba(127,160,145,.1)!important}
-.character-builder .profile-dropdown-head>div{min-width:0!important}.character-builder .profile-dropdown-head strong{display:block!important;color:#edf5f0!important;font-size:11px!important}.character-builder .profile-dropdown-head small{display:block!important;margin-top:3px!important;color:#718079!important;font-size:8px!important;overflow-wrap:anywhere!important}
-.character-builder .stamina-cylinder-card{grid-template-columns:118px minmax(220px,1fr) minmax(210px,235px)!important;gap:28px!important;align-items:center!important;padding:18px 22px!important}
-.character-builder .combat-status{grid-template-columns:repeat(2,minmax(94px,1fr))!important;gap:14px!important;align-items:center!important}
-.character-builder .combat-status-card{min-height:150px!important;padding:12px!important}
-.character-builder .combat-status-ring{width:92px!important;height:92px!important}
-.character-builder .stamina-cylinder-copy{padding-right:8px!important}
-/* Preview fix: keep identity and status in one clean parent card, without the status panel escaping below it. */
-.character-builder .character-preview{grid-template-columns:82px minmax(0,1fr)!important;align-items:center!important;gap:12px!important;padding:12px!important;overflow:hidden!important}
-.character-builder .character-preview .preview-art{grid-column:1!important;grid-row:1!important}
-.character-builder .character-preview .preview-info{grid-column:2!important;grid-row:1!important;min-width:0!important}
-.character-builder .character-preview .stamina-cylinder-card{grid-column:1/-1!important;grid-row:2!important;width:100%!important;min-width:0!important;margin-top:2px!important;box-sizing:border-box!important}
-.character-builder .character-preview .combat-status{min-width:0!important}
-@media(max-width:980px){.character-builder .stamina-cylinder-card{grid-template-columns:105px minmax(0,1fr) 190px!important;gap:20px!important}.character-builder .character-preview .stamina-cylinder-card{grid-column:1/-1!important}}
-@media(max-width:720px){.character-builder .stamina-cylinder-card{grid-template-columns:92px 1fr!important;gap:14px!important}.character-builder .combat-status{grid-column:1/-1!important;grid-template-columns:1fr 1fr!important;gap:10px!important}.character-builder .combat-status-card{min-height:112px!important}.character-builder .combat-status-ring{width:70px!important;height:70px!important}.character-builder .afterlife-profile-dropdown{right:-6px!important}.character-builder .character-preview{grid-template-columns:58px minmax(0,1fr)!important;padding:10px!important}.character-builder .character-preview .preview-art{grid-column:1!important}.character-builder .character-preview .preview-info{grid-column:2!important}.character-builder .character-preview .stamina-cylinder-card{grid-column:1/-1!important}}
-@media(max-width:440px){.character-builder .stamina-cylinder-card{grid-template-columns:78px 1fr!important;padding:14px!important;gap:10px!important}.character-builder .combat-status-ring{width:64px!important;height:64px!important}.character-builder .combat-status-card{min-height:104px!important;padding:8px!important}}
+/* AFTERLIFE — hotfix visual v10.1 */
+
+/* O cartão de identidade atrás do status não é mais exibido. */
+.character-builder .character-preview{
+  display:block!important;
+  margin-bottom:14px!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  overflow:visible!important;
+}
+.character-builder .character-preview .preview-art,
+.character-builder .character-preview .preview-info{
+  display:none!important;
+}
+
+/* A cápsula de estamina passa a ser o único cartão externo do bloco de status. */
+.character-builder .stamina-cylinder-card{
+  display:grid!important;
+  grid-template-columns:130px minmax(220px,1fr) minmax(350px,390px)!important;
+  gap:26px!important;
+  align-items:center!important;
+  width:100%!important;
+  min-height:214px!important;
+  margin:0!important;
+  padding:22px 24px!important;
+  box-sizing:border-box!important;
+  border:1px solid rgba(57,245,138,.2)!important;
+  border-radius:17px!important;
+}
+
+.character-builder .stamina-cylinder{
+  width:104px!important;
+  height:174px!important;
+}
+.character-builder .stamina-valve{width:32px!important;height:20px!important}
+.character-builder .stamina-body{width:88px!important;height:145px!important;border-radius:20px 20px 15px 15px!important}
+
+.character-builder .stamina-cylinder-copy{min-width:0!important;padding-right:12px!important}
+.character-builder .stamina-cylinder-copy b{font-size:38px!important}
+.character-builder .stamina-cylinder-copy small{max-width:330px!important;font-size:9px!important}
+
+/* HP e Defesa ficam maiores e com espaço suficiente para o círculo + legenda + valor. */
+.character-builder .combat-status{
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(155px,1fr))!important;
+  gap:16px!important;
+  min-width:0!important;
+  width:100%!important;
+}
+.character-builder .combat-status-card{
+  min-width:0!important;
+  min-height:182px!important;
+  padding:14px!important;
+  box-sizing:border-box!important;
+  border-radius:15px!important;
+}
+.character-builder .combat-status-ring{
+  position:relative!important;
+  isolation:isolate!important;
+  width:104px!important;
+  height:104px!important;
+  box-sizing:border-box!important;
+  border-width:7px!important;
+}
+.character-builder .combat-status-ring::before{
+  content:""!important;
+  position:absolute!important;
+  inset:-8px!important;
+  z-index:-1!important;
+  border:5px solid transparent!important;
+  border-radius:50%!important;
+  animation:afterlifeStatusSpin 2.2s linear infinite!important;
+  pointer-events:none!important;
+}
+.character-builder .combat-status-card.hp .combat-status-ring::before{
+  border-top-color:#ff625f!important;
+  border-right-color:#ff625f!important;
+  filter:drop-shadow(0 0 7px rgba(255,98,95,.45))!important;
+}
+.character-builder .combat-status-card.def .combat-status-ring::before{
+  border-top-color:#39f58a!important;
+  border-left-color:#39f58a!important;
+  filter:drop-shadow(0 0 7px rgba(57,245,138,.4))!important;
+}
+.character-builder .combat-status-icon{position:relative!important;z-index:2!important;font-size:29px!important}
+.character-builder .combat-status-card.hp .combat-status-icon{
+  animation:afterlifeHeartBeat 1.05s ease-in-out infinite!important;
+  transform-origin:center!important;
+}
+.character-builder .combat-status-label{margin-top:9px!important;font-size:8px!important}
+.character-builder .combat-status-value{margin-top:3px!important;font-size:26px!important}
+
+@keyframes afterlifeStatusSpin{to{transform:rotate(360deg)}}
+@keyframes afterlifeHeartBeat{
+  0%,100%{transform:scale(1);filter:drop-shadow(0 0 0 rgba(255,98,95,0))}
+  12%{transform:scale(1.17);filter:drop-shadow(0 0 9px rgba(255,98,95,.7))}
+  24%{transform:scale(1);filter:drop-shadow(0 0 4px rgba(255,98,95,.35))}
+  38%{transform:scale(1.13);filter:drop-shadow(0 0 8px rgba(255,98,95,.55))}
+  55%{transform:scale(1);filter:drop-shadow(0 0 0 rgba(255,98,95,0))}
+}
+
+/* O perfil da ficha usa exatamente as mesmas proporções do perfil global. */
+.character-builder #profileAvatar{
+  width:35px!important;height:35px!important;min-width:35px!important;max-width:35px!important;
+  min-height:35px!important;max-height:35px!important;border-radius:50%!important;
+}
+.character-builder #profileAvatar img,
+.character-builder #profileDropdownAvatar img{
+  position:absolute!important;inset:0!important;width:100%!important;height:100%!important;
+  min-width:0!important;min-height:0!important;max-width:100%!important;max-height:100%!important;
+  object-fit:cover!important;border-radius:inherit!important;display:block!important;
+}
+.character-builder #profileDropdownAvatar{
+  width:48px!important;height:48px!important;min-width:48px!important;min-height:48px!important;
+  max-width:48px!important;max-height:48px!important;border-radius:50%!important;
+}
+
+@media(max-width:1100px){
+  .character-builder .stamina-cylinder-card{grid-template-columns:110px minmax(190px,1fr) minmax(320px,350px)!important;gap:20px!important}
+  .character-builder .combat-status{grid-template-columns:repeat(2,minmax(140px,1fr))!important}
+}
+
+@media(max-width:900px){
+  .character-builder .stamina-cylinder-card{grid-template-columns:100px 1fr!important;gap:18px!important}
+  .character-builder .combat-status{grid-column:1/-1!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:14px!important}
+  .character-builder .combat-status-card{min-height:165px!important}
+}
+
+@media(max-width:560px){
+  .character-builder .stamina-cylinder-card{grid-template-columns:82px minmax(0,1fr)!important;gap:12px!important;padding:16px!important;min-height:0!important}
+  .character-builder .stamina-cylinder{width:76px!important;height:132px!important}
+  .character-builder .stamina-valve{width:25px!important;height:16px!important}
+  .character-builder .stamina-body{width:64px!important;height:108px!important;border-radius:15px 15px 12px 12px!important}
+  .character-builder .stamina-cylinder-copy b{font-size:30px!important}
+  .character-builder .combat-status{grid-column:1/-1!important;grid-template-columns:1fr 1fr!important;gap:10px!important}
+  .character-builder .combat-status-card{min-height:140px!important;padding:10px!important}
+  .character-builder .combat-status-ring{width:78px!important;height:78px!important}
+  .character-builder .combat-status-icon{font-size:23px!important}
+  .character-builder .combat-status-value{font-size:21px!important}
+}
+
+@media(max-width:380px){
+  .character-builder .combat-status{grid-template-columns:1fr!important}
+}
