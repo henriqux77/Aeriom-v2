@@ -21,7 +21,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
       article.innerHTML=`<div><div class="campaign-item__top"><h3>${escapeHtml(c.name)}</h3><span class="panel-count">${escapeHtml(c.tone)}</span></div><p>${escapeHtml(c.description||'Sem descrição.')}</p><div class="campaign-item__meta"><span>🌎 ${escapeHtml(c.country)}</span><span>👤 1 Mestre</span></div></div><div class="campaign-item__actions"><button class="btn btn--primary" data-open="${escapeHtml(c.id)}">ABRIR →</button><button class="btn btn--ghost" data-delete="${escapeHtml(c.id)}">EXCLUIR</button></div>`;
       list.appendChild(article);
     });
-    list.querySelectorAll('[data-open]').forEach(b=>b.addEventListener('click',()=>{location.href=`./campanha.html?id=${encodeURIComponent(b.dataset.open)}`}));
+    list.querySelectorAll('[data-open]').forEach(b=>b.addEventListener('click',()=>{location.href=`./campanhas.html?selected=${encodeURIComponent(b.dataset.open)}`}));
     list.querySelectorAll('[data-delete]').forEach(b=>b.addEventListener('click',()=>{if(confirm('Excluir esta campanha?')){saveCampaigns(loadCampaigns().filter(c=>c.id!==b.dataset.delete));render();}}));
   }
   function setMessage(text=''){const el=$('campaignMessage');el.textContent=text;el.classList.toggle('is-visible',Boolean(text));}
