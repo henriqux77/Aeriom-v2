@@ -7,6 +7,7 @@
 <link rel="stylesheet" href="./css/afterlife.css">
 <link rel="stylesheet" href="./css/mapa.css?v=20260913-8">
 <link rel="stylesheet" href="./css/map-pois.css?v=20260913-1">
+<link rel="stylesheet" href="./css/afterlife-profile-global.css?v=20260913-10">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
 <style>
 .map-head .page-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
@@ -16,30 +17,14 @@
 .map-head .page-actions .btn--ghost:hover{border-color:rgba(57,245,138,.35);background:linear-gradient(180deg,rgba(30,46,37,.98),rgba(11,20,15,.98));color:#fff;box-shadow:0 10px 28px rgba(0,0,0,.3)}
 .map-head .page-actions .btn--primary{border:1px solid rgba(57,245,138,.5);background:linear-gradient(180deg,#55ffa0,#26d878);color:#041008;box-shadow:0 10px 28px rgba(31,231,124,.16)}
 .map-head .page-actions .btn--primary:hover{filter:brightness(1.06);box-shadow:0 12px 32px rgba(31,231,124,.22)}
-/* Perfil do mapa: estilos locais para não depender do CSS de campanhas. */
-.profile-chip{position:relative;overflow:hidden}
-.profile-avatar{overflow:hidden;flex:none}
-.profile-avatar img{width:100%;height:100%;display:block;object-fit:cover;border-radius:50%}
-.afterlife-profile-menu{position:fixed;right:28px;top:78px;z-index:1000;width:300px;padding:10px;border:1px solid rgba(127,160,145,.24);border-radius:13px;background:rgba(5,11,9,.985);box-shadow:0 24px 70px rgba(0,0,0,.62);backdrop-filter:blur(18px);opacity:0;visibility:hidden;transform:translateY(-6px) scale(.98);pointer-events:none;transition:opacity .18s ease,transform .18s ease,visibility .18s ease}
-.profile-open .afterlife-profile-menu{opacity:1;visibility:visible;transform:none;pointer-events:auto}
-.afterlife-profile-head{display:flex;align-items:center;gap:11px;padding:9px 9px 12px;border-bottom:1px solid rgba(127,160,145,.13)}
-.afterlife-profile-avatar{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;overflow:hidden;flex:none;background:radial-gradient(circle at 50% 25%,#455b51,#121b17 62%,#07100c);border:1px solid rgba(255,255,255,.14);font-weight:800;color:#eff5f1}
-.afterlife-profile-avatar img{width:100%;height:100%;display:block;object-fit:cover;border-radius:50%}
-.afterlife-profile-head strong{display:block;font-size:13px;color:#f2f6f3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.afterlife-profile-head small{display:block;margin-top:3px;color:#8d9b94;font-size:9px;max-width:190px}
-.afterlife-profile-actions{display:grid;gap:4px;padding-top:8px}
-.afterlife-profile-actions a,.afterlife-profile-actions button{width:100%;padding:10px 9px;border:0;border-radius:8px;background:transparent;color:#dce5df;text-align:left;text-decoration:none;font:600 11px Inter,system-ui;cursor:pointer}
-.afterlife-profile-actions a:hover,.afterlife-profile-actions button:hover{background:rgba(57,245,138,.06);color:#fff}
-.afterlife-profile-actions .danger{color:#ff9e98}
-.afterlife-profile-actions .danger:hover{background:rgba(255,77,69,.08)}
-@media(max-width:620px){.afterlife-profile-menu{right:14px;top:74px;width:min(300px,calc(100vw - 28px))}}
+/* Somente ajustes do mapa; o perfil agora pertence ao CSS global. */
 </style>
 </head>
 <body>
 <div class="app-shell">
 <aside class="sidebar" id="sidebar"><div class="brand"><div class="brand__title"><span>A</span>FTERLIFE</div></div>
 <nav class="side-nav"><a class="side-nav__item" href="./index.html"><span class="icon">⌂</span><span>Início</span></a><a class="side-nav__item" href="./campanhas.html"><span class="icon">◈</span><span>Campanhas</span></a><a class="side-nav__item is-active" href="./mapa-mundial.html"><span class="icon">◇</span><span>Mapa Mundial</span></a><a class="side-nav__item" href="#"><span class="icon">●</span><span>Personagens</span></a><a class="side-nav__item" href="#"><span class="icon">▣</span><span>Inventário</span></a><a class="side-nav__item" href="#"><span class="icon">▤</span><span>Manual</span></a></nav><div class="sidebar-spacer"></div><a class="side-nav__item" href="#"><span class="icon">⚙</span><span>Configurações</span></a></aside>
-<main class="main"><header class="topbar"><button class="mobile-menu" id="mobileMenu" aria-label="Abrir menu">☰</button><div class="top-actions"><button class="profile-chip" id="profileChip" type="button" aria-label="Abrir perfil" aria-expanded="false"><span class="profile-avatar" id="profileAvatar">A</span><span class="profile-copy"><strong id="profileName">Sobrevivente</strong><small><i></i> Online</small></span><span class="profile-caret">⌄</span></button></div></header>
+<main class="main"><header class="topbar"><button class="mobile-menu" id="mobileMenu" aria-label="Abrir menu">☰</button><div class="top-actions"><button class="profile-chip" id="profileChip" type="button" aria-label="Abrir perfil"><span class="profile-avatar" id="profileAvatar">A</span><span class="profile-copy"><strong id="profileName">Sobrevivente</strong><small><i></i> Online</small></span><span class="profile-caret">⌄</span></button></div></header>
 <section class="page-head map-head"><div><div class="eyebrow">MUNDO · REGIÕES · ROTAS</div><h1>Mapa Mundial</h1><p>Explore do planeta à escala de rua. Em zoom alto, o Afterlife mostra pontos de interesse e estabelecimentos próximos.</p></div><div class="page-actions"><a class="btn btn--ghost" href="./campanhas.html">← VOLTAR PARA CAMPANHAS</a><button class="btn btn--primary" id="centerSelection" type="button">USAR SELEÇÃO</button></div></section>
 <section class="map-layout">
 <div class="map-shell panel"><div id="worldMap"></div><div class="map-hint">Clique para marcar o local da campanha. Dê zoom para descobrir ruas, lojas, serviços e outros pontos de interesse. <span id="coords">—</span></div></div>
@@ -58,29 +43,6 @@
 <script>
 (function(){
   const $=id=>document.getElementById(id);
-  const chip=$('profileChip'), menu=$('profileMenu');
-  function toggle(force){
-    const open=typeof force==='boolean'?force:!document.body.classList.contains('profile-open');
-    document.body.classList.toggle('profile-open',open);
-    chip?.setAttribute('aria-expanded',String(open));
-    menu?.setAttribute('aria-hidden',String(!open));
-  }
-  chip?.addEventListener('click',e=>{e.stopPropagation();toggle();});
-  menu?.addEventListener('click',e=>e.stopPropagation());
-  document.addEventListener('click',()=>toggle(false));
-  document.addEventListener('keydown',e=>{if(e.key==='Escape')toggle(false);});
-  $('profileLogout')?.addEventListener('click',async()=>{
-    try{const {createClient}=await import('https://esm.sh/@supabase/supabase-js@2');const sb=createClient('https://kitlpowgcugvlxwhwhqv.supabase.co','sb_publishable_WDlPiR0b8T6mlQfYMbwjGg_BGvQPZDW');await sb.auth.signOut();}finally{location.href='../index.html';}
-  });
-  const avatar=new MutationObserver(()=>{
-    const src=$('profileAvatar')?.querySelector('img');
-    const target=$('profileMenuAvatar');
-    if(!target)return;
-    target.replaceChildren();
-    if(src){const img=document.createElement('img');img.src=src.src;img.alt='';img.referrerPolicy='no-referrer';img.onerror=()=>target.textContent=$('profileAvatar')?.textContent||'A';target.appendChild(img);}else target.textContent=$('profileAvatar')?.textContent||'A';
-    const name=$('profileName')?.textContent||'Sobrevivente';$('profileMenuName').textContent=name;
-  });
-  if($('profileAvatar'))avatar.observe($('profileAvatar'),{childList:true,subtree:true,characterData:true});
   $('centerSelection')?.addEventListener('click',()=>{
     const saved=sessionStorage.getItem('afterlife_selected_location');
     if(saved){
@@ -91,5 +53,5 @@
   });
 })();
 </script>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script><script type="module" src="./js/mapa.js?v=20260913-6"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script><script type="module" src="./js/mapa.js?v=20260913-10"></script>
 </body></html>
