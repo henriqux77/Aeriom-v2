@@ -6,32 +6,25 @@
 <title>AFTERLIFE — Painel</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="./css/afterlife.css?v=20260913-dashboard"><link rel="stylesheet" href="./css/dashboard.css?v=20260913-1">
+<link rel="stylesheet" href="./css/afterlife.css?v=20260913-dashboard"><link rel="stylesheet" href="./css/dashboard.css?v=20260913-2">
 </head>
 <body>
 <div class="app-shell">
-<aside class="sidebar" id="sidebar">
-<div class="brand"><div class="brand__title"><span>A</span>FTERLIFE</div><div class="brand__tagline">SOBREVIVÊNCIA ALÉM DO FIM</div></div>
+<aside class="sidebar" id="sidebar"><div class="brand"><div class="brand__title"><span>A</span>FTERLIFE</div><div class="brand__tagline">SOBREVIVÊNCIA ALÉM DO FIM</div></div>
 <nav class="side-nav" aria-label="Navegação Afterlife">
 <a class="side-nav__item is-active" href="./index.html"><span class="icon">⌂</span><span>Início</span></a>
 <a class="side-nav__item" href="./campanhas.html"><span class="icon">◈</span><span>Campanhas</span></a>
 <a class="side-nav__item" href="#personagens"><span class="icon">●</span><span>Personagens</span></a>
 <a class="side-nav__item" href="./mapa-mundial.html"><span class="icon">◇</span><span>Mapa Mundial</span></a>
-<a class="side-nav__item" href="#"><span class="icon">▣</span><span>Inventário</span></a>
-<a class="side-nav__item" href="#"><span class="icon">▤</span><span>Manual</span></a>
-<a class="side-nav__item" href="#"><span class="icon">◎</span><span>Comunidade</span></a>
-<a class="side-nav__item" href="#"><span class="icon">▥</span><span>Notícias</span></a>
-</nav><div class="sidebar-spacer"></div><a class="side-nav__item" href="#"><span class="icon">⚙</span><span>Configurações</span></a>
-<div class="sidebar-quote"><div>“NÃO É SOBRE<br>ESPERANÇA.<br>É SOBRE<br>ESCOLHAS.”</div></div>
-</aside>
+<a class="side-nav__item" href="#"><span class="icon">▣</span><span>Inventário</span></a><a class="side-nav__item" href="#"><span class="icon">▤</span><span>Manual</span></a><a class="side-nav__item" href="#"><span class="icon">◎</span><span>Comunidade</span></a><a class="side-nav__item" href="#"><span class="icon">▥</span><span>Notícias</span></a></nav>
+<div class="sidebar-spacer"></div><a class="side-nav__item" href="#"><span class="icon">⚙</span><span>Configurações</span></a><div class="sidebar-quote"><div>“NÃO É SOBRE<br>ESPERANÇA.<br>É SOBRE<br>ESCOLHAS.”</div></div></aside>
 <main class="main" id="inicio">
 <header class="topbar"><button class="mobile-menu" id="mobileMenu" aria-label="Abrir menu">☰</button><div class="search-box"><span class="search-icon">⌕</span><input type="search" placeholder="Buscar campanhas, personagens, itens..." aria-label="Busca global"><kbd>Ctrl K</kbd></div><div class="top-actions"><button class="top-icon" aria-label="Mapa" id="mapBtn">◎</button><button class="top-icon has-dot" aria-label="Notificações">♧</button><button class="top-icon" aria-label="Mensagens">✉</button><button class="profile-chip" id="profileChip" aria-label="Abrir perfil" aria-expanded="false" type="button"><span class="profile-avatar" id="profileAvatar">A</span><span class="profile-copy"><strong id="profileName">Sobrevivente</strong><small><i></i> Online</small></span><span class="profile-caret">⌄</span></button><button class="top-icon" aria-label="Configurações">⚙</button></div></header>
-<div class="profile-menu" id="profileMenu" aria-hidden="true"><div class="profile-menu__head"><span class="profile-menu__avatar" id="profileMenuAvatar">A</span><div><strong id="profileMenuName">Sobrevivente</strong><small>Perfil compartilhado com AERIOM</small></div></div><div class="profile-menu__actions"><a href="./perfil.html">Editar perfil</a><a href="../index.html">Trocar sistema</a><button class="danger" id="profileLogout" type="button">Sair da conta</button></div></div>
 <section class="dashboard-hero"><div class="dashboard-hero__content"><div class="eyebrow">AFTERLIFE · PORTAL DE SOBREVIVÊNCIA</div><h1>O fim do mundo começa aqui.</h1><p>Crie sua campanha, escolha o ponto do planeta onde tudo começou e transforme o mapa em uma história viva.</p><div class="dashboard-hero__actions"><button class="btn btn--primary" id="createCampaignBtn">+ CRIAR CAMPANHA</button><button class="btn btn--ghost" id="viewCampaignsBtn">VER CAMPANHAS →</button></div></div></section>
-<section class="panel dashboard-panel" id="campanhas"><div class="panel-head"><h2>SUAS CAMPANHAS</h2><a href="./campanhas.html">Ver todas →</a></div><div id="dashboardCampaignList" class="dashboard-campaign-list" hidden></div><div id="dashboardEmpty" class="dashboard-empty"><div class="dashboard-empty__copy"><h3>Nenhuma campanha ainda.</h3><p>Você ainda não criou uma campanha no Afterlife. Comece escolhendo uma região do mapa e defina o cenário do colapso.</p></div><button class="btn btn--primary" id="dashboardCreateBtn">CRIAR PRIMEIRA CAMPANHA</button></div></section>
-<section class="panel dashboard-panel" id="mapa"><div class="panel-head"><h2>MAPA MUNDIAL</h2><a href="./mapa-mundial.html">Abrir mapa →</a></div><a class="dashboard-map-link" href="./mapa-mundial.html"><div><h3>Escolha onde sua história começa.</h3><p>Explore o planeta e selecione uma região inicial para sua próxima campanha.</p></div></a></section>
-<section class="panel dashboard-panel" id="personagens"><div class="panel-head"><h2>PERSONAGENS</h2><a href="#personagens">Em breve →</a></div><div class="dashboard-empty"><div class="dashboard-empty__copy"><h3>Seu sobrevivente ainda não foi criado.</h3><p>A criação de personagem entra na próxima etapa do Afterlife.</p></div></div></section>
+<section class="panel dashboard-panel" id="campanhas"><div class="panel-head"><h2>SUAS CAMPANHAS</h2><a href="./campanhas.html">Ver todas →</a></div><div id="dashboardCampaignList" class="dashboard-campaign-list" hidden></div><div id="dashboardEmpty" class="dashboard-empty"><div class="dashboard-empty__copy"><h3>Nenhuma campanha ainda.</h3><p>Seu painel está limpo. Crie sua primeira campanha no Afterlife e defina onde a sobrevivência começa.</p></div><button class="btn btn--primary" id="dashboardCreateBtn">CRIAR PRIMEIRA CAMPANHA</button></div></section>
+<section class="panel dashboard-panel" id="mapa"><div class="panel-head"><h2>MAPA MUNDIAL</h2><a href="./mapa-mundial.html">Abrir mapa →</a></div><a class="dashboard-map-link" href="./mapa-mundial.html"><div><h3>Escolha onde sua história começa.</h3><p>Explore o planeta, marque um ponto inicial e use a região como base da campanha.</p></div></a></section>
+<section class="panel dashboard-panel" id="personagens"><div class="panel-head"><h2>PERSONAGENS</h2><span class="panel-count">PRÓXIMA ETAPA</span></div><div class="dashboard-empty"><div class="dashboard-empty__copy"><h3>Seu sobrevivente ainda não foi criado.</h3><p>A criação de personagem será conectada à campanha na próxima etapa.</p></div></div></section>
 <footer class="footer"><span>AFTERLIFE v0.1</span><span>A sobrevivência é apenas o começo.</span><span>Desenvolvido por <b>AERIOM</b></span></footer>
 </main></div>
-<script type="module" src="./js/main.js?v=20260913-profile"></script><script type="module" src="./js/dashboard.js?v=20260913-1"></script>
+<script type="module" src="./js/main.js?v=20260913-profile"></script><script type="module" src="./js/dashboard.js?v=20260913-2"></script>
 </body></html>
