@@ -1,5 +1,3 @@
-import { getSupabase } from "./supabase.js";
-
 (() => {
   "use strict";
 
@@ -9,9 +7,13 @@ import { getSupabase } from "./supabase.js";
 
   const $ = (selector) => document.querySelector(selector);
   const initial = (name) => String(name || "Aventureiro").trim().charAt(0).toUpperCase() || "A";
+  const getClient = async () => {
+    if (!globalThis.AERIOM_SUPABASE?.getClient) throw new Error("Cliente AERIOM ainda não está disponível.");
+    return globalThis.AERIOM_SUPABASE.getClient();
+  };
 
   function injectStyle() {
-    if ($("#aeriom-campaign-profile-style")) return;
+    if $("#aeriom-campaign-profile-style") return;
     const style = document.createElement("style");
     style.id = "aeriom-campaign-profile-style";
     style.textContent = `
@@ -57,7 +59,7 @@ import { getSupabase } from "./supabase.js";
   }
 
   async function loadProfile() {
-    const sb = await getSupabase();
+    const sb = await getClient();
     const { data: auth } = await sb.auth.getUser();
     const user = auth?.user;
     if (!user) return;
@@ -136,7 +138,7 @@ import { getSupabase } from "./supabase.js";
     menu.addEventListener("click", (event) => event.stopPropagation());
     $("#aeriomCampaignProfileLogout")?.addEventListener("click", async () => {
       try {
-        const sb = await getSupabase();
+        const sb = await getClient();
         await sb.auth.signOut();
       } finally {
         location.replace("./index.html");
