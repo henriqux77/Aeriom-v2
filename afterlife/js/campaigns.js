@@ -15,8 +15,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
   function render(){
     const rows=loadCampaigns(); const list=$('campaignList'); const empty=$('campaignEmpty'); const count=$('campaignCount');
     count.textContent=`${rows.length} ${rows.length===1?'campanha':'campanhas'}`;
-    list.replaceChildren();
-    empty.style.display=rows.length?'none':'block';
+    list.replaceChildren(); empty.style.display=rows.length?'none':'block';
     rows.forEach(c=>{
       const article=document.createElement('article'); article.className='campaign-item';
       article.innerHTML=`<div><div class="campaign-item__top"><h3>${escapeHtml(c.name)}</h3><span class="panel-count">${escapeHtml(c.tone)}</span></div><p>${escapeHtml(c.description||'Sem descrição.')}</p><div class="campaign-item__meta"><span>🌎 ${escapeHtml(c.country)}</span><span>👤 1 Mestre</span></div></div><div class="campaign-item__actions"><button class="btn btn--primary" data-open="${escapeHtml(c.id)}">ABRIR →</button><button class="btn btn--ghost" data-delete="${escapeHtml(c.id)}">EXCLUIR</button></div>`;
@@ -34,11 +33,10 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
     const fallback=(user.user_metadata?.display_name||'S').charAt(0).toUpperCase(); $('profileAvatar').textContent=fallback;
     try{const p=await aeriom.from('profiles').select('display_name,avatar_path').eq('id',user.id).maybeSingle();if(p.data?.display_name)$('profileName').textContent=p.data.display_name;if(p.data?.avatar_path){const u=await aeriom.storage.from('avatars').createSignedUrl(p.data.avatar_path,3600);if(!u.error&&u.data?.signedUrl){$('profileAvatar').innerHTML=`<img src="${u.data.signedUrl}" alt="">`;}}}catch{}
     render();
+    if(new URLSearchParams(location.search).get('create')==='1') toggleCreate(true);
   }
   $('openCreate').addEventListener('click',()=>toggleCreate(true)); $('emptyCreate').addEventListener('click',()=>toggleCreate(true)); $('closeCreate').addEventListener('click',()=>toggleCreate(false)); $('cancelCreate').addEventListener('click',()=>toggleCreate(false));
   $('campaignForm').addEventListener('submit',e=>{e.preventDefault();setMessage('');const name=$('campaignName').value.trim();const desc=$('campaignDescription').value.trim();const country=$('campaignCountry').value;const tone=$('campaignTone').value;if(name.length<3){setMessage('Dê um nome com pelo menos 3 caracteres.');return;}if(!country){setMessage('Escolha o país inicial.');return;}const rows=loadCampaigns();rows.unshift({id:crypto.randomUUID(),name,description:desc,country,tone,createdAt:new Date().toISOString()});saveCampaigns(rows);e.target.reset();toggleCreate(false);render();});
   $('mobileMenu')?.addEventListener('click',()=>document.body.classList.toggle('menu-open'));
-  $('profileChip')?.addEventListener('click',()=>document.body.classList.toggle('profile-open'));
-  document.addEventListener('click',e=>{if(!e.target.closest('#profileChip'))document.body.classList.remove('profile-open')});
   boot().catch(()=>location.replace('../index.html'));
 })();
