@@ -5,7 +5,8 @@
 <meta name="theme-color" content="#050807"><title>AFTERLIFE — Mapa Mundial</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="./css/afterlife.css"><link rel="stylesheet" href="./css/mapa.css?v=20260913-2">
+<link rel="stylesheet" href="./css/afterlife.css">
+<link rel="stylesheet" href="./css/mapa.css?v=20260913-4">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
 </head>
 <body>
@@ -13,8 +14,16 @@
 <aside class="sidebar" id="sidebar"><div class="brand"><div class="brand__title"><span>A</span>FTERLIFE</div><div class="brand__tagline">SOBREVIVÊNCIA ALÉM DO FIM</div></div>
 <nav class="side-nav"><a class="side-nav__item" href="./index.html"><span class="icon">⌂</span><span>Início</span></a><a class="side-nav__item" href="./campanhas.html"><span class="icon">◈</span><span>Campanhas</span></a><a class="side-nav__item is-active" href="./mapa-mundial.html"><span class="icon">◇</span><span>Mapa Mundial</span></a><a class="side-nav__item" href="#"><span class="icon">●</span><span>Personagens</span></a><a class="side-nav__item" href="#"><span class="icon">▣</span><span>Inventário</span></a><a class="side-nav__item" href="#"><span class="icon">▤</span><span>Manual</span></a></nav><div class="sidebar-spacer"></div><a class="side-nav__item" href="#"><span class="icon">⚙</span><span>Configurações</span></a></aside>
 <main class="main"><header class="topbar"><button class="mobile-menu" id="mobileMenu" aria-label="Abrir menu">☰</button><div class="top-actions"><button class="profile-chip" id="profileChip" type="button"><span class="profile-avatar" id="profileAvatar">A</span><span class="profile-copy"><strong id="profileName">Sobrevivente</strong><small><i></i> Online</small></span><span class="profile-caret">⌄</span></button></div></header>
-<section class="page-head map-head"><div><div class="eyebrow">MUNDO · REGIÕES · ROTAS</div><h1>Mapa Mundial</h1><p>Escolha onde sua história começa. A escala vai do planeta ao ponto exato da campanha.</p></div><a class="btn btn--ghost" href="./campanhas.html">CAMPANHAS →</a></section>
-<section class="map-layout"><div class="map-shell panel"><div id="worldMap"></div><div class="map-hint">Clique no mapa para selecionar um ponto inicial. Coordenadas: <span id="coords">—</span></div></div><aside class="map-sidebar panel"><div class="panel-head"><h2>REGIÃO SELECIONADA</h2></div><div class="region-empty" id="regionEmpty"><span>◇</span><h3>Nenhum ponto selecionado</h3><p>Toque em um país ou ponto do mapa para registrar a localização inicial.</p></div><div class="region-selected" id="regionSelected" hidden><div class="region-name" id="regionName">—</div><div class="region-coords" id="regionCoords">—</div><div class="region-actions"><a class="btn btn--primary" id="createHere" href="./campanhas.html">CRIAR CAMPANHA AQUI →</a><button class="btn btn--ghost" id="clearPoint">LIMPAR</button></div></div><div class="map-stats"><div><span>Escala</span><b>Mundo</b></div><div><span>Uso</span><b>Planejamento</b></div><div><span>Local escolhido</span><b id="mapState">Nenhum</b></div></div></aside></section>
+<section class="page-head map-head"><div><div class="eyebrow">MUNDO · REGIÕES · ROTAS</div><h1>Mapa Mundial</h1><p>Explore do planeta à escala de rua. Em zoom alto, o Afterlife mostra pontos de interesse e estabelecimentos próximos.</p></div><div class="page-actions"><a class="btn btn--ghost" href="./campanhas.html">CAMPANHAS →</a><button class="btn btn--primary" id="centerSelection" type="button">USAR SELEÇÃO</button></div></section>
+<section class="map-layout">
+<div class="map-shell panel"><div id="worldMap"></div><div class="map-hint">Clique para marcar o local da campanha. Dê zoom para descobrir ruas, lojas, serviços e outros pontos de interesse. <span id="coords">—</span></div></div>
+<aside class="map-sidebar panel">
+<div class="panel-head"><h2>LOCAL & POIs PRÓXIMOS</h2></div>
+<div class="region-empty" id="regionEmpty"><span>◇</span><h3>Nenhum ponto selecionado</h3><p>Escolha um ponto no mapa. Em escala de rua, os estabelecimentos próximos serão carregados automaticamente.</p></div>
+<div class="region-selected" id="regionSelected" hidden><div class="region-name" id="regionName">—</div><div class="region-coords" id="regionCoords">—</div><div class="region-actions"><a class="btn btn--primary" id="createHere" href="./campanhas.html">CRIAR CAMPANHA AQUI →</a><button class="btn btn--ghost" id="clearPoint">LIMPAR</button></div></div>
+<div class="nearby-panel" id="nearbyPanel"><div class="nearby-head"><span>AO REDOR DO MAPA</span><b id="nearbyStatus">Aproxime o mapa para carregar</b></div><div id="nearbyList" class="nearby-list"><div class="nearby-empty">Zoom 13+ para descobrir pontos de interesse.</div></div></div>
+<div class="map-stats"><div><span>Escala</span><b id="mapScale">Mundo</b></div><div><span>Uso</span><b>Localização de campanha</b></div><div><span>POIs</span><b id="mapPoiCount">0</b></div></div>
+</aside></section>
 <footer class="footer"><span>AFTERLIFE v0.1</span><span>O mundo mudou.</span><span>Desenvolvido por <b>AERIOM</b></span></footer></main></div>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script><script type="module" src="./js/mapa.js?v=20260913-2"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script><script type="module" src="./js/mapa.js?v=20260913-4"></script>
 </body></html>
