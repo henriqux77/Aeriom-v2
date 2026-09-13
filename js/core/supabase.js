@@ -27,701 +27,198 @@
  * ============================================================
  */
 
-
-/* ============================================================
-   CONFIGURAÇÃO
-   ============================================================ */
+/* A mesa recebe o mesmo perfil compartilhado, sem editar o perfil. */
+import "./afterlife-campaign-profile.js";
 
 const SUPABASE_CDN_URL =
   "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
-
 const AERIOM_SUPABASE_CONFIG =
   Object.freeze({
-
     url:
       "https://kitlpowgcugvlxwhwhqv.supabase.co",
-
-    /*
-     * Publishable Key.
-     *
-     * Esta chave pode permanecer no frontend.
-     *
-     * NUNCA colocar aqui:
-     *
-     * - service_role
-     * - secret key
-     * - qualquer credencial privada
-     */
-
     publishableKey:
       "sb_publishable_WDlPiR0b8T6mlQfYMbwjGg_BGvQPZDW"
-
   });
 
+let supabaseClient = null;
+let supabaseLibraryPromise = null;
+let supabaseClientPromise = null;
 
-/* ============================================================
-   ESTADO INTERNO
-   ============================================================ */
-
-let supabaseClient =
-  null;
-
-
-/*
- * Promise exclusiva para carregar a biblioteca.
- *
- * Ela NÃO representa o cliente.
- */
-
-let supabaseLibraryPromise =
-  null;
-
-
-/*
- * Promise exclusiva para inicializar o cliente.
- *
- * Isso impede duas chamadas simultâneas de criarem
- * duas instâncias diferentes.
- */
-
-let supabaseClientPromise =
-  null;
-
-
-/* ============================================================
-   LOG
-   ============================================================ */
-
-function logSupabase(
-  level,
-  message,
-  details = null
-) {
-
-  const prefix =
-    "[AERIOM][SUPABASE]";
-
-
-  if (
-    level ===
-    "error"
-  ) {
-
-    console.error(
-      prefix,
-      message,
-      details ?? ""
-    );
-
+function logSupabase(level, message, details = null) {
+  const prefix = "[AERIOM][SUPABASE]";
+  if (level === "error") {
+    console.error(prefix, message, details ?? "");
     return;
   }
-
-
-  if (
-    level ===
-    "warn"
-  ) {
-
-    console.warn(
-      prefix,
-      message,
-      details ?? ""
-    );
-
+  if (level === "warn") {
+    console.warn(prefix, message, details ?? "");
     return;
   }
-
-
-  console.info(
-    prefix,
-    message,
-    details ?? ""
-  );
-
+  console.info(prefix, message, details ?? "");
 }
 
-
-/* ============================================================
-   CONFIGURAÇÃO
-   ============================================================ */
-
 function validateConfig() {
-
-  const {
-    url,
-    publishableKey
-  } =
-    AERIOM_SUPABASE_CONFIG;
-
-
-  if (
-    typeof url !==
-      "string" ||
-    !url.trim()
-  ) {
-
-    throw new Error(
-      "SUPABASE_URL não foi configurada."
-    );
-
+  const { url, publishableKey } = AERIOM_SUPABASE_CONFIG;
+  if (typeof url !== "string" || !url.trim()) {
+    throw new Error("SUPABASE_URL não foi configurada.");
   }
-
-
-  if (
-    typeof publishableKey !==
-      "string" ||
-    !publishableKey.trim()
-  ) {
-
-    throw new Error(
-      "SUPABASE_PUBLISHABLE_KEY não foi configurada."
-    );
-
+  if (typeof publishableKey !== "string" || !publishableKey.trim()) {
+    throw new Error("SUPABASE_PUBLISHABLE_KEY não foi configurada.");
   }
-
 
   let parsedUrl;
-
-
   try {
-
-    parsedUrl =
-      new URL(
-        url
-      );
-
+    parsedUrl = new URL(url);
   } catch {
-
-    throw new Error(
-      "SUPABASE_URL não é uma URL válida."
-    );
-
+    throw new Error("SUPABASE_URL não é uma URL válida.");
+  }
+  if (parsedUrl.protocol !== "https:") {
+    throw new Error("SUPABASE_URL deve utilizar HTTPS.");
   }
 
-
-  if (
-    parsedUrl.protocol !==
-    "https:"
-  ) {
-
-    throw new Error(
-      "SUPABASE_URL deve utilizar HTTPS."
-    );
-
-  }
-
-
-  /*
-   * Aceitamos:
-   *
-   * sb_publishable_...
-   *
-   * e JWT legado iniciando com eyJ.
-   */
-
-  const validPublishableFormat =
-    publishableKey.startsWith(
-      "sb_publishable_"
-    );
-
-
-  const validLegacyFormat =
-    publishableKey.startsWith(
-      "eyJ"
-    );
-
-
-  if (
-    !validPublishableFormat &&
-    !validLegacyFormat
-  ) {
-
+  const validPublishableFormat = publishableKey.startsWith("sb_publishable_");
+  const validLegacyFormat = publishableKey.startsWith("eyJ");
+  if (!validPublishableFormat && !validLegacyFormat) {
     logSupabase(
       "warn",
       "A chave configurada não corresponde claramente ao formato esperado de uma chave pública."
     );
-
   }
-
 }
-
-
-/* ============================================================
-   CARREGAR BIBLIOTECA
-   ============================================================ */
 
 async function loadSupabaseLibrary() {
+  if (supabaseLibraryPromise) return supabaseLibraryPromise;
 
-  /*
-   * Se a biblioteca já está sendo carregada,
-   * reutilizamos a mesma Promise.
-   */
-
-  if (
-    supabaseLibraryPromise
-  ) {
-
-    return supabaseLibraryPromise;
-
-  }
-
-
-  supabaseLibraryPromise =
-    import(
-      SUPABASE_CDN_URL
-    )
-      .then(
-        (module) => {
-
-          if (
-            !module ||
-            typeof module.createClient !==
-              "function"
-          ) {
-
-            throw new Error(
-              "O Supabase JS foi carregado, mas createClient não está disponível."
-            );
-
-          }
-
-
-          return module;
-
-        }
-      )
-      .catch(
-        (error) => {
-
-          /*
-           * Permite nova tentativa caso a CDN falhe.
-           */
-
-          supabaseLibraryPromise =
-            null;
-
-
-          logSupabase(
-            "error",
-            "Falha ao carregar o Supabase JS pela CDN.",
-            error
-          );
-
-
-          throw error;
-
-        }
+  supabaseLibraryPromise = import(SUPABASE_CDN_URL)
+    .then((module) => {
+      if (!module || typeof module.createClient !== "function") {
+        throw new Error(
+          "O Supabase JS foi carregado, mas createClient não está disponível."
+        );
+      }
+      return module;
+    })
+    .catch((error) => {
+      supabaseLibraryPromise = null;
+      logSupabase(
+        "error",
+        "Falha ao carregar o Supabase JS pela CDN.",
+        error
       );
-
+      throw error;
+    });
 
   return supabaseLibraryPromise;
-
 }
 
-
-/* ============================================================
-   CRIAR CLIENTE
-   ============================================================ */
-
-function createSupabaseClient(
-  createClient
-) {
-
-  if (
-    typeof createClient !==
-    "function"
-  ) {
-
-    throw new Error(
-      "createClient do Supabase não está disponível."
-    );
-
+function createSupabaseClient(createClient) {
+  if (typeof createClient !== "function") {
+    throw new Error("createClient do Supabase não está disponível.");
   }
 
+  const client = createClient(
+    AERIOM_SUPABASE_CONFIG.url,
+    AERIOM_SUPABASE_CONFIG.publishableKey,
+    {
+      auth: {
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: true
+      },
+      global: { headers: {} }
+    }
+  );
 
-  const client =
-    createClient(
-      AERIOM_SUPABASE_CONFIG.url,
-      AERIOM_SUPABASE_CONFIG.publishableKey,
-      {
-
-        auth: {
-
-          /*
-           * Necessário para:
-           *
-           * - sessão persistente;
-           * - renovação automática;
-           * - processamento de callback OAuth/e-mail.
-           */
-
-          autoRefreshToken:
-            true,
-
-          persistSession:
-            true,
-
-          detectSessionInUrl:
-            true
-
-        },
-
-
-        global: {
-  headers: {}
-}
-
-      }
-    );
-
-
-  if (
-    !client
-  ) {
-
-    throw new Error(
-      "createClient não retornou uma instância válida."
-    );
-
-  }
-
-
-  if (
-    !client.auth
-  ) {
-
-    throw new Error(
-      "O cliente Supabase não possui o módulo Auth."
-    );
-
-  }
-
+  if (!client) throw new Error("createClient não retornou uma instância válida.");
+  if (!client.auth) throw new Error("O cliente Supabase não possui o módulo Auth.");
 
   return client;
-
 }
 
-
-/* ============================================================
-   INICIALIZAÇÃO
-   ============================================================ */
-
 export async function initializeSupabase() {
-
-  /*
-   * Já inicializado.
-   */
-
-  if (
-    supabaseClient
-  ) {
-
-    return supabaseClient;
-
-  }
-
-
-  /*
-   * Já existe uma inicialização em andamento.
-   *
-   * Todas as chamadas passam a aguardar a mesma Promise.
-   */
-
-  if (
-    supabaseClientPromise
-  ) {
-
-    return supabaseClientPromise;
-
-  }
-
+  if (supabaseClient) return supabaseClient;
+  if (supabaseClientPromise) return supabaseClientPromise;
 
   validateConfig();
 
-
-  supabaseClientPromise =
-    (async () => {
-
-      try {
-
-        const module =
-          await loadSupabaseLibrary();
-
-
-        const client =
-          createSupabaseClient(
-            module.createClient
-          );
-
-
-        supabaseClient =
-          client;
-
-
-        logSupabase(
-          "info",
-          "Cliente Supabase inicializado com sucesso."
-        );
-
-
-        return client;
-
-      } catch (
+  supabaseClientPromise = (async () => {
+    try {
+      const module = await loadSupabaseLibrary();
+      const client = createSupabaseClient(module.createClient);
+      supabaseClient = client;
+      logSupabase("info", "Cliente Supabase inicializado com sucesso.");
+      return client;
+    } catch (error) {
+      supabaseClientPromise = null;
+      supabaseClient = null;
+      logSupabase(
+        "error",
+        "Não foi possível inicializar o cliente Supabase.",
         error
-      ) {
-
-        /*
-         * Limpa somente a Promise do cliente.
-         *
-         * A Promise da biblioteca poderá continuar existente
-         * caso o carregamento tenha sido concluído.
-         */
-
-        supabaseClientPromise =
-          null;
-
-
-        supabaseClient =
-          null;
-
-
-        logSupabase(
-          "error",
-          "Não foi possível inicializar o cliente Supabase.",
-          error
-        );
-
-
-        throw error;
-
-      }
-
-    })();
-
+      );
+      throw error;
+    }
+  })();
 
   return supabaseClientPromise;
-
 }
-
-
-/* ============================================================
-   GETTER
-   ============================================================ */
 
 export async function getSupabase() {
-
-  if (
-    supabaseClient
-  ) {
-
-    return supabaseClient;
-
-  }
-
-
-  const client =
-    await initializeSupabase();
-
-
-  if (
-    !client
-  ) {
-
-    throw new Error(
-      "Cliente Supabase não disponível após a inicialização."
-    );
-
-  }
-
-
+  if (supabaseClient) return supabaseClient;
+  const client = await initializeSupabase();
+  if (!client) throw new Error("Cliente Supabase não disponível após a inicialização.");
   return client;
-
 }
-
-
-/* ============================================================
-   ESTADO
-   ============================================================ */
 
 export function isSupabaseInitialized() {
-
-  return Boolean(
-    supabaseClient
-  );
-
+  return Boolean(supabaseClient);
 }
 
-
-/* ============================================================
-   NORMALIZAR ERRO
-   ============================================================ */
-
-export function normalizeSupabaseError(
-  error,
-  context = {}
-) {
-
+export function normalizeSupabaseError(error, context = {}) {
   const normalized = {
-
-    file:
-      context.file ??
-      "desconhecido",
-
-    function:
-      context.function ??
-      "desconhecida",
-
-    table:
-      context.table ??
-      "desconhecida",
-
-    operation:
-      context.operation ??
-      "desconhecida",
-
-    code:
-      error?.code ??
-      null,
-
-    message:
-      error?.message ??
-      "Erro desconhecido do Supabase.",
-
-    details:
-      error?.details ??
-      null,
-
-    hint:
-      error?.hint ??
-      null,
-
-    status:
-      error?.status ??
-      null,
-
-    raw:
-      error ??
-      null
-
+    file: context.file ?? "desconhecido",
+    function: context.function ?? "desconhecida",
+    table: context.table ?? "desconhecida",
+    operation: context.operation ?? "desconhecida",
+    code: error?.code ?? null,
+    message: error?.message ?? "Erro desconhecido do Supabase.",
+    details: error?.details ?? null,
+    hint: error?.hint ?? null,
+    status: error?.status ?? null,
+    raw: error ?? null
   };
 
-
-  logSupabase(
-    "error",
-    "Operação Supabase falhou.",
-    normalized
-  );
-
-
+  logSupabase("error", "Operação Supabase falhou.", normalized);
   return normalized;
-
 }
 
-
-/* ============================================================
-   EXECUTAR OPERAÇÃO
-   ============================================================ */
-
-export async function runSupabaseOperation(
-  operationPromise,
-  context = {}
-) {
-
+export async function runSupabaseOperation(operationPromise, context = {}) {
   try {
-
-    const result =
-      await operationPromise;
-
-
-    if (
-      result?.error
-    ) {
-
-      throw result.error;
-
-    }
-
-
+    const result = await operationPromise;
+    if (result?.error) throw result.error;
     return result;
-
-  } catch (
-    error
-  ) {
-
-    throw normalizeSupabaseError(
-      error,
-      context
-    );
-
+  } catch (error) {
+    throw normalizeSupabaseError(error, context);
   }
-
 }
 
+export const supabaseConfig = Object.freeze({
+  url: AERIOM_SUPABASE_CONFIG.url
+});
 
-/* ============================================================
-   CONFIGURAÇÃO PÚBLICA
-   ============================================================ */
-
-export const supabaseConfig =
-  Object.freeze({
-
-    url:
-      AERIOM_SUPABASE_CONFIG.url
-
-  });
-
-
-/* ============================================================
-   API GLOBAL DE COMPATIBILIDADE
-   ============================================================ */
-
-globalThis.AERIOM_SUPABASE =
-  Object.freeze({
-
-    getClient:
-      getSupabase,
-
-    initialize:
-      initializeSupabase,
-
-    isInitialized:
-      isSupabaseInitialized
-
-  });
-
-
-/* ============================================================
-   DIAGNÓSTICO
-   ============================================================ */
+globalThis.AERIOM_SUPABASE = Object.freeze({
+  getClient: getSupabase,
+  initialize: initializeSupabase,
+  isInitialized: isSupabaseInitialized
+});
 
 export function getSupabaseDiagnostic() {
-
   return Object.freeze({
-
-    initialized:
-      Boolean(
-        supabaseClient
-      ),
-
-    libraryLoading:
-      Boolean(
-        supabaseLibraryPromise
-      ),
-
-    clientInitializing:
-      Boolean(
-        supabaseClientPromise
-      ),
-
-    hasAuth:
-      Boolean(
-        supabaseClient?.auth
-      ),
-
-    url:
-      AERIOM_SUPABASE_CONFIG.url
-
+    initialized: Boolean(supabaseClient),
+    libraryLoading: Boolean(supabaseLibraryPromise),
+    clientInitializing: Boolean(supabaseClientPromise),
+    hasAuth: Boolean(supabaseClient?.auth),
+    url: AERIOM_SUPABASE_CONFIG.url
   });
-
 }
