@@ -1,172 +1,76 @@
 @import url('./ficha-criacao-v4-base.css');
 
-/* AFTERLIFE — status visual / cilindro de estamina */
-.character-builder .preview-mini-stats{
-  display:grid!important;
-  grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:8px;
-  margin-top:12px;
-  padding:0;
-  border:0;
-}
-.character-builder .preview-mini-stats>div{
-  position:relative;
-  min-height:64px;
-  display:grid!important;
-  grid-template-columns:34px 1fr;
-  grid-template-rows:auto 1fr;
-  align-items:center;
-  column-gap:9px;
-  padding:10px 12px!important;
-  border:1px solid rgba(127,160,145,.14)!important;
-  border-radius:12px!important;
-  background:linear-gradient(145deg,rgba(255,255,255,.028),rgba(255,255,255,.008)),#07100b!important;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.025),0 8px 22px rgba(0,0,0,.16);
-  overflow:hidden;
-}
-.character-builder .preview-mini-stats>div:nth-child(1)::before,
-.character-builder .preview-mini-stats>div:nth-child(2)::before{
-  grid-row:1/3;
-  width:30px;height:30px;
-  display:grid;place-items:center;
-  border-radius:9px;
-  font-size:17px;
-  background:rgba(255,255,255,.035);
-}
+/* AFTERLIFE — ficha criação: correções de composição v7 */
+.character-builder [hidden]{display:none!important}
+
+/* O avatar/dropdown do topo nunca pode invadir o construtor. */
+.character-builder .topbar{position:sticky;z-index:120;overflow:visible}
+.character-builder .top-actions{position:relative;z-index:130}
+.character-builder .profile-wrap{position:relative;z-index:140;max-width:260px}
+.character-builder .profile-chip{max-width:260px}
+.character-builder .profile-avatar{width:35px!important;height:35px!important;min-width:35px!important;max-width:35px!important;min-height:35px!important;max-height:35px!important;overflow:hidden}
+.character-builder .profile-avatar img{width:100%!important;height:100%!important;object-fit:cover!important;border-radius:50%!important}
+.character-builder .afterlife-profile-dropdown[hidden]{display:none!important}
+.character-builder .afterlife-profile-dropdown{position:absolute;right:0;top:calc(100% + 8px);z-index:200;width:240px;max-width:calc(100vw - 24px);overflow:hidden}
+.character-builder .afterlife-profile-dropdown .profile-avatar--large{width:44px!important;height:44px!important;min-width:44px!important;max-width:44px!important;min-height:44px!important;max-height:44px!important}
+
+/* Status do sobrevivente: HP e DEF limpos; ESTAMINA fica representada pelo cilindro. */
+.character-builder .preview-mini-stats{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:12px;padding:0;border:0}
+.character-builder .preview-mini-stats>div{position:relative;min-height:64px;display:grid!important;grid-template-columns:34px 1fr;grid-template-rows:auto 1fr;align-items:center;column-gap:9px;padding:10px 12px!important;border:1px solid rgba(127,160,145,.14)!important;border-radius:12px!important;background:linear-gradient(145deg,rgba(255,255,255,.028),rgba(255,255,255,.008)),#07100b!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.025),0 8px 22px rgba(0,0,0,.16);overflow:hidden}
+.character-builder .preview-mini-stats>div:nth-child(1)::before,.character-builder .preview-mini-stats>div:nth-child(2)::before{grid-row:1/3;width:30px;height:30px;display:grid;place-items:center;border-radius:9px;font-size:17px;background:rgba(255,255,255,.035)}
 .character-builder .preview-mini-stats>div:nth-child(1)::before{content:'♥';color:#ff6a67;background:rgba(255,89,84,.08)}
 .character-builder .preview-mini-stats>div:nth-child(2)::before{content:'◈';color:#5cf4a0;background:rgba(57,245,138,.07)}
-.character-builder .preview-mini-stats small{
-  margin:0!important;
-  color:#738078!important;
-  font-size:7px!important;
-  font-weight:900!important;
-  letter-spacing:1px!important;
-}
-.character-builder .preview-mini-stats b{
-  margin:1px 0 0!important;
-  color:#edf5f0!important;
-  font:800 22px/1 Space Grotesk,sans-serif!important;
-}
+.character-builder .preview-mini-stats small{margin:0!important;color:#738078!important;font-size:7px!important;font-weight:900!important;letter-spacing:1px!important}
+.character-builder .preview-mini-stats b{margin:1px 0 0!important;color:#edf5f0!important;font:800 22px/1 Space Grotesk,sans-serif!important}
 .character-builder .preview-mini-stats>div:nth-child(3){display:none!important}
 
-/* Cilindro inspirado em equipamento de mergulho, usado SOMENTE como representação gráfica da estamina. */
-.character-builder .stamina-cylinder-card{
-  display:grid!important;
-  grid-template-columns:118px minmax(0,1fr);
-  align-items:center;
-  gap:16px;
-  margin-top:10px!important;
-  min-height:170px;
-  padding:15px 14px!important;
-  border:1px solid rgba(57,245,138,.16)!important;
-  border-radius:14px!important;
-  background:linear-gradient(145deg,rgba(57,245,138,.045),rgba(255,255,255,.008)),#06100b!important;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.025),0 12px 28px rgba(0,0,0,.16);
-}
-.character-builder .stamina-cylinder{
-  position:relative;
-  width:88px!important;
-  height:142px!important;
-  flex:0 0 88px!important;
-  display:flex!important;
-  flex-direction:column!important;
-  align-items:center!important;
-  justify-content:flex-start!important;
-  filter:drop-shadow(0 10px 16px rgba(0,0,0,.38));
-}
-.character-builder .stamina-valve{
-  position:relative;
-  width:30px!important;
-  height:18px!important;
-  margin-bottom:-1px;
-  border:1px solid rgba(226,238,231,.28)!important;
-  border-radius:6px 6px 3px 3px!important;
-  background:linear-gradient(180deg,#8a9790,#343e38)!important;
-  box-shadow:inset 0 1px rgba(255,255,255,.12),0 2px 4px rgba(0,0,0,.25);
-}
-.character-builder .stamina-valve::before{
-  content:'';
-  position:absolute;
-  left:7px;right:7px;top:-6px;height:7px;
-  border:1px solid rgba(226,238,231,.2);
-  border-bottom:0;
-  border-radius:5px 5px 0 0;
-  background:#4c5851;
-}
-.character-builder .stamina-body{
-  position:relative!important;
-  width:74px!important;
-  height:116px!important;
-  padding:0!important;
-  margin:0!important;
-  display:block!important;
-  border:1px solid rgba(223,236,229,.26)!important;
-  border-radius:18px 18px 13px 13px!important;
-  background:linear-gradient(90deg,#151e1a 0%,#35423a 14%,#121b17 28%,#25312b 53%,#0c1410 78%,#29352e 100%)!important;
-  overflow:hidden!important;
-  box-shadow:inset 7px 0 10px rgba(255,255,255,.025),inset -8px 0 14px rgba(0,0,0,.32),inset 0 0 0 2px rgba(0,0,0,.16);
-}
-.character-builder .stamina-body::after{
-  content:'';
-  position:absolute;
-  left:5px;right:5px;bottom:5px;
-  height:46%;
-  border-radius:10px 10px 9px 9px;
-  background:linear-gradient(180deg,rgba(98,255,157,.9),rgba(24,190,102,.95));
-  box-shadow:0 -8px 15px rgba(57,245,138,.28),inset 0 3px rgba(214,255,228,.18);
-}
-.character-builder .stamina-body::before{
-  content:'';
-  position:absolute;
-  z-index:2;
-  top:8px;bottom:8px;left:11px;width:10px;
-  border-radius:999px;
-  background:linear-gradient(180deg,rgba(255,255,255,.25),rgba(255,255,255,0));
-}
+/* Cilindro vertical: elemento puramente visual da ESTAMINA. */
+.character-builder .stamina-cylinder-card{display:grid!important;grid-template-columns:118px minmax(0,1fr);align-items:center;gap:16px;margin-top:10px!important;min-height:170px;padding:15px 14px!important;border:1px solid rgba(57,245,138,.16)!important;border-radius:14px!important;background:linear-gradient(145deg,rgba(57,245,138,.045),rgba(255,255,255,.008)),#06100b!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.025),0 12px 28px rgba(0,0,0,.16)}
+.character-builder .stamina-cylinder{position:relative;width:88px!important;height:142px!important;flex:0 0 88px!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:flex-start!important;filter:drop-shadow(0 10px 16px rgba(0,0,0,.38))}
+.character-builder .stamina-valve{position:relative;width:30px!important;height:18px!important;margin-bottom:-1px;border:1px solid rgba(226,238,231,.28)!important;border-radius:6px 6px 3px 3px!important;background:linear-gradient(180deg,#8a9790,#343e38)!important;box-shadow:inset 0 1px rgba(255,255,255,.12),0 2px 4px rgba(0,0,0,.25)}
+.character-builder .stamina-valve::before{content:'';position:absolute;left:7px;right:7px;top:-6px;height:7px;border:1px solid rgba(226,238,231,.2);border-bottom:0;border-radius:5px 5px 0 0;background:#4c5851}
+.character-builder .stamina-body{position:relative!important;width:74px!important;height:116px!important;padding:0!important;margin:0!important;display:block!important;border:1px solid rgba(223,236,229,.26)!important;border-radius:18px 18px 13px 13px!important;background:linear-gradient(90deg,#151e1a 0%,#35423a 14%,#121b17 28%,#25312b 53%,#0c1410 78%,#29352e 100%)!important;overflow:hidden!important;box-shadow:inset 7px 0 10px rgba(255,255,255,.025),inset -8px 0 14px rgba(0,0,0,.32),inset 0 0 0 2px rgba(0,0,0,.16)}
+.character-builder .stamina-body::after{content:'';position:absolute;left:5px;right:5px;bottom:5px;height:46%;border-radius:10px 10px 9px 9px;background:linear-gradient(180deg,rgba(98,255,157,.9),rgba(24,190,102,.95));box-shadow:0 -8px 15px rgba(57,245,138,.28),inset 0 3px rgba(214,255,228,.18)}
+.character-builder .stamina-body::before{content:'';position:absolute;z-index:2;top:8px;bottom:8px;left:11px;width:10px;border-radius:999px;background:linear-gradient(180deg,rgba(255,255,255,.25),rgba(255,255,255,0))}
 .character-builder .stamina-body i{display:none!important}
-.character-builder .stamina-cylinder-copy{
-  min-width:0;
-  align-self:center;
-}
-.character-builder .stamina-cylinder-copy span{
-  display:block;
-  color:#7f8c85!important;
-  font-size:8px!important;
-  font-weight:900!important;
-  letter-spacing:1.2px!important;
-}
-.character-builder .stamina-cylinder-copy b{
-  display:block;
-  margin:3px 0 0!important;
-  color:var(--green)!important;
-  font:800 31px/1 Space Grotesk,sans-serif!important;
-  letter-spacing:-.5px;
-}
+.character-builder .stamina-cylinder-copy{min-width:0;align-self:center}
+.character-builder .stamina-cylinder-copy>span{display:block;color:#7f8c85!important;font-size:8px!important;font-weight:900!important;letter-spacing:1.2px!important}
+.character-builder .stamina-cylinder-copy b{display:block;margin:3px 0 0!important;color:var(--green)!important;font:800 31px/1 Space Grotesk,sans-serif!important}
 .character-builder .stamina-cylinder-copy em{font-style:normal}
-.character-builder .stamina-cylinder-copy b span{
-  display:inline!important;
-  color:#7d8b82!important;
-  font-size:14px!important;
-  letter-spacing:0!important;
-}
-.character-builder .stamina-cylinder-copy small{
-  display:block;
-  max-width:210px;
-  margin-top:8px!important;
-  color:#68766f!important;
-  font-size:8px!important;
-  line-height:1.45!important;
-}
+.character-builder .stamina-cylinder-copy b span{display:inline!important;color:#7d8b82!important;font-size:14px!important;letter-spacing:0!important}
+.character-builder .stamina-cylinder-copy small{display:block;max-width:210px;margin-top:8px!important;color:#68766f!important;font-size:8px!important;line-height:1.45!important}
 
-@media(max-width:520px){
-  .character-builder .preview-mini-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .character-builder .stamina-cylinder-card{grid-template-columns:92px minmax(0,1fr);gap:11px;min-height:154px;padding:12px!important}
-  .character-builder .stamina-cylinder{transform:scale(.88);transform-origin:center center}
-  .character-builder .stamina-cylinder-copy b{font-size:28px!important}
-  .character-builder .stamina-cylinder-copy small{font-size:7px!important}
-}
-@media(max-width:360px){
-  .character-builder .stamina-cylinder-card{grid-template-columns:82px minmax(0,1fr);gap:7px}
-  .character-builder .stamina-cylinder{transform:scale(.78);margin-left:-5px;margin-right:-12px}
-  .character-builder .preview-mini-stats>div{padding:9px}
-}
+/* Setas da navegação principal. */
+.character-builder .carousel-window{position:relative;min-width:0}
+.character-builder .carousel-track{overflow:hidden;touch-action:pan-y}
+.character-builder .carousel-arrow{position:absolute;top:50%;z-index:80;width:50px;height:50px;border-radius:50%;transform:translateY(-50%);display:grid!important;place-items:center;border:1px solid rgba(57,245,138,.3)!important;background:rgba(4,10,7,.97)!important;color:#eff6f1!important;font:400 32px/1 Inter,sans-serif!important;cursor:pointer;box-shadow:0 15px 35px rgba(0,0,0,.4)}
+.character-builder .carousel-arrow:hover:not(:disabled){color:var(--green)!important;border-color:rgba(57,245,138,.6)!important;transform:translateY(-50%) scale(1.06)}
+.character-builder .carousel-arrow:disabled{opacity:.2;cursor:not-allowed}
+.character-builder .carousel-prev{left:6px}.character-builder .carousel-next{right:6px}
+
+/* Carrossel de classes: somente estas duas setas circulares devem aparecer dentro do deck. */
+.character-builder .class-carousel-v4{position:relative;min-height:340px;display:grid;align-items:center;padding:0 48px}
+.character-builder .class-deck{min-height:320px;position:relative;z-index:2}
+.character-builder .class-arrow{appearance:none!important;-webkit-appearance:none!important;position:absolute!important;top:50%!important;z-index:30!important;width:44px!important;height:44px!important;min-width:44px!important;padding:0!important;margin:0!important;display:grid!important;place-items:center!important;transform:translateY(-50%)!important;border:1px solid rgba(57,245,138,.28)!important;border-radius:50%!important;background:rgba(5,14,9,.98)!important;color:#eaf4ee!important;font:400 28px/1 Inter,sans-serif!important;cursor:pointer!important;box-shadow:0 10px 30px rgba(0,0,0,.32)!important}
+.character-builder .class-arrow:hover{color:var(--green)!important;border-color:rgba(57,245,138,.58)!important;transform:translateY(-50%) scale(1.06)!important}
+.character-builder .class-arrow--left{left:0!important}.character-builder .class-arrow--right{right:0!important}
+.character-builder .deck-meta{text-align:center;margin-top:-7px}
+
+/* Atributos — reforço para impedir fallback dos controles HTML. */
+.character-builder .attribute-pool{display:flex!important;align-items:center;justify-content:space-between;gap:14px;margin-top:20px;padding:13px 14px;border:1px solid rgba(57,245,138,.15);border-radius:12px;background:linear-gradient(90deg,rgba(57,245,138,.05),rgba(255,255,255,.012))}
+.character-builder .attribute-pool span{display:block;color:#728078;font-size:7px;letter-spacing:1px}.character-builder .attribute-pool b{display:block;color:var(--green);font:800 28px Space Grotesk;margin-top:2px}.character-builder .attribute-pool small{color:#718078;font-size:8px;text-align:right}
+.character-builder .attribute-grid-v4{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:12px}
+.character-builder .attribute-grid-v4>div{position:relative;min-height:120px;padding:13px;border:1px solid var(--line)!important;border-radius:12px;background:#070d0a!important;overflow:hidden;display:block!important}
+.character-builder .attribute-grid-v4>div>span{display:block;color:#707e77;font-size:7px;font-weight:900;letter-spacing:1px;margin-right:72px}.character-builder .attribute-grid-v4 strong{display:block;margin:6px 0;color:#edf5f0;font:800 28px Space Grotesk}
+.character-builder .attribute-grid-v4 button{appearance:none!important;-webkit-appearance:none!important;position:absolute!important;top:11px!important;width:27px!important;height:27px!important;padding:0!important;border:1px solid rgba(255,255,255,.08)!important;border-radius:8px!important;background:rgba(255,255,255,.025)!important;color:#e7eee9!important;font:600 16px/1 Inter,sans-serif!important;cursor:pointer}
+.character-builder .attribute-grid-v4 button:hover:not(:disabled){border-color:rgba(57,245,138,.32)!important;color:var(--green)!important;background:rgba(57,245,138,.05)!important}.character-builder .attribute-grid-v4 button:disabled{opacity:.23;cursor:not-allowed}.character-builder .attribute-grid-v4 [data-minus]{right:42px!important}.character-builder .attribute-grid-v4 [data-plus]{right:11px!important}
+.character-builder .attribute-grid-v4 i{display:block;height:5px;border-radius:999px;background:#18261e;overflow:hidden}.character-builder .attribute-grid-v4 i em{display:block;width:0;height:100%;border-radius:inherit;background:linear-gradient(90deg,#1cae60,var(--green));transition:width .2s ease}
+.character-builder .live-stats-panel-v4{margin-top:16px;padding:15px;border:1px solid rgba(57,245,138,.16);border-radius:14px;background:linear-gradient(180deg,rgba(57,245,138,.045),rgba(255,255,255,.01)),#06100b}
+.character-builder .live-stats-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-end;margin-bottom:10px}.character-builder .live-stats-head span{display:block;color:var(--green);font-size:7px;letter-spacing:1px;font-weight:900}.character-builder .live-stats-head h3{margin:3px 0 0;color:#edf5f0;font:700 18px Space Grotesk}.character-builder .live-stats-head>small{max-width:220px;color:#66756d;font-size:7px;line-height:1.4}
+.character-builder .live-stat-row{display:grid!important;grid-template-columns:96px minmax(0,1fr) 160px;gap:9px;align-items:center;padding:8px 0;border-top:1px solid rgba(255,255,255,.05)}
+.character-builder .live-stat-row>div{display:flex;justify-content:space-between;gap:6px}.character-builder .live-stat-row>div span{color:#8b9992;font-size:7px;font-weight:900}.character-builder .live-stat-row>div b{color:var(--text);font:800 15px Space Grotesk}.character-builder .live-stat-row>i{display:block;height:7px;border-radius:99px;background:#17241c;overflow:hidden}.character-builder .live-stat-row>i em{display:block;width:5%;height:100%;border-radius:inherit;background:linear-gradient(90deg,#159b53,var(--green));transition:width .2s}.character-builder .live-stat-row>small{color:#6d7d74;font-size:7px;line-height:1.3}
+
+@media(max-width:1050px){.character-builder .appearance-builder-v4{grid-template-columns:minmax(250px,320px) minmax(0,1fr)}.character-builder .class-carousel-v4{padding:0 44px}}
+@media(max-width:780px){.character-builder .topbar{z-index:200}.character-builder .profile-wrap{max-width:200px}.character-builder .carousel-arrow{width:42px;height:42px;font-size:28px}.character-builder .class-carousel-v4{padding:0 40px}.character-builder .class-arrow{width:40px!important;height:40px!important;min-width:40px!important}.character-builder .attribute-grid-v4{grid-template-columns:repeat(2,minmax(0,1fr))}.character-builder .live-stat-row{grid-template-columns:90px minmax(0,1fr)}.character-builder .live-stat-row>small{grid-column:1/-1}.character-builder .stamina-cylinder-card{grid-template-columns:92px minmax(0,1fr);gap:11px;min-height:154px;padding:12px!important}.character-builder .stamina-cylinder{transform:scale(.88);transform-origin:center center}.character-builder .stamina-cylinder-copy b{font-size:28px!important}}
+@media(max-width:560px){.character-builder .appearance-builder-v4{grid-template-columns:1fr}.character-builder .class-carousel-v4{padding:0 34px}.character-builder .attribute-grid-v4{grid-template-columns:1fr}.character-builder .preview-mini-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.character-builder .stamina-cylinder-copy small{display:none}.character-builder .profile-copy{display:none}.character-builder .profile-chip{padding:6px}}
+@media(max-width:360px){.character-builder .stamina-cylinder-card{grid-template-columns:82px minmax(0,1fr);gap:7px}.character-builder .stamina-cylinder{transform:scale(.78);margin-left:-5px;margin-right:-12px}}
