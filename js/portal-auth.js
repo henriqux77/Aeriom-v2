@@ -29,6 +29,8 @@ function friendlyError(error) {
   if (text.includes('invalid login credentials')) return 'E-mail ou senha incorretos.';
   if (text.includes('email not confirmed')) return 'Confirme seu e-mail antes de entrar.';
   if (text.includes('user already registered')) return 'Este e-mail já possui uma conta.';
+  if (text.includes('provider') && text.includes('disabled')) return 'Este método de login ainda não está habilitado no Supabase.';
+  if (text.includes('redirect')) return 'A URL de retorno não está autorizada no Supabase.';
   if (text.includes('rate limit') || text.includes('too many')) return 'Muitas tentativas. Aguarde um pouco.';
   if (text.includes('password')) return 'A senha não atende aos requisitos mínimos.';
   return error?.message || 'Não foi possível concluir a autenticação.';
@@ -38,15 +40,38 @@ function displaySystem(user) {
   showView('system');
   const name = $('systemUserName');
   const email = $('systemUserEmail');
-  if (name) name.textContent = user?.user_metadata?.display_name || user?.email?.split('@')[0] || 'Sobrevivente';
+  if (name) name.textContent = user?.user_metadata?.display_name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Sobrevivente';
   if (email) email.textContent = user?.email || '';
 }
 
+async function oauth(provider) {
+  showMessage();
+  const buttons = { google: $('googleLogin'), discord: $('discordLogin'), github: $('githubLogin') };
+  const button = buttons[provider];
+  if (button) button.disabled = true;
+
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider,
+    options: {
+      redirectTo: `${window.location.origin}${window.location.pathname}`,
+      queryParams: provider === 'google' ? { access_type: 'offline', prompt: 'consent' } : undefined
+    }
+  });
+
+  if (error) {
+    if (button) button.disabled = false;
+    showMessage(friendlyError(error));
+  }
+}
+
 async function init() {
-  const { data } = await supabase.auth.getSession();
+  const { data, error } = await supabase.auth.getSession();
+  if (error) showMessage(friendlyError(error));
   if (data.session?.user) displaySystem(data.session.user);
+
   const remembered = localStorage.getItem('aeriom_portal_email');
   if (remembered && $('loginEmail')) $('loginEmail').value = remembered;
+
   supabase.auth.onAuthStateChange((event, session) => {
     if (event === 'SIGNED_IN' && session?.user) displaySystem(session.user);
     if (event === 'SIGNED_OUT') showView('login');
@@ -60,9 +85,9 @@ $('loginForm')?.addEventListener('submit', async (event) => {
   const password = $('loginPassword')?.value || '';
   if (!email || !password) return showMessage('Preencha e-mail e senha.');
   const button = $('loginSubmit');
-  button && (button.disabled = true);
+  if (button) button.disabled = true;
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-  button && (button.disabled = false);
+  if (button) button.disabled = false;
   if (error) return showMessage(friendlyError(error));
   if ($('remember')?.checked) localStorage.setItem('aeriom_portal_email', email);
   displaySystem(data.user);
@@ -80,9 +105,9 @@ $('registerForm')?.addEventListener('submit', async (event) => {
   if (password.length < 8) return showMessage('A senha precisa ter pelo menos 8 caracteres.');
   if (password !== confirm) return showMessage('As senhas não coincidem.');
   const button = $('registerSubmit');
-  button && (button.disabled = true);
+  if (button) button.disabled = true;
   const { data, error } = await supabase.auth.signUp({ email, password, options: { data: { display_name: name } } });
-  button && (button.disabled = false);
+  if (button) button.disabled = false;
   if (error) return showMessage(friendlyError(error));
   if (data.session?.user) return displaySystem(data.user);
   showView('login');
@@ -103,9 +128,13 @@ $('showLogin')?.addEventListener('click', () => { showView('login'); showMessage
 $('forgotPassword')?.addEventListener('click', async () => {
   const email = $('loginEmail')?.value.trim();
   if (!email) return showMessage('Digite seu e-mail para receber o link de recuperação.');
-  const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${location.origin}${location.pathname}` });
+  const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}${window.location.pathname}` });
   showMessage(error ? friendlyError(error) : 'Enviamos um link de recuperação para seu e-mail.', error ? 'error' : 'success');
 });
+
+$('googleLogin')?.addEventListener('click', () => oauth('google'));
+$('discordLogin')?.addEventListener('click', () => oauth('discord'));
+$('githubLogin')?.addEventListener('click', () => oauth('github'));
 
 $('logoutSystem')?.addEventListener('click', async (event) => {
   event.preventDefault();
@@ -113,7 +142,21 @@ $('logoutSystem')?.addEventListener('click', async (event) => {
   showView('login');
 });
 
-$('enterAeriom')?.addEventListener('click', () => { window.location.href = './campanhas.html'; });
-$('enterAfterlife')?.addEventListener('click', () => { window.location.href = './afterlife/index.html'; });
+document.querySelectorAll('.system-enter').forEach((button) => {
+  button.addEventListener('click', () => {
+    const href = button.dataset.href;
+    if (href) window.location.href = href;
+  });
+});
+
+document.querySelectorAll('.card-info').forEach((button) => {
+  button.addEventListener('click', () => {
+    const target = $(button.dataset.target);
+    if (!target) return;
+    const open = target.classList.toggle('is-open');
+    button.setAttribute('aria-expanded', String(open));
+    button.textContent = open ? 'OCULTAR' : 'CONHECER';
+  });
+});
 
 init().catch((error) => showMessage(friendlyError(error)));
