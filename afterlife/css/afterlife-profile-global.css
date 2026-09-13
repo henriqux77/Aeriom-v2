@@ -32,3 +32,25 @@ body:not(:has(.dashboard-hero)) .afterlife-global-profile-menu,body:not(:has(.da
 
 /* Logomarca nova enviada pelo usuário — substitui visualmente a marca antiga do menu lateral. */
 .brand__logo{display:block!important;width:165px!important;max-width:100%!important;height:auto!important;object-fit:contain!important;content:url("https://i.ibb.co/BH2Hqr3P/file-00000000b47c820e88b788de23f77e3e.png")!important}
+
+/* Burger do Afterlife fica disponível também nas páginas que carregam apenas este CSS. */
+.mobile-menu{position:relative!important;z-index:10001!important;cursor:pointer!important}
+@media(max-width:980px){
+  .mobile-menu{display:inline-flex!important;width:42px!important;height:42px!important;flex:0 0 42px!important;align-items:center!important;justify-content:center!important;padding:0!important;border:1px solid rgba(127,160,145,.18)!important;border-radius:10px!important;background:rgba(7,15,12,.82)!important;color:#dce6df!important}
+  .mobile-menu>span,.mobile-menu>span::before,.mobile-menu>span::after{display:block!important;width:22px!important;height:2px!important;border-radius:999px!important;background:currentColor!important;transition:transform .28s cubic-bezier(.2,.8,.2,1),top .28s cubic-bezier(.2,.8,.2,1),opacity .2s ease!important}
+  .mobile-menu>span{position:relative!important}
+  .mobile-menu>span::before,.mobile-menu>span::after{content:"";position:absolute;left:0}
+  .mobile-menu>span::before{top:-7px}
+  .mobile-menu>span::after{top:7px}
+  .mobile-menu[aria-expanded="true"]>span{background:transparent!important}
+  .mobile-menu[aria-expanded="true"]>span::before{top:0;transform:rotate(45deg)}
+  .mobile-menu[aria-expanded="true"]>span::after{top:0;transform:rotate(-45deg)}
+  .sidebar{position:fixed!important;left:0!important;top:0!important;bottom:0!important;width:min(300px,86vw)!important;height:100vh!important;z-index:10000!important;transform:translateX(-105%)!important;transition:transform .32s cubic-bezier(.2,.8,.2,1)!important;box-shadow:20px 0 60px rgba(0,0,0,.38)!important}
+  .sidebar.is-open{transform:translateX(0)!important}
+  body.menu-open .sidebar,body.afterlife-sidebar-open .sidebar{transform:translateX(0)!important}
+  body.afterlife-sidebar-open,body.menu-open{overflow:hidden!important}
+  .topbar{position:sticky!important;top:0!important;z-index:100!important}
+  .main{min-width:0!important}
+}
+@media(max-width:620px){.mobile-menu{width:40px!important;height:40px!important;flex-basis:40px!important}.topbar{gap:10px!important;padding-left:14px!important;padding-right:14px!important}.search-box{min-width:0!important}.search-box kbd{display:none!important}}
+@media(prefers-reduced-motion:reduce){.mobile-menu,.mobile-menu>span,.mobile-menu>span::before,.mobile-menu>span::after,.sidebar{transition:none!important}}
