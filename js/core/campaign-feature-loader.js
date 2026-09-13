@@ -10,9 +10,8 @@
   };
   async function loadGroup(group){if(loaded.get(group))return true;if(importing.has(group))return importing.get(group);const list=modules[group];if(!list)return false;const task=Promise.allSettled(list.map(spec=>import(spec))).then(results=>{const failed=results.filter(r=>r.status==="rejected");failed.forEach(r=>console.error("[AERIOM][FEATURE LOAD]",r.reason));if(!failed.length)loaded.set(group,true);return !failed.length}).finally(()=>importing.delete(group));importing.set(group,task);return task;}
   function currentTab(){return document.documentElement.dataset.campaignTab||document.querySelector("[data-campaign-tab].is-active")?.dataset.campaignTab||"overview";}
-  function onTabChange(e){const tab=e.detail?.tab||currentTab();if(tab==="master-controls")void loadGroup("master");else if(tab==="theme")void loadGroup("theme");}
-  window.addEventListener("aeriom:campaigntabchange",onTabChange);
-  window.addEventListener("aeriom:campaign:ready",()=>{void loadGroup("base");const tab=currentTab();if(tab==="master-controls")void loadGroup("master");else if(tab==="theme")void loadGroup("theme");});
+  function onTabChange(e){const tab=e.detail?.tab||currentTab();void loadGroup("base");if(tab==="master-controls")void loadGroup("master");else if(tab==="theme")void loadGroup("theme");}
+  window.addEventListener("aeriom:campaigntabchange",onTabChange);window.addEventListener("aeriom:campaign:ready",()=>{void loadGroup("base");const tab=currentTab();if(tab==="master-controls")void loadGroup("master");else if(tab==="theme")void loadGroup("theme");});
   const boot=()=>{void loadGroup("base");const tab=currentTab();if(tab==="master-controls")void loadGroup("master");else if(tab==="theme")void loadGroup("theme");};
   if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",boot,{once:true});else boot();
   window.AERIOM_FEATURES=Object.freeze({loadBase:()=>loadGroup("base"),loadMaster:()=>loadGroup("master"),loadTheme:()=>loadGroup("theme")});
