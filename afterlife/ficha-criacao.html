@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#050807"><title>AFTERLIFE — Criar Ficha</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./css/afterlife.css"><link rel="stylesheet" href="./css/ficha-criacao.css?v=20260913-1">
+</head>
+<body class="character-builder">
+<div class="app-shell">
+<aside class="sidebar" id="sidebar">
+  <div class="brand"><div class="brand__title"><span>A</span>FTERLIFE</div></div>
+  <nav class="side-nav" aria-label="Navegação Afterlife">
+    <a class="side-nav__item" href="./index.html"><span class="icon">⌂</span><span>Início</span></a>
+    <a class="side-nav__item" href="./campanhas.html"><span class="icon">◈</span><span>Campanhas</span></a>
+    <a class="side-nav__item is-active" href="./ficha-criacao.html"><span class="icon">●</span><span>Personagens</span></a>
+    <a class="side-nav__item" href="./mapa-mundial.html"><span class="icon">◇</span><span>Mapa Mundial</span></a>
+    <a class="side-nav__item" href="#"><span class="icon">▣</span><span>Inventário</span></a>
+    <a class="side-nav__item" href="#"><span class="icon">▤</span><span>Manual</span></a>
+  </nav>
+  <div class="sidebar-spacer"></div>
+  <a class="side-nav__item" href="#"><span class="icon">⚙</span><span>Configurações</span></a>
+</aside>
+<main class="main">
+<header class="topbar"><button class="mobile-menu" id="mobileMenu" aria-label="Abrir menu">☰</button><div class="top-actions"><button class="profile-chip" id="profileChip" type="button" aria-label="Abrir perfil"><span class="profile-avatar" id="profileAvatar">A</span><span class="profile-copy"><strong id="profileName">Sobrevivente</strong><small><i></i> Online</small></span><span class="profile-caret">⌄</span></button></div></header>
+
+<section class="builder-head">
+  <div class="builder-kicker">AFTERLIFE · CRIAÇÃO DE PERSONAGEM</div>
+  <div class="builder-title-row"><div><h1>Crie seu sobrevivente.</h1><p>Monte a identidade do personagem passo a passo. O carrossel mantém suas escolhas no centro da experiência.</p></div><div class="builder-status"><span></span><strong id="stepCount">01 / 06</strong><small>CONFIGURAÇÃO</small></div></div>
+</section>
+
+<section class="builder-shell">
+  <aside class="builder-rail" aria-label="Etapas da ficha">
+    <div class="rail-label">PROGRESSO</div>
+    <div class="rail-progress"><i id="progressBar"></i></div>
+    <button class="builder-step is-active" data-step="0"><span>01</span><b>Identidade</b><small>Nome e perfil</small></button>
+    <button class="builder-step" data-step="1"><span>02</span><b>Origem</b><small>Raça e linhagem</small></button>
+    <button class="builder-step" data-step="2"><span>03</span><b>Aparência</b><small>Visual do personagem</small></button>
+    <button class="builder-step" data-step="3"><span>04</span><b>Classe</b><small>Função e estilo</small></button>
+    <button class="builder-step" data-step="4"><span>05</span><b>Atributos</b><small>Valores iniciais</small></button>
+    <button class="builder-step" data-step="5"><span>06</span><b>Conceito</b><small>História e motivação</small></button>
+  </aside>
+
+  <section class="builder-content">
+    <div class="character-preview">
+      <div class="preview-art"><div class="preview-glow"></div><div class="preview-silhouette">A</div></div>
+      <div class="preview-info"><span>SEU SOBREVIVENTE</span><h2 id="previewName">Sem nome</h2><p id="previewSub">Humano · Sobrevivente</p></div>
+      <div class="preview-mini-stats"><div><small>HP</small><b id="previewHp">10</b></div><div><small>DEF</small><b id="previewDef">10</b></div><div><small>MV</small><b id="previewMove">6</b></div></div>
+    </div>
+
+    <div class="carousel-window" id="carouselWindow">
+      <button class="carousel-arrow carousel-prev" id="prevStep" type="button" aria-label="Etapa anterior">‹</button>
+      <div class="carousel-track" id="carouselTrack">
+        <article class="builder-slide is-active" data-slide="0"><div class="slide-kicker">01 · IDENTIDADE</div><h2>Quem sobreviveu?</h2><p>Comece pelo básico. Essas informações serão usadas pela ficha, pelo combate e pela campanha.</p><div class="field-grid two"><label><span>Nome do personagem</span><input id="characterName" maxlength="60" placeholder="Ex.: Elias Vale"></label><label><span>Apelido</span><input id="characterNickname" maxlength="40" placeholder="Como o grupo chama você?"></label><label><span>Gênero</span><select id="characterGender"><option>Não definido</option><option>Feminino</option><option>Masculino</option><option>Não-binário</option><option>Outro</option></select></label><label><span>Idade</span><input id="characterAge" type="number" min="1" max="999" placeholder="Ex.: 27"></label></div><div class="callout"><b>IDENTIDADE</b><span>Você poderá editar tudo depois. Agora estamos criando apenas o núcleo visual da ficha.</span></div></article>
+        <article class="builder-slide" data-slide="1"><div class="slide-kicker">02 · ORIGEM</div><h2>De onde você veio?</h2><p>A origem será selecionada com cartas em carrossel. As opções abaixo são apenas amostras visuais para o design.</p><div class="option-carousel"><button class="mini-arrow" data-origin="prev" type="button">‹</button><div class="origin-cards" id="originCards"><button class="origin-card is-selected" type="button" data-value="Humano"><span>H</span><div><b>Humano</b><small>Adaptável e versátil.</small></div></button><button class="origin-card" type="button" data-value="Mutante"><span>M</span><div><b>Mutante</b><small>Sobreviveu ao impossível.</small></div></button><button class="origin-card" type="button" data-value="Sintético"><span>S</span><div><b>Sintético</b><small>Corpo reconstruído.</small></div></button><button class="origin-card" type="button" data-value="Desconhecido"><span>?</span><div><b>Desconhecido</b><small>Uma origem apagada.</small></div></button></div><button class="mini-arrow" data-origin="next" type="button">›</button></div><div class="origin-readout"><span>ORIGEM ATUAL</span><strong id="originReadout">Humano</strong><small id="originDescription">Adaptável e versátil.</small></div></article>
+        <article class="builder-slide" data-slide="2"><div class="slide-kicker">03 · APARÊNCIA</div><h2>Como o mundo vê você?</h2><p>O retrato ficará no centro da ficha. Aqui o espaço já está pronto para receber o sistema de aparência e imagens.</p><div class="appearance-builder"><div class="portrait-placeholder"><div class="portrait-ring"><span>IMG</span></div><button type="button" class="btn btn--ghost">ADICIONAR RETRATO</button></div><div class="appearance-fields"><label><span>Altura</span><select><option>1,60 m</option><option selected>1,75 m</option><option>1,85 m</option><option>1,95 m</option></select></label><label><span>Pele</span><select><option>Clara</option><option selected>Morena</option><option>Escura</option><option>Pálida</option></select></label><label><span>Cabelo</span><select><option>Preto</option><option selected>Castanho</option><option>Ruivo</option><option>Loiro</option></select></label><label><span>Olhos</span><select><option>Castanhos</option><option selected>Verdes</option><option>Azuis</option><option>Cinzentos</option></select></label></div></div></article>
+        <article class="builder-slide" data-slide="3"><div class="slide-kicker">04 · CLASSE</div><h2>Qual é sua função?</h2><p>A seleção de classe vai virar um carrossel de cartas como no AERION, com a opção central destacada.</p><div class="class-deck" id="classDeck"><button class="class-card side" type="button"><span>◎</span><b>Explorador</b><small>Mobilidade e leitura do ambiente.</small></button><button class="class-card selected" type="button"><span>✦</span><b>Sobrevivente</b><small>Equilíbrio entre combate e recursos.</small></button><button class="class-card side" type="button"><span>◈</span><b>Combatente</b><small>Pressão e resistência em combate.</small></button></div><div class="deck-meta"><span>CLASSE SELECIONADA</span><strong id="classReadout">Sobrevivente</strong><small>02 / 06</small></div></article>
+        <article class="builder-slide" data-slide="4"><div class="slide-kicker">05 · ATRIBUTOS</div><h2>O que você consegue fazer?</h2><p>Os atributos ficarão visíveis e editáveis em uma grade compacta. O cálculo final entra na próxima etapa.</p><div class="attribute-grid"><div><span>FORÇA</span><b>10</b><i style="--w:50%"></i></div><div><span>AGILIDADE</span><b>12</b><i style="--w:60%"></i></div><div><span>VIGOR</span><b>11</b><i style="--w:55%"></i></div><div><span>PERCEPÇÃO</span><b>13</b><i style="--w:65%"></i></div><div><span>MENTE</span><b>9</b><i style="--w:45%"></i></div><div><span>VONTADE</span><b>14</b><i style="--w:70%"></i></div></div><div class="attribute-note"><span>◉</span><b>Distribuição de pontos</b><small>A mecânica definitiva de distribuição será ligada ao sistema de regras quando você definir os valores.</small></div></article>
+        <article class="builder-slide" data-slide="5"><div class="slide-kicker">06 · CONCEITO</div><h2>Por que continuar?</h2><p>A última etapa fecha a identidade narrativa antes de transformar as escolhas em uma ficha de personagem.</p><div class="field-stack"><label><span>Personalidade</span><input placeholder="Como esse personagem costuma agir?"></label><label><span>Objetivo</span><input placeholder="O que ele busca agora?"></label><label><span>Medo</span><input placeholder="O que ele não consegue encarar?"></label><label><span>História</span><textarea rows="4" placeholder="Conte brevemente de onde ele veio..."></textarea></label></div></article>
+      </div>
+      <button class="carousel-arrow carousel-next" id="nextStep" type="button" aria-label="Próxima etapa">›</button>
+    </div>
+
+    <div class="carousel-footer"><div class="carousel-dots" id="carouselDots"></div><div class="footer-actions"><a class="btn btn--ghost" href="./index.html">CANCELAR</a><button class="btn btn--ghost" id="backStep" type="button">← VOLTAR</button><button class="btn btn--primary" id="nextAction" type="button">CONTINUAR →</button></div></div>
+  </section>
+</section>
+<footer class="footer"><span>AFTERLIFE v0.1</span><span>CRIAÇÃO DE PERSONAGEM</span><span>Desenvolvido por <b>AERIOM</b></span></footer>
+</main></div>
+<script type="module" src="./js/ficha-criacao.js?v=20260913-1"></script>
+</body></html>
