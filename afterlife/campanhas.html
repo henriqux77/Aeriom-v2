@@ -1,52 +1,8 @@
 <!doctype html>
-<html lang="pt-BR">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#050807">
-<title>AFTERLIFE — Campanhas</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="./css/afterlife.css">
-<link rel="stylesheet" href="./css/campaigns.css?v=20260913-1">
-</head>
-<body>
-<div class="app-shell">
-<aside class="sidebar" id="sidebar">
-  <div class="brand"><div class="brand__title"><span>A</span>FTERLIFE</div><div class="brand__tagline">SOBREVIVÊNCIA ALÉM DO FIM</div></div>
-  <nav class="side-nav" aria-label="Navegação Afterlife">
-    <a class="side-nav__item" href="./index.html"><span class="icon">⌂</span><span>Início</span></a>
-    <a class="side-nav__item is-active" href="./campanhas.html"><span class="icon">◈</span><span>Campanhas</span></a>
-    <a class="side-nav__item" href="./index.html#personagens"><span class="icon">●</span><span>Personagens</span></a>
-    <a class="side-nav__item" href="./mapa-mundial.html"><span class="icon">◇</span><span>Mapa Mundial</span></a>
-    <a class="side-nav__item" href="#"><span class="icon">▣</span><span>Inventário</span></a>
-    <a class="side-nav__item" href="#"><span class="icon">▤</span><span>Manual</span></a>
-    <a class="side-nav__item" href="#"><span class="icon">◎</span><span>Comunidade</span></a>
-  </nav>
-  <div class="sidebar-spacer"></div><a class="side-nav__item" href="#"><span class="icon">⚙</span><span>Configurações</span></a>
-  <div class="sidebar-quote"><div>“NÃO É SOBRE<br>ESPERANÇA.<br>É SOBRE<br>ESCOLHAS.”</div></div>
-</aside>
-<main class="main">
-<header class="topbar"><button class="mobile-menu" id="mobileMenu" aria-label="Abrir menu">☰</button><div class="top-actions"><button class="profile-chip" id="profileChip" type="button" aria-label="Abrir perfil"><span class="profile-avatar" id="profileAvatar">A</span><span class="profile-copy"><strong id="profileName">Sobrevivente</strong><small><i></i> Online</small></span><span class="profile-caret">⌄</span></button></div></header>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050807"><title>AFTERLIFE — Campanhas</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"><link rel="stylesheet" href="./css/afterlife.css"><link rel="stylesheet" href="./css/campaigns.css?v=20260913-1"></head>
+<body><div class="app-shell"><aside class="sidebar" id="sidebar"><div class="brand"><div class="brand__title"><span>A</span>FTERLIFE</div><div class="brand__tagline">SOBREVIVÊNCIA ALÉM DO FIM</div></div><nav class="side-nav" aria-label="Navegação Afterlife"><a class="side-nav__item" href="./index.html"><span class="icon">⌂</span><span>Início</span></a><a class="side-nav__item is-active" href="./campanhas.html"><span class="icon">◈</span><span>Campanhas</span></a><a class="side-nav__item" href="./index.html#personagens"><span class="icon">●</span><span>Personagens</span></a><a class="side-nav__item" href="./mapa-mundial.html"><span class="icon">◇</span><span>Mapa Mundial</span></a><a class="side-nav__item" href="#"><span class="icon">▣</span><span>Inventário</span></a><a class="side-nav__item" href="#"><span class="icon">▤</span><span>Manual</span></a><a class="side-nav__item" href="#"><span class="icon">◎</span><span>Comunidade</span></a></nav><div class="sidebar-spacer"></div><a class="side-nav__item" href="#"><span class="icon">⚙</span><span>Configurações</span></a><div class="sidebar-quote"><div>“NÃO É SOBRE<br>ESPERANÇA.<br>É SOBRE<br>ESCOLHAS.”</div></div></aside>
+<main class="main"><header class="topbar"><button class="mobile-menu" id="mobileMenu" aria-label="Abrir menu">☰</button><div class="top-actions"><button class="profile-chip" id="profileChip" type="button" aria-label="Abrir perfil"><span class="profile-avatar" id="profileAvatar">A</span><span class="profile-copy"><strong id="profileName">Sobrevivente</strong><small><i></i> Online</small></span><span class="profile-caret">⌄</span></button></div></header>
 <section class="page-head"><div><div class="eyebrow">SOBREVIVÊNCIA · CAMPANHAS</div><h1>Suas campanhas</h1><p>Crie uma nova realidade, escolha onde o colapso começou e reúna seu grupo.</p></div><div class="page-actions"><a class="btn btn--ghost" href="./mapa-mundial.html">MAPA MUNDIAL</a><button class="btn btn--primary" id="openCreate">+ CRIAR CAMPANHA</button></div></section>
-<section class="campaign-create panel" id="createPanel" hidden>
-  <div class="panel-head"><h2>NOVA CAMPANHA</h2><button class="close-btn" id="closeCreate" aria-label="Fechar">×</button></div>
-  <form id="campaignForm" class="campaign-form" novalidate>
-    <div class="field"><label for="campaignName">Nome da campanha</label><input id="campaignName" maxlength="100" required placeholder="Ex.: Tokyo: After the Fall"></div>
-    <div class="field"><label for="campaignDescription">Descrição</label><textarea id="campaignDescription" maxlength="600" rows="4" placeholder="O que torna esta campanha diferente?"></textarea></div>
-    <div class="form-grid">
-      <div class="field"><label for="campaignCountry">País inicial</label><select id="campaignCountry" required><option value="">Escolha uma região</option><option>Brasil</option><option>Japão</option><option>Estados Unidos</option><option>Canadá</option><option>Reino Unido</option><option>França</option><option>Alemanha</option><option>Itália</option><option>Espanha</option><option>México</option><option>Argentina</option><option>Austrália</option><option>Coreia do Sul</option><option>China</option><option>Índia</option><option>África do Sul</option><option>Outro local</option></select></div>
-      <div class="field"><label for="campaignTone">Tom da campanha</label><select id="campaignTone"><option>Realista</option><option>Sobrevivência extrema</option><option>Horror</option><option>Ação</option><option>Exploração</option></select></div>
-    </div>
-    <div class="campaign-form-note"><span>◉</span><div><strong>Local inicial</strong><small>Depois de criar, você poderá aprofundar a região pelo Mapa Mundial.</small></div></div>
-    <div id="campaignMessage" class="campaign-message" role="alert"></div>
-    <div class="form-actions"><button type="button" class="btn btn--ghost" id="cancelCreate">CANCELAR</button><button type="submit" class="btn btn--primary">CRIAR CAMPANHA →</button></div>
-  </form>
-</section>
-<section class="panel"><div class="panel-head"><h2>SUAS CAMPANHAS</h2><span class="panel-count" id="campaignCount">0 campanhas</span></div><div id="campaignList" class="campaign-list"></div><div id="campaignEmpty" class="empty-state"><div class="empty-mark">+</div><h3>Nenhuma campanha criada</h3><p>Seu painel está limpo. Crie a primeira campanha do Afterlife para começar.</p><button class="btn btn--primary" id="emptyCreate">CRIAR PRIMEIRA CAMPANHA</button></div></section>
-<footer class="footer"><span>AFTERLIFE v0.1</span><span>A sobrevivência é apenas o começo.</span><span>Desenvolvido por <b>AERIOM</b></span></footer>
-</main></div>
-<script type="module" src="./js/campaigns.js?v=20260913-1"></script>
-</body>
-</html>
+<section class="campaign-create panel" id="createPanel" hidden><div class="panel-head"><h2>NOVA CAMPANHA</h2><button class="close-btn" id="closeCreate" aria-label="Fechar">×</button></div><form id="campaignForm" class="campaign-form" novalidate><div class="field"><label for="campaignName">Nome da campanha</label><input id="campaignName" maxlength="100" required placeholder="Ex.: Tokyo: After the Fall"></div><div class="field"><label for="campaignDescription">Descrição</label><textarea id="campaignDescription" maxlength="600" rows="4" placeholder="O que torna esta campanha diferente?"></textarea></div><div class="form-grid"><div class="field"><label for="campaignCountry">País inicial</label><select id="campaignCountry" required><option value="">Escolha uma região</option><option>Brasil</option><option>Japão</option><option>Estados Unidos</option><option>Canadá</option><option>Reino Unido</option><option>França</option><option>Alemanha</option><option>Itália</option><option>Espanha</option><option>México</option><option>Argentina</option><option>Austrália</option><option>Coreia do Sul</option><option>China</option><option>Índia</option><option>África do Sul</option><option>Outro local</option></select></div><div class="field"><label for="campaignTone">Tom da campanha</label><select id="campaignTone"><option>Realista</option><option>Sobrevivência extrema</option><option>Horror</option><option>Ação</option><option>Exploração</option></select></div></div><div class="campaign-form-note"><span>◉</span><div><strong>Local inicial</strong><small>Depois de criar, você poderá aprofundar a região pelo Mapa Mundial.</small></div></div><div id="campaignMessage" class="campaign-message" role="alert"></div><div class="form-actions"><button type="button" class="btn btn--ghost" id="cancelCreate">CANCELAR</button><button type="submit" class="btn btn--primary">CRIAR CAMPANHA →</button></div></form></section>
+<section class="panel"><div class="panel-head"><h2>SUAS CAMPANHAS</h2><span class="panel-count" id="campaignCount">0 campanhas</span></div><div id="campaignList" class="campaign-list"></div><div id="campaignEmpty" class="empty-state"><div class="empty-mark">+</div><h3>Nenhuma campanha criada</h3><p>Seu painel está limpo. Crie a primeira campanha do Afterlife para começar.</p><button class="btn btn--primary" id="emptyCreate">CRIAR PRIMEIRA CAMPANHA</button></div></section><footer class="footer"><span>AFTERLIFE v0.1</span><span>A sobrevivência é apenas o começo.</span><span>Desenvolvido por <b>AERIOM</b></span></footer>
+</main></div><script type="module" src="./js/main.js?v=20260913-profile"></script><script type="module" src="./js/campaigns.js?v=20260913-2"></script></body></html>
