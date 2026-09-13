@@ -1,1 +1,8 @@
 .aeriom-landing-features{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:18px;max-width:620px}.landing-feature{padding:11px;border:1px solid rgba(255,255,255,.08);border-radius:12px;background:rgba(8,7,6,.34);backdrop-filter:blur(6px);color:#eee;text-decoration:none;transition:transform .18s ease,border-color .18s ease,background .18s ease}.landing-feature:hover{transform:translateY(-2px);border-color:rgba(227,195,109,.25);background:rgba(20,16,11,.52)}.landing-feature strong{display:block;font:600 12px Cinzel,Georgia,serif}.landing-feature span{display:block;margin-top:4px;color:rgba(255,255,255,.45);font-size:8px;line-height:1.45}.landing-feature--tutorial{border-color:rgba(227,195,109,.28);box-shadow:0 0 25px rgba(227,195,109,.06)}@media(max-width:900px){.aeriom-landing-features{grid-template-columns:1fr;max-width:100%}}
+
+/* AERIOM / AFTERLIFE portal branding */
+.aeriom-page--auth .auth-brand{display:flex;flex-direction:column;align-items:flex-start;gap:12px;max-width:520px}
+.aeriom-page--auth .auth-brand__logo{display:block;max-width:min(330px,75vw);height:auto}
+.aeriom-page--auth .auth-brand::after{content:"";display:block;width:min(300px,68vw);height:64px;background:url('../afterlife/assets/afterlife-logo.svg') left center/contain no-repeat;filter:drop-shadow(0 8px 26px rgba(0,0,0,.5));opacity:.96;border-top:1px solid rgba(255,255,255,.18);padding-top:14px}
+.aeriom-page--auth .auth-visual__content::after{content:"AERIOM  •  AFTERLIFE";display:block;margin-top:16px;color:rgba(255,255,255,.44);font:700 10px Inter,system-ui,sans-serif;letter-spacing:2.5px}
+@media(max-width:900px){.aeriom-page--auth .auth-brand::after{width:240px;height:52px}.aeriom-page--auth .auth-brand__logo{max-width:260px}}
