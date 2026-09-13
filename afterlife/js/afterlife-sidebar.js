@@ -5,6 +5,9 @@
 
   const BREAKPOINT = 980;
   const $ = (id) => document.getElementById(id);
+  let dragStartX = null;
+  let dragStartY = null;
+  let dragActive = false;
 
   function isMobile() {
     return window.matchMedia ? window.matchMedia(`(max-width:${BREAKPOINT}px)`).matches : window.innerWidth <= BREAKPOINT;
@@ -58,6 +61,9 @@
     backdrop?.classList.remove('is-open');
     document.body.classList.remove('afterlife-sidebar-open');
     setButtonState(false);
+    dragStartX = null;
+    dragStartY = null;
+    dragActive = false;
   }
 
   function toggle() {
@@ -70,7 +76,8 @@
 
   function boot() {
     const button = ensureButton();
-    if (!button || button.dataset.afterlifeSidebarBound === '1') return;
+    const sidebar = $('sidebar');
+    if (!button || !sidebar || button.dataset.afterlifeSidebarBound === '1') return;
     button.dataset.afterlifeSidebarBound = '1';
 
     button.addEventListener('click', (event) => {
@@ -81,17 +88,66 @@
 
     document.addEventListener('click', (event) => {
       if (!isMobile()) return;
-      const sidebar = $('sidebar');
+      const currentSidebar = $('sidebar');
       const backdrop = $('afterlifeSidebarBackdrop');
-      if (!sidebar?.classList.contains('is-open')) return;
+      if (!currentSidebar?.classList.contains('is-open')) return;
       const target = event.target;
-      if (button.contains(target) || sidebar.contains(target) || backdrop?.contains(target)) return;
+      if (button.contains(target) || currentSidebar.contains(target)) return;
+      if (backdrop?.contains(target)) return;
       close();
     }, true);
 
     document.addEventListener('keydown', (event) => {
       if (event.key === 'Escape') close();
     });
+
+    sidebar.addEventListener('touchstart', (event) => {
+      if (!isMobile() || !sidebar.classList.contains('is-open')) return;
+      if (!event.touches?.length) return;
+      const touch = event.touches[0];
+      dragStartX = touch.clientX;
+      dragStartY = touch.clientY;
+      dragActive = true;
+      sidebar.classList.add('is-dragging');
+    }, { passive: true });
+
+    sidebar.addEventListener('touchmove', (event) => {
+      if (!dragActive || dragStartX == null || !event.touches?.length || !isMobile()) return;
+      const touch = event.touches[0];
+      const dx = touch.clientX - dragStartX;
+      const dy = touch.clientY - dragStartY;
+      if (Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > 12) {
+        dragActive = false;
+        sidebar.classList.remove('is-dragging');
+        return;
+      }
+      if (dx >= 0) return;
+      const width = sidebar.getBoundingClientRect().width || 300;
+      const progress = Math.max(0, Math.min(1, Math.abs(dx) / width));
+      sidebar.style.setProperty('--afterlife-drag-x', `${dx}px`);
+      sidebar.style.setProperty('--afterlife-drag-progress', String(1 - progress));
+    }, { passive: true });
+
+    sidebar.addEventListener('touchend', () => {
+      if (!dragActive) return;
+      const dx = parseFloat(sidebar.style.getPropertyValue('--afterlife-drag-x')) || 0;
+      sidebar.classList.remove('is-dragging');
+      sidebar.style.removeProperty('--afterlife-drag-x');
+      sidebar.style.removeProperty('--afterlife-drag-progress');
+      dragActive = false;
+      if (dx < -70) close();
+      dragStartX = null;
+      dragStartY = null;
+    }, { passive: true });
+
+    sidebar.addEventListener('touchcancel', () => {
+      sidebar.classList.remove('is-dragging');
+      sidebar.style.removeProperty('--afterlife-drag-x');
+      sidebar.style.removeProperty('--afterlife-drag-progress');
+      dragActive = false;
+      dragStartX = null;
+      dragStartY = null;
+    }, { passive: true });
 
     window.addEventListener('resize', () => {
       if (!isMobile()) close();
