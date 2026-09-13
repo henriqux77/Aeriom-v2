@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#050807">
+  <meta name="description" content="AERIOM — escolha seu sistema.">
+  <title>AERIOM / AFTERLIFE — Escolha o sistema</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/sistemas.css?v=1">
+</head>
+<body>
+  <main class="systems-shell">
+    <header class="systems-topbar">
+      <a class="aeriom-brand" href="./index.html" aria-label="Aeriom">
+        <span class="aeriom-mark">A</span>
+        <span>AERIOM</span>
+      </a>
+      <div class="topbar-copy"><span>PORTAL DE SISTEMAS</span><strong>ESCOLHA ONDE CONTINUAR</strong></div>
+      <button id="logoutButton" class="logout" type="button">Sair</button>
+    </header>
+
+    <section class="systems-hero">
+      <div class="eyebrow">ACESSO CONFIRMADO</div>
+      <h1>Escolha seu sistema</h1>
+      <p>Uma conta. Experiências diferentes. Selecione o mundo que você quer acessar.</p>
+      <div class="identity" id="identityLine">Conta autenticada</div>
+    </section>
+
+    <section class="systems-grid" aria-label="Sistemas disponíveis">
+      <button id="aeriomCard" class="system-card system-card--aeriom" type="button">
+        <div class="card-visual card-visual--aeriom"><div class="visual-label">FANTASIA • RPG</div></div>
+        <div class="card-body">
+          <div class="card-brand">AERIOM</div>
+          <div class="card-tag">RPG SEM LIMITES</div>
+          <p>Crie mundos, campanhas, personagens, mapas, lore e mesas virtuais para aventuras de fantasia.</p>
+          <div class="card-features"><span>✦ Campanhas</span><span>✦ Personagens</span><span>✦ Mapas</span><span>✦ Homebrew</span></div>
+          <div class="card-cta">ENTRAR NO AERIOM <span>→</span></div>
+        </div>
+      </button>
+
+      <button id="afterlifeCard" class="system-card system-card--afterlife is-featured" type="button">
+        <div class="card-visual card-visual--afterlife"><div class="visual-label">SOBREVIVÊNCIA • RPG</div></div>
+        <div class="card-body">
+          <div class="card-brand"><span>A</span>FTERLIFE</div>
+          <div class="card-tag">SOBREVIVÊNCIA ALÉM DO FIM</div>
+          <p>Explore o mundo após o colapso, administre recursos, crie sobreviventes e enfrente ameaças em evolução.</p>
+          <div class="card-features"><span>☣ Sobrevivência</span><span>☣ Mundo global</span><span>☣ Inventário físico</span><span>☣ Evolução</span></div>
+          <div class="card-cta">ENTRAR NO AFTERLIFE <span>→</span></div>
+        </div>
+      </button>
+    </section>
+
+    <footer class="systems-footer">
+      <span>AERIOM • AFTERLIFE</span>
+      <span>Uma plataforma. Dois mundos.</span>
+      <span id="sessionStatus">Sessão ativa</span>
+    </footer>
+  </main>
+  <script type="module" src="./js/sistemas.js?v=1"></script>
+</body>
+</html>
