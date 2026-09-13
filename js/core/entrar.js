@@ -53,11 +53,20 @@ import { getSupabase } from "./supabase.js";
       @media(max-width:520px){.aeriom-otp-shell{padding-inline:12px}.aeriom-otp-slots{gap:6px}.aeriom-otp-slot{height:50px;font-size:18px}}
     `; document.head.appendChild(style);
 
-    const input=$("campaign-invite-code-input"); const host=input?.closest("form")||input?.parentElement; if(!input||!host)return;
+    const input=$("campaign-invite-code-input");
+    const inputGroup=input?.parentElement;
+    const parent=inputGroup?.parentElement;
+    if(!input||!inputGroup||!parent)return;
     if(document.getElementById("aeriom-otp-shell"))return;
-    const shell=document.createElement("section"); shell.id="aeriom-otp-shell"; shell.className="aeriom-otp-shell"; shell.setAttribute("aria-label","Verificação do convite");
+
+    const shell=document.createElement("section");
+    shell.id="aeriom-otp-shell";
+    shell.className="aeriom-otp-shell";
+    shell.setAttribute("aria-label","Verificação do convite");
     shell.innerHTML=`<div class="aeriom-otp-orbit"></div><div class="aeriom-otp-core"></div><h3 class="aeriom-otp-title">Verifique o convite</h3><p class="aeriom-otp-subtitle">Digite o código de 5 caracteres ou abra o link do mestre. O AERIOM confirma o acesso antes de entrar na mesa.</p><div class="aeriom-otp-slots" aria-hidden="true">${Array.from({length:5},()=>'<div class="aeriom-otp-slot"></div>').join("")}</div><div class="aeriom-otp-status" id="aeriom-otp-status">Aguardando código</div></section>`;
-    host.insertBefore(shell,input);
+
+    /* O input não é filho direto do form. O bloco do campo é o nó correto para a inserção. */
+    parent.insertBefore(shell,inputGroup);
   }
 
   function slots(){ return [...document.querySelectorAll("#aeriom-otp-shell .aeriom-otp-slot")]; }
