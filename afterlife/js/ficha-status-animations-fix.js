@@ -15,7 +15,27 @@
 @keyframes afterlifeHeartBeat{0%,100%{transform:scale(1)}12%{transform:scale(1.16)}24%{transform:scale(.96)}36%{transform:scale(1.10)}50%{transform:scale(1)}}
 @media (prefers-reduced-motion:reduce){.character-builder .combat-status-ring::before,.character-builder .combat-status-card.hp .combat-status-icon{animation:none!important}}
 `;
-  const mount=()=>{if(document.getElementById(STYLE_ID))return;const style=document.createElement('style');style.id=STYLE_ID;style.textContent=css;document.head.appendChild(style)};
-  const boot=()=>{mount()};
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
+
+  const mount = () => {
+    if (document.getElementById(STYLE_ID)) return;
+    const style = document.createElement('style');
+    style.id = STYLE_ID;
+    style.textContent = css;
+    document.head.appendChild(style);
+  };
+
+  const boot = () => {
+    mount();
+    const observer = new MutationObserver(() => {
+      if (document.getElementById(STYLE_ID)) {
+        observer.disconnect();
+        return;
+      }
+      if (document.querySelector('.character-builder .combat-status-ring')) mount();
+    });
+    observer.observe(document.head, { childList: true });
+  };
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, { once: true });
+  else boot();
 })();
