@@ -1,4 +1,4 @@
-import './profile-global.js';
+import './profile-global.js?v=20260913-10';
 
 (() => {
   'use strict';
