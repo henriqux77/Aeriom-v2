@@ -6,8 +6,11 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
   const AERIOM_KEY='sb_publishable_WDlPiR0b8T6mlQfYMbwjGg_BGvQPZDW';
   const aeriom=createClient(AERIOM_URL,AERIOM_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
   const KEY_PREFIX='afterlife_campaigns_v1_';
+  const MAX_IMAGE_SIZE=5*1024*1024;
+  const IMAGE_TYPES=new Set(['image/jpeg','image/png','image/webp','image/gif']);
   const $=id=>document.getElementById(id);
   let user=null;
+  let campaignImageData='';
 
   const escapeHtml=v=>String(v??'').replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
   function key(){return KEY_PREFIX+(user?.id||'anonymous');}
@@ -23,7 +26,8 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
       const article=document.createElement('article'); article.className='campaign-item';
       const location=c.locationName||c.locationAddress||'Local definido no mapa';
       const coords=(Number.isFinite(Number(c.latitude))&&Number.isFinite(Number(c.longitude)))?`${Number(c.latitude).toFixed(3)}, ${Number(c.longitude).toFixed(3)}`:'';
-      article.innerHTML=`<div><div class="campaign-item__top"><h3>${escapeHtml(c.name)}</h3><span class="panel-count">${escapeHtml(c.tone)}</span></div><p>${escapeHtml(c.description||'Sem descrição.')}</p><div class="campaign-item__meta"><span>🌎 ${escapeHtml(location)}</span>${coords?`<span>⌖ ${coords}</span>`:''}<span>👤 1 Mestre</span></div></div><div class="campaign-item__actions"><button class="btn btn--primary" data-open="${escapeHtml(c.id)}">ABRIR →</button><button class="btn btn--ghost" data-delete="${escapeHtml(c.id)}">EXCLUIR</button></div>`;
+      const media=c.imageData?`<div class="campaign-item__image"><img src="${escapeHtml(c.imageData)}" alt=""></div>`:'<div class="campaign-item__image campaign-item__image--empty">AFTERLIFE</div>';
+      article.innerHTML=`${media}<div class="campaign-item__content"><div><div class="campaign-item__top"><h3>${escapeHtml(c.name)}</h3><span class="panel-count">${escapeHtml(c.tone)}</span></div><p>${escapeHtml(c.description||'Sem descrição.')}</p><div class="campaign-item__meta"><span>🌎 ${escapeHtml(location)}</span>${coords?`<span>⌖ ${coords}</span>`:''}<span>👤 1 Mestre</span></div></div><div class="campaign-item__actions"><button class="btn btn--primary" data-open="${escapeHtml(c.id)}">ABRIR →</button><button class="btn btn--ghost" data-delete="${escapeHtml(c.id)}">EXCLUIR</button></div></div>`;
       list.appendChild(article);
     });
     list.querySelectorAll('[data-open]').forEach(b=>b.addEventListener('click',()=>{location.href=`./campanhas.html?selected=${encodeURIComponent(b.dataset.open)}`}));
@@ -31,7 +35,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
   }
 
   function setMessage(text=''){const el=$('campaignMessage');el.textContent=text;el.classList.toggle('is-visible',Boolean(text));}
-  function toggleCreate(show){$('createPanel').hidden=!show;if(show){requestAnimationFrame(()=>$('campaignName').focus())}else setMessage('');}
+  function toggleCreate(show){$('createPanel').hidden=!show;if(show){requestAnimationFrame(()=>$('campaignName').focus())}else{setMessage('');resetCampaignImage();}}
 
   function applyLocationFromParams(){
     const qs=new URLSearchParams(location.search);
@@ -45,6 +49,53 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
     const title=$('campaignLocationTitle'); const desc=$('campaignLocationDescription');
     if(title)title.textContent=label||'Local selecionado no mapa';
     if(desc)desc.textContent=`${lat.toFixed(5)}°, ${lng.toFixed(5)}° · Você pode alterar a localização pelo Mapa Mundial.`;
+  }
+
+  function resetCampaignImage(){
+    campaignImageData='';
+    const input=$('campaignImageFile'),preview=$('campaignImagePreview'),img=$('campaignImagePreviewImg'),name=$('campaignImageFileName');
+    if(input)input.value='';
+    if(preview)preview.hidden=true;
+    if(img)img.removeAttribute('src');
+    if(name)name.textContent='Imagem selecionada';
+  }
+
+  function compressImage(file){
+    return new Promise((resolve,reject)=>{
+      const reader=new FileReader();
+      reader.onerror=()=>reject(new Error('Não foi possível ler a imagem.'));
+      reader.onload=()=>{
+        const img=new Image();
+        img.onload=()=>{
+          const maxW=1400,maxH=800;
+          const ratio=Math.min(1,maxW/img.width,maxH/img.height);
+          const canvas=document.createElement('canvas');
+          canvas.width=Math.max(1,Math.round(img.width*ratio));
+          canvas.height=Math.max(1,Math.round(img.height*ratio));
+          const ctx=canvas.getContext('2d');
+          ctx.drawImage(img,0,0,canvas.width,canvas.height);
+          resolve(canvas.toDataURL('image/jpeg',0.82));
+        };
+        img.onerror=()=>reject(new Error('Não foi possível abrir a imagem.'));
+        img.src=String(reader.result);
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function handleCampaignImage(){
+    const file=$('campaignImageFile').files?.[0];
+    if(!file)return;
+    if(!IMAGE_TYPES.has(file.type)){setMessage('Formato de imagem não permitido. Use JPG, PNG, WEBP ou GIF.');$('campaignImageFile').value='';return;}
+    if(file.size>MAX_IMAGE_SIZE){setMessage('A imagem precisa ter no máximo 5 MB.');$('campaignImageFile').value='';return;}
+    setMessage('Preparando imagem…');
+    try{
+      campaignImageData=await compressImage(file);
+      $('campaignImagePreviewImg').src=campaignImageData;
+      $('campaignImageFileName').textContent=file.name;
+      $('campaignImagePreview').hidden=false;
+      setMessage('');
+    }catch(error){campaignImageData='';setMessage(error.message||'Não foi possível preparar a imagem.');}
   }
 
   async function loadSharedProfile(){
@@ -108,6 +159,9 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
   $('closeCreate').addEventListener('click',()=>toggleCreate(false));
   $('cancelCreate').addEventListener('click',()=>toggleCreate(false));
   $('openWorldMap')?.addEventListener('click',()=>{});
+  $('campaignImageButton')?.addEventListener('click',()=>$('campaignImageFile')?.click());
+  $('campaignImageFile')?.addEventListener('change',handleCampaignImage);
+  $('campaignImageRemove')?.addEventListener('click',resetCampaignImage);
   $('campaignForm').addEventListener('submit',e=>{
     e.preventDefault();setMessage('');
     const name=$('campaignName').value.trim(), desc=$('campaignDescription').value.trim(), tone=$('campaignTone').value, scale=$('campaignScale').value;
@@ -115,7 +169,13 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
     const locationName=$('campaignLocationName').value.trim()||'Local selecionado no mapa';
     if(name.length<3){setMessage('Dê um nome com pelo menos 3 caracteres.');return;}
     if(!Number.isFinite(lat)||!Number.isFinite(lng)){setMessage('Abra o Mapa Mundial e escolha o local inicial da campanha.');return;}
-    const rows=loadCampaigns();rows.unshift({id:crypto.randomUUID(),name,description:desc,tone,scale,latitude:lat,longitude:lng,locationName,createdAt:new Date().toISOString()});saveCampaigns(rows);e.target.reset();toggleCreate(false);render();
+    const rows=loadCampaigns();
+    rows.unshift({id:crypto.randomUUID(),name,description:desc,tone,scale,latitude:lat,longitude:lng,locationName,imageData:campaignImageData,createdAt:new Date().toISOString()});
+    saveCampaigns(rows);
+    e.target.reset();
+    resetCampaignImage();
+    toggleCreate(false);
+    render();
   });
   $('mobileMenu')?.addEventListener('click',()=>document.body.classList.toggle('menu-open'));
   boot().catch(()=>location.replace('../index.html'));
