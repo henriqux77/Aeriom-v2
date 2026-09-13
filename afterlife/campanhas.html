@@ -9,12 +9,12 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="./css/afterlife.css">
-<link rel="stylesheet" href="./css/campaigns.css?v=20260913-5">
+<link rel="stylesheet" href="./css/campaigns.css?v=20260913-6">
 </head>
 <body>
 <div class="app-shell">
 <aside class="sidebar" id="sidebar">
-<div class="brand"><div class="brand__title"><span>A</span>FTERLIFE</div><div class="brand__tagline">SOBREVIVÊNCIA ALÉM DO FIM</div></div>
+<div class="brand"><div class="brand__title"><span>A</span>FTERLIFE</div></div>
 <nav class="side-nav" aria-label="Navegação Afterlife">
 <a class="side-nav__item" href="./index.html"><span class="icon">⌂</span><span>Início</span></a>
 <a class="side-nav__item is-active" href="./campanhas.html"><span class="icon">◈</span><span>Campanhas</span></a>
@@ -26,7 +26,6 @@
 </nav>
 <div class="sidebar-spacer"></div>
 <a class="side-nav__item" href="#"><span class="icon">⚙</span><span>Configurações</span></a>
-<div class="sidebar-quote"><div>“NÃO É SOBRE<br>ESPERANÇA.<br>É SOBRE<br>ESCOLHAS.”</div></div>
 </aside>
 <main class="main">
 <header class="topbar"><button class="mobile-menu" id="mobileMenu" aria-label="Abrir menu">☰</button><div class="top-actions"><button class="profile-chip" id="profileChip" type="button" aria-label="Abrir perfil"><span class="profile-avatar" id="profileAvatar">A</span><span class="profile-copy"><strong id="profileName">Sobrevivente</strong><small><i></i> Online</small></span><span class="profile-caret">⌄</span></button></div></header>
@@ -36,6 +35,7 @@
 <form id="campaignForm" class="campaign-form" novalidate>
 <div class="field"><label for="campaignName">Nome da campanha</label><input id="campaignName" maxlength="100" required placeholder="Ex.: Tokyo: After the Fall"></div>
 <div class="field"><label for="campaignDescription">Descrição</label><textarea id="campaignDescription" maxlength="600" rows="4" placeholder="O que torna esta campanha diferente?"></textarea></div>
+<div class="field campaign-image-field"><label for="campaignImageFile">Imagem da campanha</label><div class="campaign-image-upload" id="campaignImageUpload"><input id="campaignImageFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif" hidden><button type="button" class="campaign-image-button" id="campaignImageButton"><span class="campaign-image-icon">＋</span><span><strong>ENVIAR IMAGEM</strong><small>Escolha uma imagem do seu dispositivo · até 5 MB</small></span></button><div class="campaign-image-preview" id="campaignImagePreview" hidden><img id="campaignImagePreviewImg" alt="Prévia da imagem da campanha"><div><strong id="campaignImageFileName">Imagem selecionada</strong><small>Esta imagem será salva junto da campanha.</small></div><button type="button" class="campaign-image-remove" id="campaignImageRemove" aria-label="Remover imagem">×</button></div></div></div>
 <div class="campaign-location-field"><label>Local inicial</label><div class="campaign-location-card"><div class="campaign-location-card__copy"><span class="campaign-location-card__icon">◇</span><div><strong id="campaignLocationTitle">Nenhum local escolhido</strong><small id="campaignLocationDescription">Abra o Mapa Mundial para explorar qualquer região, dar zoom até a escala de rua e selecionar exatamente onde a campanha começa.</small></div></div><a class="btn btn--ghost" id="openWorldMap" href="./mapa-mundial.html?select=1&return=create">ABRIR MAPA MUNDIAL →</a></div><input type="hidden" id="campaignLatitude"><input type="hidden" id="campaignLongitude"><input type="hidden" id="campaignLocationName"><input type="hidden" id="campaignLocationAddress"></div>
 <div class="form-grid"><div class="field"><label for="campaignTone">Tom da campanha</label><select id="campaignTone"><option>Realista</option><option>Sobrevivência extrema</option><option>Horror</option><option>Ação</option><option>Exploração</option></select></div><div class="field"><label for="campaignScale">Escala inicial</label><select id="campaignScale"><option value="world">Mundo</option><option value="regional">Regional</option><option value="city">Cidade</option><option value="local">Local</option></select></div></div>
 <div class="campaign-form-note"><span>◉</span><div><strong>Localização inteligente</strong><small>O mapa mundial ganha informações de rua e pontos de interesse em zoom alto. A campanha guarda o ponto escolhido.</small></div></div>
@@ -47,5 +47,5 @@
 <footer class="footer"><span>AFTERLIFE v0.1</span><span>A sobrevivência é apenas o começo.</span><span>Desenvolvido por <b>AERIOM</b></span></footer>
 </main></div>
 <div class="afterlife-profile-menu" id="profileMenu" aria-hidden="true"><div class="afterlife-profile-head"><span class="afterlife-profile-avatar" id="profileMenuAvatar">A</span><div><strong id="profileMenuName">Sobrevivente</strong><small>Perfil compartilhado com AERIOM</small></div></div><div class="afterlife-profile-actions"><a href="./perfil.html">Editar perfil</a><a href="../index.html">Trocar sistema</a><button id="profileLogout" class="danger" type="button">Sair da conta</button></div></div>
-<script type="module" src="./js/campaigns.js?v=20260913-4"></script>
+<script type="module" src="./js/campaigns.js?v=20260913-5"></script>
 </body></html>
