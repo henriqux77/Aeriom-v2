@@ -1,187 +1,269 @@
 <!doctype html>
 <html lang="pt-BR">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#050807"><title>AFTERLIFE — Criar Ficha</title>
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#050807">
+<title>AFTERLIFE — Criar Ficha</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="./css/afterlife.css"><link rel="stylesheet" href="./css/ficha-criacao.css?v=20260913-3"><link rel="stylesheet" href="./css/ficha-criacao-v2.css?v=20260913-3">
+<link rel="stylesheet" href="./css/afterlife.css?v=20260913-6">
+<link rel="stylesheet" href="./css/ficha-criacao.css?v=20260913-6">
+<link rel="stylesheet" href="./css/ficha-criacao-v4.css?v=20260913-6">
 </head>
 <body class="character-builder">
 <div class="app-shell">
-<aside class="sidebar" id="sidebar">
-  <div class="brand"><div class="brand__title"><span>A</span>FTERLIFE</div></div>
-  <nav class="side-nav" aria-label="Navegação Afterlife">
-    <a class="side-nav__item" href="./index.html"><span class="icon">⌂</span><span>Início</span></a>
-    <a class="side-nav__item" href="./campanhas.html"><span class="icon">◈</span><span>Campanhas</span></a>
-    <a class="side-nav__item is-active" href="./ficha-criacao.html"><span class="icon">●</span><span>Personagens</span></a>
-    <a class="side-nav__item" href="./mapa-mundial.html"><span class="icon">◇</span><span>Mapa Mundial</span></a>
-    <a class="side-nav__item" href="#"><span class="icon">▣</span><span>Inventário</span></a>
-    <a class="side-nav__item" href="#"><span class="icon">▤</span><span>Manual</span></a>
-  </nav>
-  <div class="sidebar-spacer"></div>
-  <a class="side-nav__item" href="#"><span class="icon">⚙</span><span>Configurações</span></a>
-</aside>
-<main class="main">
-<header class="topbar">
-  <button class="mobile-menu" id="mobileMenu" aria-label="Abrir menu">☰</button>
-  <div class="top-actions">
-    <div class="profile-wrap" id="profileWrap">
-      <button class="profile-chip" id="profileChip" type="button" aria-label="Abrir perfil" aria-expanded="false">
-        <span class="profile-avatar" id="profileAvatar">A</span>
-        <span class="profile-copy"><strong id="profileName">Sobrevivente</strong><small><i></i> Online</small></span>
-        <span class="profile-caret">⌄</span>
-      </button>
-      <div class="afterlife-profile-dropdown" id="profileDropdown" hidden>
-        <div class="profile-dropdown-head"><span class="profile-avatar profile-avatar--large" id="profileDropdownAvatar">A</span><div><strong id="profileDropdownName">Sobrevivente</strong><small id="profileDropdownEmail">Conta Afterlife</small></div></div>
-        <a href="./perfil.html">Editar perfil</a>
-        <a href="../index.html">Trocar sistema</a>
-        <button type="button" id="profileSignOut">Sair da conta</button>
-      </div>
-    </div>
-  </div>
-</header>
-
-<section class="builder-head">
-  <div class="builder-kicker">AFTERLIFE · CRIAÇÃO DE PERSONAGEM</div>
-  <div class="builder-title-row"><div><h1>Crie seu sobrevivente.</h1><p>Monte o personagem em etapas. O carrossel concentra uma decisão por vez, sem perder a visão geral da ficha.</p></div><div class="builder-status"><span></span><strong id="stepCount">01 / 07</strong><small id="stepStatusLabel">CONFIGURAÇÃO</small></div></div>
-</section>
-
-<section class="builder-shell">
-  <aside class="builder-rail" aria-label="Etapas da ficha">
-    <div class="rail-label">PROGRESSO</div>
-    <div class="rail-progress"><i id="progressBar"></i></div>
-    <button class="builder-step is-active" data-step="0"><span>01</span><b>Identidade</b><small>Quem sobreviveu</small></button>
-    <button class="builder-step" data-step="1"><span>02</span><b>Origem</b><small>País de origem</small></button>
-    <button class="builder-step" data-step="2"><span>03</span><b>Aparência</b><small>Visual e retrato</small></button>
-    <button class="builder-step" data-step="3"><span>04</span><b>Classe</b><small>Função e estilo</small></button>
-    <button class="builder-step" data-step="4"><span>05</span><b>Atributos</b><small>Distribuir pontos</small></button>
-    <button class="builder-step" data-step="5"><span>06</span><b>Conceito</b><small>História e motivação</small></button>
-    <button class="builder-step" data-step="6"><span>07</span><b>Revisão</b><small>Visualização final</small></button>
+  <aside class="sidebar" id="sidebar">
+    <div class="brand"><div class="brand__title"><span>A</span>FTERLIFE</div></div>
+    <nav class="side-nav" aria-label="Navegação Afterlife">
+      <a class="side-nav__item" href="./index.html"><span class="icon">⌂</span><span>Início</span></a>
+      <a class="side-nav__item" href="./campanhas.html"><span class="icon">◈</span><span>Campanhas</span></a>
+      <a class="side-nav__item is-active" href="./ficha-criacao.html"><span class="icon">●</span><span>Personagens</span></a>
+      <a class="side-nav__item" href="./mapa-mundial.html"><span class="icon">◇</span><span>Mapa Mundial</span></a>
+      <a class="side-nav__item" href="#"><span class="icon">▣</span><span>Inventário</span></a>
+      <a class="side-nav__item" href="#"><span class="icon">▤</span><span>Manual</span></a>
+    </nav>
+    <div class="sidebar-spacer"></div>
+    <a class="side-nav__item" href="#"><span class="icon">⚙</span><span>Configurações</span></a>
   </aside>
 
-  <section class="builder-content">
-    <div class="character-preview">
-      <div class="preview-art" id="previewArt"><div class="preview-glow"></div><img id="previewAvatar" alt="Retrato do sobrevivente" hidden><div class="preview-silhouette" id="previewPlaceholder">A</div></div>
-      <div class="preview-info"><span>SEU SOBREVIVENTE</span><h2 id="previewName">Sem nome</h2><p id="previewSub">Humano · Sobrevivente</p></div>
-      <div class="preview-mini-stats"><div><small>HP</small><b id="previewHp">10</b></div><div><small>DEF</small><b id="previewDef">10</b></div><div><small>EST</small><b id="previewStamina">6</b></div></div>
-    </div>
-
-    <div class="carousel-window" id="carouselWindow">
-      <button class="carousel-arrow carousel-prev" id="prevStep" type="button" aria-label="Etapa anterior">‹</button>
-      <div class="carousel-track" id="carouselTrack" tabindex="0">
-        <article class="builder-slide is-active" data-slide="0">
-          <div class="slide-kicker">01 · IDENTIDADE</div><h2>Quem sobreviveu?</h2><p>Defina os dados básicos do personagem.</p>
-          <div class="field-grid two">
-            <label><span>Nome do personagem</span><input id="characterName" maxlength="60" autocomplete="off" placeholder="Ex.: Elias Vale"></label>
-            <label><span>Apelido</span><input id="characterNickname" maxlength="40" autocomplete="off" placeholder="Como o grupo chama você?"></label>
-            <label><span>Gênero</span><select id="characterGender"><option value="Masculino">Masculino</option><option value="Feminino">Feminino</option></select></label>
-            <label><span>Idade</span><input id="characterAge" type="number" min="1" max="999" inputmode="numeric" placeholder="Ex.: 27"></label>
-          </div>
-          <div class="callout"><b>IDENTIDADE</b><span>O personagem continua editável depois. O gênero disponível nesta etapa é apenas Masculino ou Feminino.</span></div>
-        </article>
-
-        <article class="builder-slide" data-slide="1">
-          <div class="slide-kicker">02 · ORIGEM</div><h2>De onde você veio?</h2><p>A origem do sobrevivente é humana. Escolha o país de origem para montar um preset visual opcional.</p>
-          <div class="origin-country-card">
-            <label class="country-select-field"><span>PAÍS DE ORIGEM</span><select id="countryOrigin"></select></label>
-            <div class="country-preview"><span class="country-flag" id="countryFlag">🌎</span><div><b id="countryName">Brasil</b><small id="countryHint">Preset visual neutro · ajuste manual disponível.</small></div></div>
-          </div>
-          <div class="origin-card-single is-selected"><span>H</span><div><b>Humano</b><small>Única origem disponível no Afterlife.</small></div><strong>✓</strong></div>
-          <div class="callout"><b>PRESET VISUAL</b><span>O país serve como referência para o visual inicial. O preset é uma sugestão estética e pode ser ajustado livremente na aparência.</span></div>
-        </article>
-
-        <article class="builder-slide" data-slide="2">
-          <div class="slide-kicker">03 · APARÊNCIA</div><h2>Como o mundo vê você?</h2><p>Escolha um visual pronto do Afterlife ou envie o seu próprio retrato.</p>
-          <div class="appearance-builder-v2">
-            <div class="portrait-panel">
-              <div class="portrait-stage" id="portraitStage"><img id="portraitImg" alt="Prévia do personagem" hidden><div class="portrait-empty" id="portraitEmpty"><strong>SEU RETRATO</strong><span>PERSONAGEM DO AFTERLIFE</span></div></div>
-              <div class="portrait-scale-readout"><span>ALTURA VISUAL</span><b id="heightReadout">1,70 m</b></div>
-              <div class="weight-scale" aria-label="Indicador visual de peso"><div class="weight-track"><i id="weightMarker"></i></div><div class="weight-scale-labels"><span>45 kg</span><span>120 kg</span></div></div>
-              <div class="portrait-actions"><input id="characterImageFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif" hidden><button type="button" class="btn btn--primary" id="uploadCharacterImage">↑ ENVIAR IMAGEM</button><button type="button" class="btn btn--ghost" id="removeCharacterImage" hidden>REMOVER</button></div>
-              <small class="upload-note">JPG, PNG, WEBP ou GIF · até 5 MB</small>
+  <main class="main">
+    <header class="topbar">
+      <button class="mobile-menu" id="mobileMenu" aria-label="Abrir menu">☰</button>
+      <div class="top-actions">
+        <div class="profile-wrap" id="profileWrap">
+          <button class="profile-chip" id="profileChip" type="button" aria-label="Abrir perfil" aria-expanded="false">
+            <span class="profile-avatar" id="profileAvatar">A</span>
+            <span class="profile-copy"><strong id="profileName">Sobrevivente</strong><small><i></i> Online</small></span>
+            <span class="profile-caret">⌄</span>
+          </button>
+          <div class="afterlife-profile-dropdown" id="profileDropdown" hidden>
+            <div class="profile-dropdown-head">
+              <span class="profile-avatar profile-avatar--large" id="profileDropdownAvatar">A</span>
+              <div><strong id="profileDropdownName">Sobrevivente</strong><small id="profileDropdownEmail">Conta Afterlife</small></div>
             </div>
-            <div class="appearance-controls-v2">
-              <div class="appearance-country-note"><span>◇</span><div><b id="appearancePresetTitle">Preset de origem</b><small id="appearancePresetText">Selecione um país na etapa anterior para receber uma sugestão visual.</small></div></div>
-              <div class="field-grid two appearance-fields-v2">
-                <label><span>Tom de pele</span><select id="appearanceSkin"><option>Claro</option><option>Bege</option><option>Moreno</option><option>Marrom</option><option>Escuro</option></select></label>
-                <label><span>Cabelo</span><select id="appearanceHair"><option>Preto</option><option>Castanho</option><option>Loiro</option><option>Ruivo</option><option>Grisalho</option></select></label>
-                <label><span>Olhos</span><select id="appearanceEyes"><option>Castanhos</option><option>Azuis</option><option>Verdes</option><option>Cinzentos</option></select></label>
-                <label><span>Formato dos olhos</span><select id="appearanceEyeShape"><option>Natural</option><option>Amendoado</option><option>Arredondado</option><option>Mais alongado</option></select></label>
-                <label><span>Altura</span><select id="appearanceHeight"><option>1,55 m</option><option>1,60 m</option><option>1,65 m</option><option selected>1,70 m</option><option>1,75 m</option><option>1,80 m</option><option>1,85 m</option><option>1,90 m</option><option>1,95 m</option></select></label>
-                <label><span>Peso</span><select id="appearanceWeight"><option>45 kg</option><option>50 kg</option><option>55 kg</option><option>60 kg</option><option>65 kg</option><option selected>70 kg</option><option>75 kg</option><option>80 kg</option><option>85 kg</option><option>90 kg</option><option>95 kg</option><option>100 kg</option><option>105 kg</option><option>110 kg</option><option>115 kg</option><option>120 kg</option></select></label>
-                <label><span>Visual</span><select id="appearanceStyle"><option>Casual</option><option>Sobrevivente</option><option>Militar</option><option>Urbano</option><option>Personalizado</option></select></label>
-              </div>
-              <div class="appearance-extra-grid">
-                <label><span>Cicatriz / marca</span><input id="appearanceScar" maxlength="180" placeholder="Ex.: cicatriz na sobrancelha esquerda"></label>
-                <label><span>Outras características</span><input id="appearanceFeatures" maxlength="240" placeholder="Tatuagens, manchas, acessórios, detalhes físicos..."></label>
-              </div>
-              <label class="appearance-description"><span>Descrição completa da aparência</span><textarea id="appearanceDescription" rows="4" maxlength="800" placeholder="Descreva qualquer detalhe que não apareceu nas seleções acima."></textarea></label>
-              <div class="appearance-helper"><b>PERSONALIZAÇÃO</b><span>Use o preset como ponto de partida. As opções e os campos livres trabalham juntos para descrever exatamente o personagem.</span></div>
-            </div>
+            <a href="./perfil.html">Editar perfil</a>
+            <a href="../index.html">Trocar sistema</a>
+            <button type="button" id="profileSignOut">Sair da conta</button>
           </div>
-        </article>
-
-        <article class="builder-slide" data-slide="3">
-          <div class="slide-kicker">04 · CLASSE</div><h2>Qual é sua função?</h2><p>A classe define a função inicial do personagem.</p>
-          <div class="class-carousel-v2" id="classCarousel">
-            <button class="class-arrow class-arrow--left" type="button" data-class-prev aria-label="Classe anterior">‹</button>
-            <div class="class-deck" id="classDeck">
-              <button class="class-card side" type="button" data-class="Explorador"><span>◎</span><b>Explorador</b><small>Mobilidade e leitura do ambiente.</small></button>
-              <button class="class-card selected" type="button" data-class="Sobrevivente"><span>✦</span><b>Sobrevivente</b><small>Equilíbrio entre combate, recursos e adaptação.</small></button>
-              <button class="class-card side" type="button" data-class="Combatente"><span>◈</span><b>Combatente</b><small>Pressão e resistência em combate.</small></button>
-            </div>
-            <button class="class-arrow class-arrow--right" type="button" data-class-next aria-label="Próxima classe">›</button>
-          </div>
-          <div class="deck-meta"><span>CLASSE SELECIONADA</span><strong id="classReadout">Sobrevivente</strong><small id="classIndex">02 / 03</small></div>
-        </article>
-
-        <article class="builder-slide" data-slide="4">
-          <div class="slide-kicker">05 · ATRIBUTOS</div><h2>Distribua seus pontos.</h2><p>Você terá um conjunto de pontos para definir os pontos fortes do sobrevivente. A interface abaixo já responde ao vivo para facilitar o balanceamento.</p>
-          <div class="attribute-pool"><div><span>PONTOS DISPONÍVEIS</span><b id="pointsRemaining">12</b></div><small>Base 8 em cada atributo · máximo temporário 15</small></div>
-          <div class="attribute-grid-v2" id="attributeGrid">
-            <div data-attr="forca"><span>FORÇA</span><strong>8</strong><button type="button" data-minus="forca">−</button><button type="button" data-plus="forca">+</button><i><em></em></i></div>
-            <div data-attr="agilidade"><span>AGILIDADE</span><strong>8</strong><button type="button" data-minus="agilidade">−</button><button type="button" data-plus="agilidade">+</button><i><em></em></i></div>
-            <div data-attr="vigor"><span>VIGOR</span><strong>8</strong><button type="button" data-minus="vigor">−</button><button type="button" data-plus="vigor">+</button><i><em></em></i></div>
-            <div data-attr="percepcao"><span>PERCEPÇÃO</span><strong>8</strong><button type="button" data-minus="percepcao">−</button><button type="button" data-plus="percepcao">+</button><i><em></em></i></div>
-            <div data-attr="mente"><span>MENTE</span><strong>8</strong><button type="button" data-minus="mente">−</button><button type="button" data-plus="mente">+</button><i><em></em></i></div>
-            <div data-attr="vontade"><span>VONTADE</span><strong>8</strong><button type="button" data-minus="vontade">−</button><button type="button" data-plus="vontade">+</button><i><em></em></i></div>
-          </div>
-          <div class="live-stats-panel">
-            <div class="live-stats-head"><div><span>LEITURA AO VIVO</span><h3>Impacto dos atributos</h3></div><small>valores provisórios do protótipo</small></div>
-            <div class="live-stat-row"><div><span>HP</span><b id="liveHpValue">10</b></div><i><em id="liveHpBar"></em></i><small id="liveHpHint">Vigor influencia diretamente.</small></div>
-            <div class="live-stat-row"><div><span>DEFESA</span><b id="liveDefValue">10</b></div><i><em id="liveDefBar"></em></i><small id="liveDefHint">Agilidade + percepção.</small></div>
-            <div class="live-stat-row"><div><span>ESTAMINA</span><b id="liveStaminaValue">6</b></div><i><em id="liveStaminaBar"></em></i><small id="liveStaminaHint">Vigor + agilidade.</small></div>
-            <div class="live-stat-row"><div><span>ATAQUE</span><b id="liveAttackValue">5</b></div><i><em id="liveAttackBar"></em></i><small id="liveAttackHint">Força influencia diretamente.</small></div>
-            <div class="live-stat-row"><div><span>FOCO</span><b id="liveFocusValue">5</b></div><i><em id="liveFocusBar"></em></i><small id="liveFocusHint">Vontade + mente.</small></div>
-          </div>
-        </article>
-
-        <article class="builder-slide" data-slide="5">
-          <div class="slide-kicker">06 · CONCEITO</div><h2>Por que continuar?</h2><p>Feche a identidade narrativa antes de transformar tudo em uma ficha.</p>
-          <div class="field-stack"><label><span>Personalidade</span><input id="characterPersonality" maxlength="300" placeholder="Como esse personagem costuma agir?"></label><label><span>Objetivo</span><input id="characterObjective" maxlength="300" placeholder="O que ele busca agora?"></label><label><span>Medo</span><input id="characterFear" maxlength="300" placeholder="O que ele não consegue encarar?"></label><label><span>História</span><textarea id="characterHistory" rows="5" maxlength="1200" placeholder="Conte de onde ele veio e o que aconteceu..."></textarea></label></div>
-        </article>
-
-        <article class="builder-slide final-review-slide" data-slide="6">
-          <div class="slide-kicker">07 · REVISÃO FINAL</div><h2>Seu sobrevivente está pronto.</h2><p>Revise tudo em uma única tela antes de finalizar a ficha.</p>
-          <div class="final-review-grid">
-            <section class="review-card review-card--identity"><span class="review-label">IDENTIDADE</span><h3 id="finalName">Sem nome</h3><div class="review-lines"><p><b>Apelido</b><span id="finalNickname">—</span></p><p><b>Gênero</b><span id="finalGender">Masculino</span></p><p><b>Idade</b><span id="finalAge">—</span></p></div></section>
-            <section class="review-card"><span class="review-label">ORIGEM</span><h3><span id="finalCountryFlag">🇧🇷</span> <span id="finalCountry">Brasil</span></h3><p>Humano · preset visual ajustável</p></section>
-            <section class="review-card"><span class="review-label">CLASSE</span><h3 id="finalClass">Sobrevivente</h3><p>Função inicial escolhida</p></section>
-            <section class="review-card"><span class="review-label">ATRIBUTOS</span><div class="review-attribute-grid" id="finalAttributes"></div></section>
-            <section class="review-card review-card--wide"><span class="review-label">APARÊNCIA</span><div class="review-appearance"><div><b id="finalAppearanceSummary">1,70 m · 70 kg</b><small id="finalAppearanceDetails">Sem características adicionais.</small></div><div class="review-mini-tags"><span id="finalSkin">Pele: Claro</span><span id="finalHair">Cabelo: Preto</span><span id="finalEyes">Olhos: Castanhos</span></div></div></section>
-            <section class="review-card review-card--wide"><span class="review-label">CONCEITO</span><div class="review-concept"><p><b>Personalidade</b><span id="finalPersonality">—</span></p><p><b>Objetivo</b><span id="finalObjective">—</span></p><p><b>Medo</b><span id="finalFear">—</span></p><p><b>História</b><span id="finalHistory">—</span></p></div></section>
-          </div>
-        </article>
+        </div>
       </div>
-      <button class="carousel-arrow carousel-next" id="nextStep" type="button" aria-label="Próxima etapa">›</button>
-    </div>
+    </header>
 
-    <div class="carousel-footer"><div class="carousel-dots" id="carouselDots"></div><div class="footer-actions"><a class="btn btn--ghost" href="./campanhas.html">CANCELAR</a><button class="btn btn--ghost" id="backStep" type="button">← VOLTAR</button><button class="btn btn--primary" id="nextAction" type="button">CONTINUAR →</button></div></div>
-  </section>
-</section>
-</main>
+    <section class="builder-head">
+      <div class="builder-kicker">AFTERLIFE · CRIAÇÃO DE PERSONAGEM</div>
+      <div class="builder-title-row">
+        <div><h1>Crie seu sobrevivente.</h1><p>Monte o personagem em etapas. O carrossel concentra uma decisão por vez, sem perder a visão geral da ficha.</p></div>
+        <div class="builder-status"><span></span><strong id="stepCount">01 / 07</strong><small id="stepStatusLabel">CONFIGURAÇÃO</small></div>
+      </div>
+    </section>
+
+    <section class="builder-shell">
+      <aside class="builder-rail" aria-label="Etapas da ficha">
+        <div class="rail-label">PROGRESSO</div>
+        <div class="rail-progress"><i id="progressBar"></i></div>
+        <button class="builder-step is-active" data-step="0"><span>01</span><b>Identidade</b><small>Quem sobreviveu</small></button>
+        <button class="builder-step" data-step="1"><span>02</span><b>Origem</b><small>País de origem</small></button>
+        <button class="builder-step" data-step="2"><span>03</span><b>Aparência</b><small>Visual e retrato</small></button>
+        <button class="builder-step" data-step="3"><span>04</span><b>Classe</b><small>Função e estilo</small></button>
+        <button class="builder-step" data-step="4"><span>05</span><b>Atributos</b><small>Distribuir pontos</small></button>
+        <button class="builder-step" data-step="5"><span>06</span><b>Conceito</b><small>História e motivação</small></button>
+        <button class="builder-step" data-step="6"><span>07</span><b>Revisão</b><small>Ficha final</small></button>
+      </aside>
+
+      <section class="builder-content">
+        <div class="character-preview">
+          <div class="preview-art" id="previewArt"><div class="preview-glow"></div><div class="preview-sprite" id="previewSprite"></div><div class="preview-silhouette" id="previewPlaceholder">A</div></div>
+          <div class="preview-info"><span>SEU SOBREVIVENTE</span><h2 id="previewName">Sem nome</h2><p id="previewSub">Humano · Sobrevivente · Brasil</p></div>
+          <div class="preview-mini-stats">
+            <div><small>HP</small><b id="previewHp">10</b></div>
+            <div><small>DEF</small><b id="previewDef">10</b></div>
+            <div><small>EST</small><b id="previewStamina">6</b></div>
+          </div>
+          <div class="stamina-cylinder-card" id="staminaCylinderCard" aria-label="Representação visual da estamina">
+            <div class="stamina-cylinder" aria-hidden="true"><span class="stamina-valve"></span><div class="stamina-body"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+            <div class="stamina-cylinder-copy"><span>ESTAMINA</span><b><em id="previewStaminaCylinder">6</em> / <span id="previewStaminaMax">13</span></b><small>O cilindro é apenas a representação visual da reserva de estamina.</small></div>
+          </div>
+        </div>
+
+        <div class="carousel-window" id="carouselWindow">
+          <button class="carousel-arrow carousel-prev" id="prevStep" type="button" aria-label="Etapa anterior">‹</button>
+          <div class="carousel-track" id="carouselTrack" tabindex="0">
+            <article class="builder-slide is-active" data-slide="0">
+              <div class="slide-kicker">01 · IDENTIDADE</div><h2>Quem sobreviveu?</h2><p>Defina os dados básicos do personagem.</p>
+              <div class="field-grid two">
+                <label><span>Nome do personagem</span><input id="characterName" maxlength="60" autocomplete="off" placeholder="Ex.: Elias Vale"></label>
+                <label><span>Apelido</span><input id="characterNickname" maxlength="40" autocomplete="off" placeholder="Como o grupo chama você?"></label>
+                <label><span>Gênero</span><select id="characterGender"><option value="Masculino">Masculino</option><option value="Feminino">Feminino</option></select></label>
+                <label><span>Idade</span><input id="characterAge" type="number" min="1" max="999" inputmode="numeric" placeholder="Ex.: 27"></label>
+              </div>
+              <div class="callout"><b>IDENTIDADE</b><span>O personagem continua editável depois. Nesta etapa, o gênero disponível é Masculino ou Feminino.</span></div>
+            </article>
+
+            <article class="builder-slide" data-slide="1">
+              <div class="slide-kicker">02 · ORIGEM</div><h2>De onde você veio?</h2><p>A origem é humana. O país funciona como referência visual opcional para o modelo-base.</p>
+              <div class="origin-layout">
+                <div class="origin-control-card">
+                  <div class="origin-control-top"><span>ORIGEM HUMANA</span><strong>HUMANO</strong></div>
+                  <label class="country-select-field"><span>PAÍS DE ORIGEM</span><select id="countryOrigin"></select></label>
+                  <div class="origin-selected-info"><span class="country-flag" id="countryFlag">🇧🇷</span><div><b id="countryName">Brasil</b><small id="countryHint">Referência visual ajustável.</small></div></div>
+                </div>
+                <div class="origin-reference-card">
+                  <div class="origin-reference-head"><span>PERSONAGEM DE REFERÊNCIA</span><b id="originGenderLabel">MASCULINO</b></div>
+                  <div class="origin-character-frame" id="originCharacterFrame"><div class="country-sprite" id="originCharacterSprite"></div></div>
+                  <div class="origin-reference-foot"><span id="originReferenceCountry">Brasil</span><small>Modelo visual da nacionalidade selecionada</small></div>
+                </div>
+              </div>
+              <div class="callout"><b>PRESET VISUAL</b><span>O país é uma referência estética para o personagem-base. Não bloqueia suas escolhas de aparência.</span></div>
+            </article>
+
+            <article class="builder-slide" data-slide="2">
+              <div class="slide-kicker">03 · APARÊNCIA</div><h2>Como o mundo vê você?</h2><p>Use o personagem-base da sua origem ou envie a sua própria imagem.</p>
+              <div class="appearance-builder-v4">
+                <div class="portrait-panel">
+                  <div class="portrait-stage" id="portraitStage">
+                    <div class="portrait-reference-badge">REFERÊNCIA</div>
+                    <div class="country-sprite portrait-sprite" id="appearancePresetSprite"></div>
+                    <img id="portraitImg" alt="Prévia do personagem enviado" hidden>
+                    <div class="portrait-empty" id="portraitEmpty"><strong>SEU RETRATO</strong><span>ENVIE UMA IMAGEM PARA SUBSTITUIR A REFERÊNCIA</span></div>
+                  </div>
+                  <div class="scale-card">
+                    <div class="scale-card-head"><span>ALTURA VISUAL</span><b id="heightReadout">1,70 m</b></div>
+                    <div class="height-scale-line"><i></i><i></i><i></i><i></i><i></i></div>
+                    <small>A altura selecionada altera proporcionalmente a apresentação do modelo-base.</small>
+                  </div>
+                  <div class="weight-control-card">
+                    <div class="weight-control-head"><span>PESO DO PERSONAGEM</span><b id="weightReadout">70 kg</b></div>
+                    <div class="weight-quick-buttons" id="weightQuickButtons" role="group" aria-label="Escolha de peso">
+                      <button type="button" data-weight="45">45</button><button type="button" data-weight="55">55</button><button type="button" data-weight="65">65</button><button type="button" data-weight="70" class="is-active">70</button><button type="button" data-weight="80">80</button><button type="button" data-weight="90">90</button><button type="button" data-weight="105">105</button><button type="button" data-weight="120">120</button>
+                    </div>
+                    <div class="weight-thermometer"><span id="weightBar"></span></div>
+                    <div class="weight-labels"><small>45 kg</small><small>120 kg</small></div>
+                    <input id="appearanceWeight" type="hidden" value="70">
+                  </div>
+                  <div class="portrait-actions">
+                    <input id="characterImageFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif" hidden>
+                    <button type="button" class="btn btn--primary" id="uploadCharacterImage">↑ ENVIAR IMAGEM</button>
+                    <button type="button" class="btn btn--ghost" id="removeCharacterImage" hidden>REMOVER</button>
+                  </div>
+                  <small class="upload-note">JPG, PNG, WEBP ou GIF · até 5 MB</small>
+                </div>
+
+                <div class="appearance-controls-v4">
+                  <div class="appearance-country-note"><span>◇</span><div><b id="appearancePresetTitle">Preset de origem · Brasil</b><small id="appearancePresetText">Modelo de referência carregado com base na origem.</small></div></div>
+                  <div class="field-grid two appearance-fields-v4">
+                    <label><span>Tom de pele</span><select id="appearanceSkin"><option>Claro</option><option>Bege</option><option>Moreno</option><option>Marrom</option><option>Escuro</option></select></label>
+                    <label><span>Cabelo</span><select id="appearanceHair"><option>Preto</option><option>Castanho</option><option>Loiro</option><option>Ruivo</option><option>Grisalho</option></select></label>
+                    <label><span>Olhos</span><select id="appearanceEyes"><option>Castanhos</option><option>Azuis</option><option>Verdes</option><option>Cinzentos</option></select></label>
+                    <label><span>Formato dos olhos</span><select id="appearanceEyeShape"><option>Natural</option><option>Amendoado</option><option>Arredondado</option><option>Mais alongado</option></select></label>
+                    <label><span>Altura</span><select id="appearanceHeight"><option>1,55 m</option><option>1,60 m</option><option>1,65 m</option><option selected>1,70 m</option><option>1,75 m</option><option>1,80 m</option><option>1,85 m</option><option>1,90 m</option><option>1,95 m</option></select></label>
+                    <label><span>Visual</span><select id="appearanceStyle"><option>Casual</option><option selected>Sobrevivente</option><option>Militar</option><option>Urbano</option><option>Personalizado</option></select></label>
+                  </div>
+                  <div class="free-appearance-panel">
+                    <div class="free-appearance-head"><span>DETALHES LIVRES</span><small>Para características que não cabem nas opções prontas.</small></div>
+                    <div class="appearance-extra-grid">
+                      <label><span>Cicatriz / marca</span><input id="appearanceScar" maxlength="180" placeholder="Ex.: corte antigo sobre a sobrancelha esquerda"></label>
+                      <label><span>Outras características</span><input id="appearanceFeatures" maxlength="240" placeholder="Tatuagens, manchas, acessórios, detalhes físicos..."></label>
+                    </div>
+                    <label class="appearance-description"><span>Descrição completa da aparência</span><textarea id="appearanceDescription" rows="5" maxlength="800" placeholder="Descreva rosto, corpo, marcas, postura, roupas, acessórios ou qualquer detalhe que não foi contemplado acima."></textarea></label>
+                  </div>
+                  <div class="appearance-helper"><b>PERSONALIZAÇÃO</b><span>O modelo de origem é apenas uma referência. Você pode substituir a imagem e descrever livremente cada detalhe do personagem.</span></div>
+                </div>
+              </div>
+            </article>
+
+            <article class="builder-slide" data-slide="3">
+              <div class="slide-kicker">04 · CLASSE</div><h2>Qual é sua função?</h2><p>Escolha uma função inicial para o sobrevivente.</p>
+              <div class="class-carousel-v4">
+                <button class="class-arrow class-arrow--left" type="button" data-class-prev aria-label="Classe anterior">‹</button>
+                <div class="class-deck" id="classDeck">
+                  <button class="class-card side" type="button" data-class="Explorador"><span>◎</span><b>Explorador</b><small>Mobilidade, observação e leitura do ambiente.</small></button>
+                  <button class="class-card selected" type="button" data-class="Sobrevivente"><span>✦</span><b>Sobrevivente</b><small>Equilíbrio entre combate, recursos e adaptação.</small></button>
+                  <button class="class-card side" type="button" data-class="Combatente"><span>◈</span><b>Combatente</b><small>Pressão, resistência e presença em combate.</small></button>
+                </div>
+                <button class="class-arrow class-arrow--right" type="button" data-class-next aria-label="Próxima classe">›</button>
+              </div>
+              <div class="deck-meta"><span>CLASSE SELECIONADA</span><strong id="classReadout">Sobrevivente</strong><small id="classIndex">02 / 03</small></div>
+            </article>
+
+            <article class="builder-slide" data-slide="4">
+              <div class="slide-kicker">05 · ATRIBUTOS</div><h2>Distribua seus pontos.</h2><p>A interface reage na hora e mostra o efeito estimado das escolhas no personagem.</p>
+              <div class="attribute-pool"><div><span>PONTOS DISPONÍVEIS</span><b id="pointsRemaining">12</b></div><small>Base 8 em cada atributo · máximo temporário 15</small></div>
+              <div class="attribute-grid-v4" id="attributeGrid">
+                <div data-attr="forca"><span>FORÇA</span><strong>8</strong><button type="button" data-minus="forca">−</button><button type="button" data-plus="forca">+</button><i><em></em></i></div>
+                <div data-attr="agilidade"><span>AGILIDADE</span><strong>8</strong><button type="button" data-minus="agilidade">−</button><button type="button" data-plus="agilidade">+</button><i><em></em></i></div>
+                <div data-attr="vigor"><span>VIGOR</span><strong>8</strong><button type="button" data-minus="vigor">−</button><button type="button" data-plus="vigor">+</button><i><em></em></i></div>
+                <div data-attr="percepcao"><span>PERCEPÇÃO</span><strong>8</strong><button type="button" data-minus="percepcao">−</button><button type="button" data-plus="percepcao">+</button><i><em></em></i></div>
+                <div data-attr="mente"><span>MENTE</span><strong>8</strong><button type="button" data-minus="mente">−</button><button type="button" data-plus="mente">+</button><i><em></em></i></div>
+                <div data-attr="vontade"><span>VONTADE</span><strong>8</strong><button type="button" data-minus="vontade">−</button><button type="button" data-plus="vontade">+</button><i><em></em></i></div>
+              </div>
+              <div class="live-stats-panel-v4">
+                <div class="live-stats-head"><div><span>LEITURA AO VIVO</span><h3>Como os atributos estão refletindo na ficha</h3></div><small>Os cálculos abaixo são uma prévia de interface; as fórmulas finais do sistema podem ser definidas depois.</small></div>
+                <div class="live-stat-row"><div><span>HP</span><b id="liveHpValue">10</b></div><i><em id="liveHpBar"></em></i><small id="liveHpHint">Vigor 8</small></div>
+                <div class="live-stat-row"><div><span>DEFESA</span><b id="liveDefValue">10</b></div><i><em id="liveDefBar"></em></i><small id="liveDefHint">Agilidade + Percepção</small></div>
+                <div class="live-stat-row"><div><span>ESTAMINA</span><b id="liveStaminaValue">6</b></div><i><em id="liveStaminaBar"></em></i><small id="liveStaminaHint">Vigor + Agilidade</small></div>
+                <div class="live-stat-row"><div><span>ATAQUE</span><b id="liveAttackValue">5</b></div><i><em id="liveAttackBar"></em></i><small id="liveAttackHint">Força 8</small></div>
+                <div class="live-stat-row"><div><span>FOCO</span><b id="liveFocusValue">5</b></div><i><em id="liveFocusBar"></em></i><small id="liveFocusHint">Mente + Vontade</small></div>
+              </div>
+            </article>
+
+            <article class="builder-slide" data-slide="5">
+              <div class="slide-kicker">06 · CONCEITO</div><h2>Por que continuar?</h2><p>Feche a identidade narrativa antes de transformar tudo em uma ficha.</p>
+              <div class="field-stack">
+                <label><span>Personalidade</span><input id="characterPersonality" maxlength="300" placeholder="Como esse personagem costuma agir?"></label>
+                <label><span>Objetivo</span><input id="characterObjective" maxlength="300" placeholder="O que ele busca agora?"></label>
+                <label><span>Medo</span><input id="characterFear" maxlength="300" placeholder="O que ele não consegue encarar?"></label>
+                <label><span>História</span><textarea id="characterHistory" rows="6" maxlength="1200" placeholder="Conte de onde ele veio e o que aconteceu..."></textarea></label>
+              </div>
+            </article>
+
+            <article class="builder-slide final-review-slide-v4" data-slide="6">
+              <div class="slide-kicker">07 · REVISÃO FINAL</div><h2>Seu sobrevivente está pronto para ser visto.</h2><p>Confira a ficha completa antes de finalizar.</p>
+              <div class="final-review-layout-v4">
+                <div class="final-character-card">
+                  <div class="final-character-frame"><div class="country-sprite final-sprite" id="finalSprite"></div></div>
+                  <div><span>PERSONAGEM</span><h3 id="finalName">Sem nome</h3><p id="finalCountryLine">🇧🇷 Brasil · Masculino</p></div>
+                </div>
+                <div class="review-card-v4">
+                  <div class="review-title">IDENTIDADE</div>
+                  <div class="review-lines-v4"><p><b>Apelido</b><span id="finalNickname">—</span></p><p><b>Idade</b><span id="finalAge">—</span></p><p><b>Classe</b><span id="finalClass">Sobrevivente</span></p></div>
+                </div>
+                <div class="review-card-v4 review-card-v4--wide">
+                  <div class="review-title">APARÊNCIA</div>
+                  <div class="review-chip-row"><span id="finalSkin">Pele: Claro</span><span id="finalHair">Cabelo: Preto</span><span id="finalEyes">Olhos: Castanhos</span><span id="finalAppearanceSummary">1,70 m · 70 kg</span></div>
+                  <p id="finalAppearanceDetails">Sem características adicionais.</p>
+                </div>
+                <div class="review-card-v4 review-card-v4--wide">
+                  <div class="review-title">ATRIBUTOS</div>
+                  <div class="review-attribute-grid-v4" id="finalAttributes"></div>
+                  <div class="review-stat-strip"><span>HP <b id="finalHp">10</b></span><span>DEF <b id="finalDef">10</b></span><span>ESTAMINA <b id="finalStamina">6</b></span></div>
+                </div>
+                <div class="review-card-v4">
+                  <div class="review-title">CONCEITO</div>
+                  <div class="review-text-stack"><p><b>Personalidade</b><span id="finalPersonality">—</span></p><p><b>Objetivo</b><span id="finalObjective">—</span></p><p><b>Medo</b><span id="finalFear">—</span></p></div>
+                </div>
+                <div class="review-card-v4">
+                  <div class="review-title">HISTÓRIA</div><p id="finalHistory">—</p>
+                </div>
+              </div>
+            </article>
+          </div>
+          <button class="carousel-arrow carousel-next" id="nextStep" type="button" aria-label="Próxima etapa">›</button>
+        </div>
+
+        <div class="carousel-footer-v4">
+          <div class="carousel-dots" id="carouselDots"></div>
+          <div class="footer-actions">
+            <a class="btn btn--ghost" href="./index.html">CANCELAR</a>
+            <button class="btn btn--ghost" id="backStep" type="button">← VOLTAR</button>
+            <button class="btn btn--primary" id="nextAction" type="button">CONTINUAR →</button>
+          </div>
+        </div>
+      </section>
+    </section>
+  </main>
 </div>
-<script type="module" src="./js/ficha-criacao.js?v=20260913-4"></script>
+<script type="module" src="./js/ficha-criacao.js?v=20260913-6"></script>
 </body>
 </html>
