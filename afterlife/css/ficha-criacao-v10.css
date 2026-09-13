@@ -1,6 +1,5 @@
-/* AFTERLIFE — hotfix visual v10.1 */
+/* AFTERLIFE — hotfix visual v10.2 */
 
-/* O cartão de identidade atrás do status não é mais exibido. */
 .character-builder .character-preview{
   display:block!important;
   margin-bottom:14px!important;
@@ -12,11 +11,8 @@
   overflow:visible!important;
 }
 .character-builder .character-preview .preview-art,
-.character-builder .character-preview .preview-info{
-  display:none!important;
-}
+.character-builder .character-preview .preview-info{display:none!important}
 
-/* A cápsula de estamina passa a ser o único cartão externo do bloco de status. */
 .character-builder .stamina-cylinder-card{
   display:grid!important;
   grid-template-columns:130px minmax(220px,1fr) minmax(350px,390px)!important;
@@ -30,19 +26,13 @@
   border:1px solid rgba(57,245,138,.2)!important;
   border-radius:17px!important;
 }
-
-.character-builder .stamina-cylinder{
-  width:104px!important;
-  height:174px!important;
-}
+.character-builder .stamina-cylinder{width:104px!important;height:174px!important}
 .character-builder .stamina-valve{width:32px!important;height:20px!important}
 .character-builder .stamina-body{width:88px!important;height:145px!important;border-radius:20px 20px 15px 15px!important}
-
 .character-builder .stamina-cylinder-copy{min-width:0!important;padding-right:12px!important}
 .character-builder .stamina-cylinder-copy b{font-size:38px!important}
 .character-builder .stamina-cylinder-copy small{max-width:330px!important;font-size:9px!important}
 
-/* HP e Defesa ficam maiores e com espaço suficiente para o círculo + legenda + valor. */
 .character-builder .combat-status{
   display:grid!important;
   grid-template-columns:repeat(2,minmax(155px,1fr))!important;
@@ -69,7 +59,7 @@
   content:""!important;
   position:absolute!important;
   inset:-8px!important;
-  z-index:-1!important;
+  z-index:1!important;
   border:5px solid transparent!important;
   border-radius:50%!important;
   animation:afterlifeStatusSpin 2.2s linear infinite!important;
@@ -102,7 +92,6 @@
   55%{transform:scale(1);filter:drop-shadow(0 0 0 rgba(255,98,95,0))}
 }
 
-/* O perfil da ficha usa exatamente as mesmas proporções do perfil global. */
 .character-builder #profileAvatar{
   width:35px!important;height:35px!important;min-width:35px!important;max-width:35px!important;
   min-height:35px!important;max-height:35px!important;border-radius:50%!important;
@@ -122,13 +111,11 @@
   .character-builder .stamina-cylinder-card{grid-template-columns:110px minmax(190px,1fr) minmax(320px,350px)!important;gap:20px!important}
   .character-builder .combat-status{grid-template-columns:repeat(2,minmax(140px,1fr))!important}
 }
-
 @media(max-width:900px){
   .character-builder .stamina-cylinder-card{grid-template-columns:100px 1fr!important;gap:18px!important}
   .character-builder .combat-status{grid-column:1/-1!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:14px!important}
   .character-builder .combat-status-card{min-height:165px!important}
 }
-
 @media(max-width:560px){
   .character-builder .stamina-cylinder-card{grid-template-columns:82px minmax(0,1fr)!important;gap:12px!important;padding:16px!important;min-height:0!important}
   .character-builder .stamina-cylinder{width:76px!important;height:132px!important}
@@ -141,7 +128,4 @@
   .character-builder .combat-status-icon{font-size:23px!important}
   .character-builder .combat-status-value{font-size:21px!important}
 }
-
-@media(max-width:380px){
-  .character-builder .combat-status{grid-template-columns:1fr!important}
-}
+@media(max-width:380px){.character-builder .combat-status{grid-template-columns:1fr!important}}
