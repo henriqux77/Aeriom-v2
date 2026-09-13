@@ -11,12 +11,20 @@
   }
 
   function loadCss() {
-    if (document.querySelector('link[data-afterlife-profile-css]')) return;
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.href = './css/afterlife-profile-global.css?v=20260913-11';
-    link.dataset.afterlifeProfileCss = '1';
-    document.head.appendChild(link);
+    if (!document.querySelector('link[data-afterlife-profile-css]')) {
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = './css/afterlife-profile-global.css?v=20260913-11';
+      link.dataset.afterlifeProfileCss = '1';
+      document.head.appendChild(link);
+    }
+    if (!document.querySelector('link[data-afterlife-sidebar-css]')) {
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = './css/afterlife-sidebar.css?v=20260913-1';
+      link.dataset.afterlifeSidebarCss = '1';
+      document.head.appendChild(link);
+    }
   }
 
   function setAvatar(box, url, name) {
@@ -192,6 +200,9 @@
     loadCss();
     applyBrandLogo();
     startCombatAnimationGuard();
+    if (!isAfterlifeHome()) {
+      try { await import('./afterlife-sidebar.js?v=20260913-1'); } catch (error) { console.warn('[AFTERLIFE] sidebar:', error); }
+    }
     await bootProfile();
   }
 
