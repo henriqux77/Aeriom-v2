@@ -1,5 +1,5 @@
-import './profile-global.js?v=20260913-10';
-import './afterlife-sidebar.js?v=20260913-1';
+import './profile-global.js?v=20260913-11';
+import './afterlife-sidebar.js?v=20260913-2';
 
 (() => {
   'use strict';
@@ -11,7 +11,6 @@ import './afterlife-sidebar.js?v=20260913-1';
     document.querySelectorAll('.side-nav__item').forEach(item => item.addEventListener('click', () => {
       document.querySelectorAll('.side-nav__item').forEach(nav => nav.classList.remove('is-active'));
       item.classList.add('is-active');
-      document.getElementById('sidebar')?.classList.remove('is-open');
     }));
 
     const updateClock = () => {
