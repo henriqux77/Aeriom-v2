@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#050807"><title>AFTERLIFE — Mapa Mundial</title>
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.googleapis.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="./css/afterlife.css">
-<link rel="stylesheet" href="./css/mapa.css?v=20260913-5">
+<link rel="stylesheet" href="./css/mapa.css?v=20260913-6">
 <link rel="stylesheet" href="./css/map-pois.css?v=20260913-1">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
 </head>
@@ -29,5 +29,33 @@
   <div class="afterlife-profile-head"><span class="afterlife-profile-avatar" id="profileMenuAvatar">A</span><div><strong id="profileMenuName">Sobrevivente</strong><small id="profileMenuEmail">Perfil compartilhado com AERIOM</small></div></div>
   <div class="afterlife-profile-actions"><a href="./perfil.html">Editar perfil</a><a href="../index.html">Trocar sistema</a><button id="profileLogout" class="danger" type="button">Sair da conta</button></div>
 </div>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script><script type="module" src="./js/mapa.js?v=20260913-5"></script>
+<script>
+(function(){
+  const $=id=>document.getElementById(id);
+  const chip=$('profileChip'), menu=$('profileMenu');
+  function toggle(force){
+    const open=typeof force==='boolean'?force:!document.body.classList.contains('profile-open');
+    document.body.classList.toggle('profile-open',open);
+    chip?.setAttribute('aria-expanded',String(open));
+    menu?.setAttribute('aria-hidden',String(!open));
+  }
+  chip?.addEventListener('click',e=>{e.stopPropagation();toggle();});
+  menu?.addEventListener('click',e=>e.stopPropagation());
+  document.addEventListener('click',()=>toggle(false));
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')toggle(false);});
+  $('profileLogout')?.addEventListener('click',async()=>{
+    try{const {createClient}=await import('https://esm.sh/@supabase/supabase-js@2');const sb=createClient('https://kitlpowgcugvlxwhwhqv.supabase.co','sb_publishable_WDlPiR0b8T6mlQfYMbwjGg_BGvQPZDW');await sb.auth.signOut();}finally{location.href='../index.html';}
+  });
+  const avatar=new MutationObserver(()=>{
+    const src=$('profileAvatar')?.querySelector('img');
+    const target=$('profileMenuAvatar');
+    if(!target)return;
+    target.replaceChildren();
+    if(src){const img=document.createElement('img');img.src=src.src;img.alt='';img.referrerPolicy='no-referrer';img.onerror=()=>target.textContent=$('profileAvatar')?.textContent||'A';target.appendChild(img);}else target.textContent=$('profileAvatar')?.textContent||'A';
+    const name=$('profileName')?.textContent||'Sobrevivente';$('profileMenuName').textContent=name;
+  });
+  if($('profileAvatar'))avatar.observe($('profileAvatar'),{childList:true,subtree:true,characterData:true});
+})();
+</script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script><script type="module" src="./js/mapa.js?v=20260913-6"></script>
 </body></html>
