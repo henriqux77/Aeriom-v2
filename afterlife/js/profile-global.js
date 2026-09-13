@@ -3,6 +3,7 @@
   if (window.__afterlifeGlobalProfileBooted) return;
   window.__afterlifeGlobalProfileBooted = true;
 
+  const NEW_LOGO = 'https://i.ibb.co/BH2Hqr3P/file-00000000b47c820e88b788de23f77e3e.png';
   const $ = (id) => document.getElementById(id);
   const initial = (name) => String(name || 'A').trim().charAt(0).toUpperCase() || 'A';
 
@@ -14,14 +15,14 @@
     if (!document.querySelector('link[data-afterlife-profile-css]')) {
       const link = document.createElement('link');
       link.rel = 'stylesheet';
-      link.href = './css/afterlife-profile-global.css?v=20260913-11';
+      link.href = './css/afterlife-profile-global.css?v=20260913-12';
       link.dataset.afterlifeProfileCss = '1';
       document.head.appendChild(link);
     }
     if (!document.querySelector('link[data-afterlife-sidebar-css]')) {
       const link = document.createElement('link');
       link.rel = 'stylesheet';
-      link.href = './css/afterlife-sidebar.css?v=20260913-1';
+      link.href = './css/afterlife-sidebar.css?v=20260913-2';
       link.dataset.afterlifeSidebarCss = '1';
       document.head.appendChild(link);
     }
@@ -41,21 +42,24 @@
   }
 
   function applyBrandLogo() {
-    const brand = document.querySelector('.brand__title');
-    if (!brand || brand.dataset.afterlifeLogoApplied === '1') return;
-    brand.dataset.afterlifeLogoApplied = '1';
-    brand.replaceChildren();
-    const img = document.createElement('img');
-    img.src = './assets/afterlife-logo.svg?v=20260913-2';
-    img.alt = 'AFTERLIFE — Sobrevivência além do fim';
-    img.decoding = 'async';
-    img.loading = 'eager';
-    img.style.display = 'block';
-    img.style.width = '165px';
-    img.style.maxWidth = '100%';
-    img.style.height = 'auto';
-    img.style.objectFit = 'contain';
-    brand.appendChild(img);
+    document.querySelectorAll('.brand__title').forEach((brand) => {
+      let img = brand.querySelector('.brand__logo');
+      if (!img) {
+        brand.replaceChildren();
+        img = document.createElement('img');
+        img.className = 'brand__logo';
+        brand.appendChild(img);
+      }
+      img.src = NEW_LOGO;
+      img.alt = 'AFTERLIFE — Sobrevivência além do fim';
+      img.decoding = 'async';
+      img.loading = 'eager';
+      img.style.display = 'block';
+      img.style.width = '165px';
+      img.style.maxWidth = '100%';
+      img.style.height = 'auto';
+      img.style.objectFit = 'contain';
+    });
   }
 
   function applyCombatAnimationFix() {
@@ -201,7 +205,7 @@
     applyBrandLogo();
     startCombatAnimationGuard();
     if (!isAfterlifeHome()) {
-      try { await import('./afterlife-sidebar.js?v=20260913-1'); } catch (error) { console.warn('[AFTERLIFE] sidebar:', error); }
+      try { await import('./afterlife-sidebar.js?v=20260913-2'); } catch (error) { console.warn('[AFTERLIFE] sidebar:', error); }
     }
     await bootProfile();
   }
