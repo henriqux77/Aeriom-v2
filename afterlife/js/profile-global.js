@@ -7,7 +7,7 @@
   const initial = (name) => String(name || 'A').trim().charAt(0).toUpperCase() || 'A';
 
   function isAfterlifeHome() {
-    return /\/afterlife(?:\/index\.html)?$/.test(location.pathname);
+    return Boolean(document.querySelector('.dashboard-hero'));
   }
 
   function loadCss() {
