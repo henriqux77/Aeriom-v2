@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 150" role="img" aria-labelledby="title desc">
+  <title id="title">AFTERLIFE</title>
+  <desc id="desc">Logomarca AFTERLIFE — Sobrevivência além do fim</desc>
+  <defs>
+    <linearGradient id="steel" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f5f7f5"/>
+      <stop offset="0.5" stop-color="#aeb7b2"/>
+      <stop offset="1" stop-color="#ffffff"/>
+    </linearGradient>
+    <linearGradient id="scarlet" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ff5a51"/>
+      <stop offset="1" stop-color="#a92321"/>
+    </linearGradient>
+  </defs>
+  <g font-family="Inter,Segoe UI,Arial,sans-serif" font-weight="800" letter-spacing="-2">
+    <text x="4" y="90" font-size="92" fill="url(#scarlet)">A</text>
+    <text x="72" y="90" font-size="92" fill="url(#steel)">FTERLIFE</text>
+  </g>
+  <text x="76" y="126" fill="#a7b1ac" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="16" letter-spacing="6">SOBREVIVÊNCIA ALÉM DO FIM</text>
+</svg>
