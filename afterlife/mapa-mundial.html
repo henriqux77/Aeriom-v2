@@ -5,7 +5,7 @@
 <meta name="theme-color" content="#050807"><title>AFTERLIFE — Mapa Mundial</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="./css/afterlife.css">
-<link rel="stylesheet" href="./css/mapa.css?v=20260913-7">
+<link rel="stylesheet" href="./css/mapa.css?v=20260913-8">
 <link rel="stylesheet" href="./css/map-pois.css?v=20260913-1">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
 <style>
@@ -16,6 +16,23 @@
 .map-head .page-actions .btn--ghost:hover{border-color:rgba(57,245,138,.35);background:linear-gradient(180deg,rgba(30,46,37,.98),rgba(11,20,15,.98));color:#fff;box-shadow:0 10px 28px rgba(0,0,0,.3)}
 .map-head .page-actions .btn--primary{border:1px solid rgba(57,245,138,.5);background:linear-gradient(180deg,#55ffa0,#26d878);color:#041008;box-shadow:0 10px 28px rgba(31,231,124,.16)}
 .map-head .page-actions .btn--primary:hover{filter:brightness(1.06);box-shadow:0 12px 32px rgba(31,231,124,.22)}
+/* Perfil do mapa: estilos locais para não depender do CSS de campanhas. */
+.profile-chip{position:relative;overflow:hidden}
+.profile-avatar{overflow:hidden;flex:none}
+.profile-avatar img{width:100%;height:100%;display:block;object-fit:cover;border-radius:50%}
+.afterlife-profile-menu{position:fixed;right:28px;top:78px;z-index:1000;width:300px;padding:10px;border:1px solid rgba(127,160,145,.24);border-radius:13px;background:rgba(5,11,9,.985);box-shadow:0 24px 70px rgba(0,0,0,.62);backdrop-filter:blur(18px);opacity:0;visibility:hidden;transform:translateY(-6px) scale(.98);pointer-events:none;transition:opacity .18s ease,transform .18s ease,visibility .18s ease}
+.profile-open .afterlife-profile-menu{opacity:1;visibility:visible;transform:none;pointer-events:auto}
+.afterlife-profile-head{display:flex;align-items:center;gap:11px;padding:9px 9px 12px;border-bottom:1px solid rgba(127,160,145,.13)}
+.afterlife-profile-avatar{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;overflow:hidden;flex:none;background:radial-gradient(circle at 50% 25%,#455b51,#121b17 62%,#07100c);border:1px solid rgba(255,255,255,.14);font-weight:800;color:#eff5f1}
+.afterlife-profile-avatar img{width:100%;height:100%;display:block;object-fit:cover;border-radius:50%}
+.afterlife-profile-head strong{display:block;font-size:13px;color:#f2f6f3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.afterlife-profile-head small{display:block;margin-top:3px;color:#8d9b94;font-size:9px;max-width:190px}
+.afterlife-profile-actions{display:grid;gap:4px;padding-top:8px}
+.afterlife-profile-actions a,.afterlife-profile-actions button{width:100%;padding:10px 9px;border:0;border-radius:8px;background:transparent;color:#dce5df;text-align:left;text-decoration:none;font:600 11px Inter,system-ui;cursor:pointer}
+.afterlife-profile-actions a:hover,.afterlife-profile-actions button:hover{background:rgba(57,245,138,.06);color:#fff}
+.afterlife-profile-actions .danger{color:#ff9e98}
+.afterlife-profile-actions .danger:hover{background:rgba(255,77,69,.08)}
+@media(max-width:620px){.afterlife-profile-menu{right:14px;top:74px;width:min(300px,calc(100vw - 28px))}}
 </style>
 </head>
 <body>
