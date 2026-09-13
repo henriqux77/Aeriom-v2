@@ -45,9 +45,11 @@ function applyBrandLogo() {
   brand.dataset.afterlifeLogoApplied = '1';
   brand.replaceChildren();
   const img = document.createElement('img');
-  img.src = './assets/afterlife-logo.svg?v=20260913-1';
+  img.src = 'https://i.ibb.co/BH2Hqr3P/file-00000000b47c820e88b788de23f77e3e.png';
   img.alt = 'AFTERLIFE — Sobrevivência além do fim';
   img.decoding = 'async';
+  img.loading = 'eager';
+  img.referrerPolicy = 'no-referrer';
   img.style.display = 'block';
   img.style.width = '165px';
   img.style.maxWidth = '100%';
@@ -71,7 +73,6 @@ function applyCombatAnimationFix() {
     `;
     document.head.appendChild(style);
   } else {
-    // Sempre deixa o hotfix por último, depois do CSS dinâmico da ficha.
     document.head.appendChild(style);
   }
 }
