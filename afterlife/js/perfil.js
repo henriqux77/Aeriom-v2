@@ -1,4 +1,4 @@
-import { aeriom } from './aeriom-client.js?v=20260913-3';
+import { aeriom } from './aeriom-client.js?v=20260914-24';
 
 const BUCKET = 'avatars';
 const MAX_SIZE = 5 * 1024 * 1024;
