@@ -4,11 +4,12 @@ const PORTAL_SUPABASE_URL = 'https://kitlpowgcugvlxwhwhqv.supabase.co';
 const PORTAL_SUPABASE_KEY = 'sb_publishable_WDlPiR0b8T6mlQfYMbwjGg_BGvQPZDW';
 const AFTERLIFE_SUPABASE_URL = 'https://srmpaiawojkwlppoisns.supabase.co';
 const AFTERLIFE_SUPABASE_KEY = 'sb_publishable_m3bleT4vqCFGeFOgnEfeZg_VpCxprmm';
+const AFTERLIFE_ENTRY = `${window.location.origin}/Aeriom-v2/afterlife/index.html`;
 const supabase = createClient(PORTAL_SUPABASE_URL, PORTAL_SUPABASE_KEY, {
   auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
 });
 
-const HOTFIX_CSS = './css/portal-hotfix.css?v=20260914-3';
+const HOTFIX_CSS = './css/portal-hotfix.css?v=20260914-4';
 if (!document.querySelector('link[data-portal-hotfix="1"]')) {
   const link = document.createElement('link');
   link.rel = 'stylesheet';
@@ -64,6 +65,14 @@ async function oauth(provider) {
   }
 }
 
+function forceAfterlifeRedirect(actionLink) {
+  const url = new URL(actionLink);
+  // O portal não aceita o redirect padrão do projeto Afterlife (que pode estar em localhost).
+  // Reescrevemos somente o destino final para a página publicada do Afterlife.
+  url.searchParams.set('redirect_to', AFTERLIFE_ENTRY);
+  return url.href;
+}
+
 async function enterAfterlife(button) {
   if (button.disabled) return;
   const oldText = button.textContent;
@@ -97,7 +106,7 @@ async function enterAfterlife(button) {
       throw new Error(payload.error || `Não foi possível iniciar o Afterlife (${response.status}).`);
     }
 
-    window.location.assign(payload.action_link);
+    window.location.assign(forceAfterlifeRedirect(payload.action_link));
   } catch (error) {
     button.disabled = false;
     button.removeAttribute('aria-busy');
