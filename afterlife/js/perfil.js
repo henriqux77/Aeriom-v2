@@ -66,5 +66,21 @@ async function save(event){
   }catch(error){ console.error('[AFTERLIFE][PROFILE]',error); message(error?.message||'Não foi possível salvar o perfil.','error'); }
   finally{saveBtn.disabled=false;}
 }
-async function boot(){ try{ await afterlifeReady; const {data,error}=await aeriom.auth.getUser(); if(error)throw error; user=data?.user||null; if(!user){message('Sessão do Afterlife não encontrada. Volte ao portal e entre novamente.','error');return;} await load(); bind(); }catch(error){console.error('[AFTERLIFE][PROFILE]',error);message('Não foi possível carregar o perfil.','error');} }
+async function boot(){
+  try{
+    await afterlifeReady;
+    const {data:sessionData,error:sessionError}=await aeriom.auth.getSession();
+    if(sessionError)throw sessionError;
+    user=sessionData?.session?.user||null;
+    if(!user){
+      message('Sessão do Afterlife não encontrada. Volte ao portal e entre novamente.','error');
+      return;
+    }
+    await load();
+    bind();
+  }catch(error){
+    console.error('[AFTERLIFE][PROFILE]',error);
+    message('Não foi possível carregar o perfil.','error');
+  }
+}
 boot();
