@@ -2,9 +2,20 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 
 const PORTAL_SUPABASE_URL = 'https://kitlpowgcugvlxwhwhqv.supabase.co';
 const PORTAL_SUPABASE_KEY = 'sb_publishable_WDlPiR0b8T6mlQfYMbwjGg_BGvQPZDW';
+const AFTERLIFE_SUPABASE_URL = 'https://srmpaiawojkwlppoisns.supabase.co';
+const AFTERLIFE_SUPABASE_KEY = 'sb_publishable_m3bleT4vqCFGeFOgnEfeZg_VpCxprmm';
 const supabase = createClient(PORTAL_SUPABASE_URL, PORTAL_SUPABASE_KEY, {
   auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
 });
+
+const HOTFIX_CSS = './css/portal-hotfix.css?v=20260914-3';
+if (!document.querySelector('link[data-portal-hotfix="1"]')) {
+  const link = document.createElement('link');
+  link.rel = 'stylesheet';
+  link.href = HOTFIX_CSS;
+  link.dataset.portalHotfix = '1';
+  document.head.appendChild(link);
+}
 
 const $ = (id) => document.getElementById(id);
 const loginView = $('loginView');
@@ -36,18 +47,7 @@ function friendlyError(error) {
   return error?.message || 'Não foi possível concluir a autenticação.';
 }
 
-function rememberPortalIdentity(user) {
-  if (!user) return;
-  localStorage.setItem('afterlife_portal_handoff', JSON.stringify({
-    id: user.id,
-    email: user.email || '',
-    display_name: user.user_metadata?.display_name || user.user_metadata?.full_name || user.email?.split('@')[0] || 'Sobrevivente',
-    handedAt: Date.now()
-  }));
-}
-
 function displaySystem(user) {
-  rememberPortalIdentity(user);
   showView('system');
   $('systemUserName') && ($('systemUserName').textContent = user?.user_metadata?.display_name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Sobrevivente');
   $('systemUserEmail') && ($('systemUserEmail').textContent = user?.email || '');
@@ -65,28 +65,46 @@ async function oauth(provider) {
 }
 
 async function enterAfterlife(button) {
+  if (button.disabled) return;
   const oldText = button.textContent;
   button.disabled = true;
+  button.setAttribute('aria-busy', 'true');
   button.textContent = 'ABRINDO AFTERLIFE…';
+  showMessage('Conectando sua conta ao Afterlife…', 'success');
+
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), 15000);
+
   try {
     const { data, error } = await supabase.auth.getSession();
-    if (error || !data.session?.access_token) throw error || new Error('Sua sessão do portal expirou. Entre novamente.');
-    const response = await fetch('https://srmpaiawojkwlppoisns.supabase.co/functions/v1/portal-bridge', {
+    if (error) throw error;
+    const accessToken = data.session?.access_token;
+    if (!accessToken) throw new Error('Sua sessão do portal expirou. Entre novamente.');
+
+    const response = await fetch(`${AFTERLIFE_SUPABASE_URL}/functions/v1/portal-bridge`, {
       method: 'POST',
+      signal: controller.signal,
       headers: {
-        Authorization: `Bearer ${data.session.access_token}`,
-        apikey: 'sb_publishable_m3bleT4vqCFGeFOgnEfeZg_VpCxprmm',
+        Authorization: `Bearer ${accessToken}`,
+        apikey: AFTERLIFE_SUPABASE_KEY,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({})
+      body: '{}'
     });
+
     const payload = await response.json().catch(() => ({}));
-    if (!response.ok || !payload.action_link) throw new Error(payload.error || 'Não foi possível iniciar o Afterlife.');
-    window.location.href = payload.action_link;
+    if (!response.ok || !payload.action_link) {
+      throw new Error(payload.error || `Não foi possível iniciar o Afterlife (${response.status}).`);
+    }
+
+    window.location.assign(payload.action_link);
   } catch (error) {
     button.disabled = false;
+    button.removeAttribute('aria-busy');
     button.textContent = oldText;
-    showMessage(friendlyError(error));
+    showMessage(error?.name === 'AbortError' ? 'A conexão com o Afterlife demorou mais de 15 segundos. Tente novamente.' : friendlyError(error));
+  } finally {
+    window.clearTimeout(timeout);
   }
 }
 
@@ -98,10 +116,7 @@ async function init() {
   if (remembered && $('loginEmail')) $('loginEmail').value = remembered;
   supabase.auth.onAuthStateChange((event, session) => {
     if (event === 'SIGNED_IN' && session?.user) displaySystem(session.user);
-    if (event === 'SIGNED_OUT') {
-      localStorage.removeItem('afterlife_portal_handoff');
-      showView('login');
-    }
+    if (event === 'SIGNED_OUT') showView('login');
   });
 }
 
@@ -169,10 +184,9 @@ $('logoutSystem')?.addEventListener('click', async (event) => {
 
 document.querySelectorAll('.system-enter').forEach((button) => {
   button.addEventListener('click', () => {
-    const href = button.dataset.href;
-    if (!href) return;
     if (button.closest('.system-card--afterlife')) return enterAfterlife(button);
-    window.location.href = href;
+    const href = button.dataset.href;
+    if (href) window.location.href = href;
   });
 });
 
