@@ -1,4 +1,4 @@
-import './afterlife-sidebar.js?v=20260913-3';
+import './afterlife-sidebar.js?v=20260913-5';
 
 (() => {
   'use strict';
