@@ -1,15 +1,10 @@
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 
-const supabase = createClient(
-  'https://kitlpowgcugvlxwhwhqv.supabase.co',
-  'sb_publishable_WDlPiR0b8T6mlQfYMbwjGg_BGvQPZDW',
-  { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } }
-);
-
-const hotfix = document.createElement('link');
-hotfix.rel = 'stylesheet';
-hotfix.href = './css/portal-hotfix.css?v=20260914-1';
-document.head.appendChild(hotfix);
+const PORTAL_SUPABASE_URL = 'https://kitlpowgcugvlxwhwhqv.supabase.co';
+const PORTAL_SUPABASE_KEY = 'sb_publishable_WDlPiR0b8T6mlQfYMbwjGg_BGvQPZDW';
+const supabase = createClient(PORTAL_SUPABASE_URL, PORTAL_SUPABASE_KEY, {
+  auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+});
 
 const $ = (id) => document.getElementById(id);
 const loginView = $('loginView');
@@ -54,22 +49,43 @@ function rememberPortalIdentity(user) {
 function displaySystem(user) {
   rememberPortalIdentity(user);
   showView('system');
-  const name = $('systemUserName');
-  const email = $('systemUserEmail');
-  if (name) name.textContent = user?.user_metadata?.display_name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Sobrevivente';
-  if (email) email.textContent = user?.email || '';
+  $('systemUserName') && ($('systemUserName').textContent = user?.user_metadata?.display_name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Sobrevivente');
+  $('systemUserEmail') && ($('systemUserEmail').textContent = user?.email || '');
 }
 
 async function oauth(provider) {
   showMessage();
   const button = $('discordLogin');
   if (button) button.disabled = true;
-  const { error } = await supabase.auth.signInWithOAuth({
-    provider,
-    options: { redirectTo: `${window.location.origin}${window.location.pathname}` }
-  });
+  const { error } = await supabase.auth.signInWithOAuth({ provider, options: { redirectTo: `${window.location.origin}${window.location.pathname}` } });
   if (error) {
     if (button) button.disabled = false;
+    showMessage(friendlyError(error));
+  }
+}
+
+async function enterAfterlife(button) {
+  const oldText = button.textContent;
+  button.disabled = true;
+  button.textContent = 'ABRINDO AFTERLIFE…';
+  try {
+    const { data, error } = await supabase.auth.getSession();
+    if (error || !data.session?.access_token) throw error || new Error('Sua sessão do portal expirou. Entre novamente.');
+    const response = await fetch('https://srmpaiawojkwlppoisns.supabase.co/functions/v1/portal-bridge', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${data.session.access_token}`,
+        apikey: 'sb_publishable_m3bleT4vqCFGeFOgnEfeZg_VpCxprmm',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({})
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok || !payload.action_link) throw new Error(payload.error || 'Não foi possível iniciar o Afterlife.');
+    window.location.href = payload.action_link;
+  } catch (error) {
+    button.disabled = false;
+    button.textContent = oldText;
     showMessage(friendlyError(error));
   }
 }
@@ -82,7 +98,10 @@ async function init() {
   if (remembered && $('loginEmail')) $('loginEmail').value = remembered;
   supabase.auth.onAuthStateChange((event, session) => {
     if (event === 'SIGNED_IN' && session?.user) displaySystem(session.user);
-    if (event === 'SIGNED_OUT') showView('login');
+    if (event === 'SIGNED_OUT') {
+      localStorage.removeItem('afterlife_portal_handoff');
+      showView('login');
+    }
   });
 }
 
@@ -127,8 +146,7 @@ $('showLogin')?.addEventListener('click', () => { showView('login'); showMessage
 
 [['toggleLoginPassword','loginPassword'],['toggleRegisterPassword','registerPassword'],['toggleRegisterConfirm','registerConfirm']].forEach(([buttonId, inputId]) => {
   $(buttonId)?.addEventListener('click', () => {
-    const input = $(inputId);
-    if (!input) return;
+    const input = $(inputId); if (!input) return;
     input.type = input.type === 'password' ? 'text' : 'password';
   });
 });
@@ -141,10 +159,10 @@ $('forgotPassword')?.addEventListener('click', async () => {
 });
 
 $('discordLogin')?.addEventListener('click', () => oauth('discord'));
-
 $('logoutSystem')?.addEventListener('click', async (event) => {
   event.preventDefault();
   localStorage.removeItem('afterlife_portal_handoff');
+  localStorage.removeItem('afterlife-auth');
   await supabase.auth.signOut();
   showView('login');
 });
@@ -153,21 +171,14 @@ document.querySelectorAll('.system-enter').forEach((button) => {
   button.addEventListener('click', () => {
     const href = button.dataset.href;
     if (!href) return;
-    if (button.closest('.system-card--afterlife')) {
-      const target = new URL('./afterlife/index.html', window.location.href);
-      target.searchParams.set('from', 'portal');
-      target.searchParams.set('handoff', '1');
-      window.location.href = target.href;
-      return;
-    }
+    if (button.closest('.system-card--afterlife')) return enterAfterlife(button);
     window.location.href = href;
   });
 });
 
 document.querySelectorAll('.card-info').forEach((button) => {
   button.addEventListener('click', () => {
-    const target = $(button.dataset.target);
-    if (!target) return;
+    const target = $(button.dataset.target); if (!target) return;
     const open = target.classList.toggle('is-open');
     button.setAttribute('aria-expanded', String(open));
     button.textContent = open ? 'OCULTAR' : 'CONHECER';
