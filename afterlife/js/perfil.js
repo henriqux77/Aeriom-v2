@@ -1,4 +1,4 @@
-import { aeriom } from './aeriom-client.js?v=20260914-24';
+import { aeriom, afterlifeReady } from './aeriom-client.js?v=20260914-25';
 
 const BUCKET = 'avatars';
 const MAX_SIZE = 5 * 1024 * 1024;
@@ -66,5 +66,5 @@ async function save(event){
   }catch(error){ console.error('[AFTERLIFE][PROFILE]',error); message(error?.message||'Não foi possível salvar o perfil.','error'); }
   finally{saveBtn.disabled=false;}
 }
-async function boot(){ try{ const {data,error}=await aeriom.auth.getUser(); if(error)throw error; user=data?.user||null; if(!user){location.replace('./entrar.html');return;} await load(); bind(); }catch(error){console.error('[AFTERLIFE][PROFILE]',error);message('Não foi possível carregar o perfil.','error');} }
+async function boot(){ try{ await afterlifeReady; const {data,error}=await aeriom.auth.getUser(); if(error)throw error; user=data?.user||null; if(!user){message('Sessão do Afterlife não encontrada. Volte ao portal e entre novamente.','error');return;} await load(); bind(); }catch(error){console.error('[AFTERLIFE][PROFILE]',error);message('Não foi possível carregar o perfil.','error');} }
 boot();
