@@ -1,0 +1,11 @@
+/* Portal current visual assets — keep login layout and replace stale system-card artwork. */
+.system-card--aeriom .card-visual{
+  background-image:url('https://i.ibb.co/rRdgjMpJ/file-00000000b7b4820e98cac40fdb66c6a4-1.png')!important;
+}
+.system-card--afterlife .card-visual{
+  background-image:url('https://i.ibb.co/4gXCcjb0/file-00000000b7b4820e98cac40fdb66c6a4.png')!important;
+}
+/* Only the currently supported social provider remains visible. */
+#googleLogin,#githubLogin,.social--google,.social--github{display:none!important}
+.socials{display:flex!important;justify-content:flex-start!important;gap:10px!important}
+@media(max-width:620px){.socials{justify-content:flex-start!important}.social--discord{display:flex!important}}
