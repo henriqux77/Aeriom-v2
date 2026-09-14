@@ -1,3 +1,5 @@
+import './aeriom-client.js?v=20260914-23';
+
 (() => {
   'use strict';
   if (window.__afterlifeSidebarBooted) return;
