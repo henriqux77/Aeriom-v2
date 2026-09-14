@@ -11,10 +11,10 @@
 
   function loadCss() {
     if (!document.querySelector('link[data-afterlife-profile-css]')) {
-      const link = document.createElement('link'); link.rel='stylesheet'; link.href='./css/afterlife-profile-global.css?v=20260914-22'; link.dataset.afterlifeProfileCss='1'; document.head.appendChild(link);
+      const link = document.createElement('link'); link.rel='stylesheet'; link.href='./css/afterlife-profile-global.css?v=20260914-24'; link.dataset.afterlifeProfileCss='1'; document.head.appendChild(link);
     }
     if (!document.querySelector('link[data-afterlife-sidebar-css]')) {
-      const link = document.createElement('link'); link.rel='stylesheet'; link.href='./css/afterlife-sidebar.css?v=20260914-22'; link.dataset.afterlifeSidebarCss='1'; document.head.appendChild(link);
+      const link = document.createElement('link'); link.rel='stylesheet'; link.href='./css/afterlife-sidebar.css?v=20260914-24'; link.dataset.afterlifeSidebarCss='1'; document.head.appendChild(link);
     }
   }
 
@@ -63,7 +63,7 @@
     menu.classList.add('afterlife-global-profile-menu'); menu.hidden=true; menu.setAttribute('aria-hidden','true'); return {wrap,menu};
   }
 
-  async function getClient(){const mod=await import('./aeriom-client.js?v=20260914-22');return mod.aeriom;}
+  async function getClient(){const mod=await import('./aeriom-client.js?v=20260914-24');return mod.aeriom;}
 
   async function loadProfile(){
     try{
@@ -92,7 +92,7 @@
 
   async function boot(){
     loadCss(); applyBrandLogo(); startCombatAnimationGuard();
-    if(!isAfterlifeHome())try{await import('./afterlife-sidebar.js?v=20260914-22')}catch(error){console.warn('[AFTERLIFE] sidebar:',error)}
+    if(!isAfterlifeHome())try{await import('./afterlife-sidebar.js?v=20260914-24')}catch(error){console.warn('[AFTERLIFE] sidebar:',error)}
     await bootProfile();
   }
 
