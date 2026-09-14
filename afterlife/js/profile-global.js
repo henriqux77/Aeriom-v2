@@ -15,14 +15,14 @@
     if (!document.querySelector('link[data-afterlife-profile-css]')) {
       const link = document.createElement('link');
       link.rel = 'stylesheet';
-      link.href = './css/afterlife-profile-global.css?v=20260913-12';
+      link.href = './css/afterlife-profile-global.css?v=20260913-13';
       link.dataset.afterlifeProfileCss = '1';
       document.head.appendChild(link);
     }
     if (!document.querySelector('link[data-afterlife-sidebar-css]')) {
       const link = document.createElement('link');
       link.rel = 'stylesheet';
-      link.href = './css/afterlife-sidebar.css?v=20260913-2';
+      link.href = './css/afterlife-sidebar.css?v=20260913-5';
       link.dataset.afterlifeSidebarCss = '1';
       document.head.appendChild(link);
     }
@@ -123,7 +123,7 @@
           <div>
             <strong id="afterlifeGlobalProfileName">Sobrevivente</strong>
             <small id="afterlifeGlobalProfileEmail">Conta Afterlife</small>
-            <span class="afterlife-global-profile-badge"><i></i> Conta compartilhada</span>
+            <span class="afterlife-global-profile-badge"><i></i> Conta Afterlife</span>
           </div>
         </div>
         <div class="afterlife-global-profile-actions">
@@ -140,7 +140,7 @@
   }
 
   async function getClient() {
-    const mod = await import('./aeriom-client.js');
+    const mod = await import('./aeriom-client.js?v=20260913-3');
     return mod.aeriom;
   }
 
@@ -149,7 +149,7 @@
       const sb = await getClient();
       const { data: sessionData } = await sb.auth.getSession();
       const user = sessionData?.session?.user || null;
-      if (!user) { setProfile('Sobrevivente','','Faça login no AERIOM'); return; }
+      if (!user) { setProfile('Sobrevivente','','Faça login no AFTERLIFE'); return; }
       let name = user.user_metadata?.display_name || user.user_metadata?.full_name || user.email?.split('@')[0] || 'Sobrevivente';
       const { data, error } = await sb.from('profiles').select('id,display_name,avatar_path').eq('id', user.id).maybeSingle();
       if (error) throw error;
@@ -205,7 +205,7 @@
     applyBrandLogo();
     startCombatAnimationGuard();
     if (!isAfterlifeHome()) {
-      try { await import('./afterlife-sidebar.js?v=20260913-2'); } catch (error) { console.warn('[AFTERLIFE] sidebar:', error); }
+      try { await import('./afterlife-sidebar.js?v=20260913-5'); } catch (error) { console.warn('[AFTERLIFE] sidebar:', error); }
     }
     await bootProfile();
   }
