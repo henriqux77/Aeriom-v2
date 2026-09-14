@@ -1,4 +1,4 @@
-import { aeriom } from './aeriom-client.js?v=20260914-24';
+import { aeriom, afterlifeReady } from './aeriom-client.js?v=20260914-25';
 
 (() => {
   'use strict';
@@ -34,6 +34,7 @@ import { aeriom } from './aeriom-client.js?v=20260914-24';
   }
 
   async function load() {
+    await afterlifeReady;
     status.textContent='CARREGANDO'; grid.innerHTML='<div class="characters-loading">Carregando seus sobreviventes…</div>';
     const { data: sessionData, error: sessionError } = await aeriom.auth.getSession(); if(sessionError)throw sessionError;
     const user=sessionData?.session?.user; if(!user){window.location.replace('./entrar.html');return;}
