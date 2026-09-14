@@ -1,4 +1,4 @@
-import { aeriom, afterlifeReady } from './aeriom-client.js?v=20260914-25';
+import { aeriom, afterlifeReady } from './aeriom-client.js?v=20260914-30';
 
 (() => {
   'use strict';
@@ -35,15 +35,23 @@ import { aeriom, afterlifeReady } from './aeriom-client.js?v=20260914-25';
 
   async function load() {
     await afterlifeReady;
-    status.textContent='CARREGANDO'; grid.innerHTML='<div class="characters-loading">Carregando seus sobreviventes…</div>';
-    const { data: sessionData, error: sessionError } = await aeriom.auth.getSession(); if(sessionError)throw sessionError;
-    const user=sessionData?.session?.user; if(!user){window.location.replace('./entrar.html');return;}
+    status.textContent='CARREGANDO';
+    grid.innerHTML='<div class="characters-loading">Carregando seus sobreviventes…</div>';
+    const { data: sessionData, error: sessionError } = await aeriom.auth.getSession();
+    if(sessionError) throw sessionError;
+    const user = sessionData?.session?.user;
+    if(!user){
+      count.textContent='0 sobreviventes';
+      grid.innerHTML='<div class="characters-empty"><strong>Seus sobreviventes aparecerão aqui.</strong>Você pode abrir o criador e montar uma nova ficha mesmo enquanto a sessão compartilhada é restaurada.<br><a href="./ficha-criacao.html?new=1">Criar novo sobrevivente →</a></div>';
+      status.textContent='PRONTO PARA CRIAR';
+      return;
+    }
     const {data,error}=await aeriom.from('characters').select('id,name,age,race,class,origin,region,status,hp_current,hp_max,defense,avatar_path,creation_state,xp_total,updated_at,campaign_id').eq('user_id',user.id).is('campaign_id',null).neq('status','archived').order('updated_at',{ascending:false});
     if(error)throw error;
     const rows=data||[]; count.textContent=`${rows.length} ${rows.length===1?'sobrevivente':'sobreviventes'}`; grid.replaceChildren();
     if(!rows.length){grid.innerHTML='<div class="characters-empty"><strong>Você ainda não criou nenhum sobrevivente.</strong>Comece sua primeira história criando uma ficha.<br><a href="./ficha-criacao.html?new=1">Criar novo sobrevivente →</a></div>';status.textContent='VAZIO';return;}
     const cards=await Promise.all(rows.map(card)); cards.forEach((item)=>grid.appendChild(item)); status.textContent='ATUALIZADO';
   }
-  async function init(){try{await load()}catch(error){console.error('[AFTERLIFE][PERSONAGENS]',error);status.textContent='ERRO';grid.innerHTML=`<div class="characters-error">Não foi possível carregar seus sobreviventes.<br><small>${esc(error?.message||'Erro desconhecido')}</small></div>`}}
+  async function init(){try{await load()}catch(error){console.error('[AFTERLIFE][PERSONAGENS]',error);status.textContent='ERRO';grid.innerHTML=`<div class="characters-error">Não foi possível carregar seus sobreviventes agora.<br><small>${esc(error?.message||'Erro desconhecido')}</small><br><a href="./ficha-criacao.html?new=1">Abrir criador de ficha →</a></div>`}}
   init();
 })();
