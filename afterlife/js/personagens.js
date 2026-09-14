@@ -1,4 +1,4 @@
-import { aeriom } from './aeriom-client.js?v=20260914-22';
+import { aeriom } from './aeriom-client.js?v=20260914-24';
 
 (() => {
   'use strict';
