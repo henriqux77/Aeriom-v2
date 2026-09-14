@@ -11,6 +11,21 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
   const $ = (id) => document.getElementById(id);
   const initials = (name) => String(name || 'Sobrevivente').trim().charAt(0).toUpperCase() || 'S';
 
+  function injectProfilePresentationFix() {
+    if (document.getElementById('afterlife-shared-profile-presentation-fix')) return;
+    const style = document.createElement('style');
+    style.id = 'afterlife-shared-profile-presentation-fix';
+    style.textContent = `
+      .profile-chip{display:flex!important;align-items:center!important;visibility:visible!important}
+      .profile-avatar,.afterlife-global-profile-avatar,.afterlife-profile-avatar,.profile-dropdown-head .profile-avatar,.afterlife-account-avatar{position:relative!important;overflow:hidden!important;display:grid!important;place-items:center!important;border-radius:50%!important}
+      .profile-avatar img,.afterlife-global-profile-avatar img,.afterlife-profile-avatar img,.profile-dropdown-head .profile-avatar img,.afterlife-account-avatar img{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;max-width:none!important;max-height:none!important;object-fit:cover!important;object-position:center!important;border-radius:50%!important;display:block!important}
+      .afterlife-profile-dropdown .profile-avatar--large,.afterlife-profile-dropdown .profile-dropdown-head .profile-avatar--large{width:56px!important;height:56px!important;min-width:56px!important;min-height:56px!important;border-radius:50%!important}
+      .afterlife-global-profile-menu .afterlife-global-profile-avatar{border-radius:50%!important}
+      .afterlife-global-profile-menu .afterlife-global-profile-avatar img{border-radius:50%!important}
+    `;
+    document.head.appendChild(style);
+  }
+
   function setAvatar(el, url, name, large = false) {
     if (!el) return;
     el.replaceChildren();
@@ -130,6 +145,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
   }
 
   async function boot() {
+    injectProfilePresentationFix();
     bindDropdown();
     try {
       const shared = await portalProfile();
