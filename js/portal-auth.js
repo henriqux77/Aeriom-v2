@@ -6,6 +6,11 @@ const supabase = createClient(
   { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } }
 );
 
+const hotfix = document.createElement('link');
+hotfix.rel = 'stylesheet';
+hotfix.href = './css/portal-hotfix.css?v=20260914-1';
+document.head.appendChild(hotfix);
+
 const $ = (id) => document.getElementById(id);
 const loginView = $('loginView');
 const registerView = $('registerView');
@@ -36,7 +41,18 @@ function friendlyError(error) {
   return error?.message || 'Não foi possível concluir a autenticação.';
 }
 
+function rememberPortalIdentity(user) {
+  if (!user) return;
+  localStorage.setItem('afterlife_portal_handoff', JSON.stringify({
+    id: user.id,
+    email: user.email || '',
+    display_name: user.user_metadata?.display_name || user.user_metadata?.full_name || user.email?.split('@')[0] || 'Sobrevivente',
+    handedAt: Date.now()
+  }));
+}
+
 function displaySystem(user) {
+  rememberPortalIdentity(user);
   showView('system');
   const name = $('systemUserName');
   const email = $('systemUserEmail');
@@ -48,12 +64,10 @@ async function oauth(provider) {
   showMessage();
   const button = $('discordLogin');
   if (button) button.disabled = true;
-
   const { error } = await supabase.auth.signInWithOAuth({
     provider,
     options: { redirectTo: `${window.location.origin}${window.location.pathname}` }
   });
-
   if (error) {
     if (button) button.disabled = false;
     showMessage(friendlyError(error));
@@ -64,10 +78,8 @@ async function init() {
   const { data, error } = await supabase.auth.getSession();
   if (error) showMessage(friendlyError(error));
   if (data.session?.user) displaySystem(data.session.user);
-
   const remembered = localStorage.getItem('aeriom_portal_email');
   if (remembered && $('loginEmail')) $('loginEmail').value = remembered;
-
   supabase.auth.onAuthStateChange((event, session) => {
     if (event === 'SIGNED_IN' && session?.user) displaySystem(session.user);
     if (event === 'SIGNED_OUT') showView('login');
@@ -132,6 +144,7 @@ $('discordLogin')?.addEventListener('click', () => oauth('discord'));
 
 $('logoutSystem')?.addEventListener('click', async (event) => {
   event.preventDefault();
+  localStorage.removeItem('afterlife_portal_handoff');
   await supabase.auth.signOut();
   showView('login');
 });
@@ -139,7 +152,15 @@ $('logoutSystem')?.addEventListener('click', async (event) => {
 document.querySelectorAll('.system-enter').forEach((button) => {
   button.addEventListener('click', () => {
     const href = button.dataset.href;
-    if (href) window.location.href = href;
+    if (!href) return;
+    if (button.closest('.system-card--afterlife')) {
+      const target = new URL('./afterlife/index.html', window.location.href);
+      target.searchParams.set('from', 'portal');
+      target.searchParams.set('handoff', '1');
+      window.location.href = target.href;
+      return;
+    }
+    window.location.href = href;
   });
 });
 
