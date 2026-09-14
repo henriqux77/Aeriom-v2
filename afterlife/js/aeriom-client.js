@@ -1,9 +1,9 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-const AERIOM_URL = 'https://kitlpowgcugvlxwhwhqv.supabase.co';
-const AERIOM_KEY = 'sb_publishable_WDlPiR0b8T6mlQfYMbwjGg_BGvQPZDW';
+const AFTERLIFE_URL = 'https://srmpaiawojkwlppoisns.supabase.co';
+const AFTERLIFE_KEY = 'sb_publishable_m3bleT4vqCFGeFOgnEfeZg_VpCxprmm';
 
-export const aeriom = window.__afterlifeAeriom || createClient(AERIOM_URL, AERIOM_KEY, {
+export const aeriom = window.__afterlifeAeriom || createClient(AFTERLIFE_URL, AFTERLIFE_KEY, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
