@@ -5,20 +5,70 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#050708">
   <meta name="description" content="AERIOM / AFTERLIFE — portal central de acesso aos sistemas de RPG.">
-  <link rel="icon" type="image/svg+xml" href="./afterlife/favicon.svg">
   <title>AERIOM / AFTERLIFE — Portal</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/portal.css?v=20260913-6">
-  <link rel="stylesheet" href="./css/system-selector.css?v=20260913-1">
+  <link rel="stylesheet" href="./css/portal.css?v=20260914-restore">
 </head>
 <body>
   <main class="portal">
-    <section class="visual" aria-label="AERIOM e AFTERLIFE"><div class="visual-backdrop" aria-hidden="true"></div><div class="visual-shade" aria-hidden="true"></div><div class="visual-inner"><div class="suite-mark"><span>A</span><strong>AERIOM</strong><i>/</i><strong>AFTERLIFE</strong></div><div class="portal-identity"><div class="identity-caption">DOIS SISTEMAS · UMA PORTA DE ENTRADA</div><h1>Entre no mundo<br>que você quer viver.</h1><p>Faça login uma única vez e escolha entre criar mundos no Aeriom ou sobreviver ao fim no Afterlife.</p></div><footer class="visual-footer"><span>AERIOM PLATFORM</span><span>AFTERLIFE v0.1</span><span>HISTÓRIAS VIVAS</span></footer></div></section>
-    <section class="auth" aria-label="Autenticação"><div class="auth-inner"><div class="topline"><span class="portal-label">PORTAL CENTRAL</span><span class="status"><i></i>SISTEMAS ONLINE</span></div>
-      <div id="loginView"><header class="heading"><div class="eyebrow">AERIOM / AFTERLIFE</div><h2>Entre na sua conta</h2><p>Um único acesso para todas as suas experiências.</p></header><div id="authMessage" class="message" role="alert" aria-live="polite"></div><form id="loginForm" novalidate><div class="field"><label for="loginEmail">E-mail</label><div class="control"><input id="loginEmail" type="email" autocomplete="email" placeholder="seu@email.com" required></div></div><div class="field"><label for="loginPassword">Senha</label><div class="control"><input id="loginPassword" type="password" autocomplete="current-password" placeholder="Sua senha" required><button id="toggleLoginPassword" type="button" aria-label="Mostrar senha">◉</button></div></div><div class="row"><label class="check"><input id="remember" type="checkbox"> Lembrar deste dispositivo</label><button id="forgotPassword" class="link" type="button">Esqueci minha senha</button></div><button id="loginSubmit" class="primary" type="submit">ENTRAR <span>→</span></button></form><div class="or"><span>ou continue com</span></div><div class="socials" aria-label="Outras formas de login"><button class="social social--discord" id="discordLogin" type="button" aria-label="Entrar com Discord" title="Entrar com Discord"><svg class="social-svg" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M20.32 4.37A19.79 19.79 0 0 0 15.52 3l-.6 1.23a17.29 17.29 0 0 0-5.84 0L8.48 3a19.79 19.79 0 0 0-4.8 1.37C.64 8.1-.18 11.73.23 15.32a19.86 19.86 0 0 0 5.93 2.96l1.44-1.95c-.8-.3-1.57-.68-2.28-1.14l.56-.43c4.38 2.05 9.66 2.05 14.04 0l.56.43c-.71.46-1.48.84-2.28 1.14l1.44 1.95a19.86 19.86 0 0 0 5.93-2.96c.48-4.16-.82-7.76-1.27-10.95ZM8.06 13.32c-1.2 0-2.19-1.1-2.19-2.46S6.84 8.4 8.06 8.4s2.21 1.1 2.2 2.46c0 1.36-.98 2.46-2.2 2.46Zm7.88 0c-1.2 0-2.2-1.1-2.2-2.46s.98-2.46 2.2-2.46 2.19 1.1 2.19 2.46-.98 2.46-2.19 2.46Z"/></svg></button></div><div class="auth-switch">Não tem uma conta? <button id="showRegister" type="button">Criar conta</button></div><div class="legal">Ao continuar, você concorda com os termos e políticas da plataforma.</div></div>
-      <div id="registerView" class="register view-hidden"><button id="showLogin" class="link back" type="button">← Voltar para login</button><header class="heading"><div class="eyebrow">NOVA CONTA</div><h2>Crie sua conta</h2><p>Um acesso para suas experiências no Aeriom e no Afterlife.</p></header><form id="registerForm" novalidate><div class="field"><label for="registerName">Nome</label><div class="control"><input id="registerName" type="text" autocomplete="name" placeholder="Como você será chamado?" required></div></div><div class="field"><label for="registerEmail">E-mail</label><div class="control"><input id="registerEmail" type="email" autocomplete="email" placeholder="seu@email.com" required></div></div><div class="field"><label for="registerPassword">Senha</label><div class="control"><input id="registerPassword" type="password" autocomplete="new-password" placeholder="Mínimo de 8 caracteres" required><button id="toggleRegisterPassword" type="button" aria-label="Mostrar senha">◉</button></div></div><div class="field"><label for="registerConfirm">Confirmar senha</label><div class="control"><input id="registerConfirm" type="password" autocomplete="new-password" placeholder="Digite novamente" required><button id="toggleRegisterConfirm" type="button" aria-label="Mostrar confirmação">◉</button></div></div><button id="registerSubmit" class="primary" type="submit">CRIAR CONTA <span>→</span></button></form></div>
-      <div id="systemView" class="system"><header class="system-head"><div class="eyebrow">ACESSO CONFIRMADO</div><h2>Escolha seu sistema</h2><p>Olá, <strong id="systemUserName">sobrevivente</strong>. Onde sua próxima história começa?</p><small id="systemUserEmail"></small></header><div class="system-grid"><article class="system-card system-card--aeriom" data-system="aeriom"><div class="card-visual" role="img" aria-label="Aeriom — mundo de fantasia"></div><div class="card-body"><div class="card-brand">AERIOM</div><div class="card-tag">RPG SEM LIMITES</div><p class="card-summary">Crie mundos, campanhas, personagens e aventuras sem limites.</p><div class="card-details" id="aeriomDetails"><span>✦ Mundos e campanhas</span><span>✦ Personagens e lore</span><span>✦ Mesa virtual</span><span>✦ Homebrew</span></div><div class="card-actions"><button class="card-info" type="button" data-target="aeriomDetails" aria-expanded="false">CONHECER</button><button class="card-cta system-enter" type="button" data-href="./campanhas.html">ENTRAR →</button></div></div></article><article class="system-card system-card--afterlife" data-system="afterlife"><div class="card-visual" role="img" aria-label="Afterlife — sobrevivência pós-apocalíptica"></div><div class="card-body"><div class="card-brand">AFTERLIFE</div><div class="card-tag">SOBREVIVÊNCIA ALÉM DO FIM</div><p class="card-summary">Sobreviva, explore, evolua e enfrente um mundo pós-apocalíptico.</p><div class="card-details" id="afterlifeDetails"><span>☣ Sobrevivência realista</span><span>☣ Mundo contemporâneo</span><span>☣ Campanhas globais</span><span>☣ Evolução e mutações</span></div><div class="card-actions"><button class="card-info" type="button" data-target="afterlifeDetails" aria-expanded="false">CONHECER</button><button class="card-cta system-enter" type="button" data-href="./afterlife/index.html">ENTRAR →</button></div></div></article></div><div class="system-note">Cada sistema possui sua própria experiência e banco de dados. Este portal cuida da identidade e da escolha.</div><a href="#" class="signout" id="logoutSystem">Sair da conta</a></div>
-    </div></section></main>
-  <script type="module" src="./js/portal-auth.js?v=20260913-3"></script>
-</body></html>
+    <section class="visual" aria-label="AERIOM e AFTERLIFE">
+      <div class="visual-backdrop" aria-hidden="true"></div>
+      <div class="visual-shade" aria-hidden="true"></div>
+      <div class="visual-inner">
+        <div class="suite-mark"><span>A</span><strong>AERIOM</strong><i>/</i><strong>AFTERLIFE</strong></div>
+        <div class="portal-identity">
+          <div class="identity-caption">DOIS SISTEMAS · UMA PORTA DE ENTRADA</div>
+          <h1>Entre no mundo<br>que você quer viver.</h1>
+          <p>Faça login uma única vez e escolha entre criar mundos no Aeriom ou sobreviver ao fim no Afterlife.</p>
+        </div>
+        <footer class="visual-footer"><span>AERIOM PLATFORM</span><span>AFTERLIFE v0.1</span><span>HISTÓRIAS VIVAS</span></footer>
+      </div>
+    </section>
+    <section class="auth" aria-label="Autenticação">
+      <div class="auth-inner">
+        <div class="topline"><span class="portal-label">PORTAL CENTRAL</span><span class="status"><i></i>SISTEMAS ONLINE</span></div>
+        <div id="loginView">
+          <header class="heading"><div class="eyebrow">AERIOM / AFTERLIFE</div><h2>Entre na sua conta</h2><p>Um único acesso para todas as suas experiências.</p></header>
+          <div id="authMessage" class="message" role="alert" aria-live="polite"></div>
+          <form id="loginForm" novalidate>
+            <div class="field"><label for="loginEmail">E-mail</label><div class="control"><input id="loginEmail" type="email" autocomplete="email" placeholder="seu@email.com" required></div></div>
+            <div class="field"><label for="loginPassword">Senha</label><div class="control"><input id="loginPassword" type="password" autocomplete="current-password" placeholder="Sua senha" required><button id="toggleLoginPassword" type="button" aria-label="Mostrar senha">◉</button></div></div>
+            <div class="row"><label class="check"><input id="remember" type="checkbox"> Lembrar deste dispositivo</label><button id="forgotPassword" class="link" type="button">Esqueci minha senha</button></div>
+            <button id="loginSubmit" class="primary" type="submit">ENTRAR <span>→</span></button>
+          </form>
+          <div class="or"><span>ou continue com</span></div>
+          <div class="socials" aria-label="Outras formas de login">
+            <button class="social social--discord" id="discordLogin" type="button" aria-label="Entrar com Discord" title="Entrar com Discord">
+              <svg class="social-svg" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M20.32 4.37A19.79 19.79 0 0 0 15.52 3l-.6 1.23a17.29 17.29 0 0 0-5.84 0L8.48 3a19.79 19.79 0 0 0-4.8 1.37C.64 8.1-.18 11.73.23 15.32a19.86 19.86 0 0 0 5.93 2.96l1.44-1.95c-.8-.3-1.57-.68-2.28-1.14l.56-.43c4.38 2.05 9.66 2.05 14.04 0l.56.43c-.71.46-1.48.84-2.28 1.14l1.44 1.95a19.86 19.86 0 0 0 5.93-2.96c.48-4.16-.82-7.76-1.27-10.95ZM8.06 13.32c-1.2 0-2.19-1.1-2.19-2.46S6.84 8.4 8.06 8.4s2.21 1.1 2.2 2.46c0 1.36-.98 2.46-2.2 2.46Zm7.88 0c-1.2 0-2.2-1.1-2.2-2.46s.98-2.46 2.2-2.46 2.19 1.1 2.19 2.46-.98 2.46-2.19 2.46Z"/></svg>
+            </button>
+          </div>
+          <div class="auth-switch">Não tem uma conta? <button id="showRegister" type="button">Criar conta</button></div>
+          <div class="legal">Ao continuar, você concorda com os termos e políticas da plataforma.</div>
+        </div>
+        <div id="registerView" class="register view-hidden">
+          <button id="showLogin" class="link back" type="button">← Voltar para login</button>
+          <header class="heading"><div class="eyebrow">NOVA CONTA</div><h2>Crie sua conta</h2><p>Um acesso para suas experiências no Aeriom e no Afterlife.</p></header>
+          <form id="registerForm" novalidate>
+            <div class="field"><label for="registerName">Nome</label><div class="control"><input id="registerName" type="text" autocomplete="name" placeholder="Como você será chamado?" required></div></div>
+            <div class="field"><label for="registerEmail">E-mail</label><div class="control"><input id="registerEmail" type="email" autocomplete="email" placeholder="seu@email.com" required></div></div>
+            <div class="field"><label for="registerPassword">Senha</label><div class="control"><input id="registerPassword" type="password" autocomplete="new-password" placeholder="Mínimo de 8 caracteres" required><button id="toggleRegisterPassword" type="button" aria-label="Mostrar senha">◉</button></div></div>
+            <div class="field"><label for="registerConfirm">Confirmar senha</label><div class="control"><input id="registerConfirm" type="password" autocomplete="new-password" placeholder="Digite novamente" required><button id="toggleRegisterConfirm" type="button" aria-label="Mostrar confirmação">◉</button></div></div>
+            <button id="registerSubmit" class="primary" type="submit">CRIAR CONTA <span>→</span></button>
+          </form>
+        </div>
+        <div id="systemView" class="system">
+          <header class="system-head"><div class="eyebrow">ACESSO CONFIRMADO</div><h2>Escolha seu sistema</h2><p>Olá, <strong id="systemUserName">sobrevivente</strong>. Onde sua próxima história começa?</p><small id="systemUserEmail"></small></header>
+          <div class="system-grid">
+            <article class="system-card system-card--aeriom" data-system="aeriom"><div class="card-visual"></div><div class="card-body"><div class="card-brand">AERIOM</div><div class="card-tag">RPG SEM LIMITES</div><p class="card-summary">Crie mundos, campanhas, personagens e aventuras sem limites.</p><div class="card-details" id="aeriomDetails"><span>✦ Mundos e campanhas</span><span>✦ Personagens e lore</span><span>✦ Mesa virtual</span><span>✦ Homebrew</span></div><div class="card-actions"><button class="card-info" type="button" data-target="aeriomDetails" aria-expanded="false">CONHECER</button><button class="card-cta system-enter" type="button" data-href="./campanhas.html">ENTRAR →</button></div></div></article>
+            <article class="system-card system-card--afterlife" data-system="afterlife"><div class="card-visual"></div><div class="card-body"><div class="card-brand">AFTERLIFE</div><div class="card-tag">SOBREVIVÊNCIA ALÉM DO FIM</div><p class="card-summary">Sobreviva, explore, evolua e enfrente um mundo pós-apocalíptico.</p><div class="card-details" id="afterlifeDetails"><span>☣ Sobrevivência realista</span><span>☣ Mundo contemporâneo</span><span>☣ Campanhas globais</span><span>☣ Evolução e mutações</span></div><div class="card-actions"><button class="card-info" type="button" data-target="afterlifeDetails" aria-expanded="false">CONHECER</button><button class="card-cta system-enter" type="button" data-href="./afterlife/index.html">ENTRAR →</button></div></div></article>
+          </div>
+          <div class="system-note">Cada sistema possui sua própria experiência e banco de dados. Este portal cuida da identidade e da escolha.</div>
+          <a href="#" class="signout" id="logoutSystem">Sair da conta</a>
+        </div>
+      </div>
+    </section>
+  </main>
+  <script type="module" src="./js/portal-auth.js?v=20260914-restore"></script>
+</body>
+</html>
