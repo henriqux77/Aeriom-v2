@@ -9,7 +9,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="./css/afterlife.css">
 <link rel="stylesheet" href="./css/campaigns.css?v=20260913-6">
-<link rel="stylesheet" href="./css/afterlife-profile-global.css?v=20260913-12">
+<link rel="stylesheet" href="./css/afterlife-profile-global.css?v=20260913-13">
+<link rel="stylesheet" href="./css/afterlife-sidebar.css?v=20260913-5">
 </head>
 <body>
 <div class="app-shell">
@@ -18,7 +19,7 @@
 <nav class="side-nav" aria-label="Navegação Afterlife">
 <a class="side-nav__item" href="./index.html"><span class="icon">⌂</span><span>Início</span></a>
 <a class="side-nav__item is-active" href="./campanhas.html"><span class="icon">◈</span><span>Campanhas</span></a>
-<a class="side-nav__item" href="./index.html#personagens"><span class="icon">●</span><span>Personagens</span></a>
+<a class="side-nav__item" href="./personagens.html"><span class="icon">●</span><span>Personagens</span></a>
 <a class="side-nav__item" href="./mapa-mundial.html"><span class="icon">◇</span><span>Mapa Mundial</span></a>
 <a class="side-nav__item" href="#"><span class="icon">▣</span><span>Inventário</span></a>
 <a class="side-nav__item" href="#"><span class="icon">▤</span><span>Manual</span></a>
@@ -28,7 +29,7 @@
 <a class="side-nav__item" href="#"><span class="icon">⚙</span><span>Configurações</span></a>
 </aside>
 <main class="main">
-<header class="topbar"><button class="mobile-menu" id="mobileMenu" aria-label="Abrir menu">☰</button><div class="top-actions"><button class="profile-chip" id="profileChip" type="button" aria-label="Abrir perfil"><span class="profile-avatar" id="profileAvatar">A</span><span class="profile-copy"><strong id="profileName">Sobrevivente</strong><small><i></i> Online</small></span><span class="profile-caret">⌄</span></button></div></header>
+<header class="topbar"><button class="mobile-menu" id="mobileMenu" aria-label="Abrir menu"><span aria-hidden="true"></span></button><div class="top-actions"><button class="profile-chip" id="profileChip" type="button" aria-label="Abrir perfil"><span class="profile-avatar" id="profileAvatar">A</span><span class="profile-copy"><strong id="profileName">Sobrevivente</strong><small><i></i> Online</small></span><span class="profile-caret">⌄</span></button></div></header>
 <section class="page-head"><div><div class="eyebrow">SOBREVIVÊNCIA · CAMPANHAS</div><h1>Suas campanhas</h1><p>Crie uma nova realidade, escolha onde o colapso começou e reúna seu grupo.</p></div><div class="page-actions"><a class="btn btn--ghost" href="./mapa-mundial.html">MAPA MUNDIAL</a><button class="btn btn--primary" id="openCreate">+ CRIAR CAMPANHA</button></div></section>
 <section class="campaign-create panel" id="createPanel" hidden>
 <div class="panel-head"><h2>NOVA CAMPANHA</h2><button class="close-btn" id="closeCreate" aria-label="Fechar">×</button></div>
@@ -46,6 +47,6 @@
 <section class="panel"><div class="panel-head"><h2>SUAS CAMPANHAS</h2><span class="panel-count" id="campaignCount">0 campanhas</span></div><div id="campaignList" class="campaign-list"></div><div id="campaignEmpty" class="empty-state"><div class="empty-mark">+</div><h3>Nenhuma campanha criada</h3><p>Seu painel está limpo. Crie a primeira campanha do Afterlife para começar.</p><button class="btn btn--primary" id="emptyCreate">CRIAR PRIMEIRA CAMPANHA</button></div></section>
 <footer class="footer"><span>AFTERLIFE v0.1</span><span>A sobrevivência é apenas o começo.</span><span>Desenvolvido por <b>AERIOM</b></span></footer>
 </main></div>
-<div class="afterlife-profile-menu" id="profileMenu" aria-hidden="true"><div class="afterlife-profile-head"><span class="afterlife-profile-avatar" id="profileMenuAvatar">A</span><div><strong id="profileMenuName">Sobrevivente</strong><small>Perfil compartilhado com AERIOM</small></div></div><div class="afterlife-profile-actions"><a href="./perfil.html">Editar perfil</a><a href="../index.html">Trocar sistema</a><button id="profileLogout" class="danger" type="button">Sair da conta</button></div></div>
-<script type="module" src="./js/campaigns.js?v=20260913-10"></script>
+<div class="afterlife-profile-menu" id="profileMenu" aria-hidden="true"><div class="afterlife-profile-head"><span class="afterlife-profile-avatar" id="profileMenuAvatar">A</span><div><strong id="profileMenuName">Sobrevivente</strong><small>Conta Afterlife</small></div></div><div class="afterlife-profile-actions"><a href="./perfil.html">Editar perfil</a><a href="../index.html">Trocar sistema</a><button id="profileLogout" class="danger" type="button">Sair da conta</button></div></div>
+<script type="module" src="./js/campaigns.js?v=20260913-3"></script>
 </body></html>
