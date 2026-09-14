@@ -52,44 +52,42 @@ async function bootstrapFromPortal() {
   const portal = createClient(PORTAL_URL, PORTAL_KEY, {
     auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
   });
-
   const portalSession = await getPortalSession(portal);
   const portalToken = portalSession?.access_token;
-  if (!portalToken) {
-    console.warn('[AFTERLIFE] Sessão do portal não disponível para SSO.');
-    return false;
-  }
+  if (!portalToken) return false;
 
-  let response;
   try {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 12000);
-    response = await fetch(`${AFTERLIFE_URL}/functions/v1/portal-bridge`, {
+    const response = await fetch(`${AFTERLIFE_URL}/functions/v1/portal-bridge`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${portalToken}`, apikey: AFTERLIFE_KEY, 'Content-Type': 'application/json' },
       body: '{}',
       signal: controller.signal
     });
     clearTimeout(timer);
+
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok || !payload.access_token || !payload.refresh_token) {
+      console.warn('[AFTERLIFE] SSO:', payload.error || `HTTP ${response.status}`);
+      return false;
+    }
+
+    const { data, error } = await aeriom.auth.setSession({
+      access_token: payload.access_token,
+      refresh_token: payload.refresh_token
+    });
+    if (error || !data?.session?.user) {
+      console.warn('[AFTERLIFE] SSO session:', error || 'sessão não criada');
+      return false;
+    }
+
+    localStorage.removeItem(HANDOFF_KEY);
+    return true;
   } catch (error) {
-    console.warn('[AFTERLIFE] Falha ao contactar a ponte SSO:', error);
+    console.warn('[AFTERLIFE] SSO bootstrap:', error);
     return false;
   }
-
-  const payload = await response.json().catch(() => ({}));
-  if (!response.ok || !payload.token_hash || !payload.email) {
-    console.warn('[AFTERLIFE] SSO:', payload.error || `HTTP ${response.status}`);
-    return false;
-  }
-
-  const { data, error } = await aeriom.auth.verifyOtp({ email: payload.email, token_hash: payload.token_hash, type: 'email' });
-  if (error || !data?.session?.user) {
-    console.warn('[AFTERLIFE] SSO verify:', error || 'sessão não criada');
-    return false;
-  }
-
-  localStorage.removeItem(HANDOFF_KEY);
-  return true;
 }
 
 export async function ensureAfterlifeSession() {
