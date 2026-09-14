@@ -71,7 +71,7 @@ function renderNearby(items){
 }
 
 async function fetchNearby(center,mapZoom){
-  if(mapZoom<13){$('nearbyStatus').textContent='Aproxime o mapa para carregar';$('nearbyList').innerHTML='<div class="nearby-empty">Zoom 13+ para descobrir comércio e serviços.</div>';$('mapPoiCount').textContent='0';clearPoiMarkers();return;}
+  if(mapZoom<13){$('nearbyStatus').textContent='Aproxime o mapa para carregar';$('nearbyList').innerHTML='<div class="nearby-empty">Zoom 13+ para descobrir pontos de interesse.</div>';$('mapPoiCount').textContent='0';clearPoiMarkers();return;}
   const key=`${center.lat.toFixed(3)},${center.lng.toFixed(3)},${Math.round(mapZoom)}`;
   if(key===lastPoiKey)return;
   lastPoiKey=key;$('nearbyStatus').textContent='Procurando…';$('nearbyList').innerHTML='<div class="nearby-empty">Buscando pontos próximos…</div>';
@@ -127,4 +127,4 @@ function initMap(){
   window.addEventListener('resize',()=>map.invalidateSize());
 }
 
-document.addEventListener('DOMContentLoaded',()=>{ $('mobileMenu')?.addEventListener('click',()=>document.body.classList.toggle('menu-open')); loadProfile(); initMap(); });
+document.addEventListener('DOMContentLoaded',()=>{ loadProfile(); initMap(); });
