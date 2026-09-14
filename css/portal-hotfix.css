@@ -1,11 +1,16 @@
-/* Portal current visual assets — keep login layout and replace stale system-card artwork. */
-.system-card--aeriom .card-visual{
-  background-image:url('https://i.ibb.co/rRdgjMpJ/file-00000000b7b4820e98cac40fdb66c6a4-1.png')!important;
-}
-.system-card--afterlife .card-visual{
-  background-image:url('https://i.ibb.co/4gXCcjb0/file-00000000b7b4820e98cac40fdb66c6a4.png')!important;
-}
-/* Only the currently supported social provider remains visible. */
+/* CURRENT PORTAL SYSTEM CARD ART + DISTINCT SYSTEM THEMES */
+.system-card{border-color:rgba(255,255,255,.12)!important;box-shadow:0 16px 45px rgba(0,0,0,.20)!important}
+.system-card:hover,.system-card:focus-within{transform:translateY(-3px);border-color:rgba(255,255,255,.26)!important;box-shadow:0 22px 55px rgba(0,0,0,.28)!important}
+.system-card--aeriom{--card-accent:#c8a66b;--card-accent-soft:rgba(200,166,107,.12);background:linear-gradient(180deg,#0c1214,#080c0d)!important}
+.system-card--afterlife{--card-accent:#39f58a;--card-accent-soft:rgba(57,245,138,.08);background:linear-gradient(180deg,#09120f,#060b09)!important}
+.system-card--aeriom .card-visual{background-image:url('https://i.ibb.co/rRdgjMpJ/file-00000000b7b4820e98cac40fdb66c6a4-1.png')!important;background-repeat:no-repeat;background-color:#0a0e0d;background-position:center 34%;background-size:cover}
+.system-card--afterlife .card-visual{background-image:url('https://i.ibb.co/4gXCcjb0/file-00000000b7b4820e98cac40fdb66c6a4.png')!important;background-repeat:no-repeat;background-color:#0a0e0d;background-position:center 34%;background-size:cover}
+.system-card .card-visual:after{background:linear-gradient(0deg,rgba(4,8,6,.96) 0%,rgba(4,8,6,.60) 28%,transparent 72%)!important}
+.system-card--aeriom .card-brand{color:#f4eee1!important}.system-card--aeriom .card-tag{color:#c8b78f!important}.system-card--aeriom .card-summary{color:#b9c0bd!important}
+.system-card--aeriom .card-info,.system-card--aeriom .card-cta{border-color:rgba(200,166,107,.25)!important;background:rgba(200,166,107,.035)!important}.system-card--aeriom .card-cta{color:#ead7aa!important}.system-card--aeriom .card-info:hover,.system-card--aeriom .card-cta:hover{border-color:rgba(200,166,107,.55)!important;background:rgba(200,166,107,.08)!important}
+.system-card--afterlife .card-brand{color:#f1f6f3!important}.system-card--afterlife .card-tag{color:#8eb29f!important}.system-card--afterlife .card-summary{color:#b0bdb6!important}
+.system-card--afterlife .card-info,.system-card--afterlife .card-cta{border-color:rgba(57,245,138,.22)!important;background:rgba(57,245,138,.025)!important}.system-card--afterlife .card-cta{color:#9cf6bc!important}.system-card--afterlife .card-info:hover,.system-card--afterlife .card-cta:hover{border-color:rgba(57,245,138,.55)!important;background:rgba(57,245,138,.07)!important}
+/* Only the supported social login remains visible. */
 #googleLogin,#githubLogin,.social--google,.social--github{display:none!important}
-.socials{display:flex!important;justify-content:flex-start!important;gap:10px!important}
+.socials{display:flex!important;justify-content:flex-start!important;align-items:center!important;gap:10px!important}
 @media(max-width:620px){.socials{justify-content:flex-start!important}.social--discord{display:flex!important}}
