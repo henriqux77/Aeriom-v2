@@ -62,28 +62,45 @@ async function bootstrapFromPortal() {
     const response = await fetch(`${AFTERLIFE_URL}/functions/v1/portal-bridge`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${portalToken}`, apikey: AFTERLIFE_KEY, 'Content-Type': 'application/json' },
-      body: '{}',
-      signal: controller.signal
+      body: '{}', signal: controller.signal
     });
     clearTimeout(timer);
 
     const payload = await response.json().catch(() => ({}));
-    if (!response.ok || !payload.access_token || !payload.refresh_token) {
+    if (!response.ok) {
       console.warn('[AFTERLIFE] SSO:', payload.error || `HTTP ${response.status}`);
       return false;
     }
 
-    const { data, error } = await aeriom.auth.setSession({
-      access_token: payload.access_token,
-      refresh_token: payload.refresh_token
-    });
-    if (error || !data?.session?.user) {
-      console.warn('[AFTERLIFE] SSO session:', error || 'sessão não criada');
+    // The bridge returns a token_hash so the browser can perform the OTP
+    // exchange itself. Do not consume the magic-link token on the server.
+    if (payload.token_hash && payload.email) {
+      const { data, error } = await aeriom.auth.verifyOtp({
+        email: payload.email,
+        token_hash: payload.token_hash,
+        type: 'email'
+      });
+      if (!error && data?.session?.user) {
+        localStorage.removeItem(HANDOFF_KEY);
+        return true;
+      }
+      console.warn('[AFTERLIFE] SSO verify:', error || 'sessão não criada');
       return false;
     }
 
-    localStorage.removeItem(HANDOFF_KEY);
-    return true;
+    // Backward-compatible path for a bridge returning an already-created session.
+    if (payload.access_token && payload.refresh_token) {
+      const { data, error } = await aeriom.auth.setSession({
+        access_token: payload.access_token,
+        refresh_token: payload.refresh_token
+      });
+      if (!error && data?.session?.user) {
+        localStorage.removeItem(HANDOFF_KEY);
+        return true;
+      }
+      console.warn('[AFTERLIFE] SSO session:', error || 'sessão não criada');
+    }
+    return false;
   } catch (error) {
     console.warn('[AFTERLIFE] SSO bootstrap:', error);
     return false;
