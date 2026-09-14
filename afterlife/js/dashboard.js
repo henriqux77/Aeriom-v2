@@ -1,4 +1,4 @@
-import { aeriom } from './aeriom-client.js';
+import { aeriom } from './aeriom-client.js?v=20260913-3';
 
 (() => {
   'use strict';
@@ -22,7 +22,7 @@ import { aeriom } from './aeriom-client.js';
 
   async function boot(){
     const s=await aeriom.auth.getSession(); user=s.data?.session?.user||null;
-    if(!user){const next=encodeURIComponent(location.pathname);location.replace(`../index.html?next=${next}`);return;}
+    if(!user){const next=encodeURIComponent(location.pathname);location.replace('./entrar.html?next='+next);return;}
     render(load());
   }
 
@@ -31,5 +31,5 @@ import { aeriom } from './aeriom-client.js';
   $('dashboardCreateBtn')?.addEventListener('click',openCreate);
   $('viewCampaignsBtn')?.addEventListener('click',()=>location.href='./campanhas.html');
   $('mapBtn')?.addEventListener('click',()=>location.href='./mapa-mundial.html');
-  boot().catch(()=>location.replace('../index.html'));
+  boot().catch(()=>location.replace('./entrar.html'));
 })();
