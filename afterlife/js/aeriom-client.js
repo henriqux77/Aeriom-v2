@@ -4,6 +4,7 @@ const AFTERLIFE_URL = 'https://srmpaiawojkwlppoisns.supabase.co';
 const AFTERLIFE_KEY = 'sb_publishable_m3bleT4vqCFGeFOgnEfeZg_VpCxprmm';
 const PORTAL_URL = 'https://kitlpowgcugvlxwhwhqv.supabase.co';
 const PORTAL_KEY = 'sb_publishable_WDlPiR0b8T6mlQfYMbwjGg_BGvQPZDW';
+const HANDOFF_KEY = 'afterlife_portal_handoff';
 
 export const aeriom = createClient(AFTERLIFE_URL, AFTERLIFE_KEY, {
   auth: {
@@ -13,13 +14,27 @@ export const aeriom = createClient(AFTERLIFE_URL, AFTERLIFE_KEY, {
     storageKey: 'afterlife-auth'
   }
 });
-
 export const afterlife = aeriom;
 
 const nativeGetSession = aeriom.auth.getSession.bind(aeriom.auth);
 const nativeGetUser = aeriom.auth.getUser.bind(aeriom.auth);
-
 let readyPromise;
+
+function readPortalHandoff() {
+  try {
+    const raw = localStorage.getItem(HANDOFF_KEY);
+    if (!raw) return null;
+    const data = JSON.parse(raw);
+    if (!data?.access_token || !data?.refresh_token) return null;
+    if (data.created_at && Date.now() - data.created_at > 5 * 60 * 1000) {
+      localStorage.removeItem(HANDOFF_KEY);
+      return null;
+    }
+    return data;
+  } catch {
+    return null;
+  }
+}
 
 async function bootstrapFromPortal() {
   const current = await nativeGetSession();
@@ -28,8 +43,23 @@ async function bootstrapFromPortal() {
   const portal = createClient(PORTAL_URL, PORTAL_KEY, {
     auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
   });
-  const { data: portalData } = await portal.auth.getSession();
-  const portalToken = portalData?.session?.access_token;
+
+  const handoff = readPortalHandoff();
+  let portalSession = null;
+  if (handoff) {
+    const restored = await portal.auth.setSession({
+      access_token: handoff.access_token,
+      refresh_token: handoff.refresh_token
+    });
+    portalSession = restored.data?.session || null;
+  }
+
+  if (!portalSession) {
+    const { data: portalData } = await portal.auth.getSession();
+    portalSession = portalData?.session || null;
+  }
+
+  const portalToken = portalSession?.access_token;
   if (!portalToken) return false;
 
   const response = await fetch(`${AFTERLIFE_URL}/functions/v1/portal-bridge`, {
@@ -56,6 +86,8 @@ async function bootstrapFromPortal() {
     console.warn('[AFTERLIFE] SSO verify:', error || 'sessão não criada');
     return false;
   }
+
+  localStorage.removeItem(HANDOFF_KEY);
   return true;
 }
 
