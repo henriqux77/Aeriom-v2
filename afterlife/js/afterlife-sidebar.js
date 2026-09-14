@@ -74,11 +74,19 @@
     else open();
   }
 
+  function normalizeNavigation() {
+    document.querySelectorAll('.side-nav__item').forEach((link) => {
+      const label = link.querySelector('span:last-child')?.textContent?.trim().toLowerCase();
+      if (label === 'personagens') link.setAttribute('href', './personagens.html');
+    });
+  }
+
   function boot() {
     const button = ensureButton();
     const sidebar = $('sidebar');
     if (!button || !sidebar || button.dataset.afterlifeSidebarBound === '1') return;
     button.dataset.afterlifeSidebarBound = '1';
+    normalizeNavigation();
 
     button.addEventListener('click', (event) => {
       event.preventDefault();
@@ -126,6 +134,7 @@
       const progress = Math.max(0, Math.min(1, Math.abs(dx) / width));
       sidebar.style.setProperty('--afterlife-drag-x', `${dx}px`);
       sidebar.style.setProperty('--afterlife-drag-progress', String(1 - progress));
+      $('afterlifeSidebarBackdrop')?.style.setProperty('opacity', String(Math.max(0, 1 - progress)));
     }, { passive: true });
 
     sidebar.addEventListener('touchend', () => {
@@ -134,6 +143,7 @@
       sidebar.classList.remove('is-dragging');
       sidebar.style.removeProperty('--afterlife-drag-x');
       sidebar.style.removeProperty('--afterlife-drag-progress');
+      $('afterlifeSidebarBackdrop')?.style.removeProperty('opacity');
       dragActive = false;
       if (dx < -70) close();
       dragStartX = null;
@@ -144,6 +154,7 @@
       sidebar.classList.remove('is-dragging');
       sidebar.style.removeProperty('--afterlife-drag-x');
       sidebar.style.removeProperty('--afterlife-drag-progress');
+      $('afterlifeSidebarBackdrop')?.style.removeProperty('opacity');
       dragActive = false;
       dragStartX = null;
       dragStartY = null;
