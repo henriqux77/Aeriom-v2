@@ -1,3 +1,5 @@
+import { aeriom, afterlifeReady } from './aeriom-client.js?v=20260914-23';
+
 (() => {
   'use strict';
   const PREFIX='afterlife_campaigns_v1_';
@@ -19,21 +21,10 @@
     });
   }
 
-  function readPortalHandoff(){
-    try{
-      const raw=localStorage.getItem('afterlife_portal_handoff');
-      if(!raw)return null;
-      const handoff=JSON.parse(raw);
-      if(!handoff?.id)return null;
-      return {id:handoff.id,email:handoff.email||'',user_metadata:{display_name:handoff.display_name||'Sobrevivente'}};
-    }catch{return null}
-  }
-
   async function boot(){
+    await afterlifeReady;
     const s=await aeriom.auth.getSession();
     user=s.data?.session?.user||null;
-    if(!user) user=readPortalHandoff();
-    /* Entering Afterlife from the central portal must never bounce to its old login page. */
     render(load());
   }
 
