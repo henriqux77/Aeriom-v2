@@ -20,20 +20,20 @@ window.__afterlifeSupabaseClient = afterlifeClient;
 export const aeriom = afterlifeClient;
 export const afterlife = afterlifeClient;
 
+// Todas as páginas protegidas aguardam a mesma ponte de sessão. Assim nenhuma
+// página redireciona para a antiga tela de entrada enquanto a sessão é restaurada.
+const nativeGetSession = afterlifeClient.auth.getSession.bind(afterlifeClient.auth);
+
 async function bootstrapFromPortal() {
   if (window.__afterlifeBootstrapStarted) return window.__afterlifeBootstrapStarted;
 
   window.__afterlifeBootstrapStarted = (async () => {
     try {
-      const { data } = await afterlifeClient.auth.getSession();
+      const { data } = await nativeGetSession();
       if (data?.session?.user) return true;
 
       const portal = createClient(PORTAL_URL, PORTAL_KEY, {
-        auth: {
-          persistSession: true,
-          autoRefreshToken: true,
-          detectSessionInUrl: true
-        }
+        auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
       });
       const { data: portalSession } = await portal.auth.getSession();
       const token = portalSession?.session?.access_token;
@@ -68,4 +68,10 @@ async function bootstrapFromPortal() {
 }
 
 export const afterlifeReady = bootstrapFromPortal();
-void afterlifeReady;
+
+// Intercepta chamadas normais a getSession() feitas pelas páginas do Afterlife,
+// evitando a corrida entre a página e a restauração da sessão.
+afterlifeClient.auth.getSession = async (...args) => {
+  await afterlifeReady;
+  return nativeGetSession(...args);
+};
