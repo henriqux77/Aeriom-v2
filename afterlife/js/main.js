@@ -1,5 +1,5 @@
-import './profile-global.js?v=20260913-13';
-import './afterlife-sidebar.js?v=20260913-5';
+import './profile-global.js?v=20260914-22';
+import './afterlife-sidebar.js?v=20260914-22';
 
 (() => {
   'use strict';
