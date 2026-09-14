@@ -17,7 +17,6 @@ const afterlifeClient = window.__afterlifeSupabaseClient || createClient(AFTERLI
 
 window.__afterlifeSupabaseClient = afterlifeClient;
 
-// API pública do Afterlife. Nunca reutiliza o cliente do Aeriom como cliente de dados.
 export const aeriom = afterlifeClient;
 export const afterlife = afterlifeClient;
 
@@ -29,8 +28,6 @@ async function bootstrapFromPortal() {
       const { data } = await afterlifeClient.auth.getSession();
       if (data?.session?.user) return true;
 
-      // O portal continua sendo a identidade central. O Afterlife cria sua própria
-      // sessão somente depois que a página do Afterlife foi aberta.
       const portal = createClient(PORTAL_URL, PORTAL_KEY, {
         auth: {
           persistSession: true,
@@ -58,10 +55,7 @@ async function bootstrapFromPortal() {
       }
 
       const action = new URL(payload.action_link);
-      const currentRedirect = action.searchParams.get('redirect_to') || '';
-      if (!currentRedirect || /localhost|127\.0\.0\.1/i.test(currentRedirect)) {
-        action.searchParams.set('redirect_to', AFTERLIFE_ENTRY);
-      }
+      action.searchParams.set('redirect_to', AFTERLIFE_ENTRY);
       window.location.replace(action.toString());
       return false;
     } catch (error) {
@@ -73,4 +67,5 @@ async function bootstrapFromPortal() {
   return window.__afterlifeBootstrapStarted;
 }
 
-void bootstrapFromPortal();
+export const afterlifeReady = bootstrapFromPortal();
+void afterlifeReady;
