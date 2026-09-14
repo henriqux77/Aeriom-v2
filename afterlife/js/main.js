@@ -1,5 +1,5 @@
-import './profile-global.js?v=20260914-22';
-import './afterlife-sidebar.js?v=20260914-22';
+import './profile-global.js?v=20260914-30';
+import './afterlife-sidebar.js?v=20260914-30';
 
 (() => {
   'use strict';
@@ -16,9 +16,7 @@ import './afterlife-sidebar.js?v=20260914-22';
     const updateClock = () => {
       if (clock) {
         clock.textContent = new Date().toLocaleTimeString('pt-BR', {
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: false
+          hour: '2-digit', minute: '2-digit', hour12: false
         });
       }
     };
@@ -38,9 +36,6 @@ import './afterlife-sidebar.js?v=20260914-22';
     });
   };
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', boot, { once: true });
-  } else {
-    boot();
-  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, { once: true });
+  else boot();
 })();
