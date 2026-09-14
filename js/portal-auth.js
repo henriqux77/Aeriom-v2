@@ -2,14 +2,12 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 
 const PORTAL_SUPABASE_URL = 'https://kitlpowgcugvlxwhwhqv.supabase.co';
 const PORTAL_SUPABASE_KEY = 'sb_publishable_WDlPiR0b8T6mlQfYMbwjGg_BGvQPZDW';
-const AFTERLIFE_SUPABASE_URL = 'https://srmpaiawojkwlppoisns.supabase.co';
-const AFTERLIFE_SUPABASE_KEY = 'sb_publishable_m3bleT4vqCFGeFOgnEfeZg_VpCxprmm';
-const AFTERLIFE_ENTRY = `${window.location.origin}/Aeriom-v2/afterlife/index.html`;
+const AFTERLIFE_ENTRY = 'https://henriqux77.github.io/Aeriom-v2/afterlife/index.html';
 const supabase = createClient(PORTAL_SUPABASE_URL, PORTAL_SUPABASE_KEY, {
   auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
 });
 
-const HOTFIX_CSS = './css/portal-hotfix.css?v=20260914-4';
+const HOTFIX_CSS = './css/portal-hotfix.css?v=20260914-5';
 if (!document.querySelector('link[data-portal-hotfix="1"]')) {
   const link = document.createElement('link');
   link.rel = 'stylesheet';
@@ -65,56 +63,16 @@ async function oauth(provider) {
   }
 }
 
-function forceAfterlifeRedirect(actionLink) {
-  const url = new URL(actionLink);
-  // O portal não aceita o redirect padrão do projeto Afterlife (que pode estar em localhost).
-  // Reescrevemos somente o destino final para a página publicada do Afterlife.
-  url.searchParams.set('redirect_to', AFTERLIFE_ENTRY);
-  return url.href;
-}
-
 async function enterAfterlife(button) {
   if (button.disabled) return;
-  const oldText = button.textContent;
   button.disabled = true;
   button.setAttribute('aria-busy', 'true');
   button.textContent = 'ABRINDO AFTERLIFE…';
-  showMessage('Conectando sua conta ao Afterlife…', 'success');
+  showMessage('Abrindo o Afterlife…', 'success');
 
-  const controller = new AbortController();
-  const timeout = window.setTimeout(() => controller.abort(), 15000);
-
-  try {
-    const { data, error } = await supabase.auth.getSession();
-    if (error) throw error;
-    const accessToken = data.session?.access_token;
-    if (!accessToken) throw new Error('Sua sessão do portal expirou. Entre novamente.');
-
-    const response = await fetch(`${AFTERLIFE_SUPABASE_URL}/functions/v1/portal-bridge`, {
-      method: 'POST',
-      signal: controller.signal,
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        apikey: AFTERLIFE_SUPABASE_KEY,
-        'Content-Type': 'application/json'
-      },
-      body: '{}'
-    });
-
-    const payload = await response.json().catch(() => ({}));
-    if (!response.ok || !payload.action_link) {
-      throw new Error(payload.error || `Não foi possível iniciar o Afterlife (${response.status}).`);
-    }
-
-    window.location.assign(forceAfterlifeRedirect(payload.action_link));
-  } catch (error) {
-    button.disabled = false;
-    button.removeAttribute('aria-busy');
-    button.textContent = oldText;
-    showMessage(error?.name === 'AbortError' ? 'A conexão com o Afterlife demorou mais de 15 segundos. Tente novamente.' : friendlyError(error));
-  } finally {
-    window.clearTimeout(timeout);
-  }
+  // Este botão é apenas uma navegação para a página publicada do Afterlife.
+  // Não cria sessão, não chama Edge Function e não altera o Supabase.
+  window.location.assign(AFTERLIFE_ENTRY);
 }
 
 async function init() {
