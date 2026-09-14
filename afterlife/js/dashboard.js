@@ -1,5 +1,3 @@
-import { aeriom } from './aeriom-client.js?v=20260913-3';
-
 (() => {
   'use strict';
   const PREFIX='afterlife_campaigns_v1_';
@@ -11,6 +9,7 @@ import { aeriom } from './aeriom-client.js?v=20260913-3';
 
   function render(rows){
     const root=$('dashboardCampaignList'); const empty=$('dashboardEmpty');
+    if(!root||!empty)return;
     root.replaceChildren();
     empty.hidden=rows.length!==0; root.hidden=rows.length===0;
     rows.slice(0,3).forEach(c=>{
@@ -20,9 +19,21 @@ import { aeriom } from './aeriom-client.js?v=20260913-3';
     });
   }
 
+  function readPortalHandoff(){
+    try{
+      const raw=localStorage.getItem('afterlife_portal_handoff');
+      if(!raw)return null;
+      const handoff=JSON.parse(raw);
+      if(!handoff?.id)return null;
+      return {id:handoff.id,email:handoff.email||'',user_metadata:{display_name:handoff.display_name||'Sobrevivente'}};
+    }catch{return null}
+  }
+
   async function boot(){
-    const s=await aeriom.auth.getSession(); user=s.data?.session?.user||null;
-    if(!user){const next=encodeURIComponent(location.pathname);location.replace('./entrar.html?next='+next);return;}
+    const s=await aeriom.auth.getSession();
+    user=s.data?.session?.user||null;
+    if(!user) user=readPortalHandoff();
+    /* Entering Afterlife from the central portal must never bounce to its old login page. */
     render(load());
   }
 
@@ -31,5 +42,5 @@ import { aeriom } from './aeriom-client.js?v=20260913-3';
   $('dashboardCreateBtn')?.addEventListener('click',openCreate);
   $('viewCampaignsBtn')?.addEventListener('click',()=>location.href='./campanhas.html');
   $('mapBtn')?.addEventListener('click',()=>location.href='./mapa-mundial.html');
-  boot().catch(()=>location.replace('./entrar.html'));
+  boot().catch(error=>{console.error('[AFTERLIFE][DASHBOARD]',error);render(load())});
 })();
