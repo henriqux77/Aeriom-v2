@@ -47,13 +47,10 @@ async function bootstrapFromPortal() {
     return false;
   }
 
-  // portal-bridge generates a magiclink token. It must be verified as
-  // "magiclink", not "email", otherwise Supabase rejects the token and
-  // the Afterlife client remains without an authenticated session.
   const { data, error } = await aeriom.auth.verifyOtp({
     email: payload.email,
     token_hash: payload.token_hash,
-    type: 'magiclink'
+    type: 'email'
   });
   if (error || !data?.session?.user) {
     console.warn('[AFTERLIFE] SSO verify:', error || 'sessão não criada');
