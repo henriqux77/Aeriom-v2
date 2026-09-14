@@ -4,6 +4,9 @@
   window.__afterlifeGlobalProfileBooted = true;
 
   const NEW_LOGO = 'https://i.ibb.co/BH2Hqr3P/file-00000000b47c820e88b788de23f77e3e.png';
+  const PORTAL_URL = 'https://kitlpowgcugvlxwhwhqv.supabase.co';
+  const PORTAL_KEY = 'sb_publishable_WDlPiR0b8T6mlQfYMbwjGg_BGvQPZDW';
+  const HANDOFF_KEY = 'afterlife_portal_handoff';
   const $ = (id) => document.getElementById(id);
   const initial = (name) => String(name || 'A').trim().charAt(0).toUpperCase() || 'A';
 
@@ -11,10 +14,10 @@
 
   function loadCss() {
     if (!document.querySelector('link[data-afterlife-profile-css]')) {
-      const link = document.createElement('link'); link.rel='stylesheet'; link.href='./css/afterlife-profile-global.css?v=20260914-25'; link.dataset.afterlifeProfileCss='1'; document.head.appendChild(link);
+      const link = document.createElement('link'); link.rel='stylesheet'; link.href='./css/afterlife-profile-global.css?v=20260914-26'; link.dataset.afterlifeProfileCss='1'; document.head.appendChild(link);
     }
     if (!document.querySelector('link[data-afterlife-sidebar-css]')) {
-      const link = document.createElement('link'); link.rel='stylesheet'; link.href='./css/afterlife-sidebar.css?v=20260914-25'; link.dataset.afterlifeSidebarCss='1'; document.head.appendChild(link);
+      const link = document.createElement('link'); link.rel='stylesheet'; link.href='./css/afterlife-sidebar.css?v=20260914-26'; link.dataset.afterlifeSidebarCss='1'; document.head.appendChild(link);
     }
   }
 
@@ -48,7 +51,7 @@
   function setProfile(name,avatarUrl,email){
     const display=name||'Sobrevivente';
     ['profileName','profileDropdownName','profileMenuName','afterlifeGlobalProfileName'].forEach((id)=>{const el=$(id);if(el)el.textContent=display});
-    ['profileDropdownEmail','profileMenuEmail','afterlifeGlobalProfileEmail'].forEach((id)=>{const el=$(id);if(el)el.textContent=email||'Conta Afterlife'});
+    ['profileDropdownEmail','profileMenuEmail','afterlifeGlobalProfileEmail'].forEach((id)=>{const el=$(id);if(el)el.textContent=email||'Conta'});
     setAvatar($('profileAvatar'),avatarUrl,display); setAvatar($('profileDropdownAvatar'),avatarUrl,display); setAvatar($('profileMenuAvatar'),avatarUrl,display); setAvatar($('afterlifeGlobalProfileAvatar'),avatarUrl,display);
   }
 
@@ -57,24 +60,59 @@
     let menu=$('afterlifeGlobalProfileMenu')||$('profileMenu')||$('profileDropdown');
     if(!menu){
       menu=document.createElement('div'); menu.id='afterlifeGlobalProfileMenu'; menu.className='afterlife-global-profile-menu';
-      menu.innerHTML=`<div class="afterlife-global-profile-head"><span class="afterlife-global-profile-avatar" id="afterlifeGlobalProfileAvatar">A</span><div><strong id="afterlifeGlobalProfileName">Sobrevivente</strong><small id="afterlifeGlobalProfileEmail">Conta Afterlife</small><span class="afterlife-global-profile-badge"><i></i> Conta Afterlife</span></div></div><div class="afterlife-global-profile-actions"><a href="./perfil.html">Editar perfil</a><a href="../index.html">Trocar sistema</a><button type="button" class="danger" id="afterlifeGlobalLogout">Sair da conta</button></div>`;
+      menu.innerHTML=`<div class="afterlife-global-profile-head"><span class="afterlife-global-profile-avatar" id="afterlifeGlobalProfileAvatar">A</span><div><strong id="afterlifeGlobalProfileName">Sobrevivente</strong><small id="afterlifeGlobalProfileEmail">Conta</small><span class="afterlife-global-profile-badge"><i></i> Perfil compartilhado</span></div></div><div class="afterlife-global-profile-actions"><a href="./perfil.html">Editar perfil</a><a href="../index.html">Trocar sistema</a><button type="button" class="danger" id="afterlifeGlobalLogout">Sair da conta</button></div>`;
       (wrap||document.querySelector('.top-actions')||document.body).appendChild(menu);
     }
     menu.classList.add('afterlife-global-profile-menu'); menu.hidden=true; menu.setAttribute('aria-hidden','true'); return {wrap,menu};
   }
 
-  async function getClient(){const mod=await import('./aeriom-client.js?v=20260914-25');return mod.aeriom;}
+  async function getClient(){const mod=await import('./aeriom-client.js?v=20260914-30');return mod.aeriom;}
+
+  async function getPortalProfileFallback(){
+    try{
+      const raw=localStorage.getItem(HANDOFF_KEY); if(!raw)return null;
+      const handoff=JSON.parse(raw);
+      if(!handoff?.access_token||!handoff?.refresh_token)return null;
+      if(handoff.created_at&&Date.now()-Number(handoff.created_at)>300000)return null;
+      const {createClient}=await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+      const portal=createClient(PORTAL_URL,PORTAL_KEY,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}});
+      const restored=await portal.auth.setSession({access_token:handoff.access_token,refresh_token:handoff.refresh_token});
+      if(restored.error||!restored.data?.session?.user)return null;
+      const portalUser=restored.data.session.user;
+      const {data,error}=await portal.from('profiles').select('id,display_name,avatar_path').eq('id',portalUser.id).maybeSingle();
+      if(error)throw error;
+      const profile=data||{};
+      const name=profile.display_name||portalUser.user_metadata?.display_name||portalUser.user_metadata?.full_name||portalUser.email?.split('@')[0]||'Sobrevivente';
+      let avatarUrl='';
+      if(profile.avatar_path){const signed=await portal.storage.from('avatars').createSignedUrl(profile.avatar_path,3600);avatarUrl=signed.data?.signedUrl||'';}
+      return {name,avatarUrl,email:portalUser.email||''};
+    }catch(error){console.warn('[AFTERLIFE] perfil compartilhado:',error);return null;}
+  }
 
   async function loadProfile(){
     try{
-      const sb=await getClient(); const {data:sessionData}=await sb.auth.getSession(); const user=sessionData?.session?.user||null;
-      if(!user){setProfile('Sobrevivente','','Faça login no AFTERLIFE');return;}
-      let name=user.user_metadata?.display_name||user.user_metadata?.full_name||user.email?.split('@')[0]||'Sobrevivente';
-      const {data,error}=await sb.from('profiles').select('id,display_name,avatar_path').eq('id',user.id).maybeSingle(); if(error)throw error;
-      const profile=data||{id:user.id,display_name:name,avatar_path:null}; if(data?.display_name)name=data.display_name; let avatarUrl='';
-      if(profile.avatar_path){const signed=await sb.storage.from('avatars').createSignedUrl(profile.avatar_path,3600);avatarUrl=signed.data?.signedUrl||'';}
-      setProfile(name,avatarUrl,user.email||'Conta Afterlife');
-    }catch(error){console.warn('[AFTERLIFE] perfil:',error);setProfile('Sobrevivente','','Conta Afterlife');}
+      const sb=await getClient();
+      const {data:sessionData}=await sb.auth.getSession();
+      const user=sessionData?.session?.user||null;
+      if(user){
+        let name=user.user_metadata?.display_name||user.user_metadata?.full_name||user.email?.split('@')[0]||'Sobrevivente';
+        const {data,error}=await sb.from('profiles').select('id,display_name,avatar_path').eq('id',user.id).maybeSingle();
+        if(error)throw error;
+        const profile=data||{};
+        if(profile.display_name)name=profile.display_name;
+        let avatarUrl='';
+        if(profile.avatar_path){const signed=await sb.storage.from('avatars').createSignedUrl(profile.avatar_path,3600);avatarUrl=signed.data?.signedUrl||'';}
+        setProfile(name,avatarUrl,user.email||'');
+        return;
+      }
+      const shared=await getPortalProfileFallback();
+      if(shared){setProfile(shared.name,shared.avatarUrl,shared.email);return;}
+      setProfile('Sobrevivente','','Faça login no portal');
+    }catch(error){
+      console.warn('[AFTERLIFE] perfil:',error);
+      const shared=await getPortalProfileFallback();
+      if(shared)setProfile(shared.name,shared.avatarUrl,shared.email);else setProfile('Sobrevivente','','Faça login no portal');
+    }
   }
 
   async function bootProfile(){
@@ -92,7 +130,7 @@
 
   async function boot(){
     loadCss(); applyBrandLogo(); startCombatAnimationGuard();
-    if(!isAfterlifeHome())try{await import('./afterlife-sidebar.js?v=20260914-25')}catch(error){console.warn('[AFTERLIFE] sidebar:',error)}
+    if(!isAfterlifeHome())try{await import('./afterlife-sidebar.js?v=20260914-30')}catch(error){console.warn('[AFTERLIFE] sidebar:',error)}
     await bootProfile();
   }
 
