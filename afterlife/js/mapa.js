@@ -30,7 +30,7 @@ function poiCoords(item){return [item.lat??item.center?.lat,item.lon??item.cente
 async function loadProfile(){
   try{
     const {createClient}=await import('https://esm.sh/@supabase/supabase-js@2');
-    const sb=createClient('https://kitlpowgcugvlxwhwhqv.supabase.co','sb_publishable_WDlPiR0b8T6mlQfYMbwjGg_BGvQPZDW',{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+    const sb=createClient('https://srmpaiawojkwlppoisns.supabase.co','sb_publishable_m3bleT4vqCFGeFOgnEfeZg_VpCxprmm',{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
     const {data}=await sb.auth.getSession(); const user=data?.session?.user; if(!user)return;
     const profile=await sb.from('profiles').select('display_name,avatar_path').eq('id',user.id).maybeSingle();
     const name=profile.data?.display_name||user.user_metadata?.display_name||user.user_metadata?.full_name||user.email?.split('@')[0]||'Sobrevivente';
