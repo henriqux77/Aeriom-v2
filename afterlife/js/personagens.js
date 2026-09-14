@@ -1,4 +1,4 @@
-import { aeriom } from './aeriom-client.js?v=20260913-2';
+import { aeriom } from './aeriom-client.js?v=20260913-3';
 
 (() => {
   'use strict';
@@ -73,7 +73,7 @@ import { aeriom } from './aeriom-client.js?v=20260913-2';
     const user = sessionData?.session?.user;
 
     if (!user) {
-      window.location.replace('./index.html');
+      window.location.replace('./entrar.html');
       return;
     }
 
