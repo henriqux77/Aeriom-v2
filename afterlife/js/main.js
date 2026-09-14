@@ -1,5 +1,6 @@
+import './error-monitor.js?v=20260914-1';
 import './profile-global.js?v=20260914-30';
-import './afterlife-sidebar.js?v=20260914-30';
+import './afterlife-sidebar.js?v=20260914-31';
 
 (() => {
   'use strict';
