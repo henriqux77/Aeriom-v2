@@ -19,6 +19,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
     style.id = 'afterlife-shared-profile-presentation-fix';
     style.textContent = `
       .profile-chip{display:flex!important;align-items:center!important;visibility:visible!important}
+      .afterlife-profile-dropdown:not([hidden]),.afterlife-profile-menu:not([hidden]),.afterlife-account-menu:not([hidden]),.afterlife-global-profile-menu:not([hidden]){display:block!important;visibility:visible!important}
       .profile-avatar,.afterlife-global-profile-avatar,.afterlife-profile-avatar,.profile-dropdown-head .profile-avatar,.afterlife-account-avatar{position:relative!important;overflow:hidden!important;display:grid!important;place-items:center!important;border-radius:50%!important}
       .profile-avatar img,.afterlife-global-profile-avatar img,.afterlife-profile-avatar img,.profile-dropdown-head .profile-avatar img,.afterlife-account-avatar img{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;max-width:none!important;max-height:none!important;object-fit:cover!important;object-position:center!important;border-radius:50%!important;display:block!important}
       .afterlife-profile-dropdown .profile-avatar--large,.afterlife-profile-dropdown .profile-dropdown-head .profile-avatar--large{width:56px!important;height:56px!important;min-width:56px!important;min-height:56px!important;border-radius:50%!important}
@@ -29,8 +30,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
   }
 
   function setAvatar(el, url, name, large = false) {
-    if (!el) return;
-    if (syncing) return;
+    if (!el || syncing) return;
     syncing = true;
     try {
       el.replaceChildren();
@@ -48,6 +48,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
         img.style.objectFit = 'cover';
         img.style.objectPosition = 'center';
         img.onerror = () => {
+          el.dataset.sharedAvatarFailed = '1';
           el.replaceChildren();
           el.textContent = initials(name);
         };
@@ -77,7 +78,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
   }
 
   function avatarNeedsRepair(el) {
-    if (!el || !sharedState.avatarUrl) return false;
+    if (!el || !sharedState.avatarUrl || el.dataset.sharedAvatarFailed === '1') return false;
     const img = el.querySelector('img');
     return !img || img.src !== sharedState.avatarUrl;
   }
