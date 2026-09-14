@@ -10,6 +10,8 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
   const HANDOFF_KEY = 'afterlife_portal_handoff';
   const $ = (id) => document.getElementById(id);
   const initials = (name) => String(name || 'Sobrevivente').trim().charAt(0).toUpperCase() || 'S';
+  let sharedState = { name: '', avatarUrl: '', email: '' };
+  let syncing = false;
 
   function injectProfilePresentationFix() {
     if (document.getElementById('afterlife-shared-profile-presentation-fix')) return;
@@ -28,31 +30,38 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
   function setAvatar(el, url, name, large = false) {
     if (!el) return;
-    el.replaceChildren();
-    if (!url) {
-      el.textContent = initials(name);
-      return;
-    }
-    const img = document.createElement('img');
-    img.src = url;
-    img.alt = '';
-    img.referrerPolicy = 'no-referrer';
-    img.loading = 'eager';
-    img.decoding = 'async';
-    img.style.width = '100%';
-    img.style.height = '100%';
-    img.style.objectFit = 'cover';
-    img.style.objectPosition = 'center';
-    img.onerror = () => {
+    if (syncing) return;
+    syncing = true;
+    try {
       el.replaceChildren();
-      el.textContent = initials(name);
-    };
-    el.appendChild(img);
-    if (large) el.style.borderRadius = '50%';
+      if (!url) {
+        el.textContent = initials(name);
+      } else {
+        const img = document.createElement('img');
+        img.src = url;
+        img.alt = '';
+        img.referrerPolicy = 'no-referrer';
+        img.loading = 'eager';
+        img.decoding = 'async';
+        img.style.width = '100%';
+        img.style.height = '100%';
+        img.style.objectFit = 'cover';
+        img.style.objectPosition = 'center';
+        img.onerror = () => {
+          el.replaceChildren();
+          el.textContent = initials(name);
+        };
+        el.appendChild(img);
+      }
+      if (large) el.style.borderRadius = '50%';
+    } finally {
+      syncing = false;
+    }
   }
 
   function setProfile(name, avatarUrl, email) {
     const display = name || 'Sobrevivente';
+    sharedState = { name: display, avatarUrl: avatarUrl || '', email: email || '' };
     ['profileName', 'profileDropdownName', 'profileMenuName', 'afterlifeGlobalProfileName'].forEach((id) => {
       const el = $(id);
       if (el) el.textContent = display;
@@ -65,6 +74,25 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
     setAvatar($('profileDropdownAvatar'), avatarUrl, display, true);
     setAvatar($('profileMenuAvatar'), avatarUrl, display, true);
     setAvatar($('afterlifeGlobalProfileAvatar'), avatarUrl, display, true);
+  }
+
+  function avatarNeedsRepair(el) {
+    if (!el || !sharedState.avatarUrl) return false;
+    const img = el.querySelector('img');
+    return !img || img.src !== sharedState.avatarUrl;
+  }
+
+  function startAvatarGuard() {
+    const observer = new MutationObserver(() => {
+      if (syncing || !sharedState.avatarUrl) return;
+      const targets = [
+        $('profileAvatar'), $('profileDropdownAvatar'), $('profileMenuAvatar'), $('afterlifeGlobalProfileAvatar')
+      ].filter(Boolean);
+      targets.forEach((target) => {
+        if (avatarNeedsRepair(target)) setAvatar(target, sharedState.avatarUrl, sharedState.name, target.id !== 'profileAvatar');
+      });
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
   }
 
   async function portalProfile() {
@@ -146,12 +174,11 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
   async function boot() {
     injectProfilePresentationFix();
+    startAvatarGuard();
     bindDropdown();
     try {
       const shared = await portalProfile();
-      if (shared) {
-        setProfile(shared.name, shared.avatarUrl, shared.email);
-      }
+      if (shared) setProfile(shared.name, shared.avatarUrl, shared.email);
     } catch (error) {
       console.warn('[AFTERLIFE] perfil compartilhado:', error);
     }
