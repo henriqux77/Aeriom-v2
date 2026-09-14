@@ -1,4 +1,4 @@
-import { aeriom, afterlifeReady } from './aeriom-client.js?v=20260914-24';
+import { aeriom, afterlifeReady } from './aeriom-client.js?v=20260914-25';
 
 (() => {
   'use strict';
