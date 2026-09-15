@@ -1,6 +1,6 @@
-import './error-monitor.js?v=20260915-5';
-import './aeriom-client.js?v=20260915-5';
-import './shared-profile.js?v=20260915-5';
+import './error-monitor.js?v=20260915-6';
+import './aeriom-client.js?v=20260915-6';
+import './shared-profile.js?v=20260915-6';
 
 (() => {
   'use strict';
