@@ -20,11 +20,7 @@ export const afterlife = aeriom;
 let ensurePromise = null;
 
 function parse(raw) {
-  try {
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
-  }
+  try { return raw ? JSON.parse(raw) : null; } catch { return null; }
 }
 
 function portalCandidates() {
@@ -37,27 +33,19 @@ function portalCandidates() {
 async function validatePortal(accessToken) {
   try {
     const response = await fetch(`${PORTAL_URL}/auth/v1/user`, {
-      headers: {
-        apikey: PORTAL_KEY,
-        Authorization: `Bearer ${accessToken}`,
-      },
+      headers: { apikey: PORTAL_KEY, Authorization: `Bearer ${accessToken}` },
       cache: 'no-store',
     });
     if (!response.ok) return null;
     return await response.json();
-  } catch {
-    return null;
-  }
+  } catch { return null; }
 }
 
 async function refreshPortal(refreshToken) {
   try {
     const response = await fetch(`${PORTAL_URL}/auth/v1/token?grant_type=refresh_token`, {
       method: 'POST',
-      headers: {
-        apikey: PORTAL_KEY,
-        'Content-Type': 'application/json',
-      },
+      headers: { apikey: PORTAL_KEY, 'Content-Type': 'application/json' },
       body: JSON.stringify({ refresh_token: refreshToken }),
       cache: 'no-store',
     });
@@ -67,12 +55,13 @@ async function refreshPortal(refreshToken) {
     localStorage.setItem(HANDOFF_KEY, JSON.stringify({
       access_token: payload.access_token,
       refresh_token: payload.refresh_token,
+      expires_at: Math.floor(Date.now() / 1000) + Number(payload.expires_in || 3600),
+      email: payload.user?.email || null,
+      user_id: payload.user?.id || null,
       created_at: Date.now(),
     }));
     return payload;
-  } catch {
-    return null;
-  }
+  } catch { return null; }
 }
 
 async function getPortalAccess() {
@@ -154,8 +143,8 @@ export async function ensureAfterlifeSession() {
       console.warn('[AFTERLIFE][AUTH]', error?.message || error);
       return null;
     })
-    .finally(() => {
-      ensurePromise = null;
-    });
+    .finally(() => { ensurePromise = null; });
   return ensurePromise;
 }
+
+export const afterlifeReady = ensureAfterlifeSession();
