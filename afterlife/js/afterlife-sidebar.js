@@ -1,5 +1,5 @@
 import './error-monitor.js?v=20260915-7';
-import './aeriom-client.js?v=20260915-7';
+import './aeriom-client-v2.js?v=1';
 import './shared-profile.js?v=20260915-7';
 import './auth-guard.js?v=20260915-1';
 
