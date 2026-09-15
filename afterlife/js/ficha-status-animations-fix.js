@@ -1,4 +1,34 @@
 (() => {
+  const path = location.pathname;
+  if (!path.endsWith('/ficha-criacao.html')) return;
+
+  document.documentElement.dataset.afterlifeAuth = 'pending';
+  document.documentElement.style.visibility = 'hidden';
+
+  const redirect = () => {
+    const url = new URL('./entrar.html', `${location.origin}${path.substring(0, path.lastIndexOf('/') + 1)}`);
+    url.searchParams.set('returnTo', `${location.pathname}${location.search}${location.hash}`);
+    location.replace(url.href);
+  };
+
+  import('./aeriom-client-v2.js?v=1')
+    .then(({ ensureAfterlifeSession }) => ensureAfterlifeSession())
+    .then((session) => {
+      if (!session?.user) {
+        document.documentElement.dataset.afterlifeAuth = 'denied';
+        redirect();
+        return;
+      }
+      document.documentElement.dataset.afterlifeAuth = 'ok';
+      document.documentElement.style.visibility = 'visible';
+    })
+    .catch(() => {
+      document.documentElement.dataset.afterlifeAuth = 'denied';
+      redirect();
+    });
+})();
+
+(() => {
   'use strict';
   if (!document.body.classList.contains('character-builder')) return;
 
