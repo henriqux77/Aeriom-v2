@@ -40,6 +40,15 @@
     document.title = 'AFTERLIFE — ' + c.name;
   }
 
+  function ensureCampaignProfileVisibility() {
+    if (!document.getElementById('afterlife-campaign-profile-visibility')) {
+      const style = document.createElement('style');
+      style.id = 'afterlife-campaign-profile-visibility';
+      style.textContent = 'body.afterlife-campaign-page .profile-chip{display:flex!important;visibility:visible!important} body.afterlife-campaign-page .afterlife-global-profile-menu:not([hidden]){display:block!important;visibility:visible!important}';
+      document.head.appendChild(style);
+    }
+  }
+
   function bindWheel() {
     const wheel = $('nuclearWheel');
     const center = $('nuclearCenter');
@@ -77,6 +86,7 @@
   }
 
   function boot() {
+    ensureCampaignProfileVisibility();
     const campaign = getCampaign();
     applyCampaign(campaign);
     bindWheel();
