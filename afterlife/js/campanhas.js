@@ -1,6 +1,6 @@
-import './error-monitor.js?v=20260915-5';
-import { aeriom, ensureAfterlifeSession } from './aeriom-client.js?v=20260915-5';
-import './afterlife-sidebar.js?v=20260915-5';
+import './error-monitor.js?v=20260915-6';
+import { aeriom, ensureAfterlifeSession } from './aeriom-client.js?v=20260915-6';
+import './afterlife-sidebar.js?v=20260915-6';
 
 (() => {
   'use strict';
@@ -38,9 +38,9 @@ import './afterlife-sidebar.js?v=20260915-5';
     list.replaceChildren(); empty.style.display = rows.length ? 'none' : 'block';
     rows.forEach((campaign) => {
       const coords = Number.isFinite(Number(campaign.latitude)) && Number.isFinite(Number(campaign.longitude)) ? `${Number(campaign.latitude).toFixed(3)}, ${Number(campaign.longitude).toFixed(3)}` : '';
-      const media = campaign.imageUrl ? `<div class="campaign-item__image"><img src="${escapeHtml(campaign.imageUrl)}" alt=""></div>` : '<div class="campaign-item__image campaign-item__image--empty">AFTERLIFE</div>';
+      const media = campaign.imageUrl ? `<div class=\"campaign-item__image\"><img src=\"${escapeHtml(campaign.imageUrl)}\" alt=\"\"></div>` : '<div class=\"campaign-item__image campaign-item__image--empty\">AFTERLIFE</div>';
       const article = document.createElement('article'); article.className = 'campaign-item';
-      article.innerHTML = `${media}<div class="campaign-item__content"><div><div class="campaign-item__top"><h3>${escapeHtml(campaign.name)}</h3><span class="panel-count">${escapeHtml(campaign.tone || 'Realista')}</span></div><p>${escapeHtml(campaign.description || 'Sem descrição.')}</p><div class="campaign-item__meta"><span>🌎 ${escapeHtml(campaign.country || 'Local definido no mapa')}</span>${coords ? `<span>⌖ ${coords}</span>` : ''}<span>👤 1 Mestre</span></div></div><div class="campaign-item__actions"><button class="btn btn--primary" data-open="${escapeHtml(campaign.id)}">ABRIR →</button><button class="btn btn--ghost" data-delete="${escapeHtml(campaign.id)}">EXCLUIR</button></div></div>`;
+      article.innerHTML = `${media}<div class=\"campaign-item__content\"><div><div class=\"campaign-item__top\"><h3>${escapeHtml(campaign.name)}</h3><span class=\"panel-count\">${escapeHtml(campaign.tone || 'Realista')}</span></div><p>${escapeHtml(campaign.description || 'Sem descrição.')}</p><div class=\"campaign-item__meta\"><span>🌎 ${escapeHtml(campaign.country || 'Local definido no mapa')}</span>${coords ? `<span>⌖ ${coords}</span>` : ''}<span>👤 1 Mestre</span></div></div><div class=\"campaign-item__actions\"><button class=\"btn btn--primary\" data-open=\"${escapeHtml(campaign.id)}\">ABRIR →</button><button class=\"btn btn--ghost\" data-delete=\"${escapeHtml(campaign.id)}\">EXCLUIR</button></div></div>`;
       list.appendChild(article);
     });
   }
