@@ -1,3 +1,5 @@
+import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260915-3';
+
 const $ = id => document.getElementById(id);
 let marker = null;
 let poiMarkers = [];
@@ -22,21 +24,20 @@ out:json][timeout:18];
 out center tags;`;
 
 function initial(name){return String(name||'S').trim().charAt(0).toUpperCase()||'?';}
-function escapeHtml(value){return String(value??'').replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function escapeHtml(value){return String(value??'').replace(/[&<>\\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 function poiType(tags){return tags?.shop?'Comércio':tags?.amenity==='restaurant'?'Restaurante':tags?.amenity==='cafe'?'Café':tags?.amenity==='pharmacy'?'Farmácia':tags?.amenity==='fuel'?'Posto':tags?.amenity?'Serviço':tags?.tourism?'Turismo':tags?.craft?'Ofício':'Ponto de interesse';}
 function poiName(tags){return tags?.name||tags?.brand||tags?.operator||poiType(tags);}
 function poiCoords(item){return [item.lat??item.center?.lat,item.lon??item.center?.lon];}
 
 async function loadProfile(){
   try{
-    const {createClient}=await import('https://esm.sh/@supabase/supabase-js@2');
-    const sb=createClient('https://srmpaiawojkwlppoisns.supabase.co','sb_publishable_m3bleT4vqCFGeFOgnEfeZg_VpCxprmm',{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
-    const {data}=await sb.auth.getSession(); const user=data?.session?.user; if(!user)return;
-    const profile=await sb.from('profiles').select('display_name,avatar_path').eq('id',user.id).maybeSingle();
-    const name=profile.data?.display_name||user.user_metadata?.display_name||user.user_metadata?.full_name||user.email?.split('@')[0]||'Sobrevivente';
+    const session=await ensureAfterlifeSession();
+    const user=session?.user;if(!user)return;
+    const {data}=await aeriom.from('profiles').select('display_name,avatar_path').eq('id',user.id).maybeSingle();
+    const name=data?.display_name||user.user_metadata?.display_name||user.user_metadata?.full_name||user.email?.split('@')[0]||'Sobrevivente';
     $('profileName')?.replaceChildren(document.createTextNode(name));
     const box=$('profileAvatar');if(!box)return;box.replaceChildren();
-    if(profile.data?.avatar_path){const signed=await sb.storage.from('avatars').createSignedUrl(profile.data.avatar_path,3600);if(!signed.error&&signed.data?.signedUrl){const img=document.createElement('img');img.src=signed.data.signedUrl;img.alt='';img.referrerPolicy='no-referrer';img.onerror=()=>box.textContent=initial(name);box.appendChild(img);return;}}
+    if(data?.avatar_path){const signed=await aeriom.storage.from('avatars').createSignedUrl(data.avatar_path,3600);if(!signed.error&&signed.data?.signedUrl){const img=document.createElement('img');img.src=signed.data.signedUrl;img.alt='';img.referrerPolicy='no-referrer';img.onerror=()=>box.textContent=initial(name);box.appendChild(img);return;}}
     box.textContent=initial(name);
   }catch(e){console.warn('[AFTERLIFE][MAP] perfil',e);}
 }
