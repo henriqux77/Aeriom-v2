@@ -1,22 +1,18 @@
-import { ensureAfterlifeSession } from './aeriom-client.js?v=20260915-7';
+import { ensureAfterlifeSession } from './aeriom-client-v2.js?v=1';
 
-const PUBLIC_PATHS = new Set(['/Aeriom-v2/afterlife/entrar.html']);
 const path = location.pathname;
-
-function isPublicPath() {
-  return PUBLIC_PATHS.has(path) || path.endsWith('/entrar.html');
-}
+const publicPath = path.endsWith('/entrar.html');
 
 function loginUrl() {
-  const url = new URL('./entrar.html', `${location.origin}${path.substring(0, path.lastIndexOf('/') + 1)}`);
-  const returnTo = `${location.pathname}${location.search}${location.hash}`;
-  url.searchParams.set('returnTo', returnTo);
+  const base = `${location.origin}${path.substring(0, path.lastIndexOf('/') + 1)}`;
+  const url = new URL('./entrar.html', base);
+  url.searchParams.set('returnTo', `${location.pathname}${location.search}${location.hash}`);
   return url.href;
 }
 
-if (!isPublicPath()) {
+if (!publicPath) {
   document.documentElement.dataset.afterlifeAuth = 'pending';
-  window.__afterlifeAuthReady = ensureAfterlifeSession({ redirect: false }).then((session) => {
+  window.__afterlifeAuthReady = ensureAfterlifeSession().then((session) => {
     if (!session?.user) {
       document.documentElement.dataset.afterlifeAuth = 'denied';
       location.replace(loginUrl());
@@ -24,9 +20,5 @@ if (!isPublicPath()) {
     }
     document.documentElement.dataset.afterlifeAuth = 'ok';
     return session;
-  }).catch(() => {
-    document.documentElement.dataset.afterlifeAuth = 'denied';
-    location.replace(loginUrl());
-    return null;
   });
 }
