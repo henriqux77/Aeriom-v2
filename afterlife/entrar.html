@@ -4,11 +4,11 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#050807">
-  <title>AFTERLIFE — Continuando</title>
+  <title>AFTERLIFE — Acesso</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/afterlife.css?v=20260914-22">
+  <link rel="stylesheet" href="./css/afterlife.css?v=20260915-3">
   <style>
     body{min-height:100dvh;display:grid;place-items:center;background:#050807;color:#edf4ef;font-family:Inter,system-ui,sans-serif}.bridge{width:min(520px,calc(100% - 28px));padding:32px;border:1px solid rgba(127,160,145,.18);border-radius:18px;background:linear-gradient(180deg,#0b1712,#07100c);box-shadow:0 30px 90px rgba(0,0,0,.45);text-align:center}.bridge img{width:min(240px,70%);height:auto;margin:0 auto 24px;display:block}.bridge__eyebrow{color:#39f58a;font-size:10px;font-weight:900;letter-spacing:2px}.bridge h1{margin:10px 0 8px;font-size:26px}.bridge p{margin:0;color:#8f9d96;font-size:12px;line-height:1.6}.bridge a{display:inline-flex;align-items:center;justify-content:center;min-height:44px;margin-top:22px;padding:0 18px;border:1px solid rgba(57,245,138,.35);border-radius:10px;color:#07120c;background:linear-gradient(180deg,#49ff9a,#27d475);font-weight:900;text-decoration:none}
   </style>
@@ -17,14 +17,26 @@
   <main class="bridge">
     <img src="https://i.ibb.co/BH2Hqr3P/file-00000000b47c820e88b788de23f77e3e.png" alt="AFTERLIFE">
     <div class="bridge__eyebrow">PORTAL CENTRAL</div>
-    <h1>Continuando para o Afterlife…</h1>
-    <p>O acesso agora acontece pelo portal central. Você não precisa fazer um segundo login para entrar no sistema.</p>
-    <a href="../index.html">Voltar ao portal</a>
+    <h1>Preparando seu acesso…</h1>
+    <p>O acesso do Afterlife é feito pelo Portal Central. Vamos manter o destino solicitado e evitar redirecionamentos em loop.</p>
+    <a id="portalLink" href="../index.html?afterlife=1">Ir para o Portal Central</a>
   </main>
-  <script>
+  <script type="module">
+    const AFTERLIFE_BASE='/Aeriom-v2/afterlife/';
     const qs=new URLSearchParams(location.search);
-    const hasCode=qs.has('code')||qs.has('invite');
-    if(!hasCode) setTimeout(()=>location.replace('../index.html'),450);
+    let target=`${AFTERLIFE_BASE}index.html`;
+    const raw=qs.get('returnTo');
+    try{
+      if(raw){
+        const u=new URL(raw,location.origin);
+        if(u.origin===location.origin&&u.pathname.startsWith(AFTERLIFE_BASE)&&!u.pathname.endsWith('/entrar.html')) target=`${u.pathname}${u.search}${u.hash}`;
+      }
+    }catch{}
+    const portal=new URL('../index.html',location.href);
+    portal.searchParams.set('afterlife','1');
+    portal.searchParams.set('returnTo',target);
+    document.getElementById('portalLink').href=portal.href;
+    setTimeout(()=>location.replace(portal.href),250);
   </script>
 </body>
 </html>
