@@ -1,23 +1,25 @@
-import './error-monitor.js?v=20260915-2';
-import { aeriom, ensureAfterlifeSession } from './aeriom-client.js?v=20260915-2';
-import './afterlife-sidebar.js?v=20260915-2';
-import './shared-profile.js?v=20260915-2';
+import './error-monitor.js?v=20260915-8';
+import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260915-5';
+import './afterlife-sidebar.js?v=20260915-5';
+import './shared-profile.js?v=20260915-5';
+import './invites.js?v=20260915-2';
+import './members-presence.js?v=20260915-1';
 
 (() => {
   'use strict';
 
   const BUCKET = 'campaign-covers';
   const $ = (id) => document.getElementById(id);
-
   const escapeCssUrl = (url) => String(url || '').replace(/(["\\)])/g, '\\$1');
 
   async function loadCampaign() {
-    await ensureAfterlifeSession();
-    const { data: sessionData } = await aeriom.auth.getSession();
-    const user = sessionData?.session?.user;
+    const session = await ensureAfterlifeSession();
+    const user = session?.user;
     if (!user) {
       const portal = new URL('../index.html', location.href);
-      location.replace(`${portal.pathname}?return=afterlife`);
+      portal.searchParams.set('afterlife', '1');
+      portal.searchParams.set('returnTo', `${location.pathname}${location.search}${location.hash}`);
+      location.replace(portal.href);
       throw new Error('Sessão Afterlife não encontrada.');
     }
 
@@ -42,8 +44,8 @@ import './shared-profile.js?v=20260915-2';
 
     let coverUrl = '';
     if (data.cover_path) {
-      const { data: publicData } = aeriom.storage.from(BUCKET).getPublicUrl(data.cover_path);
-      coverUrl = publicData?.publicUrl || '';
+      const { data: signed } = await aeriom.storage.from(BUCKET).createSignedUrl(data.cover_path, 3600);
+      coverUrl = signed?.signedUrl || '';
     }
 
     return { ...data, imageUrl: coverUrl, isOwner: data.created_by === user.id };
@@ -89,9 +91,8 @@ import './shared-profile.js?v=20260915-2';
     wheel.querySelectorAll('[data-target]').forEach((btn) => btn.addEventListener('click', () => {
       const target = btn.dataset.target;
       if (!target) return;
-      if (target.startsWith('./') || target.startsWith('../')) {
-        location.href = target;
-      } else {
+      if (target.startsWith('./') || target.startsWith('../')) location.href = target;
+      else {
         document.querySelector(target)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
         wheel.classList.remove('is-open');
       }
@@ -108,8 +109,6 @@ import './shared-profile.js?v=20260915-2';
     document.querySelectorAll('[data-jump]').forEach((btn) => btn.addEventListener('click', () => {
       document.querySelector(btn.dataset.jump)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }));
-    $('inviteMember')?.addEventListener('click', () => navigator.clipboard?.writeText(location.href));
-    $('inviteMemberCard')?.addEventListener('click', () => navigator.clipboard?.writeText(location.href));
     $('manageCampaign')?.addEventListener('click', () => {
       if (typeof window.openCampaignManager === 'function') window.openCampaignManager();
       else alert('Controles da campanha em preparação.');
