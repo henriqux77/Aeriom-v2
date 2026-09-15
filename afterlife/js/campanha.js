@@ -1,98 +1,145 @@
+import './error-monitor.js?v=20260915-2';
+import { aeriom, ensureAfterlifeSession } from './aeriom-client.js?v=20260915-2';
+import './afterlife-sidebar.js?v=20260915-2';
+import './shared-profile.js?v=20260915-2';
+
 (() => {
   'use strict';
-  const KEY_PREFIX = 'afterlife_campaigns_v1_';
-  const HANDOFF_KEY = 'afterlife_portal_handoff';
+
+  const BUCKET = 'campaign-covers';
   const $ = (id) => document.getElementById(id);
-  const esc = (v) => String(v ?? '').replace(/[&<>\"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[c]));
 
-  function getCampaigns() {
-    try {
-      const handoff = JSON.parse(localStorage.getItem(HANDOFF_KEY) || 'null');
-      const userId = handoff?.user_id || 'anonymous';
-      return JSON.parse(localStorage.getItem(KEY_PREFIX + userId) || '[]');
-    } catch { return []; }
-  }
+  const escapeCssUrl = (url) => String(url || '').replace(/(["\\)])/g, '\\$1');
 
-  function getCampaign() {
-    const qs = new URLSearchParams(location.search);
-    const id = qs.get('id') || qs.get('campaign') || qs.get('selected');
-    const rows = getCampaigns();
-    return rows.find(row => String(row.id) === String(id)) || rows[0] || {
-      id:'demo', name:'Nova Campanha', description:'Uma campanha pronta para receber a sua história.', tone:'Realista', scale:'world', latitude:null, longitude:null, locationName:'Local inicial não definido', imageData:''
-    };
-  }
-
-  function applyCampaign(c) {
-    $('campaignCrumb').textContent = c.name;
-    $('campaignTitle').textContent = c.name;
-    $('campaignDescription').textContent = c.description || 'A história da sua campanha começa aqui.';
-    $('campaignMaster').textContent = 'Você';
-    $('campaignMembersCount').textContent = c.membersCount || 1;
-    $('membersPanelCount').textContent = '(' + (c.membersCount || 1) + ')';
-    $('campaignScaleLabel').textContent = c.scale === 'local' ? 'Local' : c.scale === 'city' ? 'Cidade' : c.scale === 'regional' ? 'Regional' : 'Mundo aberto';
-    $('campaignLocation').textContent = c.locationName || 'Local inicial não definido';
-    const coords = Number.isFinite(Number(c.latitude)) && Number.isFinite(Number(c.longitude)) ? Number(c.latitude).toFixed(5) + '°, ' + Number(c.longitude).toFixed(5) + '°' : 'Escolha um ponto no mapa mundial.';
-    $('campaignCoordinates').textContent = coords;
-    const hero = $('campaignHeroImage');
-    const world = $('worldPreviewImage');
-    if (hero) hero.style.backgroundImage = c.imageData ? 'url("' + esc(c.imageData) + '")' : '';
-    if (world && c.imageData) world.style.backgroundImage = 'url("' + esc(c.imageData) + '")';
-    document.title = 'AFTERLIFE — ' + c.name;
-  }
-
-  function ensureCampaignProfileVisibility() {
-    if (!document.getElementById('afterlife-campaign-profile-visibility')) {
-      const style = document.createElement('style');
-      style.id = 'afterlife-campaign-profile-visibility';
-      style.textContent = 'body.afterlife-campaign-page .profile-chip{display:flex!important;visibility:visible!important} body.afterlife-campaign-page .afterlife-global-profile-menu:not([hidden]){display:block!important;visibility:visible!important} @media(max-width:900px){.afterlife-campaign-page .nuclear-wheel{display:block;right:10px;top:auto;bottom:12px;width:190px;height:190px;transform:scale(.9);transform-origin:right bottom}.afterlife-campaign-page .nuclear-wheel:before{inset:22px}.afterlife-campaign-page .nuclear-wheel:after{inset:49px}.afterlife-campaign-page .nuclear-center{width:62px;height:62px;font-size:29px}.afterlife-campaign-page .nuclear-item{width:54px;height:54px;font-size:8px}.afterlife-campaign-page .nuclear-item span{font-size:14px}.afterlife-campaign-page .n1{left:68px;top:0}.afterlife-campaign-page .n2{right:0;top:42px}.afterlife-campaign-page .n3{right:0;bottom:42px}.afterlife-campaign-page .n4{left:68px;bottom:0}.afterlife-campaign-page .n5{left:0;bottom:42px}.afterlife-campaign-page .n6{left:0;top:42px}} @media(max-width:620px){.afterlife-campaign-page .nuclear-wheel{right:6px;bottom:8px;transform:scale(.78)}.afterlife-campaign-page .campaign-hero{padding-right:8px}}';
-      document.head.appendChild(style);
+  async function loadCampaign() {
+    await ensureAfterlifeSession();
+    const { data: sessionData } = await aeriom.auth.getSession();
+    const user = sessionData?.session?.user;
+    if (!user) {
+      const portal = new URL('../index.html', location.href);
+      location.replace(`${portal.pathname}?return=afterlife`);
+      throw new Error('Sessão Afterlife não encontrada.');
     }
+
+    const qs = new URLSearchParams(location.search);
+    const id = qs.get('campaign') || qs.get('id') || qs.get('selected');
+    if (!id) {
+      location.replace('./campanhas.html');
+      throw new Error('ID da campanha não informado.');
+    }
+
+    const { data, error } = await aeriom
+      .from('campaigns')
+      .select('id,created_by,name,description,country,tone,scale,latitude,longitude,cover_path,created_at,updated_at')
+      .eq('id', id)
+      .maybeSingle();
+
+    if (error) throw error;
+    if (!data) {
+      location.replace('./campanhas.html');
+      throw new Error('Campanha não encontrada ou sem permissão.');
+    }
+
+    let coverUrl = '';
+    if (data.cover_path) {
+      const { data: publicData } = aeriom.storage.from(BUCKET).getPublicUrl(data.cover_path);
+      coverUrl = publicData?.publicUrl || '';
+    }
+
+    return { ...data, imageUrl: coverUrl, isOwner: data.created_by === user.id };
+  }
+
+  function applyCampaign(campaign) {
+    $('campaignCrumb') && ($('campaignCrumb').textContent = campaign.name);
+    $('campaignTitle') && ($('campaignTitle').textContent = campaign.name);
+    $('campaignDescription') && ($('campaignDescription').textContent = campaign.description || '');
+    $('campaignMaster') && ($('campaignMaster').textContent = campaign.isOwner ? 'Você' : 'Mestre');
+    $('campaignMembersCount') && ($('campaignMembersCount').textContent = '1');
+    $('membersPanelCount') && ($('membersPanelCount').textContent = '(1)');
+
+    const scaleLabel = campaign.scale === 'local' ? 'Local' : campaign.scale === 'city' ? 'Cidade' : campaign.scale === 'regional' ? 'Regional' : 'Mundo aberto';
+    $('campaignScaleLabel') && ($('campaignScaleLabel').textContent = scaleLabel);
+    $('campaignLocation') && ($('campaignLocation').textContent = campaign.country || 'Local inicial');
+
+    const coords = Number.isFinite(Number(campaign.latitude)) && Number.isFinite(Number(campaign.longitude))
+      ? `${Number(campaign.latitude).toFixed(5)}°, ${Number(campaign.longitude).toFixed(5)}°`
+      : 'Local não definido.';
+    $('campaignCoordinates') && ($('campaignCoordinates').textContent = coords);
+
+    if (campaign.imageUrl) {
+      const hero = $('campaignHeroImage');
+      const world = $('worldPreviewImage');
+      if (hero) hero.style.backgroundImage = `url("${escapeCssUrl(campaign.imageUrl)}")`;
+      if (world) world.style.backgroundImage = `url("${escapeCssUrl(campaign.imageUrl)}")`;
+    }
+
+    document.title = `AFTERLIFE — ${campaign.name}`;
   }
 
   function bindWheel() {
     const wheel = $('nuclearWheel');
     const center = $('nuclearCenter');
-    if (!wheel || !center) return;
-    center.addEventListener('click', e => {
-      e.stopPropagation();
+    if (!wheel || !center || wheel.dataset.bound === '1') return;
+    wheel.dataset.bound = '1';
+    center.addEventListener('click', (event) => {
+      event.stopPropagation();
       wheel.classList.toggle('is-open');
       wheel.setAttribute('aria-expanded', String(wheel.classList.contains('is-open')));
     });
-    wheel.querySelectorAll('[data-target]').forEach(btn => btn.addEventListener('click', () => {
+    wheel.querySelectorAll('[data-target]').forEach((btn) => btn.addEventListener('click', () => {
       const target = btn.dataset.target;
       if (!target) return;
-      if (target.startsWith('./') || target.startsWith('../')) location.href = target;
-      else { document.querySelector(target)?.scrollIntoView({behavior:'smooth', block:'start'}); wheel.classList.remove('is-open'); }
+      if (target.startsWith('./') || target.startsWith('../')) {
+        location.href = target;
+      } else {
+        document.querySelector(target)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        wheel.classList.remove('is-open');
+      }
     }));
-    document.addEventListener('click', e => { if (!wheel.contains(e.target)) wheel.classList.remove('is-open'); });
+    document.addEventListener('click', (event) => {
+      if (!wheel.contains(event.target)) {
+        wheel.classList.remove('is-open');
+        wheel.setAttribute('aria-expanded', 'false');
+      }
+    });
   }
 
   function bindQuickLinks() {
-    document.querySelectorAll('[data-jump]').forEach(btn => btn.addEventListener('click', () => document.querySelector(btn.dataset.jump)?.scrollIntoView({behavior:'smooth',block:'start'})));
-    $('inviteMember')?.addEventListener('click', invite);
-    $('inviteMemberCard')?.addEventListener('click', invite);
-    $('manageCampaign')?.addEventListener('click', () => alert('Gerenciamento da campanha será conectado aos controles do mestre.'));
-    $('campaignMenuButton')?.addEventListener('click', () => alert('Opções da campanha.'));
-  }
-
-  function invite() {
-    const text = 'Convide jogadores pela área de campanha.';
-    if (navigator.clipboard?.writeText) navigator.clipboard.writeText(location.href).catch(()=>{});
-    alert(text + '\nO link desta campanha foi preparado para compartilhamento.');
+    document.querySelectorAll('[data-jump]').forEach((btn) => btn.addEventListener('click', () => {
+      document.querySelector(btn.dataset.jump)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }));
+    $('inviteMember')?.addEventListener('click', () => navigator.clipboard?.writeText(location.href));
+    $('inviteMemberCard')?.addEventListener('click', () => navigator.clipboard?.writeText(location.href));
+    $('manageCampaign')?.addEventListener('click', () => {
+      if (typeof window.openCampaignManager === 'function') window.openCampaignManager();
+      else alert('Controles da campanha em preparação.');
+    });
+    $('campaignMenuButton')?.addEventListener('click', () => {
+      document.querySelector('.campaign-actions-menu')?.classList.toggle('is-open');
+    });
   }
 
   function bindCampaignNavigation() {
-    document.querySelectorAll('.side-nav__item[href="#"]').forEach(link => link.addEventListener('click', e => e.preventDefault()));
+    document.querySelectorAll('.side-nav__item[href="#"]').forEach((link) => link.addEventListener('click', (event) => event.preventDefault()));
   }
 
-  function boot() {
-    ensureCampaignProfileVisibility();
-    const campaign = getCampaign();
-    applyCampaign(campaign);
-    bindWheel();
-    bindQuickLinks();
-    bindCampaignNavigation();
+  async function boot() {
+    try {
+      const campaign = await loadCampaign();
+      applyCampaign(campaign);
+      bindWheel();
+      bindQuickLinks();
+      bindCampaignNavigation();
+    } catch (error) {
+      console.error('[AFTERLIFE][CAMPAIGN]', error);
+      const message = $('campaignMessage');
+      if (message) {
+        message.textContent = error?.message || 'Não foi possível carregar a campanha.';
+        message.hidden = false;
+      }
+    }
   }
 
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, {once:true}); else boot();
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, { once: true });
+  else boot();
 })();
