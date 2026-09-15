@@ -5,6 +5,7 @@ const AFTERLIFE_KEY = 'sb_publishable_m3bleT4vqCFGeFOgnEfeZg_VpCxprmm';
 const PORTAL_URL = 'https://kitlpowgcugvlxwhwhqv.supabase.co';
 const PORTAL_KEY = 'sb_publishable_WDlPiR0b8T6mlQfYMbwjGg_BGvQPZDW';
 const HANDOFF_KEY = 'afterlife_portal_handoff';
+const PORTAL_STORAGE_KEY = 'sb-kitlpowgcugvlxwhwhqv-auth-token';
 const HANDOFF_MAX_AGE = 30 * 24 * 60 * 60 * 1000;
 
 export const aeriom = createClient(AFTERLIFE_URL, AFTERLIFE_KEY, {
@@ -16,16 +17,30 @@ const nativeGetSession = aeriom.auth.getSession.bind(aeriom.auth);
 const nativeGetUser = aeriom.auth.getUser.bind(aeriom.auth);
 let readyPromise;
 
-function readHandoff() {
+function parseStoredSession(key) {
   try {
-    const data = JSON.parse(localStorage.getItem(HANDOFF_KEY) || 'null');
+    const raw = localStorage.getItem(key);
+    if (!raw) return null;
+    const data = JSON.parse(raw);
     if (!data?.access_token || !data?.refresh_token) return null;
-    if (data.created_at && Date.now() - Number(data.created_at) > HANDOFF_MAX_AGE) {
-      localStorage.removeItem(HANDOFF_KEY);
-      return null;
-    }
     return data;
-  } catch { return null; }
+  } catch {
+    return null;
+  }
+}
+
+function readHandoff() {
+  const data = parseStoredSession(HANDOFF_KEY);
+  if (!data) return null;
+  if (data.created_at && Date.now() - Number(data.created_at) > HANDOFF_MAX_AGE) {
+    localStorage.removeItem(HANDOFF_KEY);
+    return null;
+  }
+  return data;
+}
+
+function readPortalStoredSession() {
+  return parseStoredSession(PORTAL_STORAGE_KEY);
 }
 
 function saveHandoff(session) {
@@ -49,7 +64,9 @@ async function validatePortalToken(accessToken) {
     });
     if (!response.ok) return null;
     return await response.json();
-  } catch { return null; }
+  } catch {
+    return null;
+  }
 }
 
 async function refreshPortalToken(refreshToken) {
@@ -71,31 +88,37 @@ async function refreshPortalToken(refreshToken) {
     };
     saveHandoff(session);
     return session;
-  } catch { return null; }
+  } catch {
+    return null;
+  }
 }
 
-async function getPortalAccessToken() {
-  const handoff = readHandoff();
-  if (!handoff) return null;
-  const user = await validatePortalToken(handoff.access_token);
-  if (user?.id) return handoff.access_token;
-  const refreshed = await refreshPortalToken(handoff.refresh_token);
-  if (!refreshed) return null;
-  const freshUser = await validatePortalToken(refreshed.access_token);
-  return freshUser?.id ? refreshed.access_token : null;
+async function resolvePortalSession() {
+  const candidates = [readPortalStoredSession(), readHandoff()].filter(Boolean);
+  for (const candidate of candidates) {
+    const valid = await validatePortalToken(candidate.access_token);
+    if (valid?.id) return { token: candidate.access_token, user: valid };
+
+    const refreshed = await refreshPortalToken(candidate.refresh_token);
+    if (refreshed) {
+      const refreshedUser = await validatePortalToken(refreshed.access_token);
+      if (refreshedUser?.id) return { token: refreshed.access_token, user: refreshedUser };
+    }
+  }
+  return null;
 }
 
 async function bootstrapFromPortal() {
   const current = await nativeGetSession();
   if (current.data?.session?.user) return true;
 
-  const portalToken = await getPortalAccessToken();
-  if (!portalToken) return false;
+  const portal = await resolvePortalSession();
+  if (!portal?.token) return false;
 
   try {
     const response = await fetch(`${AFTERLIFE_URL}/functions/v1/portal-bridge`, {
       method: 'POST',
-      headers: { Authorization: `Bearer ${portalToken}`, apikey: AFTERLIFE_KEY, 'Content-Type': 'application/json' },
+      headers: { Authorization: `Bearer ${portal.token}`, apikey: AFTERLIFE_KEY, 'Content-Type': 'application/json' },
       body: '{}',
       cache: 'no-store'
     });
