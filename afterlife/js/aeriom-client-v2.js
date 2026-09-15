@@ -7,6 +7,7 @@ const PORTAL_KEY = 'sb_publishable_WDlPiR0b8T6mlQfYMbwjGg_BGvQPZDW';
 const HANDOFF_KEY = 'afterlife_portal_handoff';
 const PORTAL_STORAGE_KEY = 'sb-kitlpowgcugvlxwhwhqv-auth-token';
 const CLIENT_KEY = '__AFTERLIFE_SINGLE_SUPABASE_CLIENT__';
+const ENSURE_KEY = '__AFTERLIFE_ENSURE_SESSION_PROMISE__';
 
 export const aeriom = globalThis[CLIENT_KEY] || (globalThis[CLIENT_KEY] = createClient(AFTERLIFE_URL, AFTERLIFE_KEY, {
   auth: {
@@ -17,8 +18,6 @@ export const aeriom = globalThis[CLIENT_KEY] || (globalThis[CLIENT_KEY] = create
   },
 }));
 export const afterlife = aeriom;
-
-let ensurePromise = null;
 
 function parse(raw) {
   try { return raw ? JSON.parse(raw) : null; } catch { return null; }
@@ -126,14 +125,14 @@ async function establish() {
 }
 
 export async function ensureAfterlifeSession() {
-  if (ensurePromise) return ensurePromise;
-  ensurePromise = establish()
+  if (globalThis[ENSURE_KEY]) return globalThis[ENSURE_KEY];
+  globalThis[ENSURE_KEY] = establish()
     .catch((error) => {
       console.warn('[AFTERLIFE][AUTH]', error?.message || error);
       return null;
     })
-    .finally(() => { ensurePromise = null; });
-  return ensurePromise;
+    .finally(() => { globalThis[ENSURE_KEY] = null; });
+  return globalThis[ENSURE_KEY];
 }
 
 export const afterlifeReady = ensureAfterlifeSession();
