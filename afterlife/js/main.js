@@ -1,6 +1,7 @@
+import './aeriom-client-v2.js?v=20260915-4';
 import './error-monitor.js?v=20260914-1';
 import './profile-global.js?v=20260914-30';
-import './afterlife-sidebar.js?v=20260914-31';
+import './afterlife-sidebar.js?v=20260915-4';
 
 (() => {
   'use strict';
