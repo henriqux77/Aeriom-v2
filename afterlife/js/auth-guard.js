@@ -1,4 +1,4 @@
-import { ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260915-3';
+import { ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260915-4';
 
 const path = location.pathname;
 const publicPath = path.endsWith('/entrar.html');
