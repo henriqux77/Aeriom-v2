@@ -33,6 +33,24 @@ function friendlyError(error) {
   return error?.message || 'Não foi possível concluir a autenticação.';
 }
 
+function getReturnTo() {
+  const value = new URLSearchParams(location.search).get('returnTo');
+  if (!value) return null;
+  try {
+    const url = new URL(value, location.origin);
+    if (url.origin !== location.origin) return null;
+    if (!url.pathname.startsWith('/Aeriom-v2/afterlife/')) return null;
+    if (url.pathname.endsWith('/entrar.html')) return null;
+    return `${url.pathname}${url.search}${url.hash}`;
+  } catch {
+    return null;
+  }
+}
+
+function enterAfterlifeTarget() {
+  return getReturnTo() || './index.html';
+}
+
 function setMode(mode) {
   const register = mode === 'register';
   loginView?.classList.toggle('hidden', register);
@@ -125,7 +143,7 @@ $('enterAeriom')?.addEventListener('click', () => {
   window.location.href = '../index.html';
 });
 $('enterAfterlife')?.addEventListener('click', () => {
-  window.location.href = './index.html';
+  window.location.href = enterAfterlifeTarget();
 });
 
 const remembered = localStorage.getItem('afterlife_last_email');
