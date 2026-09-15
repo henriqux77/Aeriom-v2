@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#050807">
+<title>AFTERLIFE — Campanha</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./css/afterlife.css?v=20260915-1">
+<link rel="stylesheet" href="./css/afterlife-profile-global.css?v=20260915-1">
+<link rel="stylesheet" href="./css/afterlife-sidebar.css?v=20260915-1">
+<link rel="stylesheet" href="./css/campanha.css?v=20260915-1">
+</head>
+<body class="afterlife-campaign-page">
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand"><div class="brand__title"><img class="brand__logo" src="https://i.ibb.co/BH2Hqr3P/file-00000000b47c820e88b788de23f77e3e.png" alt="AFTERLIFE — Sobrevivência além do fim"></div></div>
+    <nav class="side-nav" aria-label="Navegação da campanha">
+      <a class="side-nav__item is-active" href="#visao"><span class="icon">⌂</span><span>Visão Geral</span></a>
+      <a class="side-nav__item" href="./mapa-mundial.html"><span class="icon">◇</span><span>Mapa</span></a>
+      <a class="side-nav__item" href="./personagens.html"><span class="icon">●</span><span>Personagens</span></a>
+      <a class="side-nav__item" href="#inventario"><span class="icon">▣</span><span>Inventário</span></a>
+      <a class="side-nav__item" href="#missoes"><span class="icon">◎</span><span>Missões</span></a>
+      <a class="side-nav__item" href="#diario"><span class="icon">▤</span><span>Diário</span></a>
+      <a class="side-nav__item" href="#locais"><span class="icon">◇</span><span>Locais</span></a>
+      <a class="side-nav__item" href="#rastros"><span class="icon">⌁</span><span>Rastros</span></a>
+      <a class="side-nav__item" href="#recursos"><span class="icon">⬡</span><span>Recursos</span></a>
+      <a class="side-nav__item" href="#notas"><span class="icon">▤</span><span>Notas</span></a>
+    </nav>
+    <div class="sidebar-spacer"></div>
+    <a class="side-nav__item" href="#config"><span class="icon">⚙</span><span>Configurações</span></a>
+  </aside>
+
+  <main class="main">
+    <header class="topbar campaign-topbar">
+      <button class="mobile-menu" id="mobileMenu" type="button" aria-label="Abrir menu"><span aria-hidden="true"></span></button>
+      <a class="campaign-back" href="./campanhas.html" aria-label="Voltar para campanhas">← <span>Campanhas</span></a>
+      <div class="campaign-breadcrumb"><span>/</span><strong id="campaignCrumb">Campanha</strong></div>
+      <div class="top-actions">
+        <button class="top-icon" type="button" aria-label="Notificações">♧</button>
+        <button class="profile-chip" id="profileChip" type="button" aria-label="Abrir perfil"><span class="profile-avatar" id="profileAvatar">A</span><span class="profile-copy"><strong id="profileName">Sobrevivente</strong><small><i></i> Online</small></span><span class="profile-caret">⌄</span></button>
+        <button class="top-icon campaign-more" type="button" aria-label="Mais opções">•••</button>
+      </div>
+    </header>
+
+    <section class="campaign-hero" id="visao">
+      <div class="campaign-hero__image" id="campaignHeroImage"></div>
+      <div class="campaign-hero__shade"></div>
+      <div class="campaign-hero__content">
+        <span class="campaign-eyebrow">CAMPANHA</span>
+        <h1 id="campaignTitle">Campanha</h1>
+        <div class="campaign-meta-line"><span>♙ Mestre: <b id="campaignMaster">Você</b></span><span>♧ <b id="campaignMembersCount">1</b> membros</span><span>◉ <b id="campaignScaleLabel">Mundo aberto</b></span></div>
+        <p id="campaignDescription">A história da sua campanha começa aqui.</p>
+        <div class="campaign-hero__actions"><button class="btn btn--primary" id="manageCampaign">GERENCIAR CAMPANHA</button><button class="btn btn--ghost" id="campaignMenuButton" type="button">•••</button></div>
+      </div>
+      <div class="nuclear-wheel" id="nuclearWheel" aria-label="Ferramentas da ficha" aria-expanded="false">
+        <button class="nuclear-center" id="nuclearCenter" type="button" aria-label="Abrir ferramentas da ficha">☢️</button>
+        <button class="nuclear-item n1" data-target="./personagens.html" type="button"><span>♙</span><b>Ficha</b></button>
+        <button class="nuclear-item n2" data-target="#inventario" type="button"><span>▣</span><b>Inventário</b></button>
+        <button class="nuclear-item n3" data-target="#atributos" type="button"><span>▥</span><b>Atributos</b></button>
+        <button class="nuclear-item n4" data-target="#pericias" type="button"><span>▤</span><b>Perícias</b></button>
+        <button class="nuclear-item n5" data-target="#tecnicas" type="button"><span>⚙</span><b>Técnicas</b></button>
+        <button class="nuclear-item n6" data-target="#equipamentos" type="button"><span>⌁</span><b>Equipamentos</b></button>
+        <button class="nuclear-item n7" data-target="#diario" type="button"><span>▤</span><b>Histórico</b></button>
+      </div>
+    </section>
+
+    <section class="campaign-main-grid">
+      <div class="campaign-feature-grid">
+        <a class="feature-card" href="./mapa-mundial.html"><div class="feature-card__media media-map"></div><div class="feature-card__body"><span>MAPA</span><h2>Explorar o mundo</h2><p>Explore, marque locais e descubra novas regiões.</p><b>→</b></div></a>
+        <a class="feature-card" href="./personagens.html"><div class="feature-card__media media-people"></div><div class="feature-card__body"><span>PERSONAGENS</span><h2>Membros da campanha</h2><p>Gerencie os sobreviventes ligados à campanha.</p><b>→</b></div></a>
+        <a class="feature-card" href="#missoes"><div class="feature-card__media media-missions"></div><div class="feature-card__body"><span>MISSÕES</span><h2>Objetivos</h2><p>Acompanhe tarefas, recompensas e progresso.</p><b>→</b></div></a>
+        <a class="feature-card" href="#diario"><div class="feature-card__media media-diary"></div><div class="feature-card__body"><span>DIÁRIO</span><h2>Registro da campanha</h2><p>Organize acontecimentos importantes da história.</p><b>→</b></div></a>
+      </div>
+
+      <section class="members-panel panel-card" id="personagens"><header><h2>MEMBROS <small id="membersPanelCount">(1)</small></h2><button type="button" id="inviteMember">＋ CONVIDAR</button></header><div class="member-list" id="memberList"><div class="member"><span class="member-avatar">S</span><div><strong>Sobrevivente</strong><small>Você · Mestre</small></div><i class="online-dot"></i></div><button class="member member-invite" id="inviteMemberCard" type="button"><span class="member-avatar ghost">＋</span><div><strong>Convidar</strong><small>Adicionar jogador</small></div></button></div></section>
+
+      <section class="world-panel panel-card"><header><h2>MUNDO</h2><a href="./mapa-mundial.html">ABRIR MAPA →</a></header><a class="world-preview" href="./mapa-mundial.html"><div class="world-preview__image" id="worldPreviewImage"></div><div class="world-preview__copy"><strong id="campaignLocation">Local inicial não definido</strong><small id="campaignCoordinates">Escolha um ponto no mapa mundial.</small></div><span>→</span></a></section>
+
+      <section class="quick-panel panel-card" id="recursos"><header><h2>RECURSOS RÁPIDOS</h2></header><div class="quick-grid"><button type="button" data-jump="#locais">⌖ <span>Locais</span> <b>→</b></button><button type="button" data-jump="#rastros">⌁ <span>Rastros</span> <b>→</b></button><button type="button" data-jump="#recursos">⬡ <span>Recursos</span> <b>→</b></button><button type="button" data-jump="#missoes">◎ <span>Missões</span> <b>→</b></button><button type="button" data-jump="#notas">▤ <span>Notas</span> <b>→</b></button></div></section>
+    </section>
+
+    <section class="empty-tools-grid">
+      <section class="panel-card tool-panel" id="missoes"><header><h2>MISSÕES</h2><span>0 ativas</span></header><div class="tool-empty"><strong>Nenhuma missão registrada</strong><small>Crie objetivos para acompanhar a campanha.</small></div></section>
+      <section class="panel-card tool-panel" id="diario"><header><h2>DIÁRIO</h2><span>0 registros</span></header><div class="tool-empty"><strong>Diário da campanha vazio</strong><small>Registre acontecimentos, pistas e descobertas.</small></div></section>
+      <section class="panel-card tool-panel" id="inventario"><header><h2>INVENTÁRIO</h2><span>0 itens</span></header><div class="tool-empty"><strong>Nenhum item compartilhado</strong><small>Os equipamentos dos personagens ficam nas fichas.</small></div></section>
+    </section>
+  </main>
+</div>
+
+<script src="./js/error-monitor.js?v=20260915-1"></script>
+<script src="./js/profile-global.js?v=20260915-1"></script>
+<script src="./js/afterlife-sidebar.js?v=20260915-1"></script>
+<script src="./js/campanha.js?v=20260915-1"></script>
+</body>
+</html>
