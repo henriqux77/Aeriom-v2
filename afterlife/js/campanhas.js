@@ -1,6 +1,6 @@
-import './error-monitor.js?v=20260915-7';
+import './error-monitor.js?v=20260915-8';
 import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=1';
-import './afterlife-sidebar.js?v=20260915-7';
+import './afterlife-sidebar.js?v=20260915-8';
 
 (() => {
   'use strict';
@@ -11,7 +11,7 @@ import './afterlife-sidebar.js?v=20260915-7';
   const ALLOWED_TONES = new Set(['Realista', 'Sobrevivência extrema', 'Horror', 'Ação', 'Exploração']);
   const ALLOWED_SCALES = new Set(['world', 'regional', 'city', 'local']);
   const $ = (id) => document.getElementById(id);
-  const escapeHtml = (value) => String(value ?? '').replace(/[&<>\"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const esc = (value) => String(value ?? '').replace(/[&<>\"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
   let user = null;
   let campaignImageFile = null;
@@ -32,16 +32,12 @@ import './afterlife-sidebar.js?v=20260915-7';
     button.textContent = active ? 'CRIANDO…' : 'CRIAR CAMPANHA →';
   }
 
-  function resetCampaignImage() {
+  function resetImage() {
     campaignImageFile = null;
-    const input = $('campaignImageFile');
-    const preview = $('campaignImagePreview');
-    const img = $('campaignImagePreviewImg');
-    const name = $('campaignImageFileName');
-    if (input) input.value = '';
-    if (preview) preview.hidden = true;
-    if (img) img.removeAttribute('src');
-    if (name) name.textContent = 'Imagem selecionada';
+    if ($('campaignImageFile')) $('campaignImageFile').value = '';
+    if ($('campaignImagePreview')) $('campaignImagePreview').hidden = true;
+    $('campaignImagePreviewImg')?.removeAttribute('src');
+    if ($('campaignImageFileName')) $('campaignImageFileName').textContent = 'Imagem selecionada';
   }
 
   function toggleCreate(show) {
@@ -49,11 +45,10 @@ import './afterlife-sidebar.js?v=20260915-7';
     const form = $('campaignForm');
     if (!panel) return;
     panel.hidden = !show;
-    if (show) {
-      requestAnimationFrame(() => $('campaignName')?.focus());
-    } else {
+    if (show) requestAnimationFrame(() => $('campaignName')?.focus());
+    else {
       form?.reset();
-      resetCampaignImage();
+      resetImage();
       setMessage('');
     }
   }
@@ -64,18 +59,17 @@ import './afterlife-sidebar.js?v=20260915-7';
     const lng = Number(qs.get('lng'));
     const label = qs.get('label') || qs.get('name') || '';
     if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
-    $('campaignLatitude').value = lat.toFixed(6);
-    $('campaignLongitude').value = lng.toFixed(6);
-    $('campaignLocationName').value = label || 'Local selecionado no mapa';
-    $('campaignLocationAddress').value = label || '';
-    $('campaignLocationTitle').textContent = label || 'Local selecionado no mapa';
-    $('campaignLocationDescription').textContent = `${lat.toFixed(5)}°, ${lng.toFixed(5)}° · Local definido no Mapa Mundial.`;
+    if ($('campaignLatitude')) $('campaignLatitude').value = lat.toFixed(6);
+    if ($('campaignLongitude')) $('campaignLongitude').value = lng.toFixed(6);
+    if ($('campaignLocationName')) $('campaignLocationName').value = label || 'Local selecionado no mapa';
+    if ($('campaignLocationAddress')) $('campaignLocationAddress').value = label || '';
+    if ($('campaignLocationTitle')) $('campaignLocationTitle').textContent = label || 'Local selecionado no mapa';
+    if ($('campaignLocationDescription')) $('campaignLocationDescription').textContent = `${lat.toFixed(5)}°, ${lng.toFixed(5)}° · Local definido no Mapa Mundial.`;
   }
 
   async function requireUser() {
-    if (user?.id) return true;
     const session = await ensureAfterlifeSession();
-    user = session?.user || null;
+    user = session?.user || user;
     if (user?.id) return true;
     setMessage('Sua sessão do Afterlife não está ativa. Entre novamente para continuar.', 'error');
     return false;
@@ -114,28 +108,27 @@ import './afterlife-sidebar.js?v=20260915-7';
       const hasCoords = Number.isFinite(Number(campaign.latitude)) && Number.isFinite(Number(campaign.longitude));
       const coords = hasCoords ? `${Number(campaign.latitude).toFixed(3)}, ${Number(campaign.longitude).toFixed(3)}` : '';
       const media = campaign.imageUrl
-        ? `<div class="campaign-item__image"><img src="${escapeHtml(campaign.imageUrl)}" alt=""></div>`
+        ? `<div class="campaign-item__image"><img src="${esc(campaign.imageUrl)}" alt=""></div>`
         : '<div class="campaign-item__image campaign-item__image--empty">AFTERLIFE</div>';
-
       const article = document.createElement('article');
       article.className = 'campaign-item';
       article.innerHTML = `${media}
         <div class="campaign-item__content">
           <div>
             <div class="campaign-item__top">
-              <h3>${escapeHtml(campaign.name)}</h3>
-              <span class="panel-count">${escapeHtml(campaign.tone || 'Realista')}</span>
+              <h3>${esc(campaign.name)}</h3>
+              <span class="panel-count">${esc(campaign.tone || 'Realista')}</span>
             </div>
-            <p>${escapeHtml(campaign.description || 'Sem descrição.')}</p>
+            <p>${esc(campaign.description || 'Sem descrição.')}</p>
             <div class="campaign-item__meta">
-              <span>🌎 ${escapeHtml(campaign.country || 'Local definido no mapa')}</span>
+              <span>🌎 ${esc(campaign.country || 'Local definido no mapa')}</span>
               ${coords ? `<span>⌖ ${coords}</span>` : ''}
               <span>👤 1 Mestre</span>
             </div>
           </div>
           <div class="campaign-item__actions">
-            <button class="btn btn--primary" data-open="${escapeHtml(campaign.id)}">ABRIR →</button>
-            <button class="btn btn--ghost" data-delete="${escapeHtml(campaign.id)}">EXCLUIR</button>
+            <button class="btn btn--primary" data-open="${esc(campaign.id)}">ABRIR →</button>
+            <button class="btn btn--ghost" data-delete="${esc(campaign.id)}">EXCLUIR</button>
           </div>
         </div>`;
       list.appendChild(article);
@@ -143,25 +136,22 @@ import './afterlife-sidebar.js?v=20260915-7';
   }
 
   function handleCampaignImage() {
-    const input = $('campaignImageFile');
-    const file = input?.files?.[0];
+    const file = $('campaignImageFile')?.files?.[0];
     if (!file) return;
-
     if (!IMAGE_TYPES.has(file.type)) {
       setMessage('Formato não permitido. Use JPG, PNG, WEBP ou GIF.', 'error');
-      resetCampaignImage();
+      resetImage();
       return;
     }
     if (file.size > MAX_IMAGE_SIZE) {
       setMessage('A imagem precisa ter no máximo 5 MB.', 'error');
-      resetCampaignImage();
+      resetImage();
       return;
     }
-
     campaignImageFile = file;
-    $('campaignImagePreviewImg').src = URL.createObjectURL(file);
-    $('campaignImageFileName').textContent = file.name;
-    $('campaignImagePreview').hidden = false;
+    if ($('campaignImagePreviewImg')) $('campaignImagePreviewImg').src = URL.createObjectURL(file);
+    if ($('campaignImageFileName')) $('campaignImageFileName').textContent = file.name;
+    if ($('campaignImagePreview')) $('campaignImagePreview').hidden = false;
     setMessage('');
   }
 
@@ -177,13 +167,10 @@ import './afterlife-sidebar.js?v=20260915-7';
     return path;
   }
 
-  async function insertCampaign(row) {
-    const { data, error } = await aeriom
-      .from('campaigns')
-      .insert(row)
-      .select('id,created_by,name,description,country,tone,scale,latitude,longitude,cover_path,created_at,updated_at')
-      .single();
+  async function createCampaignViaRpc(payload) {
+    const { data, error } = await aeriom.rpc('create_campaign', payload);
     if (error) throw error;
+    if (!data) throw new Error('O servidor não retornou a campanha criada.');
     return data;
   }
 
@@ -191,7 +178,6 @@ import './afterlife-sidebar.js?v=20260915-7';
     event.preventDefault();
     if (submitting) return;
     setMessage('');
-
     if (!(await requireUser())) return;
 
     const name = $('campaignName')?.value.trim() || '';
@@ -215,38 +201,38 @@ import './afterlife-sidebar.js?v=20260915-7';
     let coverPath = null;
 
     try {
-      setMessage('Preparando campanha…', 'info');
       if (campaignImageFile) {
         setMessage('Enviando imagem…', 'info');
         coverPath = await uploadCampaignImage(campaignImageFile, campaignId);
       }
 
-      setMessage('Salvando campanha…', 'info');
-      const row = await insertCampaign({
-        id: campaignId,
-        created_by: user.id,
-        name,
-        description,
-        country,
-        tone,
-        scale,
-        latitude,
-        longitude,
-        cover_path: coverPath,
+      setMessage('Criando campanha no servidor…', 'info');
+      const row = await createCampaignViaRpc({
+        p_id: campaignId,
+        p_name: name,
+        p_description: description,
+        p_country: country,
+        p_tone: tone,
+        p_scale: scale,
+        p_latitude: latitude,
+        p_longitude: longitude,
+        p_cover_path: coverPath,
       });
 
       setMessage(`Campanha “${row.name}” criada com sucesso.`, 'success');
       toggleCreate(false);
       await refresh();
     } catch (error) {
-      if (coverPath) {
-        await aeriom.storage.from(BUCKET).remove([coverPath]).catch(() => {});
-      }
+      if (coverPath) await aeriom.storage.from(BUCKET).remove([coverPath]).catch(() => {});
       console.error('[AFTERLIFE][CAMPAIGNS][CREATE]', error);
-      const message = String(error?.message || '').toLowerCase().includes('row-level security')
-        ? 'A sessão não foi autorizada pelo servidor. Entre novamente no Afterlife e tente de novo.'
-        : (error?.message || 'Não foi possível criar a campanha.');
-      setMessage(message, 'error');
+      const message = String(error?.message || '').toLowerCase();
+      if (message.includes('not_authenticated') || error?.code === '42501') {
+        setMessage('A sessão do Afterlife expirou. Entre novamente para continuar.', 'error');
+      } else if (message.includes('function') && message.includes('does not exist')) {
+        setMessage('O servidor ainda não está com o RPC de campanhas atualizado.', 'error');
+      } else {
+        setMessage(error?.message || 'Não foi possível criar a campanha.', 'error');
+      }
     } finally {
       submitting = false;
       setSubmitState(false);
@@ -257,19 +243,10 @@ import './afterlife-sidebar.js?v=20260915-7';
     if (!id || submitting || !(await requireUser())) return;
     if (!confirm('Excluir esta campanha?')) return;
 
-    const { data, error } = await aeriom
-      .from('campaigns')
-      .select('cover_path')
-      .eq('id', id)
-      .eq('created_by', user.id)
-      .maybeSingle();
+    const { data, error } = await aeriom.from('campaigns').select('cover_path').eq('id', id).eq('created_by', user.id).maybeSingle();
     if (error) return setMessage(error.message, 'error');
 
-    const { error: deleteError } = await aeriom
-      .from('campaigns')
-      .delete()
-      .eq('id', id)
-      .eq('created_by', user.id);
+    const { error: deleteError } = await aeriom.from('campaigns').delete().eq('id', id).eq('created_by', user.id);
     if (deleteError) return setMessage(deleteError.message, 'error');
 
     if (data?.cover_path) await aeriom.storage.from(BUCKET).remove([data.cover_path]).catch(() => {});
@@ -290,7 +267,6 @@ import './afterlife-sidebar.js?v=20260915-7';
     const menu = $('profileMenu');
     if (!chip || !menu || chip.dataset.bound === '1') return;
     chip.dataset.bound = '1';
-
     chip.addEventListener('click', (event) => {
       event.preventDefault();
       event.stopPropagation();
@@ -298,11 +274,9 @@ import './afterlife-sidebar.js?v=20260915-7';
       menu.hidden = !open;
       menu.setAttribute('aria-hidden', String(!open));
     });
-
     document.addEventListener('click', (event) => {
       if (!menu.contains(event.target) && !chip.contains(event.target)) menu.hidden = true;
     });
-
     $('profileLogout')?.addEventListener('click', async () => {
       await aeriom.auth.signOut();
       localStorage.removeItem('afterlife_portal_handoff');
@@ -317,7 +291,7 @@ import './afterlife-sidebar.js?v=20260915-7';
     $('cancelCreate')?.addEventListener('click', () => toggleCreate(false));
     $('campaignImageButton')?.addEventListener('click', () => $('campaignImageFile')?.click());
     $('campaignImageFile')?.addEventListener('change', handleCampaignImage);
-    $('campaignImageRemove')?.addEventListener('click', resetCampaignImage);
+    $('campaignImageRemove')?.addEventListener('click', resetImage);
     $('campaignForm')?.addEventListener('submit', createCampaign);
     $('campaignList')?.addEventListener('click', (event) => {
       const open = event.target.closest('[data-open]');
@@ -332,7 +306,6 @@ import './afterlife-sidebar.js?v=20260915-7';
     $('profileName')?.replaceChildren(document.createTextNode(fallback));
     $('profileMenuName')?.replaceChildren(document.createTextNode(fallback));
     if (!user?.id) return;
-
     try {
       const { data } = await aeriom.from('profiles').select('display_name,avatar_path').eq('id', user.id).maybeSingle();
       const name = data?.display_name || fallback;
@@ -365,7 +338,7 @@ import './afterlife-sidebar.js?v=20260915-7';
   }
 
   boot().catch((error) => {
-    console.error('[AFTERLIFE][CAMPAIGNS]', error);
-    setMessage(error?.message || 'Não foi possível inicializar a página.', 'error');
+    console.error('[AFTERLIFE][CAMPAIGNS][BOOT]', error);
+    setMessage(error?.message || 'Não foi possível iniciar a área de campanhas.', 'error');
   });
 })();
