@@ -6,12 +6,13 @@
   document.documentElement.style.visibility = 'hidden';
 
   const redirect = () => {
-    const url = new URL('./entrar.html', `${location.origin}${path.substring(0, path.lastIndexOf('/') + 1)}`);
+    const url = new URL('../index.html', location.href);
+    url.searchParams.set('afterlife', '1');
     url.searchParams.set('returnTo', `${location.pathname}${location.search}${location.hash}`);
     location.replace(url.href);
   };
 
-  import('./aeriom-client-v2.js?v=1')
+  import('./aeriom-client-v2.js?v=20260915-3')
     .then(({ ensureAfterlifeSession }) => ensureAfterlifeSession())
     .then((session) => {
       if (!session?.user) {
@@ -22,7 +23,8 @@
       document.documentElement.dataset.afterlifeAuth = 'ok';
       document.documentElement.style.visibility = 'visible';
     })
-    .catch(() => {
+    .catch((error) => {
+      console.warn('[AFTERLIFE][FICHA][AUTH]', error?.message || error);
       document.documentElement.dataset.afterlifeAuth = 'denied';
       redirect();
     });
