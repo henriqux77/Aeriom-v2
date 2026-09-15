@@ -2,8 +2,9 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 
 const PORTAL_SUPABASE_URL = 'https://kitlpowgcugvlxwhwhqv.supabase.co';
 const PORTAL_SUPABASE_KEY = 'sb_publishable_WDlPiR0b8T6mlQfYMbwjGg_BGvQPZDW';
-const AFTERLIFE_ENTRY = 'https://henriqux77.github.io/Aeriom-v2/afterlife/index.html';
+const AFTERLIFE_BASE = '/Aeriom-v2/afterlife/';
 const HANDOFF_KEY = 'afterlife_portal_handoff';
+const AUTO_ENTER_KEY = 'afterlife_auto_enter_attempted';
 const supabase = createClient(PORTAL_SUPABASE_URL, PORTAL_SUPABASE_KEY, {
   auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
 });
@@ -22,6 +23,7 @@ const loginView = $('loginView');
 const registerView = $('registerView');
 const systemView = $('systemView');
 const message = $('authMessage');
+const afterlifeMode = new URLSearchParams(location.search).get('afterlife') === '1';
 
 function showMessage(text = '', type = 'error') {
   if (!message) return;
@@ -53,19 +55,26 @@ function displaySystem(user) {
   $('systemUserEmail') && ($('systemUserEmail').textContent = user?.email || '');
 }
 
-async function oauth(provider) {
-  showMessage();
-  const button = $('discordLogin');
-  if (button) button.disabled = true;
-  const { error } = await supabase.auth.signInWithOAuth({ provider, options: { redirectTo: `${window.location.origin}${window.location.pathname}` } });
-  if (error) {
-    if (button) button.disabled = false;
-    showMessage(friendlyError(error));
+function safeAfterlifeReturnTo() {
+  const raw = new URLSearchParams(location.search).get('returnTo');
+  if (!raw) return `${AFTERLIFE_BASE}index.html`;
+  try {
+    const target = new URL(raw, window.location.origin);
+    if (target.origin !== window.location.origin) throw new Error('cross-origin');
+    if (!target.pathname.startsWith(AFTERLIFE_BASE)) throw new Error('outside-afterlife');
+    if (target.pathname.endsWith('/entrar.html')) throw new Error('bridge-page');
+    return `${target.pathname}${target.search}${target.hash}`;
+  } catch {
+    return `${AFTERLIFE_BASE}index.html`;
   }
 }
 
+function afterlifeTargetUrl() {
+  return new URL(safeAfterlifeReturnTo(), window.location.origin).href;
+}
+
 function writeAfterlifeHandoff(session) {
-  if (!session?.access_token) return;
+  if (!session?.access_token || !session?.refresh_token) return;
   localStorage.setItem(HANDOFF_KEY, JSON.stringify({
     access_token: session.access_token,
     refresh_token: session.refresh_token,
@@ -76,36 +85,69 @@ function writeAfterlifeHandoff(session) {
   }));
 }
 
-async function enterAfterlife(button) {
-  if (button.disabled) return;
-  button.disabled = true;
-  button.setAttribute('aria-busy', 'true');
-  button.textContent = 'ABRINDO AFTERLIFE…';
+async function enterAfterlife(button = null) {
+  if (button?.disabled) return;
+  if (button) {
+    button.disabled = true;
+    button.setAttribute('aria-busy', 'true');
+    button.textContent = 'ABRINDO AFTERLIFE…';
+  }
   showMessage('Abrindo o Afterlife…', 'success');
 
   const { data, error } = await supabase.auth.getSession();
   if (error || !data.session?.access_token) {
-    button.disabled = false;
-    button.removeAttribute('aria-busy');
-    button.textContent = 'ENTRAR →';
+    if (button) {
+      button.disabled = false;
+      button.removeAttribute('aria-busy');
+      button.textContent = 'ENTRAR →';
+    }
     showMessage(friendlyError(error || new Error('Sessão do portal não encontrada.')));
-    return;
+    return false;
   }
 
   writeAfterlifeHandoff(data.session);
-  window.location.assign(AFTERLIFE_ENTRY);
+  sessionStorage.setItem(AUTO_ENTER_KEY, '1');
+  window.location.assign(afterlifeTargetUrl());
+  return true;
+}
+
+async function autoEnterAfterlife(session) {
+  if (!afterlifeMode || !session?.user) return false;
+  if (sessionStorage.getItem(AUTO_ENTER_KEY) === '1') return false;
+  return enterAfterlife();
+}
+
+async function oauth(provider) {
+  showMessage();
+  const button = $('discordLogin');
+  if (button) button.disabled = true;
+  const { error } = await supabase.auth.signInWithOAuth({ provider, options: { redirectTo: `${window.location.origin}${window.location.pathname}${window.location.search}` } });
+  if (error) {
+    if (button) button.disabled = false;
+    showMessage(friendlyError(error));
+  }
 }
 
 async function init() {
   const { data, error } = await supabase.auth.getSession();
   if (error) showMessage(friendlyError(error));
-  if (data.session?.user) displaySystem(data.session.user);
+  if (data.session?.user) {
+    if (await autoEnterAfterlife(data.session)) return;
+    displaySystem(data.session.user);
+  }
   const remembered = localStorage.getItem('aeriom_portal_email');
   if (remembered && $('loginEmail')) $('loginEmail').value = remembered;
   supabase.auth.onAuthStateChange((event, session) => {
-    if (event === 'SIGNED_IN' && session?.user) displaySystem(session.user);
+    if (event === 'SIGNED_IN' && session?.user) {
+      if (afterlifeMode && sessionStorage.getItem(AUTO_ENTER_KEY) !== '1') {
+        enterAfterlife().catch((error) => showMessage(friendlyError(error)));
+        return;
+      }
+      displaySystem(session.user);
+    }
     if (event === 'SIGNED_OUT') {
       localStorage.removeItem(HANDOFF_KEY);
+      sessionStorage.removeItem(AUTO_ENTER_KEY);
       showView('login');
     }
   });
@@ -123,6 +165,9 @@ $('loginForm')?.addEventListener('submit', async (event) => {
   if (button) button.disabled = false;
   if (error) return showMessage(friendlyError(error));
   if ($('remember')?.checked) localStorage.setItem('aeriom_portal_email', email);
+  if (afterlifeMode && sessionStorage.getItem(AUTO_ENTER_KEY) !== '1') {
+    return enterAfterlife();
+  }
   displaySystem(data.user);
 });
 
@@ -142,7 +187,10 @@ $('registerForm')?.addEventListener('submit', async (event) => {
   const { data, error } = await supabase.auth.signUp({ email, password, options: { data: { display_name: name } } });
   if (button) button.disabled = false;
   if (error) return showMessage(friendlyError(error));
-  if (data.session?.user) return displaySystem(data.user);
+  if (data.session?.user) {
+    if (afterlifeMode && sessionStorage.getItem(AUTO_ENTER_KEY) !== '1') return enterAfterlife();
+    return displaySystem(data.user);
+  }
   showView('login');
   showMessage('Conta criada. Verifique seu e-mail para confirmar o acesso.', 'success');
 });
@@ -168,6 +216,7 @@ $('discordLogin')?.addEventListener('click', () => oauth('discord'));
 $('logoutSystem')?.addEventListener('click', async (event) => {
   event.preventDefault();
   localStorage.removeItem(HANDOFF_KEY);
+  sessionStorage.removeItem(AUTO_ENTER_KEY);
   localStorage.removeItem('afterlife-auth');
   await supabase.auth.signOut();
   showView('login');
