@@ -8,6 +8,7 @@ const HANDOFF_KEY = 'afterlife_portal_handoff';
 const PORTAL_STORAGE_KEY = 'sb-kitlpowgcugvlxwhwhqv-auth-token';
 const CLIENT_KEY = '__AFTERLIFE_SINGLE_SUPABASE_CLIENT__';
 const ENSURE_KEY = '__AFTERLIFE_ENSURE_SESSION_PROMISE__';
+const VERIFYING_KEY = '__AFTERLIFE_VERIFYING_MAGIC_LINK__';
 
 export const aeriom = globalThis[CLIENT_KEY] || (globalThis[CLIENT_KEY] = createClient(AFTERLIFE_URL, AFTERLIFE_KEY, {
   auth: {
@@ -98,20 +99,27 @@ async function bridge() {
   return payload;
 }
 
+function buildVerifyUrl(tokenHash, email) {
+  const redirectTo = `${location.origin}/Aeriom-v2/afterlife/index.html`;
+  const params = new URLSearchParams({
+    token: tokenHash,
+    type: 'magiclink',
+    redirect_to: redirectTo,
+  });
+  if (email) params.set('email', email);
+  return `${AFTERLIFE_URL}/auth/v1/verify?${params.toString()}`;
+}
+
 async function establish() {
   const current = await aeriom.auth.getSession();
-  if (current.data?.session?.user) return current.data.session;
+  if (current.data?.session?.user) {
+    localStorage.removeItem(HANDOFF_KEY);
+    sessionStorage.removeItem(VERIFYING_KEY);
+    return current.data.session;
+  }
+
   const payload = await bridge();
   if (!payload) return null;
-
-  if (payload.token_hash && payload.email) {
-    const result = await aeriom.auth.verifyOtp({ email: payload.email, token_hash: payload.token_hash, type: 'magiclink' });
-    if (result.error) throw result.error;
-    if (result.data?.session?.user) {
-      localStorage.removeItem(HANDOFF_KEY);
-      return result.data.session;
-    }
-  }
 
   if (payload.access_token && payload.refresh_token) {
     const result = await aeriom.auth.setSession({ access_token: payload.access_token, refresh_token: payload.refresh_token });
@@ -121,6 +129,33 @@ async function establish() {
       return result.data.session;
     }
   }
+
+  if (payload.action_link) {
+    if (sessionStorage.getItem(VERIFYING_KEY) !== '1') {
+      sessionStorage.setItem(VERIFYING_KEY, '1');
+      localStorage.removeItem(HANDOFF_KEY);
+      location.replace(payload.action_link);
+      return null;
+    }
+  }
+
+  if (payload.token_hash && payload.email) {
+    if (sessionStorage.getItem(VERIFYING_KEY) !== '1') {
+      sessionStorage.setItem(VERIFYING_KEY, '1');
+      localStorage.removeItem(HANDOFF_KEY);
+      location.replace(buildVerifyUrl(payload.token_hash, payload.email));
+      return null;
+    }
+
+    const result = await aeriom.auth.verifyOtp({ email: payload.email, token_hash: payload.token_hash, type: 'magiclink' });
+    if (result.error) throw result.error;
+    if (result.data?.session?.user) {
+      localStorage.removeItem(HANDOFF_KEY);
+      sessionStorage.removeItem(VERIFYING_KEY);
+      return result.data.session;
+    }
+  }
+
   return null;
 }
 
