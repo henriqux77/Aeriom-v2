@@ -3,6 +3,7 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 const PORTAL_SUPABASE_URL = 'https://kitlpowgcugvlxwhwhqv.supabase.co';
 const PORTAL_SUPABASE_KEY = 'sb_publishable_WDlPiR0b8T6mlQfYMbwjGg_BGvQPZDW';
 const AFTERLIFE_ENTRY = 'https://henriqux77.github.io/Aeriom-v2/afterlife/index.html';
+const AFTERLIFE_ROOT = '/Aeriom-v2/afterlife/';
 const HANDOFF_KEY = 'afterlife_portal_handoff';
 const VERIFYING_KEY = '__AFTERLIFE_VERIFYING_MAGIC_LINK__';
 const supabase = createClient(PORTAL_SUPABASE_URL, PORTAL_SUPABASE_KEY, {
@@ -48,6 +49,82 @@ function friendlyError(error) {
   return error?.message || 'Não foi possível concluir a autenticação.';
 }
 
+function getReturnTo() {
+  const raw = new URLSearchParams(location.search).get('returnTo');
+  if (!raw) return AFTERLIFE_ENTRY;
+  try {
+    const url = new URL(raw, location.origin);
+    if (url.origin !== location.origin) return AFTERLIFE_ENTRY;
+    if (!url.pathname.startsWith(AFTERLIFE_ROOT)) return AFTERLIFE_ENTRY;
+    if (url.pathname.endsWith('/entrar.html')) return AFTERLIFE_ENTRY;
+    return `${url.pathname}${url.search}${url.hash}`;
+  } catch {
+    return AFTERLIFE_ENTRY;
+  }
+}
+
+function writeAfterlifeHandoff(session, returnTo = AFTERLIFE_ENTRY) {
+  if (!session?.access_token) return;
+  localStorage.setItem(HANDOFF_KEY, JSON.stringify({
+    access_token: session.access_token,
+    refresh_token: session.refresh_token,
+    expires_at: session.expires_at,
+    email: session.user?.email || null,
+    user_id: session.user?.id || null,
+    return_to: returnTo,
+    created_at: Date.now()
+  }));
+}
+
+async function enterAfterlife(button) {
+  if (button?.disabled) return;
+  if (button) {
+    button.disabled = true;
+    button.setAttribute('aria-busy', 'true');
+    button.textContent = 'ABRINDO AFTERLIFE…';
+  }
+  showMessage('Abrindo o Afterlife…', 'success');
+
+  const { data, error } = await supabase.auth.getSession();
+  if (error || !data.session?.access_token) {
+    if (button) {
+      button.disabled = false;
+      button.removeAttribute('aria-busy');
+      button.textContent = 'ENTRAR →';
+    }
+    showMessage(friendlyError(error || new Error('Sessão do portal não encontrada.')));
+    return;
+  }
+
+  sessionStorage.removeItem(VERIFYING_KEY);
+  const returnTo = getReturnTo();
+  writeAfterlifeHandoff(data.session, returnTo);
+  const target = new URL(returnTo, location.origin);
+  window.location.assign(target.href);
+}
+
+async function init() {
+  const { data, error } = await supabase.auth.getSession();
+  if (error) showMessage(friendlyError(error));
+  if (data.session?.user) displaySystem(data.session.user);
+  const remembered = localStorage.getItem('aeriom_portal_email');
+  if (remembered && $('loginEmail')) $('loginEmail').value = remembered;
+  supabase.auth.onAuthStateChange((event, session) => {
+    if (event === 'SIGNED_IN' && session?.user) displaySystem(session.user);
+    if (event === 'SIGNED_OUT') {
+      localStorage.removeItem(HANDOFF_KEY);
+      sessionStorage.removeItem(VERIFYING_KEY);
+      showView('login');
+    }
+  });
+
+  const qs = new URLSearchParams(location.search);
+  if (qs.get('afterlife') === '1' && data.session?.user) {
+    const button = document.querySelector('.system-card--afterlife .system-enter');
+    await enterAfterlife(button || { disabled: false });
+  }
+}
+
 function displaySystem(user) {
   showView('system');
   $('systemUserName') && ($('systemUserName').textContent = user?.user_metadata?.display_name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Sobrevivente');
@@ -65,55 +142,6 @@ async function oauth(provider) {
   }
 }
 
-function writeAfterlifeHandoff(session) {
-  if (!session?.access_token) return;
-  localStorage.setItem(HANDOFF_KEY, JSON.stringify({
-    access_token: session.access_token,
-    refresh_token: session.refresh_token,
-    expires_at: session.expires_at,
-    email: session.user?.email || null,
-    user_id: session.user?.id || null,
-    created_at: Date.now()
-  }));
-}
-
-async function enterAfterlife(button) {
-  if (button.disabled) return;
-  button.disabled = true;
-  button.setAttribute('aria-busy', 'true');
-  button.textContent = 'ABRINDO AFTERLIFE…';
-  showMessage('Abrindo o Afterlife…', 'success');
-
-  const { data, error } = await supabase.auth.getSession();
-  if (error || !data.session?.access_token) {
-    button.disabled = false;
-    button.removeAttribute('aria-busy');
-    button.textContent = 'ENTRAR →';
-    showMessage(friendlyError(error || new Error('Sessão do portal não encontrada.')));
-    return;
-  }
-
-  sessionStorage.removeItem(VERIFYING_KEY);
-  writeAfterlifeHandoff(data.session);
-  window.location.assign(AFTERLIFE_ENTRY);
-}
-
-async function init() {
-  const { data, error } = await supabase.auth.getSession();
-  if (error) showMessage(friendlyError(error));
-  if (data.session?.user) displaySystem(data.session.user);
-  const remembered = localStorage.getItem('aeriom_portal_email');
-  if (remembered && $('loginEmail')) $('loginEmail').value = remembered;
-  supabase.auth.onAuthStateChange((event, session) => {
-    if (event === 'SIGNED_IN' && session?.user) displaySystem(session.user);
-    if (event === 'SIGNED_OUT') {
-      localStorage.removeItem(HANDOFF_KEY);
-      sessionStorage.removeItem(VERIFYING_KEY);
-      showView('login');
-    }
-  });
-}
-
 $('loginForm')?.addEventListener('submit', async (event) => {
   event.preventDefault();
   showMessage();
@@ -127,6 +155,8 @@ $('loginForm')?.addEventListener('submit', async (event) => {
   if (error) return showMessage(friendlyError(error));
   if ($('remember')?.checked) localStorage.setItem('aeriom_portal_email', email);
   displaySystem(data.user);
+  const qs = new URLSearchParams(location.search);
+  if (qs.get('afterlife') === '1') await enterAfterlife(document.querySelector('.system-card--afterlife .system-enter') || { disabled: false });
 });
 
 $('registerForm')?.addEventListener('submit', async (event) => {
