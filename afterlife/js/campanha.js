@@ -44,7 +44,7 @@
     if (!document.getElementById('afterlife-campaign-profile-visibility')) {
       const style = document.createElement('style');
       style.id = 'afterlife-campaign-profile-visibility';
-      style.textContent = 'body.afterlife-campaign-page .profile-chip{display:flex!important;visibility:visible!important} body.afterlife-campaign-page .afterlife-global-profile-menu:not([hidden]){display:block!important;visibility:visible!important}';
+      style.textContent = 'body.afterlife-campaign-page .profile-chip{display:flex!important;visibility:visible!important} body.afterlife-campaign-page .afterlife-global-profile-menu:not([hidden]){display:block!important;visibility:visible!important} @media(max-width:900px){.afterlife-campaign-page .nuclear-wheel{display:block;right:10px;top:auto;bottom:12px;width:190px;height:190px;transform:scale(.9);transform-origin:right bottom}.afterlife-campaign-page .nuclear-wheel:before{inset:22px}.afterlife-campaign-page .nuclear-wheel:after{inset:49px}.afterlife-campaign-page .nuclear-center{width:62px;height:62px;font-size:29px}.afterlife-campaign-page .nuclear-item{width:54px;height:54px;font-size:8px}.afterlife-campaign-page .nuclear-item span{font-size:14px}.afterlife-campaign-page .n1{left:68px;top:0}.afterlife-campaign-page .n2{right:0;top:42px}.afterlife-campaign-page .n3{right:0;bottom:42px}.afterlife-campaign-page .n4{left:68px;bottom:0}.afterlife-campaign-page .n5{left:0;bottom:42px}.afterlife-campaign-page .n6{left:0;top:42px}} @media(max-width:620px){.afterlife-campaign-page .nuclear-wheel{right:6px;bottom:8px;transform:scale(.78)}.afterlife-campaign-page .campaign-hero{padding-right:8px}}';
       document.head.appendChild(style);
     }
   }
