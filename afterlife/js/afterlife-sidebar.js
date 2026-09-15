@@ -1,7 +1,7 @@
 import './error-monitor.js?v=20260915-8';
-import './aeriom-client-v2.js?v=20260915-3';
+import './aeriom-client-v2.js?v=20260915-4';
 import './shared-profile.js?v=20260915-8';
-import './auth-guard.js?v=20260915-3';
+import './auth-guard.js?v=20260915-4';
 
 (() => {
   'use strict';
