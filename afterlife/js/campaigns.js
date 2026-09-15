@@ -1,6 +1,6 @@
-import './error-monitor.js?v=20260915-1';
-import { aeriom, ensureAfterlifeSession } from './aeriom-client.js?v=20260915-1';
-import './afterlife-sidebar.js?v=20260915-1';
+import './error-monitor.js?v=20260915-2';
+import { aeriom, ensureAfterlifeSession } from './aeriom-client.js?v=20260915-2';
+import './afterlife-sidebar.js?v=20260915-2';
 
 (() => {
   'use strict';
@@ -12,9 +12,7 @@ import './afterlife-sidebar.js?v=20260915-1';
   let user = null;
   let campaignImageFile = null;
 
-  const escapeHtml = (value) => String(value ?? '').replace(/[&<>\"]/g, (c) => ({
-    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'
-  }[c]));
+  const escapeHtml = (value) => String(value ?? '').replace(/[&<>\"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
   function setMessage(text = '') {
     const el = $('campaignMessage');
@@ -56,16 +54,14 @@ import './afterlife-sidebar.js?v=20260915-1';
       .order('created_at', { ascending: false });
     if (error) throw error;
 
-    const rows = data || [];
-    const enriched = await Promise.all(rows.map(async (campaign) => {
+    return Promise.all((data || []).map(async (campaign) => {
       let coverUrl = '';
       if (campaign.cover_path) {
-        const { data: urlData } = aeriom.storage.from(BUCKET).getPublicUrl(campaign.cover_path);
-        coverUrl = urlData?.publicUrl || '';
+        const { data: urlData, error: urlError } = await aeriom.storage.from(BUCKET).createSignedUrl(campaign.cover_path, 3600);
+        if (!urlError) coverUrl = urlData?.signedUrl || '';
       }
-      return { ...campaign, imageUrl: coverUrl, locationName: campaign.country || 'Local inicial não definido' };
+      return { ...campaign, imageUrl: coverUrl };
     }));
-    return enriched;
   }
 
   function render(rows) {
@@ -175,9 +171,7 @@ import './afterlife-sidebar.js?v=20260915-1';
 
     try {
       setMessage('Criando campanha…');
-      if (campaignImageFile) {
-        coverPath = await uploadCampaignImage(campaignImageFile, campaignId);
-      }
+      if (campaignImageFile) coverPath = await uploadCampaignImage(campaignImageFile, campaignId);
 
       const { error } = await aeriom.from('campaigns').insert({
         id: campaignId,
@@ -196,7 +190,7 @@ import './afterlife-sidebar.js?v=20260915-1';
       toggleCreate(false);
       await refresh();
     } catch (error) {
-      if (coverPath) await aeriom.storage.from(BUCKET).remove([coverPath]).catch(() => {});
+      if (coverPath) await aeriom.storage.from(BUCKET).remove([coverPath]);
       console.error('[AFTERLIFE][CAMPAIGNS][CREATE]', error);
       setMessage(error?.message || 'Não foi possível criar a campanha.');
     }
@@ -209,7 +203,7 @@ import './afterlife-sidebar.js?v=20260915-1';
     if (error) return setMessage(error.message);
     const { error: deleteError } = await aeriom.from('campaigns').delete().eq('id', id).eq('created_by', user.id);
     if (deleteError) return setMessage(deleteError.message);
-    if (data?.cover_path) await aeriom.storage.from(BUCKET).remove([data.cover_path]).catch(() => {});
+    if (data?.cover_path) await aeriom.storage.from(BUCKET).remove([data.cover_path]);
     await refresh();
   }
 
@@ -293,6 +287,6 @@ import './afterlife-sidebar.js?v=20260915-1';
 
   boot().catch((error) => {
     console.error('[AFTERLIFE][CAMPAIGNS]', error);
-    setMessage('Não foi possível inicializar esta página.');
+    setMessage('Não foi possível inicializar a página.');
   });
 })();
