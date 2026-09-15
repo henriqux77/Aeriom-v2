@@ -6,15 +6,16 @@ const PORTAL_URL = 'https://kitlpowgcugvlxwhwhqv.supabase.co';
 const PORTAL_KEY = 'sb_publishable_WDlPiR0b8T6mlQfYMbwjGg_BGvQPZDW';
 const HANDOFF_KEY = 'afterlife_portal_handoff';
 const PORTAL_STORAGE_KEY = 'sb-kitlpowgcugvlxwhwhqv-auth-token';
+const CLIENT_KEY = '__AFTERLIFE_SINGLE_SUPABASE_CLIENT__';
 
-export const aeriom = createClient(AFTERLIFE_URL, AFTERLIFE_KEY, {
+export const aeriom = globalThis[CLIENT_KEY] || (globalThis[CLIENT_KEY] = createClient(AFTERLIFE_URL, AFTERLIFE_KEY, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,
     storageKey: 'afterlife-auth',
   },
-});
+}));
 export const afterlife = aeriom;
 
 let ensurePromise = null;
@@ -68,7 +69,6 @@ async function getPortalAccess() {
   for (const candidate of portalCandidates()) {
     const user = await validatePortal(candidate.access_token);
     if (user?.id) return { token: candidate.access_token, user };
-
     const refreshed = await refreshPortal(candidate.refresh_token);
     if (!refreshed) continue;
     const refreshedUser = await validatePortal(refreshed.access_token);
@@ -80,7 +80,6 @@ async function getPortalAccess() {
 async function bridge() {
   const portal = await getPortalAccess();
   if (!portal) return null;
-
   const response = await fetch(`${AFTERLIFE_URL}/functions/v1/portal-bridge`, {
     method: 'POST',
     headers: {
@@ -91,7 +90,6 @@ async function bridge() {
     body: '{}',
     cache: 'no-store',
   });
-
   const payload = await response.json().catch(() => ({}));
   if (!response.ok) {
     const error = new Error(payload.error || `portal-bridge HTTP ${response.status}`);
@@ -104,16 +102,11 @@ async function bridge() {
 async function establish() {
   const current = await aeriom.auth.getSession();
   if (current.data?.session?.user) return current.data.session;
-
   const payload = await bridge();
   if (!payload) return null;
 
   if (payload.token_hash && payload.email) {
-    const result = await aeriom.auth.verifyOtp({
-      email: payload.email,
-      token_hash: payload.token_hash,
-      type: 'magiclink',
-    });
+    const result = await aeriom.auth.verifyOtp({ email: payload.email, token_hash: payload.token_hash, type: 'magiclink' });
     if (result.error) throw result.error;
     if (result.data?.session?.user) {
       localStorage.removeItem(HANDOFF_KEY);
@@ -122,17 +115,13 @@ async function establish() {
   }
 
   if (payload.access_token && payload.refresh_token) {
-    const result = await aeriom.auth.setSession({
-      access_token: payload.access_token,
-      refresh_token: payload.refresh_token,
-    });
+    const result = await aeriom.auth.setSession({ access_token: payload.access_token, refresh_token: payload.refresh_token });
     if (result.error) throw result.error;
     if (result.data?.session?.user) {
       localStorage.removeItem(HANDOFF_KEY);
       return result.data.session;
     }
   }
-
   return null;
 }
 
