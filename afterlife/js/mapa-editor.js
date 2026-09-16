@@ -2,189 +2,50 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260915
 
 (() => {
   'use strict';
+  const $=id=>document.getElementById(id);
+  const TYPES=[['house','🏚️','Casa'],['commerce','🏪','Comércio'],['fuel','⛽','Posto'],['hospital','🏥','Hospital'],['workshop','🔧','Oficina'],['factory','🏭','Fábrica'],['police','🚓','Delegacia'],['military','🪖','Base militar'],['school','🏫','Escola'],['forest','🌲','Floresta'],['abandoned','🏢','Prédio abandonado'],['contaminated','☢️','Área contaminada'],['zombie','🧟','Zumbi'],['horde','🧟‍♂️','Horda'],['npc','👤','NPC'],['survivors','👥','Sobreviventes'],['faction','🏴','Facção'],['shelter','🏕️','Abrigo'],['vehicle','🚙','Veículo'],['barricade','🚧','Barricada'],['watchtower','🗼','Torre de vigia'],['custom','✦','Outro']];
+  const TM=Object.fromEntries(TYPES.map(([key,icon,label])=>[key,{key,icon,label}]));
+  const DRAW=new Set(['faction','barricade']);
+  let map=null,campaign=null,role='player',entities=[],layers=new Map(),pendingType=null,drawing=null,busy=false;
+  const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const iconFor=t=>TM[t]?.icon||'✦', labelFor=t=>TM[t]?.label||t;
+  function status(text,type='info'){const el=$('mapEditorStatus');if(el){el.textContent=text||'';el.dataset.type=type;}}
 
-  const $ = (id) => document.getElementById(id);
-  const TYPES = [
-    ['house','🏚️','Casa'],['commerce','🏪','Comércio'],['fuel','⛽','Posto'],['hospital','🏥','Hospital'],['workshop','🔧','Oficina'],['factory','🏭','Fábrica'],['police','🚓','Delegacia'],['military','🪖','Base militar'],['school','🏫','Escola'],['forest','🌲','Floresta'],['abandoned','🏢','Prédio abandonado'],['contaminated','☢️','Área contaminada'],
-    ['zombie','🧟','Zumbi'],['horde','🧟‍♂️','Horda'],['npc','👤','NPC'],['survivors','👥','Grupo de sobreviventes'],['faction','🏴','Facção'],['shelter','🏕️','Abrigo'],['vehicle','🚙','Veículo'],['barricade','🚧','Barricada'],['watchtower','🗼','Torre de vigia'],['custom','✦','Outro']
-  ];
-  const typeMap = Object.fromEntries(TYPES.map(([key,icon,label]) => [key,{key,icon,label}]));
-  const drawTypes = new Set(['faction','barricade']);
-
-  let map = null;
-  let campaign = null;
-  let role = 'player';
-  let entities = [];
-  let markers = new Map();
-  let pendingType = null;
-  let drawing = null;
-  let busy = false;
-
-  function esc(v){return String(v ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
-  function iconFor(type){return typeMap[type]?.icon || '✦';}
-  function labelFor(type){return typeMap[type]?.label || type;}
-
-  function bootReady(detail){
-    map = detail?.map || window.__afterlifeCampaignMap?.map || null;
-    campaign = detail?.campaign || window.__afterlifeCampaignMap?.campaign || null;
-    role = detail?.role || window.__afterlifeCampaignMap?.role || 'player';
-    if (!map || !campaign || role !== 'master') return;
-    $('mapEditor')?.removeAttribute('hidden');
-    document.body.classList.add('afterlife-map-editor-enabled');
-    injectInspector();
-    injectPalette();
-    loadEntities().catch(error => setEditorStatus(error?.message || 'Não foi possível carregar os elementos do mapa.','error'));
+  function ready(detail){
+    map=detail?.map||window.__afterlifeCampaignMap?.map||null;
+    campaign=detail?.campaign||window.__afterlifeCampaignMap?.campaign||null;
+    role=detail?.role||window.__afterlifeCampaignMap?.role||'player';
+    if(!map||!campaign)return;
+    loadEntities().catch(e=>console.warn('[AFTERLIFE][MAP][EDITOR]',e));
+    if(role==='master'){
+      $('mapEditor')?.removeAttribute('hidden');
+      document.body.classList.add('afterlife-map-editor-enabled');
+      injectPalette();injectInspector();bindMap();
+    }
   }
 
-  function setEditorStatus(text,type='info'){
-    const el=$('mapEditorStatus'); if(!el)return; el.textContent=text||''; el.dataset.type=type;
-  }
+  function injectPalette(){const host=$('mapEditorPalette');if(!host||host.dataset.bound)return;host.dataset.bound='1';host.replaceChildren();TYPES.forEach(([key,icon,label])=>{const b=document.createElement('button');b.type='button';b.className='map-editor-type';b.dataset.type=key;b.innerHTML=`<span>${icon}</span><small>${esc(label)}</small>`;b.onclick=()=>startPlacing(key);host.appendChild(b);});}
+  function injectInspector(){const host=$('mapEditorInspector');if(!host||host.dataset.bound)return;host.dataset.bound='1';host.innerHTML=`<div class="map-editor-inspector__empty" id="mapEditorEmpty"><strong>Selecione um elemento</strong><small>Escolha um tipo e clique no mapa para adicionar.</small></div><form class="map-editor-form" id="mapEditorForm" hidden><div class="map-editor-form-head"><div><span id="mapEditorFormType">ELEMENTO</span><strong id="mapEditorFormTitle">Novo elemento</strong></div><button type="button" id="mapEditorCancel">×</button></div><label>Nome<input id="mapEntityName" maxlength="100" required></label><label>Descrição<textarea id="mapEntityDescription" maxlength="600" rows="3"></textarea></label><div class="map-editor-form-grid"><label>Estado<input id="mapEntityState" maxlength="80" placeholder="Ex.: ativo, saqueado..."></label><label>Perigo<select id="mapEntityDanger"><option value="low">Baixo</option><option value="medium" selected>Médio</option><option value="high">Alto</option><option value="critical">Crítico</option></select></label></div><div class="map-editor-form-actions"><button type="button" class="map-tool" id="mapEditorDelete" hidden>EXCLUIR</button><button type="submit" class="map-tool map-tool--primary">SALVAR</button></div></form>`;$('mapEditorCancel').onclick=cancelEditor;$('mapEditorDelete').onclick=deleteSelected;$('mapEditorForm').onsubmit=saveEntity;}
 
-  function injectPalette(){
-    const host=$('mapEditorPalette'); if(!host||host.dataset.bound==='1')return;
-    host.dataset.bound='1'; host.replaceChildren();
-    TYPES.forEach(([key,icon,label])=>{
-      const button=document.createElement('button'); button.type='button'; button.className='map-editor-type'; button.dataset.type=key; button.innerHTML=`<span>${icon}</span><small>${esc(label)}</small>`;
-      button.addEventListener('click',()=>startPlacing(key)); host.appendChild(button);
-    });
-  }
-
-  function injectInspector(){
-    const host=$('mapEditorInspector'); if(!host||host.dataset.bound==='1')return;
-    host.dataset.bound='1';
-    host.innerHTML=`<div class="map-editor-inspector__empty" id="mapEditorEmpty"><strong>Selecione algo para editar</strong><small>Escolha um tipo ao lado e clique no mapa para adicionar.</small></div>
-      <form class="map-editor-form" id="mapEditorForm" hidden>
-        <div class="map-editor-form-head"><div><span id="mapEditorFormType">ELEMENTO</span><strong id="mapEditorFormTitle">Novo elemento</strong></div><button type="button" id="mapEditorCancel">×</button></div>
-        <label>Nome<input id="mapEntityName" maxlength="100" required></label>
-        <label>Descrição<textarea id="mapEntityDescription" maxlength="600" rows="3"></textarea></label>
-        <div class="map-editor-form-grid"><label>Estado<input id="mapEntityState" maxlength="80" placeholder="Ex.: ativo, saqueado..."></label><label>Perigo<select id="mapEntityDanger"><option value="low">Baixo</option><option value="medium" selected>Médio</option><option value="high">Alto</option><option value="critical">Crítico</option></select></label></div>
-        <div class="map-editor-form-actions"><button type="button" class="map-tool" id="mapEditorDelete" hidden>EXCLUIR</button><button type="submit" class="map-tool map-tool--primary" id="mapEditorSave">SALVAR</button></div>
-      </form>`;
-    $('mapEditorCancel').addEventListener('click',cancelEditor);
-    $('mapEditorDelete').addEventListener('click',deleteSelected);
-    $('mapEditorForm').addEventListener('submit',saveEntity);
-  }
-
-  function startPlacing(type){
-    if(role!=='master'||!map)return;
-    cancelDrawing();
-    pendingType=type;
-    document.querySelectorAll('.map-editor-type').forEach(b=>b.classList.toggle('is-selected',b.dataset.type===type));
-    setEditorStatus(drawTypes.has(type)?`Desenhe ${labelFor(type).toLowerCase()} no mapa.`:`Clique no mapa para colocar ${labelFor(type).toLowerCase()}.`,'success');
-    if(drawTypes.has(type)) startDrawing(type);
-  }
-
-  function startDrawing(type){
-    drawing={type,points:[],layer:null};
-    map.doubleClickZoom.disable();
-    map.on('click',onDrawClick);
-    map.on('dblclick',finishDrawing);
-  }
-
-  function onDrawClick(e){
-    if(!drawing)return;
-    drawing.points.push([e.latlng.lat,e.latlng.lng]);
-    if(drawing.layer) drawing.layer.setLatLngs(drawing.points);
-    else drawing.layer = L.polyline(drawing.points,{color:typeMap[drawing.type].key==='faction'?'#d6b66c':'#63f6a8',weight:drawing.type==='faction'?3:6,dashArray:drawing.type==='faction'?'8 7':null,interactive:false}).addTo(map);
-    setEditorStatus(`${drawing.points.length} ponto(s). Continue clicando ou dê duplo clique para finalizar.`);
-  }
-
-  function finishDrawing(e){
-    if(!drawing||drawing.points.length<2)return;
-    L.DomEvent.stop(e);
-    const points=drawing.points.slice();
-    const type=drawing.type;
-    const layer=drawing.layer;
-    endDrawing();
-    if(type==='faction') openCreateForm(type,{geometry:{type:'polygon',coordinates:points.map(p=>[p[0],p[1]])}});
-    else openCreateForm(type,{geometry:{type:'polyline',coordinates:points.map(p=>[p[0],p[1]])}});
-    if(layer) layer.remove();
-  }
-
-  function endDrawing(){
-    if(!drawing)return; map.off('click',onDrawClick); map.off('dblclick',finishDrawing); map.doubleClickZoom.enable(); drawing=null;
-  }
+  function startPlacing(type){if(role!=='master'||!map)return;cancelDrawing();pendingType=type;document.querySelectorAll('.map-editor-type').forEach(b=>b.classList.toggle('is-selected',b.dataset.type===type));status(DRAW.has(type)?`Clique para desenhar ${labelFor(type).toLowerCase()}. Dê duplo clique para finalizar.`:`Clique no mapa para colocar ${labelFor(type).toLowerCase()}.`,'success');if(DRAW.has(type)){drawing={type,points:[],layer:null};map.doubleClickZoom.disable();map.on('click',drawClick);map.on('dblclick',finishDraw);}}
+  function drawClick(e){if(!drawing)return;drawing.points.push([e.latlng.lat,e.latlng.lng]);if(!drawing.layer){drawing.layer=L.polyline(drawing.points,{color:drawing.type==='faction'?'#d6b66c':'#63f6a8',weight:drawing.type==='faction'?3:6,dashArray:drawing.type==='faction'?'8 7':null,interactive:false}).addTo(map);}else drawing.layer.setLatLngs(drawing.points);status(`${drawing.points.length} ponto(s). Continue ou dê duplo clique para finalizar.`);}
+  function finishDraw(e){if(!drawing||drawing.points.length<2)return;L.DomEvent.stop(e);const d={type:drawing.type,points:drawing.points.slice()};const layer=drawing.layer;endDrawing();openCreateForm(d.type,{geometry:{type:d.type==='faction'?'polygon':'polyline',coordinates:d.points}});layer?.remove();}
+  function endDrawing(){if(!drawing)return;map.off('click',drawClick);map.off('dblclick',finishDraw);map.doubleClickZoom.enable();drawing=null;}
   function cancelDrawing(){endDrawing();}
+  function bindMap(){if(!map||map.__afterlifeEditorBound)return;map.__afterlifeEditorBound=true;map.on('click',e=>{if(role!=='master'||!pendingType||DRAW.has(pendingType))return;const t=pendingType;pendingType=null;document.querySelectorAll('.map-editor-type').forEach(b=>b.classList.remove('is-selected'));openCreateForm(t,{latitude:+e.latlng.lat.toFixed(6),longitude:+e.latlng.lng.toFixed(6)});});}
 
-  function onMapClick(e){
-    if(role!=='master'||!pendingType||drawTypes.has(pendingType))return;
-    const type=pendingType; pendingType=null;
-    document.querySelectorAll('.map-editor-type').forEach(b=>b.classList.remove('is-selected'));
-    openCreateForm(type,{latitude:Number(e.latlng.lat.toFixed(6)),longitude:Number(e.latlng.lng.toFixed(6))});
-  }
+  function openCreateForm(type,geo){const f=$('mapEditorForm'),empty=$('mapEditorEmpty');if(!f)return;f.hidden=false;if(empty)empty.hidden=true;$('mapEditorFormType').textContent=labelFor(type).toUpperCase();$('mapEditorFormTitle').textContent='Novo elemento';$('mapEntityName').value=labelFor(type);$('mapEntityDescription').value='';$('mapEntityState').value='';$('mapEntityDanger').value='medium';$('mapEditorDelete').hidden=true;f.dataset.mode='create';f.dataset.type=type;f.dataset.geometry=JSON.stringify(geo||{});f.dataset.entityId='';}
+  function openEditForm(entity){const f=$('mapEditorForm'),empty=$('mapEditorEmpty');if(!f||role!=='master')return;f.hidden=false;if(empty)empty.hidden=true;$('mapEditorFormType').textContent=labelFor(entity.entity_type).toUpperCase();$('mapEditorFormTitle').textContent='Editar elemento';$('mapEntityName').value=entity.name||labelFor(entity.entity_type);$('mapEntityDescription').value=entity.description||'';$('mapEntityState').value=entity.state?.status||'';$('mapEntityDanger').value=entity.state?.danger||'medium';$('mapEditorDelete').hidden=false;f.dataset.mode='edit';f.dataset.type=entity.entity_type;f.dataset.geometry=JSON.stringify(entity.geometry||{latitude:entity.latitude,longitude:entity.longitude});f.dataset.entityId=entity.id;}
+  function cancelEditor(){pendingType=null;cancelDrawing();const f=$('mapEditorForm'),empty=$('mapEditorEmpty');if(f)f.hidden=true;if(empty)empty.hidden=false;document.querySelectorAll('.map-editor-type').forEach(b=>b.classList.remove('is-selected'));status('Selecione um tipo para adicionar ao mapa.');}
 
-  function openCreateForm(type,geo){
-    const form=$('mapEditorForm'), empty=$('mapEditorEmpty'); if(!form)return;
-    form.hidden=false; if(empty)empty.hidden=true;
-    $('mapEditorFormType').textContent=labelFor(type).toUpperCase();
-    $('mapEditorFormTitle').textContent='Novo elemento';
-    $('mapEntityName').value=labelFor(type); $('mapEntityDescription').value=''; $('mapEntityState').value=''; $('mapEntityDanger').value='medium';
-    $('mapEditorDelete').hidden=true; form.dataset.mode='create'; form.dataset.type=type; form.dataset.geometry=JSON.stringify(geo||{}); form.dataset.entityId='';
-    setEditorStatus('Defina os detalhes e salve no mapa.','success');
-  }
+  async function saveEntity(e){e.preventDefault();if(busy)return;busy=true;try{const s=await ensureAfterlifeSession();if(role!=='master'||!s?.user)throw new Error('Somente o Mestre pode editar o mapa.');const f=$('mapEditorForm'),geo=JSON.parse(f.dataset.geometry||'{}'),name=$('mapEntityName').value.trim();if(!name)throw new Error('Informe um nome.');const payload={p_name:name,p_description:$('mapEntityDescription').value.trim()||null,p_latitude:geo.latitude??null,p_longitude:geo.longitude??null,p_geometry:geo.geometry??null,p_state:{status:$('mapEntityState').value.trim(),danger:$('mapEntityDanger').value},p_metadata:{}};let data,error;if(f.dataset.mode==='edit'){({data,error}=await aeriom.rpc('update_campaign_map_entity',{p_entity_id:f.dataset.entityId,...payload}));}else{({data,error}=await aeriom.rpc('create_campaign_map_entity',{p_campaign_id:campaign.id,p_entity_type:f.dataset.type,...payload}));}if(error)throw error;const row=Array.isArray(data)?data[0]:data;if(f.dataset.mode==='edit')entities=entities.map(x=>x.id===row.id?row:x);else entities.push(row);renderEntities();cancelEditor();status('Elemento salvo.','success');}catch(err){status(err?.message||'Falha ao salvar.','error');}finally{busy=false;}}
+  async function deleteSelected(){const id=$('mapEditorForm')?.dataset.entityId;if(!id||busy)return;if(!confirm('Excluir este elemento do mapa?'))return;busy=true;try{const {error}=await aeriom.rpc('delete_campaign_map_entity',{p_entity_id:id});if(error)throw error;entities=entities.filter(x=>x.id!==id);renderEntities();cancelEditor();status('Elemento excluído.','success');}catch(e){status(e?.message||'Falha ao excluir.','error');}finally{busy=false;}}
+  async function loadEntities(){const {data,error}=await aeriom.rpc('list_campaign_map_entities',{p_campaign_id:campaign.id});if(error)throw error;entities=Array.isArray(data)?data:[];renderEntities();}
 
-  function openEditForm(entity){
-    const form=$('mapEditorForm'), empty=$('mapEditorEmpty'); if(!form)return;
-    form.hidden=false; if(empty)empty.hidden=true;
-    $('mapEditorFormType').textContent=labelFor(entity.entity_type).toUpperCase(); $('mapEditorFormTitle').textContent='Editar elemento';
-    $('mapEntityName').value=entity.name||labelFor(entity.entity_type); $('mapEntityDescription').value=entity.description||''; $('mapEntityState').value=entity.state?.status||''; $('mapEntityDanger').value=entity.state?.danger||'medium';
-    $('mapEditorDelete').hidden=false; form.dataset.mode='edit'; form.dataset.type=entity.entity_type; form.dataset.geometry=JSON.stringify(entity.geometry||{}); form.dataset.entityId=entity.id;
-  }
+  function renderEntities(){layers.forEach(l=>removeLayer(l));layers.clear();entities.forEach(entity=>{const g=entity.geometry||{};let layer=null;if(g.type==='polygon'&&Array.isArray(g.coordinates)&&g.coordinates.length>=2)layer=L.polygon(g.coordinates,{color:'#d6b66c',fillColor:'#d6b66c',fillOpacity:.11,weight:2,dashArray:'7 6'}).addTo(map);else if(g.type==='polyline'&&Array.isArray(g.coordinates)&&g.coordinates.length>=2)layer=L.polyline(g.coordinates,{color:'#63f6a8',weight:6,opacity:.8}).addTo(map);else if(Number.isFinite(Number(entity.latitude))&&Number.isFinite(Number(entity.longitude)))layer=L.marker([entity.latitude,entity.longitude],{icon:entityIcon(entity)}).addTo(map);if(!layer)return;layer.bindPopup(`<strong>${esc(iconFor(entity.entity_type))} ${esc(entity.name)}</strong><br><span>${esc(labelFor(entity.entity_type))}</span>${entity.description?`<br><small>${esc(entity.description)}</small>`:''}`);if(role==='master')layer.on('click',e=>{e?.originalEvent&&L.DomEvent.stopPropagation(e.originalEvent);openEditForm(entity);});layers.set(entity.id,layer);});const list=$('mapEditorEntities');if(list){list.replaceChildren();entities.slice().reverse().forEach(e=>{const b=document.createElement('button');b.type='button';b.className='map-editor-entity-row';b.innerHTML=`<span>${iconFor(e.entity_type)}</span><span><strong>${esc(e.name)}</strong><small>${esc(labelFor(e.entity_type))}</small></span><b>→</b>`;b.onclick=()=>{if(role==='master')openEditForm(e);const g=e.geometry||{};if(Number.isFinite(Number(e.latitude))&&Number.isFinite(Number(e.longitude)))map.setView([e.latitude,e.longitude],Math.max(map.getZoom(),16),{animate:true});else if(Array.isArray(g.coordinates)&&g.coordinates.length)map.fitBounds(g.coordinates,{padding:[40,40],animate:true});};list.appendChild(b);});}}
+  function removeLayer(layer){try{layer?.remove();}catch{}}
+  function entityIcon(e){const d=document.createElement('div');d.className='afterlife-map-entity-marker';d.innerHTML=`<span>${iconFor(e.entity_type)}</span><b>${esc(String(e.name||'').slice(0,22))}</b>`;return L.divIcon({className:'afterlife-map-entity-wrap',html:d.outerHTML,iconSize:[86,38],iconAnchor:[43,38],popupAnchor:[0,-34]});}
 
-  function cancelEditor(){
-    pendingType=null; cancelDrawing(); const form=$('mapEditorForm'), empty=$('mapEditorEmpty'); if(form){form.hidden=true;form.dataset.mode='';} if(empty)empty.hidden=false; document.querySelectorAll('.map-editor-type').forEach(b=>b.classList.remove('is-selected')); setEditorStatus('Selecione um tipo para adicionar ao mapa.');
-  }
-
-  async function saveEntity(e){
-    e.preventDefault(); if(busy)return; busy=true;
-    try{
-      const session=await ensureAfterlifeSession(); if(!session?.user)throw new Error('Sessão Afterlife não encontrada.');
-      const form=$('mapEditorForm'); const type=form.dataset.type; const name=$('mapEntityName').value.trim(); const desc=$('mapEntityDescription').value.trim();
-      if(name.length<1)throw new Error('Informe um nome.');
-      const geo=JSON.parse(form.dataset.geometry||'{}'); const state={status:$('mapEntityState').value.trim(),danger:$('mapEntityDanger').value};
-      let data,error;
-      if(form.dataset.mode==='edit')({data,error}=await aeriom.rpc('update_campaign_map_entity',{p_entity_id:form.dataset.entityId,p_name:name,p_description:desc||null,p_latitude:geo.latitude??null,p_longitude:geo.longitude??null,p_geometry:geo.geometry??null,p_state:state,p_metadata:{}}));
-      else({data,error}=await aeriom.rpc('create_campaign_map_entity',{p_campaign_id:campaign.id,p_entity_type:type,p_name:name,p_description:desc||null,p_latitude:geo.latitude??null,p_longitude:geo.longitude??null,p_geometry:geo.geometry??null,p_state:state,p_metadata:{}}));
-      if(error)throw error;
-      const row=Array.isArray(data)?data[0]:data; if(form.dataset.mode==='edit'){entities=entities.map(x=>x.id===row.id?row:x);}else entities.push(row);
-      renderEntities(); cancelEditor(); setEditorStatus('Elemento salvo no mapa.','success');
-    }catch(error){setEditorStatus(error?.message||'Não foi possível salvar o elemento.','error');}finally{busy=false;}
-  }
-
-  async function deleteSelected(){
-    const id=$('mapEditorForm')?.dataset.entityId; if(!id||busy)return; if(!confirm('Excluir este elemento do mapa?'))return; busy=true;
-    try{const {error}=await aeriom.rpc('delete_campaign_map_entity',{p_entity_id:id});if(error)throw error;entities=entities.filter(x=>x.id!==id);renderEntities();cancelEditor();setEditorStatus('Elemento excluído.','success');}catch(error){setEditorStatus(error?.message||'Não foi possível excluir.','error');}finally{busy=false;}
-  }
-
-  async function loadEntities(){
-    const {data,error}=await aeriom.rpc('list_campaign_map_entities',{p_campaign_id:campaign.id}); if(error)throw error; entities=Array.isArray(data)?data:[]; renderEntities();
-  }
-
-  function removeLayer(item){try{item?.remove();}catch{}}
-
-  function renderEntities(){
-    for(const layer of markers.values()) removeLayer(layer);
-    markers.clear();
-    entities.forEach(entity=>{
-      const geom=entity.geometry||{}; let layer=null;
-      if(geom.type==='polygon'&&Array.isArray(geom.coordinates)&&geom.coordinates.length>=2){layer=L.polygon(geom.coordinates,{color:'#d6b66c',fillColor:'#d6b66c',fillOpacity:.10,weight:2,dashArray:'7 6'}).addTo(map);}
-      else if(geom.type==='polyline'&&Array.isArray(geom.coordinates)&&geom.coordinates.length>=2){layer=L.polyline(geom.coordinates,{color:'#63f6a8',weight:6,opacity:.75}).addTo(map);}
-      else if(Number.isFinite(Number(entity.latitude))&&Number.isFinite(Number(entity.longitude))){layer=L.marker([entity.latitude,entity.longitude],{icon:makeEntityIcon(entity)}).addTo(map);}
-      if(!layer)return;
-      layer.bindPopup(`<strong>${esc(iconFor(entity.entity_type))} ${esc(entity.name)}</strong><br><span>${esc(labelFor(entity.entity_type))}</span>${entity.description?`<br><small>${esc(entity.description)}</small>`:''}`);
-      layer.on('click',(ev)=>{if(ev?.originalEvent)L.DomEvent.stopPropagation(ev.originalEvent);openEditForm(entity);});
-      markers.set(entity.id,layer);
-    });
-    const list=$('mapEditorEntities'); if(list){list.replaceChildren();entities.slice().reverse().forEach(entity=>{const b=document.createElement('button');b.type='button';b.className='map-editor-entity-row';b.innerHTML=`<span>${iconFor(entity.entity_type)}</span><span><strong>${esc(entity.name)}</strong><small>${esc(labelFor(entity.entity_type))}</small></span><b>→</b>`;b.addEventListener('click',()=>{openEditForm(entity);const geom=entity.geometry||{};if(Number.isFinite(Number(entity.latitude))&&Number.isFinite(Number(entity.longitude)))map.setView([entity.latitude,entity.longitude],Math.max(map.getZoom(),16),{animate:true});else if(Array.isArray(geom.coordinates)&&geom.coordinates.length)map.fitBounds(geom.coordinates,{padding:[40,40],animate:true});});list.appendChild(b);});}
-  }
-
-  function makeEntityIcon(entity){
-    const icon=iconFor(entity.entity_type); const div=document.createElement('div'); div.className='afterlife-map-entity-marker'; div.innerHTML=`<span>${icon}</span><b>${esc(entity.name.slice(0,22))}</b>`; return L.divIcon({className:'afterlife-map-entity-wrap',html:div.outerHTML,iconSize:[86,38],iconAnchor:[43,38],popupAnchor:[0,-34]});
-  }
-
-  function bindMap(){ if(!map||map.__afterlifeEditorBound)return; map.__afterlifeEditorBound=true; map.on('click',onMapClick); }
-
-  window.addEventListener('afterlife:map-ready',(event)=>bootReady(event.detail));
-  if(window.__afterlifeCampaignMap?.map) bootReady(window.__afterlifeCampaignMap);
-  document.addEventListener('DOMContentLoaded',()=>{bindMap(); if(window.__afterlifeCampaignMap?.map)bootReady(window.__afterlifeCampaignMap);});
+  window.addEventListener('afterlife:map-ready',e=>ready(e.detail));
+  if(window.__afterlifeCampaignMap?.map)ready(window.__afterlifeCampaignMap);
 })();
