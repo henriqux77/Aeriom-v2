@@ -7,12 +7,14 @@
 <title>AFTERLIFE — Mapa da Campanha</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap">
-<link rel="stylesheet" href="./css/afterlife.css?v=20260915-9">
-<link rel="stylesheet" href="./css/mapa.css?v=20260915-9">
+<link rel="stylesheet" href="./css/afterlife.css?v=20260915-10">
+<link rel="stylesheet" href="./css/mapa.css?v=20260915-10">
 <link rel="stylesheet" href="./css/mapa-foundation.css?v=20260915-4">
 <link rel="stylesheet" href="./css/mapa-exploration.css?v=20260915-1">
 <link rel="stylesheet" href="./css/mapa-editor.css?v=20260915-1">
 <link rel="stylesheet" href="./css/mapa-locations.css?v=20260915-1">
+<link rel="stylesheet" href="./css/mapa-redesign.css?v=20260915-1">
+<link rel="stylesheet" href="./css/loot.css?v=20260915-1">
 <link rel="stylesheet" href="./css/afterlife-profile-global.css?v=20260915-9">
 <link rel="stylesheet" href="./css/afterlife-sidebar.css?v=20260915-9">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
@@ -38,10 +40,10 @@
     <header class="topbar"><button class="mobile-menu" id="mobileMenu" aria-label="Abrir menu"><span aria-hidden="true"></span></button><div class="top-actions"><button class="profile-chip" id="profileChip" type="button" aria-label="Abrir perfil"><span class="profile-avatar" id="profileAvatar">A</span><span class="profile-copy"><strong id="profileName">Sobrevivente</strong><small><i></i> Online</small></span><span class="profile-caret">⌄</span></button></div></header>
     <section class="page-head map-head">
       <div><div class="eyebrow">MUNDO VIVO · EXPLORAÇÃO · CAMPANHA</div><h1 id="mapTitle">Mapa da Campanha</h1><p id="mapSubtitle">Carregando o mundo da campanha…</p><div class="map-context"><span class="map-role-badge" id="mapRoleBadge">CARREGANDO…</span><span class="map-context-copy">O ponto inicial é apenas o começo. O mapa pode se estender por qualquer região do mundo.</span></div></div>
-      <div class="page-actions"><a class="btn btn--ghost" href="./campanhas.html">← VOLTAR PARA CAMPANHAS</a><button class="btn btn--primary" id="mapCenterCampaign" type="button">CENTRALIZAR INÍCIO</button></div>
+      <div class="page-actions"><a class="btn btn--ghost" href="./campanhas.html">← VOLTAR</a><button class="btn btn--primary" id="mapCenterCampaign" type="button">CENTRALIZAR INÍCIO</button></div>
     </section>
     <section class="map-layout">
-      <div class="map-shell panel"><div class="map-mode-note">MODO: <b id="mapModeLabel">EXPLORAÇÃO</b></div><div id="worldMap"></div><div class="map-hint">No modo jogador, a área clara representa a percepção atual e o que já foi descoberto fica conhecido nesta região. O Mestre pode navegar pelo mundo inteiro e movimentar os participantes. <span id="mapScale">Cidade</span> · <span id="mapStatus">Inicializando…</span></div></div>
+      <div class="map-shell panel"><div class="map-mode-note">MODO: <b id="mapModeLabel">EXPLORAÇÃO</b></div><div id="worldMap"></div><div class="map-hint">No modo jogador, a área clara representa a percepção atual e o que já foi descoberto fica conhecido nesta região. <span id="mapScale">Cidade</span> · <span id="mapStatus">Inicializando…</span></div></div>
       <aside class="map-sidebar panel">
         <div class="panel-head"><h2>CONTROLE DO MAPA</h2></div>
         <div class="map-tools" id="masterTools" hidden><div class="map-section-label">MESTRE · NAVEGAÇÃO</div><div class="map-tool-grid"><button class="map-tool" id="mapPanGlobal" type="button">🌎 VISÃO GLOBAL</button><button class="map-tool" id="refreshMembers" type="button">↻ ATUALIZAR</button></div></div>
@@ -62,4 +64,5 @@
 <script type="module" src="./js/mapa-exploration.js?v=20260915-4"></script>
 <script type="module" src="./js/mapa-editor.js?v=20260915-3"></script>
 <script type="module" src="./js/mapa-locations.js?v=20260915-1"></script>
+<script type="module" src="./js/loot.js?v=20260915-1"></script>
 </body></html>
