@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#050807">
+<meta name="description" content="AFTERLIFE — escolha o local inicial da campanha.">
+<title>AFTERLIFE — Escolha o local inicial</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./css/afterlife.css?v=20260915-12">
+<link rel="stylesheet" href="./css/afterlife-sidebar.css?v=20260915-9">
+<link rel="stylesheet" href="./css/campaign-location-picker.css?v=20260916-1">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+</head>
+<body class="campaign-location-picker-page">
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand"><div class="brand__title"><img class="brand__logo" src="https://i.ibb.co/BH2Hqr3P/file-00000000b47c820e88b788de23f77e3e.png" alt="AFTERLIFE — Sobrevivência além do fim"></div></div>
+    <nav class="side-nav" aria-label="Navegação Afterlife">
+      <a class="side-nav__item" href="./index.html"><span class="icon">⌂</span><span>Início</span></a>
+      <a class="side-nav__item is-active" href="./campanhas.html"><span class="icon">◈</span><span>Campanhas</span></a>
+      <a class="side-nav__item" href="./personagens.html"><span class="icon">●</span><span>Personagens</span></a>
+      <a class="side-nav__item" href="./mapa-mundial.html"><span class="icon">◇</span><span>Mapa Mundial</span></a>
+    </nav>
+    <div class="sidebar-spacer"></div>
+  </aside>
+
+  <main class="main campaign-location-picker-main">
+    <header class="topbar">
+      <button class="mobile-menu" id="locationPickerMenu" type="button" aria-label="Abrir menu"><span aria-hidden="true"></span></button>
+      <div class="top-actions"><a class="btn btn--ghost" id="locationPickerBack" href="./campanhas.html?create=1">← VOLTAR</a></div>
+    </header>
+
+    <section class="campaign-location-picker-head">
+      <div>
+        <div class="eyebrow">NOVA CAMPANHA · LOCALIZAÇÃO</div>
+        <h1>Escolha onde a história começa.</h1>
+        <p>Clique exatamente no ponto inicial da campanha. Você pode pesquisar uma cidade ou endereço, ampliar até a escala de rua e arrastar o marcador antes de confirmar.</p>
+      </div>
+      <div class="campaign-location-picker-actions">
+        <a class="btn btn--ghost" id="locationPickerCancel" href="./campanhas.html?create=1">CANCELAR</a>
+      </div>
+    </section>
+
+    <section class="campaign-location-picker-layout">
+      <div class="campaign-location-picker-card">
+        <div class="campaign-location-picker-toolbar">
+          <div class="campaign-location-picker-search">
+            <input id="locationPickerSearch" type="search" placeholder="Pesquisar cidade, endereço ou região…" autocomplete="off" spellcheck="false">
+            <div class="campaign-location-picker-results" id="locationPickerResults" hidden></div>
+          </div>
+        </div>
+        <div class="campaign-location-picker-map" id="locationPickerMap"></div>
+        <div class="campaign-location-picker-footer">
+          <div class="campaign-location-picker-status" id="locationPickerStatus" data-type="info">
+            <strong>Selecione um ponto no mapa.</strong>
+            <small>O local será transferido para o formulário de criação da campanha.</small>
+          </div>
+          <div class="campaign-location-picker-buttons">
+            <button type="button" class="campaign-location-picker-btn campaign-location-picker-btn--clear" id="locationPickerClear">LIMPAR</button>
+            <button type="button" class="campaign-location-picker-btn campaign-location-picker-btn--confirm" id="locationPickerConfirm" disabled>USAR ESTE LOCAL →</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer"><span>AFTERLIFE v0.1</span><span>A sobrevivência é apenas o começo.</span><span>Desenvolvido por <b>AERIOM</b></span></footer>
+  </main>
+</div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin></script>
+<script type="module" src="./js/campaign-location-picker.js?v=20260916-1"></script>
+</body>
+</html>
