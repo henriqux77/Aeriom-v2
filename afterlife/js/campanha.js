@@ -1,9 +1,9 @@
-import './error-monitor.js?v=20260915-8';
-import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260915-5';
-import './afterlife-sidebar.js?v=20260915-5';
-import './shared-profile.js?v=20260915-5';
-import './invites.js?v=20260915-2';
-import './members-presence.js?v=20260915-1';
+import './error-monitor.js?v=20260915-9';
+import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260915-6';
+import './afterlife-sidebar.js?v=20260915-9';
+import './shared-profile.js?v=20260915-6';
+import './invites.js?v=20260915-3';
+import './members-presence.js?v=20260915-2';
 
 (() => {
   'use strict';
@@ -51,6 +51,14 @@ import './members-presence.js?v=20260915-1';
     return { ...data, imageUrl: coverUrl, isOwner: data.created_by === user.id };
   }
 
+  function bindMapLinks(campaign) {
+    const id = encodeURIComponent(campaign.id);
+    const href = `./mapa-mundial.html?campaign=${id}`;
+    document.querySelectorAll('a[href="./mapa-mundial.html"],a[href="./mapa-mundial.html#"]').forEach((link) => { link.href = href; });
+    sessionStorage.setItem('afterlife_current_campaign_id', String(campaign.id));
+    sessionStorage.setItem('afterlife_current_campaign_name', String(campaign.name || 'Campanha'));
+  }
+
   function applyCampaign(campaign) {
     $('campaignCrumb') && ($('campaignCrumb').textContent = campaign.name);
     $('campaignTitle') && ($('campaignTitle').textContent = campaign.name);
@@ -58,23 +66,18 @@ import './members-presence.js?v=20260915-1';
     $('campaignMaster') && ($('campaignMaster').textContent = campaign.isOwner ? 'Você' : 'Mestre');
     $('campaignMembersCount') && ($('campaignMembersCount').textContent = '1');
     $('membersPanelCount') && ($('membersPanelCount').textContent = '(1)');
-
     const scaleLabel = campaign.scale === 'local' ? 'Local' : campaign.scale === 'city' ? 'Cidade' : campaign.scale === 'regional' ? 'Regional' : 'Mundo aberto';
     $('campaignScaleLabel') && ($('campaignScaleLabel').textContent = scaleLabel);
     $('campaignLocation') && ($('campaignLocation').textContent = campaign.country || 'Local inicial');
-
-    const coords = Number.isFinite(Number(campaign.latitude)) && Number.isFinite(Number(campaign.longitude))
-      ? `${Number(campaign.latitude).toFixed(5)}°, ${Number(campaign.longitude).toFixed(5)}°`
-      : 'Local não definido.';
+    const coords = Number.isFinite(Number(campaign.latitude)) && Number.isFinite(Number(campaign.longitude)) ? `${Number(campaign.latitude).toFixed(5)}°, ${Number(campaign.longitude).toFixed(5)}°` : 'Local não definido.';
     $('campaignCoordinates') && ($('campaignCoordinates').textContent = coords);
-
     if (campaign.imageUrl) {
       const hero = $('campaignHeroImage');
       const world = $('worldPreviewImage');
       if (hero) hero.style.backgroundImage = `url("${escapeCssUrl(campaign.imageUrl)}")`;
       if (world) world.style.backgroundImage = `url("${escapeCssUrl(campaign.imageUrl)}")`;
     }
-
+    bindMapLinks(campaign);
     document.title = `AFTERLIFE — ${campaign.name}`;
   }
 
