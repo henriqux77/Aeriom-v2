@@ -1,1 +1,103 @@
-<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050807"><title>AFTERLIFE — Mapa Mundial</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"><link rel="stylesheet" href="./css/afterlife.css?v=20260914-22"><link rel="stylesheet" href="./css/mapa.css?v=20260913-8"><link rel="stylesheet" href="./css/map-pois.css?v=20260913-1"><link rel="stylesheet" href="./css/afterlife-profile-global.css?v=20260914-22"><link rel="stylesheet" href="./css/afterlife-sidebar.css?v=20260914-22"><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""><style>.map-head .page-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.map-head .page-actions .btn{appearance:none;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 18px;border-radius:10px;font:900 10px/1 Inter,sans-serif;letter-spacing:.8px;transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease,background .16s ease,filter .16s ease}.map-head .page-actions .btn:hover{transform:translateY(-1px)}.map-head .page-actions .btn--ghost{border:1px solid rgba(132,166,150,.25);background:linear-gradient(180deg,rgba(24,35,29,.95),rgba(10,17,13,.95));color:#e5ece7;box-shadow:0 8px 22px rgba(0,0,0,.22)}.map-head .page-actions .btn--ghost:hover{border-color:rgba(57,245,138,.35);background:linear-gradient(180deg,rgba(30,46,37,.98),rgba(11,20,15,.98));color:#fff;box-shadow:0 10px 28px rgba(0,0,0,.3)}.map-head .page-actions .btn--primary{border:1px solid rgba(57,245,138,.5);background:linear-gradient(180deg,#55ffa0,#26d878);color:#041008;box-shadow:0 10px 28px rgba(31,231,124,.16)}.map-head .page-actions .btn--primary:hover{filter:brightness(1.06);box-shadow:0 12px 32px rgba(31,231,124,.22)}</style></head><body><div class="app-shell"><aside class="sidebar" id="sidebar"><div class="brand"><div class="brand__title"><img class="brand__logo" src="https://i.ibb.co/BH2Hqr3P/file-00000000b47c820e88b788de23f77e3e.png" alt="AFTERLIFE — Sobrevivência além do fim"></div></div><nav class="side-nav"><a class="side-nav__item" href="./index.html"><span class="icon">⌂</span><span>Início</span></a><a class="side-nav__item" href="./campanhas.html"><span class="icon">◈</span><span>Campanhas</span></a><a class="side-nav__item" href="./personagens.html"><span class="icon">●</span><span>Personagens</span></a><a class="side-nav__item is-active" href="./mapa-mundial.html"><span class="icon">◇</span><span>Mapa Mundial</span></a><a class="side-nav__item" href="#"><span class="icon">▣</span><span>Inventário</span></a><a class="side-nav__item" href="#"><span class="icon">▤</span><span>Manual</span></a><a class="side-nav__item" href="#"><span class="icon">◎</span><span>Comunidade</span></a><a class="side-nav__item" href="#"><span class="icon">▥</span><span>Notícias</span></a></nav><div class="sidebar-spacer"></div><a class="side-nav__item" href="#"><span class="icon">⚙</span><span>Configurações</span></a></aside><main class="main"><header class="topbar"><button class="mobile-menu" id="mobileMenu" aria-label="Abrir menu"><span aria-hidden="true"></span></button><div class="top-actions"><button class="profile-chip" id="profileChip" type="button" aria-label="Abrir perfil"><span class="profile-avatar" id="profileAvatar">A</span><span class="profile-copy"><strong id="profileName">Sobrevivente</strong><small><i></i> Online</small></span><span class="profile-caret">⌄</span></button></div></header><section class="page-head map-head"><div><div class="eyebrow">MUNDO · REGIÕES · ROTAS</div><h1>Mapa Mundial</h1><p>Explore do planeta à escala de rua. Em zoom alto, o Afterlife mostra pontos de interesse e estabelecimentos próximos.</p></div><div class="page-actions"><a class="btn btn--ghost" href="./campanhas.html">← VOLTAR PARA CAMPANHAS</a><button class="btn btn--primary" id="centerSelection" type="button">USAR SELEÇÃO</button></div></section><section class="map-layout"><div class="map-shell panel"><div id="worldMap"></div><div class="map-hint">Clique para marcar o local da campanha. Dê zoom para descobrir ruas, lojas, serviços e outros pontos de interesse. <span id="coords">—</span></div></div><aside class="map-sidebar panel"><div class="panel-head"><h2>LOCAL & POIs PRÓXIMOS</h2></div><div class="region-empty" id="regionEmpty"><span>◇</span><h3>Nenhum ponto selecionado</h3><p>Escolha um ponto no mapa. Em escala de rua, os estabelecimentos próximos serão carregados automaticamente.</p></div><div class="region-selected" id="regionSelected" hidden><div class="region-name" id="regionName">—</div><div class="region-coords" id="regionCoords">—</div><div class="region-actions"><a class="btn btn--primary" id="createHere" href="./campanhas.html">CRIAR CAMPANHA AQUI →</a><button class="btn btn--ghost" id="clearPoint">LIMPAR</button></div></div><div class="nearby-panel" id="nearbyPanel"><div class="nearby-head"><span>AO REDOR DO MAPA</span><b id="nearbyStatus">Aproxime o mapa para carregar</b></div><div id="nearbyList" class="nearby-list"><div class="nearby-empty">Zoom 13+ para descobrir pontos de interesse.</div></div></div><div class="map-stats"><div><span>Escala</span><b id="mapScale">Mundo</b></div><div><span>Uso</span><b>Localização de campanha</b></div><div><span>POIs</span><b id="mapPoiCount">0</b></div></div></aside></section><footer class="footer"><span>AFTERLIFE v0.1</span><span>O mundo mudou.</span><span>Desenvolvido por <b>AERIOM</b></span></footer></main></div><div class="afterlife-profile-menu" id="profileMenu" aria-hidden="true"><div class="afterlife-profile-head"><span class="afterlife-profile-avatar" id="profileMenuAvatar">A</span><div><strong id="profileMenuName">Sobrevivente</strong><small id="profileMenuEmail">Conta Afterlife</small></div></div><div class="afterlife-profile-actions"><a href="./perfil.html">Editar perfil</a><a href="../index.html">Trocar sistema</a><button id="profileLogout" class="danger" type="button">Sair da conta</button></div></div><script>(function(){const $=id=>document.getElementById(id);$('centerSelection')?.addEventListener('click',()=>{const saved=sessionStorage.getItem('afterlife_selected_location');if(saved){try{const loc=JSON.parse(saved);if(Number.isFinite(Number(loc.lat))&&Number.isFinite(Number(loc.lng))){location.href=`./campanhas.html?create=1&lat=${encodeURIComponent(loc.lat)}&lng=${encodeURIComponent(loc.lng)}&label=${encodeURIComponent(loc.label||'Local selecionado no mapa')}`;return;}}catch{}}const name=$('regionName')?.textContent?.trim();if(!name||name==='Nenhum ponto selecionado'||name==='Localizando…')alert('Selecione um ponto no mapa primeiro.');});})();</script><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin></script><script type="module" src="./js/afterlife-sidebar.js?v=20260914-22"></script><script type="module" src="./js/mapa.js?v=20260914-22"></script></body></html>
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#050807">
+<title>AFTERLIFE — Mapa da Campanha</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./css/afterlife.css?v=20260915-9">
+<link rel="stylesheet" href="./css/mapa.css?v=20260915-9">
+<link rel="stylesheet" href="./css/mapa-foundation.css?v=20260915-1">
+<link rel="stylesheet" href="./css/afterlife-profile-global.css?v=20260915-9">
+<link rel="stylesheet" href="./css/afterlife-sidebar.css?v=20260915-9">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+</head>
+<body class="afterlife-map-page">
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand"><div class="brand__title"><img class="brand__logo" src="https://i.ibb.co/BH2Hqr3P/file-00000000b47c820e88b788de23f77e3e.png" alt="AFTERLIFE — Sobrevivência além do fim"></div></div>
+    <nav class="side-nav">
+      <a class="side-nav__item" href="./index.html"><span class="icon">⌂</span><span>Início</span></a>
+      <a class="side-nav__item" href="./campanhas.html"><span class="icon">◈</span><span>Campanhas</span></a>
+      <a class="side-nav__item" href="./personagens.html"><span class="icon">●</span><span>Personagens</span></a>
+      <a class="side-nav__item is-active" href="./mapa-mundial.html"><span class="icon">◇</span><span>Mapa da Campanha</span></a>
+      <a class="side-nav__item" href="#"><span class="icon">▣</span><span>Inventário</span></a>
+      <a class="side-nav__item" href="#"><span class="icon">▤</span><span>Manual</span></a>
+      <a class="side-nav__item" href="#"><span class="icon">◎</span><span>Comunidade</span></a>
+      <a class="side-nav__item" href="#"><span class="icon">▥</span><span>Notícias</span></a>
+    </nav>
+    <div class="sidebar-spacer"></div>
+    <a class="side-nav__item" href="#"><span class="icon">⚙</span><span>Configurações</span></a>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <button class="mobile-menu" id="mobileMenu" aria-label="Abrir menu"><span aria-hidden="true"></span></button>
+      <div class="top-actions">
+        <button class="profile-chip" id="profileChip" type="button" aria-label="Abrir perfil"><span class="profile-avatar" id="profileAvatar">A</span><span class="profile-copy"><strong id="profileName">Sobrevivente</strong><small><i></i> Online</small></span><span class="profile-caret">⌄</span></button>
+      </div>
+    </header>
+
+    <section class="page-head map-head">
+      <div>
+        <div class="eyebrow">MUNDO VIVO · EXPLORAÇÃO · CAMPANHA</div>
+        <h1 id="mapTitle">Mapa da Campanha</h1>
+        <p id="mapSubtitle">Carregando o mundo da campanha…</p>
+        <div class="map-context"><span class="map-role-badge" id="mapRoleBadge">CARREGANDO…</span><span class="map-context-copy">O ponto inicial é apenas o começo. O mapa pode se estender por qualquer região do mundo.</span></div>
+      </div>
+      <div class="page-actions">
+        <a class="btn btn--ghost" href="./campanhas.html">← VOLTAR PARA CAMPANHAS</a>
+        <button class="btn btn--primary" id="mapCenterCampaign" type="button">CENTRALIZAR INÍCIO</button>
+      </div>
+    </section>
+
+    <section class="map-layout">
+      <div class="map-shell panel">
+        <div class="map-mode-note">MODO: <b id="mapModeLabel">EXPLORAÇÃO</b></div>
+        <div id="worldMap"></div>
+        <div class="map-hint">Aproxime para ver locais reais da região. O Mestre pode navegar pelo mundo inteiro; jogadores começam no ponto atual da campanha e não movem suas próprias posições. <span id="mapScale">Cidade</span> · <span id="mapStatus">Inicializando…</span></div>
+      </div>
+
+      <aside class="map-sidebar panel">
+        <div class="panel-head"><h2>CONTROLE DO MAPA</h2></div>
+        <div class="map-tools" id="masterTools" hidden>
+          <div class="map-section-label">MESTRE</div>
+          <div class="map-tool-grid">
+            <button class="map-tool" id="mapPanGlobal" type="button">🌎 VISÃO GLOBAL</button>
+            <button class="map-tool" id="refreshMembers" type="button">↻ ATUALIZAR</button>
+          </div>
+          <div class="map-status" id="mapStatusMaster"></div>
+        </div>
+        <div class="map-selected" id="selectedLocation" hidden></div>
+        <div class="map-members">
+          <div class="map-section-label">SOBREVIVENTES · <span id="mapMemberCount">0</span></div>
+          <div class="map-member-list" id="mapMemberList"></div>
+        </div>
+        <div class="map-pois">
+          <div class="map-section-label">LOCAIS REAIS PRÓXIMOS</div>
+          <div id="poiStatus" class="map-status">Aproxime para descobrir</div>
+          <div id="poiList"></div>
+        </div>
+        <div class="map-player-help" id="playerTools" hidden>
+          <strong>VISÃO DO SOBREVIVENTE</strong>
+          <p>Você pode explorar e observar o mapa. Sua posição é controlada pelo Mestre durante a sessão.</p>
+        </div>
+      </aside>
+    </section>
+  </main>
+</div>
+
+<div class="afterlife-profile-menu" id="profileMenu" aria-hidden="true">
+  <div class="afterlife-profile-head"><span class="afterlife-profile-avatar" id="profileMenuAvatar">A</span><div><strong id="profileMenuName">Sobrevivente</strong><small id="profileMenuEmail">Conta Afterlife</small></div></div>
+  <div class="afterlife-profile-actions"><a href="./perfil.html">Editar perfil</a><a href="../index.html">Trocar sistema</a><button id="profileLogout" class="danger" type="button">Sair da conta</button></div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin></script>
+<script type="module" src="./js/afterlife-sidebar.js?v=20260915-9"></script>
+<script type="module" src="./js/profile-global.js?v=20260915-9"></script>
+<script type="module" src="./js/mapa-foundation.js?v=20260915-1"></script>
+</body>
+</html>
