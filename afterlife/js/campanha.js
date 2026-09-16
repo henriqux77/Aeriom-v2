@@ -42,13 +42,35 @@ import './members-presence.js?v=20260915-2';
       throw new Error('Campanha não encontrada ou sem permissão.');
     }
 
+    const { data: memberData, error: memberError } = await aeriom.rpc('list_campaign_members', { p_campaign_id: id });
+    if (memberError) throw memberError;
+
+    const members = (Array.isArray(memberData) ? memberData : memberData ? [memberData] : [])
+      .map((row) => ({
+        user_id: String(row?.user_id || ''),
+        role: String(row?.role || 'player')
+      }))
+      .filter((row) => row.user_id);
+
+    const currentMember = members.find((row) => row.user_id === user.id);
+    if (!currentMember) {
+      location.replace('./campanhas.html');
+      throw new Error('Você não é membro desta campanha.');
+    }
+
     let coverUrl = '';
     if (data.cover_path) {
       const { data: signed } = await aeriom.storage.from(BUCKET).createSignedUrl(data.cover_path, 3600);
       coverUrl = signed?.signedUrl || '';
     }
 
-    return { ...data, imageUrl: coverUrl, isOwner: data.created_by === user.id };
+    return {
+      ...data,
+      imageUrl: coverUrl,
+      isOwner: data.created_by === user.id,
+      role: currentMember.role,
+      membersCount: members.length
+    };
   }
 
   function bindMapLinks(campaign) {
@@ -57,15 +79,22 @@ import './members-presence.js?v=20260915-2';
     document.querySelectorAll('a[href="./mapa-mundial.html"],a[href="./mapa-mundial.html#"]').forEach((link) => { link.href = href; });
     sessionStorage.setItem('afterlife_current_campaign_id', String(campaign.id));
     sessionStorage.setItem('afterlife_current_campaign_name', String(campaign.name || 'Campanha'));
+    sessionStorage.setItem('afterlife_current_campaign_role', String(campaign.role || 'player'));
   }
 
   function applyCampaign(campaign) {
     $('campaignCrumb') && ($('campaignCrumb').textContent = campaign.name);
     $('campaignTitle') && ($('campaignTitle').textContent = campaign.name);
     $('campaignDescription') && ($('campaignDescription').textContent = campaign.description || '');
-    $('campaignMaster') && ($('campaignMaster').textContent = campaign.isOwner ? 'Você' : 'Mestre');
-    $('campaignMembersCount') && ($('campaignMembersCount').textContent = '1');
-    $('membersPanelCount') && ($('membersPanelCount').textContent = '(1)');
+
+    const isMaster = campaign.role === 'master' || campaign.isOwner;
+    $('campaignMaster') && ($('campaignMaster').textContent = isMaster && campaign.isOwner ? 'Você' : 'Mestre');
+
+    const membersCount = Number.isFinite(Number(campaign.membersCount)) ? Number(campaign.membersCount) : 0;
+    $('campaignMembersCount') && ($('campaignMembersCount').textContent = String(membersCount));
+    $('membersPanelCount') && ($('membersPanelCount').textContent = `(${membersCount})`);
+    $('manageCampaign')?.toggleAttribute('hidden', !isMaster);
+
     const scaleLabel = campaign.scale === 'local' ? 'Local' : campaign.scale === 'city' ? 'Cidade' : campaign.scale === 'regional' ? 'Regional' : 'Mundo aberto';
     $('campaignScaleLabel') && ($('campaignScaleLabel').textContent = scaleLabel);
     $('campaignLocation') && ($('campaignLocation').textContent = campaign.country || 'Local inicial');
