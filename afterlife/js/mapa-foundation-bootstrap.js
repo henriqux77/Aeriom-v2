@@ -9,7 +9,7 @@
     return;
   }
 
-  import('./mapa-foundation.js?v=20260915-6').catch((error) => {
+  import('./mapa-foundation.js?v=20260916-2').catch((error) => {
     console.error('[AFTERLIFE][MAP][BOOTSTRAP]', error);
     const status = document.getElementById('mapStatus');
     if (status) {
