@@ -47,7 +47,17 @@ import { ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260915-6';
   function unproject(x, y) { return L.CRS.EPSG3857.unproject(L.point(x, y)); }
   function cellKey(x, y) { return `${x}:${y}`; }
   function cellFor(lat, lng) { const p = project(lat, lng); return { x: Math.floor(p.x / CELL_SIZE_METERS), y: Math.floor(p.y / CELL_SIZE_METERS) }; }
-  function cellCenter(x, y) { return unproject((x + 0.5) * CELL_SIZE_METERS, (y + 0.5) * CELL_SIZE_METERS); }
+
+  function cellBounds(x, y) {
+    const nw = unproject(x * CELL_SIZE_METERS, y * CELL_SIZE_METERS);
+    const se = unproject((x + 1) * CELL_SIZE_METERS, (y + 1) * CELL_SIZE_METERS);
+    return { nw, se };
+  }
+
+  function cellCenter(x, y) {
+    const c = cellBounds(x, y);
+    return { lat: (c.nw.lat + c.se.lat) / 2, lng: (c.nw.lng + c.se.lng) / 2 };
+  }
 
   function discoverAround(position) {
     if (!position) return false;
@@ -67,7 +77,7 @@ import { ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260915-6';
     for (let dx = -radius; dx <= radius; dx += 1) {
       for (let dy = -radius; dy <= radius; dy += 1) {
         const c = cellCenter(center.x + dx, center.y + dy);
-        const meters = distance(position, { lat: c.lat, lng: c.lng });
+        const meters = distance(position, c);
         if (meters <= maxDistance) {
           const key = cellKey(center.x + dx, center.y + dy);
           if (!set.has(key)) { set.add(key); state.cells.push(key); changed = true; }
@@ -129,11 +139,11 @@ import { ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260915-6';
       const [xs, ys] = key.split(':');
       const x = Number(xs); const y = Number(ys);
       if (!Number.isFinite(x) || !Number.isFinite(y)) continue;
-      const nw = cellCenter(x, y);
-      const ne = cellCenter(x + 1, y);
-      const se = cellCenter(x + 1, y + 1);
-      const sw = cellCenter(x, y + 1);
-      const p1 = screenPoint(nw.lat, nw.lng); const p2 = screenPoint(ne.lat, ne.lng); const p3 = screenPoint(se.lat, se.lng); const p4 = screenPoint(sw.lat, sw.lng);
+      const bounds = cellBounds(x, y);
+      const p1 = screenPoint(bounds.nw.lat, bounds.nw.lng);
+      const p2 = screenPoint(bounds.nw.lat, bounds.se.lng);
+      const p3 = screenPoint(bounds.se.lat, bounds.se.lng);
+      const p4 = screenPoint(bounds.se.lat, bounds.nw.lng);
       const left = Math.min(p1.x, p4.x), top = Math.min(p1.y, p2.y), right = Math.max(p2.x, p3.x), bottom = Math.max(p4.y, p3.y);
       if (right < -20 || left > width + 20 || bottom < -20 || top > height + 20) continue;
       addHole(holes, left, top, right - left, bottom - top, 3);
