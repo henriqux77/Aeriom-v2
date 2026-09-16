@@ -19,68 +19,40 @@ import { ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260915-6';
   let pollTimer = null;
   let renderQueued = false;
 
-  const distance = (a, b) => {
-    if (!map || !a || !b) return Infinity;
-    return map.distance([a.lat, a.lng], [b.lat, b.lng]);
-  };
+  const distance = (a, b) => (!map || !a || !b ? Infinity : map.distance([a.lat, a.lng], [b.lat, b.lng]));
 
-  function stateKey() {
-    return `${STATE_KEY_PREFIX}.${campaign?.id || 'unknown'}.${userId || 'anonymous'}`;
-  }
+  function stateKey() { return `${STATE_KEY_PREFIX}.${campaign?.id || 'unknown'}.${userId || 'anonymous'}`; }
 
   function loadState() {
     try {
       const raw = localStorage.getItem(stateKey());
       if (!raw) return;
       const parsed = JSON.parse(raw);
-      if (parsed && Array.isArray(parsed.cells)) state = {
-        anchor: parsed.anchor || null,
-        cells: parsed.cells.slice(-MAX_CELLS),
-        visitedRegions: Array.isArray(parsed.visitedRegions) ? parsed.visitedRegions.slice(-100) : []
-      };
-    } catch (error) {
-      console.warn('[AFTERLIFE][EXPLORATION] state', error);
-    }
+      if (parsed && Array.isArray(parsed.cells)) {
+        state = {
+          anchor: parsed.anchor || null,
+          cells: parsed.cells.slice(-MAX_CELLS),
+          visitedRegions: Array.isArray(parsed.visitedRegions) ? parsed.visitedRegions.slice(-100) : []
+        };
+      }
+    } catch (error) { console.warn('[AFTERLIFE][EXPLORATION] state', error); }
   }
 
   function saveState() {
-    try {
-      localStorage.setItem(stateKey(), JSON.stringify(state));
-    } catch (error) {
-      console.warn('[AFTERLIFE][EXPLORATION] save', error);
-    }
+    try { localStorage.setItem(stateKey(), JSON.stringify(state)); }
+    catch (error) { console.warn('[AFTERLIFE][EXPLORATION] save', error); }
   }
 
-  function project(lat, lng) {
-    return L.CRS.EPSG3857.project(L.latLng(lat, lng));
-  }
-
-  function unproject(x, y) {
-    return L.CRS.EPSG3857.unproject(L.point(x, y));
-  }
-
-  function cellKey(x, y) {
-    return `${x}:${y}`;
-  }
-
-  function cellFor(lat, lng) {
-    const p = project(lat, lng);
-    return {
-      x: Math.floor(p.x / CELL_SIZE_METERS),
-      y: Math.floor(p.y / CELL_SIZE_METERS)
-    };
-  }
-
-  function cellCenter(x, y) {
-    return unproject((x + 0.5) * CELL_SIZE_METERS, (y + 0.5) * CELL_SIZE_METERS);
-  }
+  function project(lat, lng) { return L.CRS.EPSG3857.project(L.latLng(lat, lng)); }
+  function unproject(x, y) { return L.CRS.EPSG3857.unproject(L.point(x, y)); }
+  function cellKey(x, y) { return `${x}:${y}`; }
+  function cellFor(lat, lng) { const p = project(lat, lng); return { x: Math.floor(p.x / CELL_SIZE_METERS), y: Math.floor(p.y / CELL_SIZE_METERS) }; }
+  function cellCenter(x, y) { return unproject((x + 0.5) * CELL_SIZE_METERS, (y + 0.5) * CELL_SIZE_METERS); }
 
   function discoverAround(position) {
     if (!position) return false;
-
-    if (!state.anchor) {
-      state.anchor = { lat: position.lat, lng: position.lng };
-    } else if (distance(state.anchor, position) > REGION_RESET_METERS) {
+    if (!state.anchor) state.anchor = { lat: position.lat, lng: position.lng };
+    else if (distance(state.anchor, position) > REGION_RESET_METERS) {
       state.visitedRegions.push({ lat: state.anchor.lat, lng: state.anchor.lng, at: Date.now() });
       state.anchor = { lat: position.lat, lng: position.lng };
       state.cells = [];
@@ -88,7 +60,7 @@ import { ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260915-6';
 
     const center = cellFor(position.lat, position.lng);
     const radius = Math.ceil(PLAYER_VISION_METERS / CELL_SIZE_METERS) + 2;
-    const radiusSq = (PLAYER_VISION_METERS + CELL_SIZE_METERS) ** 2;
+    const maxDistance = PLAYER_VISION_METERS + CELL_SIZE_METERS * 0.75;
     const set = new Set(state.cells);
     let changed = false;
 
@@ -96,13 +68,9 @@ import { ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260915-6';
       for (let dy = -radius; dy <= radius; dy += 1) {
         const c = cellCenter(center.x + dx, center.y + dy);
         const meters = distance(position, { lat: c.lat, lng: c.lng });
-        if (meters <= radiusSq) {
+        if (meters <= maxDistance) {
           const key = cellKey(center.x + dx, center.y + dy);
-          if (!set.has(key)) {
-            set.add(key);
-            state.cells.push(key);
-            changed = true;
-          }
+          if (!set.has(key)) { set.add(key); state.cells.push(key); changed = true; }
         }
       }
     }
@@ -112,9 +80,7 @@ import { ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260915-6';
     return changed;
   }
 
-  function getSelfPosition() {
-    return window.__afterlifeCampaignMap?.getSelfPosition?.() || null;
-  }
+  function getSelfPosition() { return window.__afterlifeCampaignMap?.getSelfPosition?.() || null; }
 
   function buildOverlay() {
     const host = $('worldMap');
@@ -122,48 +88,28 @@ import { ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260915-6';
     overlay = document.createElement('svg');
     overlay.className = 'afterlife-exploration-overlay';
     overlay.setAttribute('aria-hidden', 'true');
-    overlay.innerHTML = `
-      <defs>
-        <mask id="afterlifeExplorationMask">
-          <rect id="afterlifeExplorationMaskBase" x="0" y="0" width="100%" height="100%" fill="white"></rect>
-          <g id="afterlifeExplorationHoles" fill="black"></g>
-        </mask>
-      </defs>
-      <rect id="afterlifeExplorationFog" x="0" y="0" width="100%" height="100%" fill="#030604" fill-opacity="0.87" mask="url(#afterlifeExplorationMask)"></rect>
-    `;
+    overlay.innerHTML = '<defs><mask id="afterlifeExplorationMask"><rect x="0" y="0" width="100%" height="100%" fill="white"></rect><g id="afterlifeExplorationHoles" fill="black"></g></mask></defs><rect id="afterlifeExplorationFog" x="0" y="0" width="100%" height="100%" fill="#030604" fill-opacity="0.87" mask="url(#afterlifeExplorationMask)"></rect>';
     host.appendChild(overlay);
   }
 
-  function screenPoint(lat, lng) {
-    const point = map.latLngToContainerPoint([lat, lng]);
-    return { x: point.x, y: point.y };
-  }
+  function screenPoint(lat, lng) { const p = map.latLngToContainerPoint([lat, lng]); return { x: p.x, y: p.y }; }
 
   function addHole(group, x, y, w, h, radius = 0) {
     const node = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-    node.setAttribute('x', String(x));
-    node.setAttribute('y', String(y));
-    node.setAttribute('width', String(Math.max(0, w)));
-    node.setAttribute('height', String(Math.max(0, h)));
-    if (radius) {
-      node.setAttribute('rx', String(radius));
-      node.setAttribute('ry', String(radius));
-    }
+    node.setAttribute('x', String(x)); node.setAttribute('y', String(y)); node.setAttribute('width', String(Math.max(0, w))); node.setAttribute('height', String(Math.max(0, h)));
+    if (radius) { node.setAttribute('rx', String(radius)); node.setAttribute('ry', String(radius)); }
     group.appendChild(node);
   }
 
   function addCircleHole(group, cx, cy, r) {
     const node = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    node.setAttribute('cx', String(cx));
-    node.setAttribute('cy', String(cy));
-    node.setAttribute('r', String(Math.max(0, r)));
-    group.appendChild(node);
+    node.setAttribute('cx', String(cx)); node.setAttribute('cy', String(cy)); node.setAttribute('r', String(Math.max(0, r))); group.appendChild(node);
   }
 
   function metersToPixels(lat, meters) {
+    const lngDelta = meters / (111320 * Math.max(0.18, Math.cos((lat * Math.PI) / 180)));
     const p1 = map.latLngToContainerPoint([lat, 0]);
-    const lonPerMeter = meters / (111320 * Math.max(0.18, Math.cos((lat * Math.PI) / 180)));
-    const p2 = map.latLngToContainerPoint([lat, lonPerMeter]);
+    const p2 = map.latLngToContainerPoint([lat, lngDelta]);
     return Math.abs(p2.x - p1.x);
   }
 
@@ -173,7 +119,6 @@ import { ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260915-6';
     const holes = overlay.querySelector('#afterlifeExplorationHoles');
     if (!holes) return;
     holes.replaceChildren();
-
     const width = host.clientWidth;
     const height = host.clientHeight;
     overlay.setAttribute('viewBox', `0 0 ${width} ${height}`);
@@ -182,21 +127,14 @@ import { ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260915-6';
 
     for (const key of state.cells) {
       const [xs, ys] = key.split(':');
-      const x = Number(xs);
-      const y = Number(ys);
+      const x = Number(xs); const y = Number(ys);
       if (!Number.isFinite(x) || !Number.isFinite(y)) continue;
       const nw = cellCenter(x, y);
       const ne = cellCenter(x + 1, y);
       const se = cellCenter(x + 1, y + 1);
       const sw = cellCenter(x, y + 1);
-      const p1 = screenPoint(nw.lat, nw.lng);
-      const p2 = screenPoint(ne.lat, ne.lng);
-      const p3 = screenPoint(se.lat, se.lng);
-      const p4 = screenPoint(sw.lat, sw.lng);
-      const left = Math.min(p1.x, p4.x);
-      const top = Math.min(p1.y, p2.y);
-      const right = Math.max(p2.x, p3.x);
-      const bottom = Math.max(p4.y, p3.y);
+      const p1 = screenPoint(nw.lat, nw.lng); const p2 = screenPoint(ne.lat, ne.lng); const p3 = screenPoint(se.lat, se.lng); const p4 = screenPoint(sw.lat, sw.lng);
+      const left = Math.min(p1.x, p4.x), top = Math.min(p1.y, p2.y), right = Math.max(p2.x, p3.x), bottom = Math.max(p4.y, p3.y);
       if (right < -20 || left > width + 20 || bottom < -20 || top > height + 20) continue;
       addHole(holes, left, top, right - left, bottom - top, 3);
     }
@@ -208,14 +146,10 @@ import { ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260915-6';
   }
 
   function updatePanel(position) {
-    const count = $('explorationDiscoveredCount');
-    const regions = $('explorationRegionsVisited');
-    const radius = $('explorationVisionRadius');
-    const hint = $('explorationHint');
-    if (count) count.textContent = String(state.cells.length);
-    if (regions) regions.textContent = String(state.visitedRegions.length + 1);
-    if (radius) radius.textContent = `${Math.round(PLAYER_VISION_METERS)} m`;
-    if (hint) hint.textContent = position ? 'A área clara mostra o que o sobrevivente consegue perceber agora. As áreas descobertas permanecem conhecidas nesta região.' : 'Aguardando a posição do sobrevivente.';
+    $('explorationDiscoveredCount') && ($('explorationDiscoveredCount').textContent = String(state.cells.length));
+    $('explorationRegionsVisited') && ($('explorationRegionsVisited').textContent = String(state.visitedRegions.length + (state.anchor ? 1 : 0)));
+    $('explorationVisionRadius') && ($('explorationVisionRadius').textContent = `${PLAYER_VISION_METERS} m`);
+    $('explorationHint') && ($('explorationHint').textContent = position ? 'A área clara mostra o que o sobrevivente consegue perceber agora. O que já foi descoberto permanece conhecido nesta região.' : 'Aguardando a posição do sobrevivente.');
   }
 
   function queueRender() {
@@ -239,42 +173,23 @@ import { ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260915-6';
 
   async function refreshSelfPosition() {
     if (role !== 'player') return;
-    try {
-      await window.__afterlifeCampaignMap?.refreshMembers?.();
-      queueRender();
-    } catch (error) {
-      console.warn('[AFTERLIFE][EXPLORATION] refresh', error);
-    }
+    try { await window.__afterlifeCampaignMap?.refreshMembers?.(); queueRender(); }
+    catch (error) { console.warn('[AFTERLIFE][EXPLORATION] refresh', error); }
   }
 
-  function startPolling() {
-    if (pollTimer || role !== 'player') return;
-    pollTimer = setInterval(refreshSelfPosition, 5000);
-  }
+  function startPolling() { if (!pollTimer && role === 'player') pollTimer = setInterval(refreshSelfPosition, 5000); }
 
   async function boot() {
     const session = await ensureAfterlifeSession();
     if (!session?.user) return;
-
     const ready = window.__afterlifeCampaignMap;
     if (!ready?.map || !ready.campaign) return;
-
-    map = ready.map;
-    role = ready.role || 'player';
-    campaign = ready.campaign;
-    userId = session.user.id;
-
+    map = ready.map; role = ready.role || 'player'; campaign = ready.campaign; userId = session.user.id;
     if (role === 'master') return;
-
-    loadState();
-    buildOverlay();
-    hookMapEvents();
-    queueRender();
-    startPolling();
+    loadState(); buildOverlay(); hookMapEvents(); queueRender(); startPolling();
   }
 
   window.addEventListener('afterlife:map-ready', boot, { once: true });
   window.addEventListener('afterlife:map-members-updated', queueRender);
-
   if (window.__afterlifeCampaignMap?.map) boot().catch((error) => console.warn('[AFTERLIFE][EXPLORATION]', error));
 })();
