@@ -16,7 +16,7 @@
   function setStatus(text, type = 'info') {
     const el = $('locationPickerStatus');
     if (!el) return;
-    el.textContent = text;
+    el.innerHTML = `<strong>${esc(text)}</strong>`;
     el.dataset.type = type;
   }
 
@@ -34,19 +34,22 @@
   }
 
   function renderSelected() {
-    const empty = $('locationPickerEmpty');
-    const selectedBox = $('locationPickerSelected');
     const confirm = $('locationPickerConfirm');
-    if (!empty || !selectedBox || !confirm) return;
+    if (!confirm) return;
 
-    empty.hidden = Boolean(selected);
-    selectedBox.hidden = !selected;
-    confirm.disabled = !selected;
+    // O HTML atual do seletor não possui os antigos blocos
+    // locationPickerEmpty/locationPickerSelected. A seleção deve depender
+    // apenas da existência de um ponto válido.
+    const hasSelection = Boolean(
+      selected &&
+      Number.isFinite(Number(selected.lat)) &&
+      Number.isFinite(Number(selected.lng))
+    );
 
-    if (!selected) return;
-    $('locationPickerName').textContent = selected.name || 'Local selecionado';
-    $('locationPickerAddress').textContent = selected.address || `${selected.lat.toFixed(6)}, ${selected.lng.toFixed(6)}`;
-    $('locationPickerCoords').textContent = `${selected.lat.toFixed(6)}°, ${selected.lng.toFixed(6)}°`;
+    confirm.disabled = !hasSelection;
+    confirm.setAttribute('aria-disabled', String(!hasSelection));
+    confirm.style.opacity = hasSelection ? '1' : '.45';
+    confirm.style.pointerEvents = hasSelection ? 'auto' : 'none';
   }
 
   async function reverseGeocode(lat, lng, id) {
@@ -57,19 +60,19 @@
       );
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
-      if (id !== requestId) return;
+      if (id !== requestId || !selected) return;
       selected.name = data.name || data.address?.city || data.address?.town || data.address?.village || 'Local selecionado';
       selected.address = data.display_name || '';
       renderSelected();
       marker?.bindPopup(`<strong>📍 ${esc(selected.name)}</strong><br><small>${esc(selected.address)}</small>`).openPopup();
       setStatus('Local identificado. Você pode ajustar o ponto arrastando o marcador.', 'success');
     } catch {
-      if (id !== requestId) return;
+      if (id !== requestId || !selected) return;
       selected.name = 'Local selecionado no mapa';
       selected.address = `${lat.toFixed(6)}°, ${lng.toFixed(6)}°`;
       renderSelected();
       marker?.bindPopup(`<strong>📍 Local selecionado</strong><br><small>${lat.toFixed(6)}°, ${lng.toFixed(6)}°</small>`).openPopup();
-      setStatus('Coordenadas selecionadas. O endereço detalhado não foi encontrado.', 'info');
+      setStatus('Coordenadas selecionadas. O ponto pode ser usado para a campanha.', 'success');
     }
   }
 
@@ -106,17 +109,23 @@
 
   function confirmSelection() {
     if (!selected) return;
+    const lat = Number(selected.lat);
+    const lng = Number(selected.lng);
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+
     const params = new URLSearchParams({
       create: '1',
-      lat: selected.lat.toFixed(6),
-      lng: selected.lng.toFixed(6),
+      lat: lat.toFixed(6),
+      lng: lng.toFixed(6),
       label: selected.address || selected.name || 'Local selecionado no mapa'
     });
+
     sessionStorage.setItem('afterlife_selected_location', JSON.stringify({
-      lat: selected.lat,
-      lng: selected.lng,
+      lat,
+      lng,
       label: selected.address || selected.name || 'Local selecionado no mapa'
     }));
+
     location.href = `./campanhas.html?${params.toString()}`;
   }
 
