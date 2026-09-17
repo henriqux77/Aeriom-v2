@@ -8,27 +8,26 @@
   const overlays = new Map();
 
   const ICONS = {
-    fire_station: '🚒',
-    police: '🚓',
-    hospital: '🏥',
-    clinic: '🩺',
-    pharmacy: '💊',
-    school: '🏫',
-    college: '🎓',
-    university: '🎓',
-    bank: '🏦',
-    post_office: '📮',
-    fuel: '⛽',
-    supermarket: '🛒',
-    marketplace: '🛒',
-    cafe: '☕',
-    restaurant: '🍽️',
-    bar: '🍺',
-    fast_food: '🍔',
-    hotel: '🏨',
-    hostel: '🛏️',
-    museum: '🏛️',
-    attraction: '📍',
+    'corpo de bombeiros': '🚒',
+    'delegacia': '🚓',
+    'hospital': '🏥',
+    'clínica': '🩺',
+    'farmácia': '💊',
+    'escola': '🏫',
+    'faculdade': '🎓',
+    'universidade': '🎓',
+    'banco': '🏦',
+    'correios': '📮',
+    'posto': '⛽',
+    'mercado': '🛒',
+    'café': '☕',
+    'restaurante': '🍽️',
+    'bar': '🍺',
+    'alimentação': '🍔',
+    'hotel': '🏨',
+    'hostel': '🛏️',
+    'museu': '🏛️',
+    'atração': '📍',
   };
 
   function escapeHtml(value) {
@@ -36,7 +35,7 @@
   }
 
   function iconFor(type, name) {
-    const key = String(type || '').toLowerCase();
+    const key = String(type || '').toLowerCase().trim();
     if (ICONS[key]) return ICONS[key];
     const n = String(name || '').toLowerCase();
     if (n.includes('bombeiro') || n.includes('fire')) return '🚒';
@@ -51,6 +50,7 @@
   }
 
   function parsePoiPopup(layer) {
+    if (layer?.options?.className) return null;
     const popup = layer?.getPopup?.();
     if (!popup) return null;
     const content = popup.getContent?.();
@@ -62,6 +62,7 @@
     const name = strong?.textContent?.replace(/^\u200B/, '').trim() || '';
     const type = span?.textContent?.trim() || '';
     if (!name || !type) return null;
+    if (/^(local avistado|local inicial)$/i.test(name)) return null;
     return { name, type, content };
   }
 
@@ -72,19 +73,17 @@
     const poi = parsePoiPopup(circle);
     if (!poi) return;
 
-    // The legacy location-ficha handler strips the first non-space token from
-    // the popup <strong>. A zero-width prefix preserves the complete POI name.
+    // The existing location-ficha handler strips the first non-space token
+    // from <strong>. Prefixing it with a zero-width character preserves the
+    // full real-world POI name without changing what the user sees.
     if (!poi.content.includes('\u200B')) {
-      const safeName = escapeHtml(poi.name);
-      const safeType = escapeHtml(poi.type);
-      circle.bindPopup(`<strong>\u200B${safeName}</strong><br><span>${safeType}</span>`);
+      circle.bindPopup(`<strong>\u200B${escapeHtml(poi.name)}</strong><br><span>${escapeHtml(poi.type)}</span>`);
     }
 
-    const html = `<div class="afterlife-poi-icon" aria-hidden="true">${iconFor(poi.type, poi.name)}</div>`;
     const marker = L.marker(circle.getLatLng(), {
       icon: L.divIcon({
         className: 'afterlife-poi-icon-wrap',
-        html,
+        html: `<div class="afterlife-poi-icon" aria-hidden="true">${iconFor(poi.type, poi.name)}</div>`,
         iconSize: [34,34],
         iconAnchor: [17,17],
         popupAnchor: [0,-15],
@@ -95,12 +94,8 @@
     }).addTo(map);
 
     marker.bindTooltip(`${poi.name} · ${poi.type}`, { direction:'top', offset:[0,-14] });
-    marker.on('click', () => {
-      circle.openPopup();
-    });
+    marker.on('click', () => circle.openPopup());
 
-    // Hide the old green dot while keeping it as the popup source so the
-    // existing location ficha implementation continues to work unchanged.
     circle.setStyle({ opacity: 0, fillOpacity: 0, weight: 0 });
     overlays.set(circle, marker);
   }
