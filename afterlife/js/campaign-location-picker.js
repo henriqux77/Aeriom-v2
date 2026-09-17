@@ -11,7 +11,7 @@
   let searchTimer = null;
   let requestId = 0;
 
-  const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+  const esc = (value) => String(value ?? '').replace(/[&<>\"']/g, (c) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;' }[c]));
 
   function setStatus(text, type = 'info') {
     const el = $('locationPickerStatus');
@@ -37,9 +37,6 @@
     const confirm = $('locationPickerConfirm');
     if (!confirm) return;
 
-    // O HTML atual do seletor não possui os antigos blocos
-    // locationPickerEmpty/locationPickerSelected. A seleção deve depender
-    // apenas da existência de um ponto válido.
     const hasSelection = Boolean(
       selected &&
       Number.isFinite(Number(selected.lat)) &&
@@ -171,33 +168,6 @@
     }
   }
 
-  function bindMobile() {
-    const button = $('locationPickerMenu');
-    const sidebar = $('locationPickerSidebar');
-    if (!button || !sidebar) return;
-    let backdrop = null;
-
-    const close = () => {
-      sidebar.classList.remove('is-open');
-      backdrop?.remove();
-      backdrop = null;
-      button.setAttribute('aria-expanded', 'false');
-    };
-
-    button.addEventListener('click', () => {
-      const open = sidebar.classList.contains('is-open');
-      if (open) return close();
-      sidebar.classList.add('is-open');
-      button.setAttribute('aria-expanded', 'true');
-      backdrop = document.createElement('button');
-      backdrop.type = 'button';
-      backdrop.className = 'location-picker-backdrop';
-      backdrop.setAttribute('aria-label', 'Fechar menu');
-      backdrop.addEventListener('click', close);
-      document.body.appendChild(backdrop);
-    });
-  }
-
   function init() {
     document.body.classList.add('campaign-location-picker-page');
     if (typeof L === 'undefined') {
@@ -235,7 +205,6 @@
       if (results && search && !results.contains(event.target) && event.target !== search) results.hidden = true;
     });
 
-    bindMobile();
     renderSelected();
     setTimeout(() => map.invalidateSize(), 80);
 
