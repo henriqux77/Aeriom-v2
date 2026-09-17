@@ -13,7 +13,7 @@
     .then(() => import('./mapa-location-areas.js?v=20260917-2'))
     .then(() => import('./mapa-area-content.js?v=20260917-1'))
     .then(() => import('./mapa-location-actions.js?v=20260917-2'))
-    .then(() => import('./mapa-area-history.js?v=20260917-1'))
+    .then(() => import('./mapa-area-history.js?v=20260917-2'))
     .catch((error) => {
       console.error('[AFTERLIFE][MAP][BOOTSTRAP]', error);
       const status = document.getElementById('mapStatus');
