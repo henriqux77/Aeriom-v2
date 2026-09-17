@@ -107,35 +107,9 @@ import './members-presence.js?v=20260917-3';
     document.title = `AFTERLIFE — ${campaign.name}`;
   }
 
-  function bindWheel() {
-    const wheel = $('nuclearWheel');
-    // The dedicated campaign-wheel-interaction controller owns the radial.
-    // Do not attach the legacy toggle listeners a second time.
-    if (wheel?.dataset.controller === 'campaign-wheel-interaction') return;
-    const center = $('nuclearCenter');
-    if (!wheel || !center || wheel.dataset.bound === '1') return;
-    wheel.dataset.bound = '1';
-    center.addEventListener('click', (event) => {
-      event.stopPropagation();
-      wheel.classList.toggle('is-open');
-      wheel.setAttribute('aria-expanded', String(wheel.classList.contains('is-open')));
-    });
-    wheel.querySelectorAll('[data-target]').forEach((btn) => btn.addEventListener('click', () => {
-      const target = btn.dataset.target;
-      if (!target) return;
-      if (target.startsWith('./') || target.startsWith('../')) location.href = target;
-      else {
-        document.querySelector(target)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        wheel.classList.remove('is-open');
-      }
-    }));
-    document.addEventListener('click', (event) => {
-      if (!wheel.contains(event.target)) {
-        wheel.classList.remove('is-open');
-        wheel.setAttribute('aria-expanded', 'false');
-      }
-    });
-  }
+  // The radial has a single owner: campaign-wheel-interaction.js.
+  // Keeping this function as a no-op avoids any chance of duplicate listeners.
+  function bindWheel() { return; }
 
   function bindQuickLinks() {
     document.querySelectorAll('[data-jump]').forEach((btn) => btn.addEventListener('click', () => {
