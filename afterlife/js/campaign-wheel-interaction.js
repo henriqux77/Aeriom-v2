@@ -12,8 +12,9 @@
     if (!orbit) {
       orbit = document.createElement('div');
       orbit.className = 'nuclear-wheel__orbit';
-      wheel.querySelectorAll('.nuclear-item').forEach((item, index) => {
-        item.style.setProperty('--item-angle', `${index * 60}deg`);
+      const angles = [0,-30,-60,-90,-120,-150];
+      wheel.querySelectorAll('.nuclear-item').forEach((item,index) => {
+        item.style.setProperty('--item-angle', `${angles[index] ?? (index * -30)}deg`);
         orbit.appendChild(item);
       });
       wheel.insertBefore(orbit, center);
@@ -24,7 +25,7 @@
     backdrop.className = 'nuclear-wheel__backdrop';
     backdrop.type = 'button';
     backdrop.tabIndex = -1;
-    backdrop.setAttribute('aria-label', 'Fechar ferramentas rápidas');
+    backdrop.setAttribute('aria-label','Fechar ferramentas rápidas');
     document.body.appendChild(backdrop);
 
     let open = false;
@@ -36,6 +37,8 @@
     let lastAngle = 0;
     let velocity = 0;
     let animationFrame = 0;
+    const MIN_ROTATION = -18;
+    const MAX_ROTATION = 18;
 
     const normalizeDelta = (value) => {
       let delta = value;
@@ -45,10 +48,11 @@
     };
     const angleFor = (event) => {
       const rect = wheel.getBoundingClientRect();
-      return Math.atan2(event.clientY - (rect.top + rect.height / 2), event.clientX - (rect.left + rect.width / 2)) * 180 / Math.PI;
+      return Math.atan2(event.clientY - rect.bottom, event.clientX - rect.right) * 180 / Math.PI;
     };
+    const clampRotation = (value) => Math.max(MIN_ROTATION, Math.min(MAX_ROTATION, value));
     const setRotation = (value, animate = false) => {
-      rotation = value;
+      rotation = clampRotation(value);
       wheel.style.setProperty('--wheel-rotation', `${rotation}deg`);
       wheel.classList.toggle('is-settling', animate);
     };
@@ -59,10 +63,11 @@
     const openWheel = () => {
       open = true;
       wheel.classList.add('is-open');
-      wheel.setAttribute('aria-expanded', 'true');
+      wheel.setAttribute('aria-expanded','true');
       backdrop.classList.add('is-visible');
       lock();
-      center.focus({ preventScroll:true });
+      setRotation(rotation);
+      center.focus({preventScroll:true});
     };
     const closeWheel = () => {
       stopMomentum();
@@ -70,20 +75,20 @@
       dragging = false;
       moved = false;
       wheel.classList.remove('is-open','is-dragging','is-settling');
-      wheel.setAttribute('aria-expanded', 'false');
+      wheel.setAttribute('aria-expanded','false');
       backdrop.classList.remove('is-visible');
       unlock();
     };
 
-    center.addEventListener('click', (event) => {
+    center.addEventListener('click',(event) => {
       event.preventDefault();
       if (open) closeWheel(); else openWheel();
     });
-    backdrop.addEventListener('click', closeWheel);
+    backdrop.addEventListener('click',closeWheel);
 
-    wheel.addEventListener('pointerdown', (event) => {
+    wheel.addEventListener('pointerdown',(event) => {
       if (!open) return;
-      if (event.target.closest('.nuclear-item')) return;
+      if (event.target.closest('.nuclear-item') || event.target === center) return;
       stopMomentum();
       pointerId = event.pointerId;
       dragging = true;
@@ -92,20 +97,21 @@
       lastAngle = startAngle;
       velocity = 0;
       wheel.classList.add('is-dragging');
-      wheel.setPointerCapture?.(pointerId);
+      try { wheel.setPointerCapture?.(pointerId); } catch {}
     });
 
-    wheel.addEventListener('pointermove', (event) => {
+    wheel.addEventListener('pointermove',(event) => {
       if (!dragging || event.pointerId !== pointerId) return;
       const angle = angleFor(event);
       const delta = normalizeDelta(angle - lastAngle);
       if (Math.abs(angle - startAngle) > 5) moved = true;
-      rotation += delta;
-      velocity = delta;
+      const next = clampRotation(rotation + delta);
+      velocity = next - rotation;
+      rotation = next;
       lastAngle = angle;
       setRotation(rotation);
       event.preventDefault();
-    }, { passive:false });
+    },{passive:false});
 
     const release = (event) => {
       if (!dragging || event.pointerId !== pointerId) return;
@@ -113,34 +119,33 @@
       dragging = false;
       pointerId = null;
       wheel.classList.remove('is-dragging');
-      if (Math.abs(velocity) > .35) {
+      if (Math.abs(velocity) > .35 && (rotation > MIN_ROTATION && rotation < MAX_ROTATION)) {
         const animateMomentum = () => {
-          velocity *= .93;
-          rotation += velocity;
+          velocity *= .90;
+          const next = clampRotation(rotation + velocity);
+          rotation = next;
           setRotation(rotation);
-          if (Math.abs(velocity) > .05 && open) animationFrame = requestAnimationFrame(animateMomentum);
+          if (Math.abs(velocity) > .05 && rotation > MIN_ROTATION && rotation < MAX_ROTATION && open) animationFrame = requestAnimationFrame(animateMomentum);
           else animationFrame = 0;
         };
         animationFrame = requestAnimationFrame(animateMomentum);
       }
-      setTimeout(() => { moved = false; }, 80);
+      setTimeout(() => { moved = false; },80);
     };
 
-    wheel.addEventListener('pointerup', release);
-    wheel.addEventListener('pointercancel', release);
-    wheel.addEventListener('lostpointercapture', () => { dragging = false; pointerId = null; wheel.classList.remove('is-dragging'); });
+    wheel.addEventListener('pointerup',release);
+    wheel.addEventListener('pointercancel',release);
+    wheel.addEventListener('lostpointercapture',() => { dragging=false; pointerId=null; wheel.classList.remove('is-dragging'); });
 
     wheel.querySelectorAll('.nuclear-item').forEach((item) => {
-      item.addEventListener('pointerup', (event) => { if (moved) { event.preventDefault(); event.stopImmediatePropagation(); } }, true);
-      item.addEventListener('click', () => { if (open && !moved) closeWheel(); });
+      item.addEventListener('pointerup',(event) => { if (moved) { event.preventDefault(); event.stopImmediatePropagation(); } },true);
+      item.addEventListener('click',() => { if (open && !moved) closeWheel(); });
     });
 
-    document.addEventListener('keydown', (event) => {
-      if (event.key === 'Escape' && open) { event.preventDefault(); closeWheel(); }
-    });
-    window.addEventListener('pagehide', closeWheel, { once:true });
+    document.addEventListener('keydown',(event) => { if (event.key === 'Escape' && open) { event.preventDefault(); closeWheel(); } });
+    window.addEventListener('pagehide',closeWheel,{once:true});
   }
 
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, { once:true });
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded',boot,{once:true});
   else boot();
 })();
