@@ -74,10 +74,10 @@
     if (!poi) return;
 
     // The existing location-ficha handler strips the first non-space token
-    // from <strong>. Prefixing it with a zero-width character preserves the
-    // full real-world POI name without changing what the user sees.
+    // from <strong>. A zero-width prefix followed by whitespace is invisible
+    // but causes that legacy cleanup to remove only the prefix.
     if (!poi.content.includes('\u200B')) {
-      circle.bindPopup(`<strong>\u200B${escapeHtml(poi.name)}</strong><br><span>${escapeHtml(poi.type)}</span>`);
+      circle.bindPopup(`<strong>\u200B ${escapeHtml(poi.name)}</strong><br><span>${escapeHtml(poi.type)}</span>`);
     }
 
     const marker = L.marker(circle.getLatLng(), {
