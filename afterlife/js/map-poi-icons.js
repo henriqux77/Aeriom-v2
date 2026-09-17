@@ -66,6 +66,14 @@
     return { name, type, content };
   }
 
+  function openLocationFicha(circle) {
+    circle.openPopup();
+    setTimeout(() => {
+      const button = circle.getPopup?.()?.getElement?.()?.querySelector('.afterlife-open-location');
+      if (button && !button.disabled) button.click();
+    }, 90);
+  }
+
   function ensureOverlay(circle) {
     if (!map?.hasLayer(circle)) return;
     if (overlays.has(circle) && map.hasLayer(overlays.get(circle))) return;
@@ -94,8 +102,10 @@
     }).addTo(map);
 
     marker.bindTooltip(`${poi.name} · ${poi.type}`, { direction:'top', offset:[0,-14] });
-    marker.on('click', () => circle.openPopup());
+    marker.on('click', () => openLocationFicha(circle));
 
+    // Hide the old green dot. It remains as the popup source so the existing
+    // location-ficha module can create the full location record/modal.
     circle.setStyle({ opacity: 0, fillOpacity: 0, weight: 0 });
     overlays.set(circle, marker);
   }
