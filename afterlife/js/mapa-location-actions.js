@@ -36,6 +36,10 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260915
   }
 
   async function findAreaByName(name) {
+    const cached = Array.isArray(window.__afterlifeCurrentLocationAreas)
+      ? window.__afterlifeCurrentLocationAreas.find((area) => String(area?.name || '') === String(name || ''))
+      : null;
+    if (cached?.id) return cached;
     const location = getLocationFromCache();
     if (!location?.id || !name) return null;
     const session = await ensureAfterlifeSession();
@@ -81,7 +85,9 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260915
         b.disabled = false;
         if (b.dataset.action === action) { b.disabled = true; b.textContent = 'REALIZADO'; }
       });
-      window.__afterlifeCurrentLocationAreas = null;
+      window.dispatchEvent(new CustomEvent('afterlife:area-action-resolved', {
+        detail: { areaId: area.id, action, result: data || {}, campaignId: window.__afterlifeCampaignMap?.campaign?.id || null }
+      }));
     } catch (error) {
       if (host) host.innerHTML = `<div class="afterlife-action-error">${esc(error?.message || 'Não foi possível realizar o teste.')}</div>`;
       buttonsHost?.querySelectorAll('button').forEach((b) => { b.disabled = false; });
@@ -106,6 +112,13 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260915
       return;
     }
     if (!area) return;
+
+    const isMaster = String(window.__afterlifeCampaignMap?.role || '').toLowerCase() === 'master' ||
+      window.sessionStorage.getItem('afterlife_campaign_role') === 'master';
+    if (isMaster) {
+      layer.dataset.p57ActionsMounted = '1';
+      return;
+    }
 
     const legacy = body.querySelector('.afterlife-area-investigation');
     if (legacy) legacy.remove();
@@ -138,6 +151,5 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260915
     scan();
   }
 
-  window.__afterlifeLocationActionsBooted = true;
   boot();
 })();
