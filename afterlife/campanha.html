@@ -7,11 +7,12 @@
 <title>AFTERLIFE — Campanha</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap">
 <link rel="stylesheet" href="./css/afterlife.css?v=20260915-2">
 <link rel="stylesheet" href="./css/afterlife-profile-global.css?v=20260915-2">
 <link rel="stylesheet" href="./css/afterlife-sidebar.css?v=20260915-2">
 <link rel="stylesheet" href="./css/campanha.css?v=20260915-2">
+<link rel="stylesheet" href="./css/campaign-ui-overrides.css?v=20260917-1">
 </head>
 <body class="afterlife-campaign-page">
 <div class="app-shell">
@@ -40,7 +41,6 @@
       <a class="campaign-back" href="./campanhas.html" aria-label="Voltar para campanhas">← <span>Campanhas</span></a>
       <div class="campaign-breadcrumb"><span>/</span><strong id="campaignCrumb">Campanha</strong></div>
       <div class="top-actions">
-        <button class="top-icon" type="button" aria-label="Notificações">♧</button>
         <button class="profile-chip" id="profileChip" type="button" aria-label="Abrir perfil"><span class="profile-avatar" id="profileAvatar">A</span><span class="profile-copy"><strong id="profileName">Sobrevivente</strong><small><i></i> Online</small></span><span class="profile-caret">⌄</span></button>
         <button class="top-icon campaign-more" type="button" aria-label="Mais opções">•••</button>
       </div>
@@ -56,17 +56,17 @@
         <p id="campaignDescription">A história da sua campanha começa aqui.</p>
         <div class="campaign-hero__actions"><button class="btn btn--primary" id="manageCampaign">GERENCIAR CAMPANHA</button><button class="btn btn--ghost" id="campaignMenuButton" type="button">•••</button></div>
       </div>
-      <div class="nuclear-wheel" id="nuclearWheel" aria-label="Ferramentas da ficha" aria-expanded="false">
-        <button class="nuclear-center" id="nuclearCenter" type="button" aria-label="Abrir ferramentas da ficha">☢️</button>
-        <button class="nuclear-item n1" data-target="./personagens.html" type="button"><span>♙</span><b>Ficha</b></button>
-        <button class="nuclear-item n2" data-target="#inventario" type="button"><span>▣</span><b>Inventário</b></button>
-        <button class="nuclear-item n3" data-target="#atributos" type="button"><span>▥</span><b>Atributos</b></button>
-        <button class="nuclear-item n4" data-target="#pericias" type="button"><span>▤</span><b>Perícias</b></button>
-        <button class="nuclear-item n5" data-target="#tecnicas" type="button"><span>⚙</span><b>Técnicas</b></button>
-        <button class="nuclear-item n6" data-target="#equipamentos" type="button"><span>⌁</span><b>Equipamentos</b></button>
-        <button class="nuclear-item n7" data-target="#diario" type="button"><span>▤</span><b>Histórico</b></button>
-      </div>
     </section>
+
+    <div class="nuclear-wheel" id="nuclearWheel" aria-label="Ferramentas rápidas da campanha" aria-expanded="false">
+      <button class="nuclear-center" id="nuclearCenter" type="button" aria-label="Abrir ferramentas rápidas">☣</button>
+      <button class="nuclear-item n1" data-target="./personagens.html" type="button"><span>♙</span><b>Ficha</b></button>
+      <button class="nuclear-item n2" data-target="#inventario" type="button"><span>▣</span><b>Inventário</b></button>
+      <button class="nuclear-item n3" data-target="./personagens.html#atributos" type="button"><span>▥</span><b>Atributos</b></button>
+      <button class="nuclear-item n4" data-target="./personagens.html#pericias" type="button"><span>▤</span><b>Perícias</b></button>
+      <button class="nuclear-item n5" data-target="./personagens.html#tecnicas" type="button"><span>⚙</span><b>Técnicas</b></button>
+      <button class="nuclear-item n6" data-target="./personagens.html#equipamentos" type="button"><span>⌁</span><b>Equipamentos</b></button>
+    </div>
 
     <section class="campaign-main-grid">
       <div class="campaign-feature-grid">
@@ -91,8 +91,8 @@
   </main>
 </div>
 <script type="module" src="./js/error-monitor.js?v=20260915-2"></script>
-<script type="module" src="./js/profile-global.js?v=20260915-2"></script>
-<script type="module" src="./js/afterlife-sidebar.js?v=20260915-2"></script>
-<script type="module" src="./js/campanha.js?v=20260915-2"></script>
+<script type="module" src="./js/profile-global.js?v=20260917-1"></script>
+<script type="module" src="./js/afterlife-sidebar.js?v=20260917-1"></script>
+<script type="module" src="./js/campanha.js?v=20260917-1"></script>
 </body>
 </html>
