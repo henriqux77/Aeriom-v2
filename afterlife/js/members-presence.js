@@ -1,5 +1,5 @@
-import './campaign-social.js?v=20260917-1';
-import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260915-5';
+import './profile-avatar-sync.js?v=20260917-1';
+import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260915-6';
 
 (() => {
   'use strict';
@@ -13,8 +13,6 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260915
   let pollTimer = null;
   let realtimeChannel = null;
   let visibilityHandler = null;
-
-  const escapeHtml = (value) => String(value ?? '').replace(/[&<>\"]/g, (c) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]));
 
   function relativeTime(value) {
     if (!value) return 'Nunca visto';
@@ -228,6 +226,7 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260915
     if (!id) return;
     await touch();
     await refresh();
+    window.addEventListener('afterlife:profile-synced', () => { void refresh(); }, { passive: true });
     setupRealtime();
     setupPolling();
     setupVisibility();
