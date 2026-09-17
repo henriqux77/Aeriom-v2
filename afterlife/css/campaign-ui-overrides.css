@@ -1,0 +1,52 @@
+/* Campaign quick-tool wheel: persistent corner control, inspired by the site's existing radial tool pattern. */
+.nuclear-wheel{
+  position:fixed!important;
+  right:18px!important;
+  bottom:18px!important;
+  top:auto!important;
+  width:266px!important;
+  height:266px!important;
+  z-index:3000!important;
+  pointer-events:none;
+}
+.nuclear-wheel::before,.nuclear-wheel::after{
+  border-color:rgba(57,245,138,.15)!important;
+}
+.nuclear-center,.nuclear-item{pointer-events:auto!important;}
+.nuclear-center{
+  width:72px!important;
+  height:72px!important;
+  font-size:32px!important;
+  border-color:rgba(91,255,167,.65)!important;
+}
+.nuclear-item{
+  width:64px!important;
+  height:64px!important;
+  background:rgba(4,10,7,.96)!important;
+  border-color:rgba(57,245,138,.24)!important;
+}
+.nuclear-item span{font-size:18px!important;color:#8ff8bc!important;}
+.nuclear-item b{font-size:8px!important;}
+.nuclear-item:hover{border-color:rgba(57,245,138,.7)!important;}
+.n1{left:101px!important;top:2px!important;}
+.n2{right:4px!important;top:67px!important;}
+.n3{right:4px!important;bottom:67px!important;}
+.n4{left:101px!important;bottom:2px!important;}
+.n5{left:4px!important;bottom:67px!important;}
+.n6{left:4px!important;top:67px!important;}
+.nuclear-wheel:not(.is-open) .nuclear-item{opacity:0!important;transform:scale(.72)!important;pointer-events:none!important;}
+.nuclear-wheel.is-open .nuclear-item{opacity:1!important;}
+.nuclear-wheel.is-open .nuclear-center{box-shadow:0 0 55px rgba(57,245,138,.28),0 0 0 12px rgba(57,245,138,.06)!important;}
+@media(max-width:620px){
+  .nuclear-wheel{right:12px!important;bottom:12px!important;width:238px!important;height:238px!important;}
+  .nuclear-center{width:66px!important;height:66px!important;font-size:28px!important;}
+  .nuclear-item{width:58px!important;height:58px!important;}
+  .nuclear-item span{font-size:16px!important;}
+  .nuclear-item b{font-size:7px!important;}
+  .n1{left:90px!important;}
+  .n2{right:3px!important;top:58px!important;}
+  .n3{right:3px!important;bottom:58px!important;}
+  .n4{left:90px!important;}
+  .n5{left:3px!important;bottom:58px!important;}
+  .n6{left:3px!important;top:58px!important;}
+}
