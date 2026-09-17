@@ -109,6 +109,9 @@ import './members-presence.js?v=20260917-3';
 
   function bindWheel() {
     const wheel = $('nuclearWheel');
+    // The dedicated campaign-wheel-interaction controller owns the radial.
+    // Do not attach the legacy toggle listeners a second time.
+    if (wheel?.dataset.controller === 'campaign-wheel-interaction') return;
     const center = $('nuclearCenter');
     if (!wheel || !center || wheel.dataset.bound === '1') return;
     wheel.dataset.bound = '1';
