@@ -1,47 +1,21 @@
-.map-head .page-actions .btn{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  min-height:42px;
-  padding:0 14px;
-  border-radius:10px;
-  text-decoration:none;
-  box-sizing:border-box;
-}
+.map-head .page-actions .btn{display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:0 14px;border-radius:12px;text-decoration:none;box-sizing:border-box;white-space:nowrap;}
 
-.afterlife-poi-icon-wrap{
-  background:transparent!important;
-  border:0!important;
-}
-.afterlife-poi-icon{
-  width:34px;
-  height:34px;
-  display:grid;
-  place-items:center;
-  border-radius:11px;
-  border:1px solid rgba(57,245,138,.34);
-  background:linear-gradient(145deg,rgba(9,25,16,.98),rgba(3,11,7,.98));
-  color:#eafff2;
-  font-size:18px;
-  line-height:1;
-  box-shadow:0 7px 18px rgba(0,0,0,.38),0 0 18px rgba(57,245,138,.12);
-  transform:translateZ(0);
-  transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease;
-}
-.afterlife-poi-icon:hover{
-  transform:scale(1.08);
-  border-color:rgba(57,245,138,.72);
-  box-shadow:0 9px 24px rgba(0,0,0,.46),0 0 22px rgba(57,245,138,.2);
-}
+.afterlife-poi-icon-wrap{background:transparent!important;border:0!important;}
+.afterlife-poi-icon{width:30px;height:30px;display:grid;place-items:center;border:1px solid rgba(180,255,211,.38);border-radius:9px;background:rgba(5,11,8,.95);color:#eafff2;font-size:18px;line-height:1;box-shadow:0 6px 18px rgba(0,0,0,.38),0 0 18px rgba(57,245,138,.10);backdrop-filter:blur(6px);transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease;}
+.afterlife-poi-icon-wrap:hover .afterlife-poi-icon{transform:translateY(-2px) scale(1.08);border-color:rgba(57,245,138,.72);box-shadow:0 10px 24px rgba(0,0,0,.46),0 0 24px rgba(57,245,138,.18);}
+.map-poi-row{display:grid;grid-template-columns:28px minmax(0,1fr);align-items:center;gap:9px;width:100%;padding:9px 0;border:0;border-top:1px solid rgba(255,255,255,.055);background:transparent;color:inherit;text-align:left;cursor:pointer;}
+.map-poi-row:first-child{border-top:0;}
+.map-poi-row__icon{width:28px;height:28px;display:grid;place-items:center;border:1px solid rgba(255,255,255,.08);border-radius:8px;background:rgba(255,255,255,.025);font-size:15px;}
+.map-poi-row strong{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;}
+.map-poi-row small{display:block;margin-top:2px;color:rgba(255,255,255,.42);font-size:8px;}
 
-@media(max-width:620px){
-  .map-head .page-actions{
-    width:100%;
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:8px;
-    margin-top:14px;
-  }
-  .map-head .page-actions .btn{width:100%;min-height:44px;}
-  .afterlife-poi-icon{width:31px;height:31px;font-size:16px;border-radius:10px;}
-}
+.map-tool--infection.is-active{border-color:rgba(229,83,83,.52);box-shadow:0 0 0 1px rgba(229,83,83,.12),0 8px 24px rgba(229,83,83,.08);}
+.infection-control-panel{margin-top:12px;padding:12px;border:1px solid rgba(229,83,83,.18);border-radius:14px;background:linear-gradient(180deg,rgba(20,10,10,.88),rgba(8,9,8,.78));box-shadow:0 12px 30px rgba(0,0,0,.18);}
+.infection-panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;}
+.infection-panel-head>div{display:grid;gap:3px;min-width:0;}.infection-panel-head span{font-size:8px;font-weight:900;letter-spacing:.16em;color:rgba(255,157,157,.70);}.infection-panel-head strong{font-size:15px;color:rgba(255,255,255,.9);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}.infection-panel-head small{font-size:8px;color:rgba(255,255,255,.38);}.infection-panel-head button{width:34px;height:34px;border:1px solid rgba(255,255,255,.08);border-radius:9px;background:rgba(255,255,255,.025);color:rgba(255,255,255,.7);cursor:pointer;}
+.infection-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:10px;}.infection-summary>div{padding:9px;border:1px solid rgba(255,255,255,.06);border-radius:10px;background:rgba(255,255,255,.02);}.infection-summary span{display:block;font-size:7px;letter-spacing:.12em;color:rgba(255,255,255,.38);font-weight:800;}.infection-summary b{display:block;margin-top:3px;font-size:16px;font-weight:900;color:rgba(255,255,255,.86);}
+.infection-legend{display:flex;flex-wrap:wrap;gap:8px 10px;margin-top:10px;}.infection-legend span{display:flex;align-items:center;gap:5px;font-size:7px;color:rgba(255,255,255,.45);}.infection-legend i{width:7px;height:7px;border-radius:50%;display:block;}.infection-legend i[data-level="low"]{background:#57c879}.infection-legend i[data-level="mid"]{background:#e3bd52}.infection-legend i[data-level="high"]{background:#e88b4a}.infection-legend i[data-level="critical"]{background:#e55353}
+.infection-editor{margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.06);display:grid;gap:9px;}.infection-editor-head{display:grid;gap:2px;}.infection-editor-head strong{font-size:11px;color:rgba(255,255,255,.84);}.infection-editor-head small{font-size:8px;color:rgba(255,255,255,.35);}.infection-editor label{display:grid;grid-template-columns:1fr auto;gap:6px;align-items:center;font-size:8px;color:rgba(255,255,255,.58);}.infection-editor label input,.infection-editor label select{grid-column:1 / -1;width:100%;accent-color:#e55353;}.infection-editor output{font-size:9px;color:rgba(255,255,255,.78);}.infection-editor-actions{display:grid;grid-template-columns:1fr 1fr;gap:7px;}.infection-editor-actions button{min-height:34px;border:1px solid rgba(255,255,255,.08);border-radius:9px;background:rgba(255,255,255,.025);color:rgba(255,255,255,.72);font-size:8px;font-weight:900;cursor:pointer;}.infection-editor-actions button:first-child{border-color:rgba(229,83,83,.36);background:rgba(229,83,83,.08);}
+
+@media(max-width:900px){.map-head .page-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%;}}
+@media(max-width:620px){.map-head .page-actions{grid-template-columns:1fr 1fr;}.map-head .page-actions .btn{min-height:40px;padding:0 10px;font-size:9px;}.afterlife-poi-icon{width:27px;height:27px;font-size:16px;border-radius:8px;}.infection-summary b{font-size:15px;}}
