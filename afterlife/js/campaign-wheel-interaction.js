@@ -7,6 +7,7 @@
     const wheel = document.getElementById('nuclearWheel');
     const center = document.getElementById('nuclearCenter');
     if (!wheel || !center) return;
+    wheel.dataset.controller = 'campaign-wheel-interaction';
 
     let orbit = wheel.querySelector('.nuclear-wheel__orbit');
     if (!orbit) {
