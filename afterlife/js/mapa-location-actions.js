@@ -15,11 +15,9 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260915
   const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const resultLabel = (v) => ({ critical:'CRÍTICO', great_success:'GRANDE SUCESSO', success:'SUCESSO', failure:'FALHA', critical_failure:'FALHA CRÍTICA' }[v] || v || '—');
   const resultTone = (v) => ({ critical:'critical', great_success:'great', success:'success', failure:'failure', critical_failure:'critical-failure' }[v] || 'failure');
-  const titleKey = (area) => area?.id || area?.name || '';
 
   let observer = null;
   let busy = false;
-  let activeLayer = null;
 
   function injectStyle() {
     if (document.getElementById('afterlife-location-actions-style')) return;
@@ -30,9 +28,23 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260915
     document.head.appendChild(link);
   }
 
-  function findAreaByName(name) {
-    const list = Array.isArray(window.__afterlifeCurrentLocationAreas) ? window.__afterlifeCurrentLocationAreas : [];
-    return list.find((a) => a?.name === name) || null;
+  function getLocationFromCache() {
+    const cache = Array.isArray(window.__afterlifeWorldLocationsCache) ? window.__afterlifeWorldLocationsCache : [];
+    const title = document.getElementById('afterlifeLocationTitle')?.textContent?.trim();
+    if (!title) return null;
+    return cache.find((x) => x?.name === title) || null;
+  }
+
+  async function findAreaByName(name) {
+    const location = getLocationFromCache();
+    if (!location?.id || !name) return null;
+    const session = await ensureAfterlifeSession();
+    if (!session?.user) return null;
+    const { data, error } = await aeriom.rpc('list_campaign_location_areas', { p_location_id: location.id });
+    if (error) throw error;
+    const areas = Array.isArray(data) ? data : [];
+    window.__afterlifeCurrentLocationAreas = areas;
+    return areas.find((a) => a?.name === name) || null;
   }
 
   function renderResult(result) {
@@ -66,13 +78,10 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260915
       if (error) throw error;
       if (host) host.innerHTML = renderResult(data || {});
       if (buttonsHost) buttonsHost.querySelectorAll('button').forEach((b) => {
-        const key = b.dataset.action;
-        const same = key === action;
-        b.disabled = same;
-        if (same) b.textContent = 'REALIZADO';
-        else b.disabled = false;
+        b.disabled = false;
+        if (b.dataset.action === action) { b.disabled = true; b.textContent = 'REALIZADO'; }
       });
-      if (window.__afterlifeRefreshLocationAreas) await window.__afterlifeRefreshLocationAreas();
+      window.__afterlifeCurrentLocationAreas = null;
     } catch (error) {
       if (host) host.innerHTML = `<div class="afterlife-action-error">${esc(error?.message || 'Não foi possível realizar o teste.')}</div>`;
       buttonsHost?.querySelectorAll('button').forEach((b) => { b.disabled = false; });
@@ -82,18 +91,24 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260915
     }
   }
 
-  function mountOnAreaDetail(layer) {
-    if (!layer || layer === activeLayer) return;
+  async function mountOnAreaDetail(layer) {
+    if (!layer || layer.dataset.p57ActionsMounted === '1') return;
     const card = layer.querySelector('.afterlife-area-detail__card');
     const body = layer.querySelector('.afterlife-area-detail__body');
     if (!card || !body) return;
     const heading = card.querySelector('header h3');
     const name = heading?.textContent?.trim();
-    const area = findAreaByName(name);
+    if (!name) return;
+
+    let area;
+    try { area = await findAreaByName(name); } catch (error) {
+      console.warn('[AFTERLIFE][P5.7][AREA]', error);
+      return;
+    }
     if (!area) return;
 
-    const old = body.querySelector('.afterlife-area-investigation');
-    if (old) old.remove();
+    const legacy = body.querySelector('.afterlife-area-investigation');
+    if (legacy) legacy.remove();
 
     const block = document.createElement('section');
     block.className = 'afterlife-area-action-panel';
@@ -107,21 +122,17 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260915
       if (!button) return;
       run(area, button.dataset.action, resultHost, buttonsHost);
     });
-
-    activeLayer = layer;
+    layer.dataset.p57ActionsMounted = '1';
   }
 
   function scan() {
-    const layers = [...document.querySelectorAll('.afterlife-area-detail')];
-    layers.forEach((layer) => {
-      const visible = getComputedStyle(layer).display !== 'none';
-      if (visible) mountOnAreaDetail(layer);
+    document.querySelectorAll('.afterlife-area-detail').forEach((layer) => {
+      if (getComputedStyle(layer).display !== 'none') void mountOnAreaDetail(layer);
     });
   }
 
   function boot() {
     injectStyle();
-    if (observer) observer.disconnect();
     observer = new MutationObserver(scan);
     observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
     scan();
