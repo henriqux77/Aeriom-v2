@@ -12,9 +12,9 @@
     if (!orbit) {
       orbit = document.createElement('div');
       orbit.className = 'nuclear-wheel__orbit';
-      const angles = [0,-30,-60,-90,-120,-150];
+      const angles = [0,-18,-36,-54,-72,-90];
       wheel.querySelectorAll('.nuclear-item').forEach((item,index) => {
-        item.style.setProperty('--item-angle', `${angles[index] ?? (index * -30)}deg`);
+        item.style.setProperty('--item-angle', `${angles[index] ?? (index * -18)}deg`);
         orbit.appendChild(item);
       });
       wheel.insertBefore(orbit, center);
@@ -37,8 +37,8 @@
     let lastAngle = 0;
     let velocity = 0;
     let animationFrame = 0;
-    const MIN_ROTATION = -18;
-    const MAX_ROTATION = 18;
+    const MIN_ROTATION = -16;
+    const MAX_ROTATION = 16;
 
     const normalizeDelta = (value) => {
       let delta = value;
@@ -51,10 +51,9 @@
       return Math.atan2(event.clientY - rect.bottom, event.clientX - rect.right) * 180 / Math.PI;
     };
     const clampRotation = (value) => Math.max(MIN_ROTATION, Math.min(MAX_ROTATION, value));
-    const setRotation = (value, animate = false) => {
+    const setRotation = (value) => {
       rotation = clampRotation(value);
       wheel.style.setProperty('--wheel-rotation', `${rotation}deg`);
-      wheel.classList.toggle('is-settling', animate);
     };
     const lock = () => document.body.classList.add('afterlife-wheel-lock');
     const unlock = () => document.body.classList.remove('afterlife-wheel-lock');
@@ -104,7 +103,7 @@
       if (!dragging || event.pointerId !== pointerId) return;
       const angle = angleFor(event);
       const delta = normalizeDelta(angle - lastAngle);
-      if (Math.abs(angle - startAngle) > 5) moved = true;
+      if (Math.abs(angle - startAngle) > 4) moved = true;
       const next = clampRotation(rotation + delta);
       velocity = next - rotation;
       rotation = next;
@@ -119,7 +118,7 @@
       dragging = false;
       pointerId = null;
       wheel.classList.remove('is-dragging');
-      if (Math.abs(velocity) > .35 && (rotation > MIN_ROTATION && rotation < MAX_ROTATION)) {
+      if (Math.abs(velocity) > .35 && rotation > MIN_ROTATION && rotation < MAX_ROTATION) {
         const animateMomentum = () => {
           velocity *= .90;
           const next = clampRotation(rotation + velocity);
