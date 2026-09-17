@@ -189,25 +189,34 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260915
 
   function injectPopupAction(popup) {
     const source = popup?.source;
-    if (!(source instanceof L.CircleMarker)) return;
+    const poi = source?.options?.afterlifePoi;
+    if (!source || !poi?.name || !poi?.type) return;
     const container = popup.getElement()?.querySelector('.leaflet-popup-content');
     if (!container || container.querySelector('.afterlife-open-location')) return;
-    const strong = container.querySelector('strong');
-    const span = container.querySelector('span');
-    const name = strong?.textContent?.replace(/^\S+\s*/,'').trim() || 'Local sem nome';
-    const category = span?.textContent?.trim() || 'Ponto de interesse';
-    const point = source.getLatLng();
+
     const button = document.createElement('button');
-    button.type = 'button'; button.className = 'afterlife-open-location'; button.textContent = 'ABRIR FICHA';
+    button.type = 'button';
+    button.className = 'afterlife-open-location';
+    button.textContent = 'ABRIR FICHA';
     button.addEventListener('click', async () => {
-      button.disabled = true; button.textContent = 'CARREGANDO…';
+      button.disabled = true;
+      button.textContent = 'CARREGANDO…';
       try {
-        const location = await ensureLocation({ name, category, lat: point.lat, lng: point.lng, externalId: `osm:${point.lat.toFixed(6)}:${point.lng.toFixed(6)}:${name.toLowerCase()}` });
-        if (!location) throw new Error('Não foi possível carregar a ficha.');
-        renderModal(location);
-        map.closePopup();
-      } catch (error) { alert(error?.message || 'Não foi possível abrir a ficha.'); }
-      finally { button.disabled = false; button.textContent = 'ABRIR FICHA'; }
+        await window.__afterlifeOpenLocationFicha?.({
+          name: poi.name,
+          category: poi.type,
+          icon: poi.icon || '📍',
+          lat: poi.lat,
+          lng: poi.lng,
+          externalId: poi.id ? 'osm:' + poi.id : ''
+        });
+      } catch (error) {
+        console.warn('[AFTERLIFE][LOCATIONS][OPEN]', error);
+        alert(error?.message || 'Não foi possível abrir a ficha.');
+      } finally {
+        button.disabled = false;
+        button.textContent = 'ABRIR FICHA';
+      }
     });
     container.appendChild(button);
   }
