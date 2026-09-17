@@ -1,0 +1,47 @@
+.map-head .page-actions .btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:42px;
+  padding:0 14px;
+  border-radius:10px;
+  text-decoration:none;
+  box-sizing:border-box;
+}
+
+.afterlife-poi-icon-wrap{
+  background:transparent!important;
+  border:0!important;
+}
+.afterlife-poi-icon{
+  width:34px;
+  height:34px;
+  display:grid;
+  place-items:center;
+  border-radius:11px;
+  border:1px solid rgba(57,245,138,.34);
+  background:linear-gradient(145deg,rgba(9,25,16,.98),rgba(3,11,7,.98));
+  color:#eafff2;
+  font-size:18px;
+  line-height:1;
+  box-shadow:0 7px 18px rgba(0,0,0,.38),0 0 18px rgba(57,245,138,.12);
+  transform:translateZ(0);
+  transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease;
+}
+.afterlife-poi-icon:hover{
+  transform:scale(1.08);
+  border-color:rgba(57,245,138,.72);
+  box-shadow:0 9px 24px rgba(0,0,0,.46),0 0 22px rgba(57,245,138,.2);
+}
+
+@media(max-width:620px){
+  .map-head .page-actions{
+    width:100%;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px;
+    margin-top:14px;
+  }
+  .map-head .page-actions .btn{width:100%;min-height:44px;}
+  .afterlife-poi-icon{width:31px;height:31px;font-size:16px;border-radius:10px;}
+}
