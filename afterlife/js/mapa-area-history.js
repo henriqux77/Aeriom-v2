@@ -44,14 +44,14 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260915
   }[char]));
 
   let observer = null;
-  const timers = new WeakMap();
+  const resources = new Map();
 
   function injectStyle() {
     if (document.getElementById('afterlife-area-history-style')) return;
     const link = document.createElement('link');
     link.id = 'afterlife-area-history-style';
     link.rel = 'stylesheet';
-    link.href = './css/mapa-area-history.css?v=20260917-1';
+    link.href = './css/mapa-area-history.css?v=20260917-2';
     document.head.appendChild(link);
   }
 
@@ -146,7 +146,7 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260915
         <strong>O que já aconteceu aqui</strong>
         <small>As ações realizadas ficam registradas para todos os participantes da sessão.</small>
       </div>
-      <button type="button" class="afterlife-area-history__refresh" data-history-refresh aria-label="Atualizar histórico">↻</button>
+      <div class="afterlife-area-history__head-actions"><span class="afterlife-area-history__live is-live"><i></i> AO VIVO</span><button type="button" class="afterlife-area-history__refresh" data-history-refresh aria-label="Atualizar histórico">↻</button></div>
     </div>
     ${renderState(area, tests)}
     <div class="afterlife-area-history__list">
@@ -169,34 +169,71 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260915
     renderHistory(section, area, Array.isArray(data) ? data : []);
     const button = section.querySelector('[data-history-refresh]');
     if (button) button.addEventListener('click', () => refresh(layer, area, section).catch((e) => {
-      console.warn('[AFTERLIFE][P5.8][HISTORY]', e);
+      console.warn('[AFTERLIFE][P5.9][HISTORY]', e);
     }), { once: true });
   }
 
-  function clearTimer(layer) {
-    const timer = timers.get(layer);
-    if (timer) {
-      clearInterval(timer);
-      timers.delete(layer);
+  function clearResources(layer) {
+    const resource = resources.get(layer);
+    if (!resource) return;
+    if (resource.fallbackTimer) window.clearInterval(resource.fallbackTimer);
+    if (resource.channel) {
+      try { aeriom.removeChannel(resource.channel); } catch {}
     }
+    resources.delete(layer);
   }
 
-  function startPolling(layer, area, section) {
-    clearTimer(layer);
-    const timer = window.setInterval(() => {
+  function subscribeRealtime(layer, area, section) {
+    clearResources(layer);
+    const resource = { channel: null, fallbackTimer: null };
+    resources.set(layer, resource);
+
+    if (aeriom?.channel && area?.id && area?.campaign_id) {
+      resource.channel = aeriom
+        .channel(`afterlife-area-history:${area.id}`)
+        .on('postgres_changes', {
+          event: '*',
+          schema: 'public',
+          table: 'campaign_exploration_tests',
+          filter: `area_id=eq.${area.id}`
+        }, () => {
+          refresh(layer, area, section).catch((error) => {
+            console.warn('[AFTERLIFE][P5.9][REALTIME]', error);
+          });
+        })
+        .on('postgres_changes', {
+          event: '*',
+          schema: 'public',
+          table: 'campaign_location_areas',
+          filter: `id=eq.${area.id}`
+        }, (payload) => {
+          if (payload?.new && typeof payload.new === 'object') Object.assign(area, payload.new);
+          refresh(layer, area, section).catch((error) => {
+            console.warn('[AFTERLIFE][P5.9][AREA-REALTIME]', error);
+          });
+        })
+        .subscribe((status) => {
+          const live = section.querySelector('.afterlife-area-history__live');
+          if (!live) return;
+          live.classList.toggle('is-live', status === 'SUBSCRIBED');
+          live.classList.toggle('is-offline', status !== 'SUBSCRIBED');
+          live.title = status === 'SUBSCRIBED' ? 'Sincronização em tempo real ativa' : `Realtime: ${status}`;
+        });
+    }
+
+    resource.fallbackTimer = window.setInterval(() => {
       if (!document.body.contains(layer) || getComputedStyle(layer).display === 'none') {
-        clearTimer(layer);
+        clearResources(layer);
         return;
       }
       refresh(layer, area, section).catch((error) => {
-        console.warn('[AFTERLIFE][P5.8][POLL]', error);
+        console.warn('[AFTERLIFE][P5.9][FALLBACK]', error);
       });
-    }, 5000);
-    timers.set(layer, timer);
+    }, 20000);
   }
 
   async function mount(layer) {
-    if (!layer || layer.dataset.p58HistoryMounted === '1') return;
+    if (!layer || layer.dataset.p59HistoryMounted === '1') return;
 
     const card = layer.querySelector('.afterlife-area-detail__card');
     const body = layer.querySelector('.afterlife-area-detail__body');
@@ -208,7 +245,7 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260915
     try {
       area = await findAreaByName(name);
     } catch (error) {
-      console.warn('[AFTERLIFE][P5.8][AREA]', error);
+      console.warn('[AFTERLIFE][P5.9][AREA]', error);
       return;
     }
     if (!area?.id) return;
@@ -220,7 +257,7 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260915
     section.className = 'afterlife-area-history';
     section.dataset.areaId = area.id;
     body.appendChild(section);
-    layer.dataset.p58HistoryMounted = '1';
+    layer.dataset.p59HistoryMounted = '1';
 
     try {
       await refresh(layer, area, section);
@@ -228,13 +265,20 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260915
       section.innerHTML = `<div class="afterlife-area-history__error">${esc(error?.message || 'Não foi possível carregar o histórico.')}</div>`;
     }
 
-    startPolling(layer, area, section);
+    subscribeRealtime(layer, area, section);
   }
 
   function scan() {
+    const active = new Set();
     document.querySelectorAll('.afterlife-area-detail').forEach((layer) => {
-      if (getComputedStyle(layer).display !== 'none') void mount(layer);
+      if (getComputedStyle(layer).display !== 'none') {
+        active.add(layer);
+        void mount(layer);
+      }
     });
+    for (const layer of resources.keys()) {
+      if (!active.has(layer) || !document.body.contains(layer)) clearResources(layer);
+    }
   }
 
   function boot() {
