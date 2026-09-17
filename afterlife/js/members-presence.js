@@ -1,3 +1,4 @@
+import './campaign-social.js?v=20260917-1';
 import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260915-5';
 
 (() => {
