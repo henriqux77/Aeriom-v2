@@ -18,6 +18,7 @@
     .then(() => import('./mapa-area-state-feedback.js?v=20260917-1'))
     .then(() => import('./mapa-area-cycle.js?v=20260917-1'))
     .then(() => import('./mapa-travel-v2.js?v=20260917-1'))
+    .then(() => import('./mapa-travel-events.js?v=20260917-1'))
     .catch((error) => {
       console.error('[AFTERLIFE][MAP][BOOTSTRAP]', error);
       const status = document.getElementById('mapStatus');
