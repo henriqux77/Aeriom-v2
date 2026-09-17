@@ -1,0 +1,5 @@
+.character-builder .sidebar .brand{padding:16px 18px 18px;}
+.character-builder .sidebar .brand__title{font-size:22px!important;line-height:1!important;letter-spacing:1.8px!important;font-weight:800!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.character-builder .sidebar .brand__title span{font-size:inherit!important;}
+@media(max-width:980px){.character-builder .sidebar .brand{padding-top:20px;}.character-builder .sidebar .brand__title{font-size:21px!important;letter-spacing:1.6px!important;}}
+@media(max-width:620px){.character-builder .sidebar .brand{padding:18px 16px 16px;}.character-builder .sidebar .brand__title{font-size:19px!important;letter-spacing:1.4px!important;}}
