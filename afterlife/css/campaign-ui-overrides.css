@@ -1,5 +1,6 @@
-/* Campaign quick-tool wheel: persistent corner control, inspired by the site's existing radial tool pattern. */
+/* Campaign quick-tool wheel: persistent corner control, inspired by the existing radial tool pattern. */
 .nuclear-wheel{
+  display:block!important;
   position:fixed!important;
   right:18px!important;
   bottom:18px!important;
