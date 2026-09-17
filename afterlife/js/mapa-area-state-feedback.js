@@ -94,57 +94,65 @@ import { aeriom } from './aeriom-client-v2.js?v=20260915-6';
     return badge;
   }
 
+  function areaSignature(area) {
+    const state = area?.state && typeof area.state === 'object' ? area.state : {};
+    return [
+      state.status || 'unknown',
+      state.investigated ? '1' : '0',
+      state.last_result || '',
+      state.last_test_id || ''
+    ].join('|');
+  }
+
   function decorateCard(card, area) {
     if (!card || !area?.id) return;
+    const signature = areaSignature(area);
+    if (card.dataset.p511StateSignature === signature) return;
+
     const info = statusInfo(area);
     card.dataset.areaState = area?.state?.status || 'unknown';
     card.dataset.areaId = area.id;
 
-    let meta = card.querySelector('.afterlife-area-card__copy span');
+    const meta = card.querySelector('.afterlife-area-card__copy span');
     if (!meta) return;
 
-    meta.querySelectorAll('[data-area-state-badge="1"]').forEach((node) => node.remove());
     meta.classList.add('afterlife-area-card__meta');
+    meta.parentElement?.querySelectorAll('[data-area-state-badge="1"], [data-area-state-copy]').forEach((node) => node.remove());
     meta.insertAdjacentElement('afterend', createBadge(area));
 
-    let stateLine = card.querySelector('[data-area-state-copy]');
-    if (!stateLine) {
-      stateLine = document.createElement('small');
-      stateLine.className = 'afterlife-area-state-copy';
-      stateLine.dataset.areaStateCopy = '1';
-      meta.insertAdjacentElement('afterend', stateLine);
-    }
+    const stateLine = document.createElement('small');
+    stateLine.className = 'afterlife-area-state-copy';
+    stateLine.dataset.areaStateCopy = '1';
     const suffix = resultLabel(area);
     stateLine.textContent = suffix ? `${info.text} · Último teste: ${suffix}.` : info.text;
+    meta.insertAdjacentElement('afterend', stateLine);
+    card.dataset.p511StateSignature = signature;
   }
 
   function decorateMasterRow(row, area) {
     if (!row || !area?.id) return;
+    const signature = areaSignature(area);
+    if (row.dataset.p511StateSignature === signature) return;
     row.dataset.areaState = area?.state?.status || 'unknown';
     row.dataset.areaId = area.id;
     const first = row.querySelector(':scope > div:first-child');
     if (!first) return;
     first.querySelectorAll('[data-area-state-badge="1"], [data-area-state-copy]').forEach((node) => node.remove());
     first.appendChild(createBadge(area));
+    row.dataset.p511StateSignature = signature;
   }
 
   function decorateList() {
     document.querySelectorAll('.afterlife-area-card').forEach((card) => {
-      if (card.dataset.p511Decorated === '1') return;
       const name = card.querySelector('.afterlife-area-card__copy strong')?.textContent?.trim();
       const area = findAreaByName(name);
-      if (!area) return;
-      decorateCard(card, area);
-      card.dataset.p511Decorated = '1';
+      if (area) decorateCard(card, area);
     });
 
     document.querySelectorAll('.afterlife-area-master-row').forEach((row) => {
-      if (row.dataset.p511Decorated === '1') return;
       const name = row.querySelector(':scope > div:first-child strong')?.textContent?.trim();
       const area = findAreaByName(name);
-      if (!area) return;
-      decorateMasterRow(row, area);
-      row.dataset.p511Decorated = '1';
+      if (area) decorateMasterRow(row, area);
     });
   }
 
@@ -162,6 +170,7 @@ import { aeriom } from './aeriom-client-v2.js?v=20260915-6';
 
     const body = layer.querySelector('.afterlife-area-detail__body');
     if (!body) return;
+    const signature = areaSignature(area);
     let panel = body.querySelector('[data-area-state-feedback]');
     if (!panel) {
       panel = document.createElement('section');
@@ -170,12 +179,14 @@ import { aeriom } from './aeriom-client-v2.js?v=20260915-6';
       const description = body.querySelector('.afterlife-area-detail__description');
       body.insertBefore(panel, description?.nextSibling || body.firstChild);
     }
+    if (panel.dataset.p511StateSignature === signature) return;
 
     const info = statusInfo(area);
     const suffix = resultLabel(area);
     const investigated = area?.state?.investigated === true;
     panel.dataset.areaState = area?.state?.status || 'unknown';
     panel.innerHTML = `<div class="afterlife-area-state-feedback__icon">◈</div><div class="afterlife-area-state-feedback__copy"><span>ESTADO DA ÁREA</span><strong>${esc(info.label)}</strong><p>${esc(info.text)}</p>${investigated ? `<small>Investigação registrada${suffix ? ` · Último teste: ${esc(suffix)}` : ''}.</small>` : '<small>Nenhuma investigação registrada neste ciclo.</small>'}</div>`;
+    panel.dataset.p511StateSignature = signature;
   }
 
   function decorateAll() {
