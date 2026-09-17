@@ -10,7 +10,7 @@
   }
 
   import('./mapa-foundation.js?v=20260916-2')
-    .then(() => import('./mapa-location-areas.js?v=20260916-1'))
+    .then(() => import('./mapa-location-areas.js?v=20260917-2'))
     .catch((error) => {
       console.error('[AFTERLIFE][MAP][BOOTSTRAP]', error);
       const status = document.getElementById('mapStatus');
