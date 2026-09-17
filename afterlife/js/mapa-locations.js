@@ -169,8 +169,7 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260915
   }
 
   async function ensureLocation({ name, category, lat, lng, address = '', externalId = '' }) {
-    const session = await ensureAfterlifeSession();
-    if (!session?.user || !campaign) return null;
+    if (!campaign) return null;
     const id = externalId || `latlng:${Number(lat).toFixed(5)}:${Number(lng).toFixed(5)}:${String(name).toLowerCase()}`;
     const { data, error } = await aeriom.rpc('upsert_campaign_world_location', {
       p_campaign_id: campaign.id,
@@ -185,12 +184,6 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260915
     });
     if (error) throw error;
     const location = Array.isArray(data) ? data[0] : data;
-    if (location && (!location.resources || !Object.keys(location.resources).length) && location.created_at) {
-      const defaults = buildResources(category);
-      if (Object.keys(defaults).length) {
-        try { await aeriom.rpc('update_campaign_world_location', { p_id: location.id, p_resources: defaults }); location.resources = defaults; } catch {}
-      }
-    }
     return location;
   }
 
@@ -255,6 +248,21 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260915
       try { await aeriom.rpc('prune_campaign_world_locations', { p_campaign_id: campaign.id }); } catch {}
     }
   }
+
+  window.__afterlifeOpenLocationFicha = async ({ name, category, lat, lng, address = '', externalId = '' } = {}) => {
+    if (!map || !campaign) throw new Error('Mapa ainda não terminou de carregar.');
+    const location = await ensureLocation({ name, category, lat, lng, address, externalId });
+    if (!location) throw new Error('Não foi possível carregar a ficha deste local.');
+    renderModal(location);
+    try { map.closePopup(); } catch {}
+    return location;
+  };
+
+  window.addEventListener('afterlife:location-ficha-request', (event) => {
+    window.__afterlifeOpenLocationFicha?.(event.detail || {}).catch((error) => {
+      console.warn('[AFTERLIFE][LOCATIONS][FICHA]', error);
+    });
+  });
 
   window.addEventListener('afterlife:map-ready', (event) => bootReady(event.detail));
   if (window.__afterlifeCampaignMap?.map) bootReady(window.__afterlifeCampaignMap).catch((error)=>console.warn('[AFTERLIFE][LOCATIONS]',error));
