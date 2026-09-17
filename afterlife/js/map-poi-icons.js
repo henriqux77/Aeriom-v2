@@ -32,16 +32,19 @@
 
   function openLocationFicha(circle){
     const poi = circle?.options?.afterlifePoi || {};
-    let fired = false;
+    let done = false;
+    let attempts = 0;
     const finish = async () => {
-      if (fired) return;
-      fired = true;
+      if (done) return;
+      attempts += 1;
       const button = circle.getPopup?.()?.getElement?.()?.querySelector('.afterlife-open-location');
       if (button && !button.disabled) {
+        done = true;
         button.click();
         return;
       }
       if (typeof window.__afterlifeOpenLocationFicha === 'function') {
+        done = true;
         try {
           await window.__afterlifeOpenLocationFicha({
             name: poi.name || 'Local sem nome',
@@ -52,13 +55,15 @@
             externalId: poi.id ? 'osm:' + poi.id : ''
           });
         } catch (error) {
+          done = false;
           console.warn('[AFTERLIFE][MAP][POI][FICHA]', error);
         }
+        return;
       }
+      if (attempts < 6) setTimeout(finish, 120);
     };
-    circle.once?.('popupopen', finish);
     circle.openPopup();
-    setTimeout(finish, 220);
+    setTimeout(finish, 80);
   }
 
   function ensureOverlay(circle){
