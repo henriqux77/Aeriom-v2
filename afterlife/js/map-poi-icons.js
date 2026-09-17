@@ -31,8 +31,34 @@
   }
 
   function openLocationFicha(circle){
+    const poi = circle?.options?.afterlifePoi || {};
+    let fired = false;
+    const finish = async () => {
+      if (fired) return;
+      fired = true;
+      const button = circle.getPopup?.()?.getElement?.()?.querySelector('.afterlife-open-location');
+      if (button && !button.disabled) {
+        button.click();
+        return;
+      }
+      if (typeof window.__afterlifeOpenLocationFicha === 'function') {
+        try {
+          await window.__afterlifeOpenLocationFicha({
+            name: poi.name || 'Local sem nome',
+            category: poi.type || 'Ponto de interesse',
+            icon: poi.icon || '📍',
+            lat: poi.lat,
+            lng: poi.lng,
+            externalId: poi.id ? 'osm:' + poi.id : ''
+          });
+        } catch (error) {
+          console.warn('[AFTERLIFE][MAP][POI][FICHA]', error);
+        }
+      }
+    };
+    circle.once?.('popupopen', finish);
     circle.openPopup();
-    setTimeout(() => circle.getPopup?.()?.getElement?.()?.querySelector('.afterlife-open-location')?.click(), 40);
+    setTimeout(finish, 220);
   }
 
   function ensureOverlay(circle){
