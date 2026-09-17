@@ -1,9 +1,9 @@
 import './error-monitor.js?v=20260915-9';
 import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260915-6';
-import './afterlife-sidebar.js?v=20260915-9';
+import './afterlife-sidebar.js?v=20260917-1';
 import './shared-profile.js?v=20260915-6';
 import './invites.js?v=20260915-3';
-import './members-presence.js?v=20260915-2';
+import './members-presence.js?v=20260917-3';
 
 (() => {
   'use strict';
@@ -46,10 +46,7 @@ import './members-presence.js?v=20260915-2';
     if (memberError) throw memberError;
 
     const members = (Array.isArray(memberData) ? memberData : memberData ? [memberData] : [])
-      .map((row) => ({
-        user_id: String(row?.user_id || ''),
-        role: String(row?.role || 'player')
-      }))
+      .map((row) => ({ user_id: String(row?.user_id || ''), role: String(row?.role || 'player') }))
       .filter((row) => row.user_id);
 
     const currentMember = members.find((row) => row.user_id === user.id);
