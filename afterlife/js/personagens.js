@@ -26,7 +26,7 @@ import { aeriom, afterlifeReady } from './aeriom-client.js?v=20260914-30';
     const name = String(row?.name || 'Sobrevivente sem nome').trim() || 'Sobrevivente sem nome';
     const race = row?.race || 'Humano', cls = row?.class || 'Sobrevivente', origin = row?.origin || row?.region || 'Origem não definida';
     const image = await imageUrl(row), ready = row?.status === 'completed';
-    const article = document.createElement('article'); article.className = 'character-card';
+    const article = document.createElement('article'); article.className = 'character-card'; article.dataset.characterId = row.id;
     article.innerHTML = `<div class="character-art">${image ? `<img src="${esc(image)}" alt="Retrato de ${esc(name)}" loading="lazy">` : `<span class="character-fallback">${esc(name.charAt(0).toUpperCase())}</span>`}</div><div class="character-body"><span class="character-status"><i></i>${ready ? 'FICHA PRONTA' : 'EM CONSTRUÇÃO'}</span><h2 class="character-title">${esc(name)}</h2><div class="character-meta">${esc(race)} · ${esc(cls)} · ${esc(origin)}</div><div class="character-stats"><span class="character-stat">HP ${number(row?.hp_current, 10)} / ${number(row?.hp_max, 10)}</span><span class="character-stat">DEF ${number(row?.defense, 10)}</span><span class="character-stat">XP ${number(row?.xp_total, 0)}</span></div></div>`;
     const img = article.querySelector('img');
     img?.addEventListener('error', () => { img.remove(); const fallback = document.createElement('span'); fallback.className='character-fallback'; fallback.textContent=name.charAt(0).toUpperCase(); article.querySelector('.character-art')?.appendChild(fallback); });
