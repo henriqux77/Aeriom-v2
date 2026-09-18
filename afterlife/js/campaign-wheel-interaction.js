@@ -13,7 +13,7 @@
     if (!orbit) {
       orbit = document.createElement('div');
       orbit.className = 'nuclear-wheel__orbit';
-      const angles = [0,-18,-36,-54,-72,-90];
+      const angles = [0,-30,-60,-90,-120,-150];
       wheel.querySelectorAll('.nuclear-item').forEach((item,index) => {
         item.style.setProperty('--item-angle', `${angles[index] ?? (index * -18)}deg`);
         orbit.appendChild(item);
@@ -38,8 +38,8 @@
     let lastAngle = 0;
     let velocity = 0;
     let animationFrame = 0;
-    const MIN_ROTATION = -16;
-    const MAX_ROTATION = 16;
+    const MIN_ROTATION = -32;
+    const MAX_ROTATION = 32;
 
     const normalizeDelta = (value) => {
       let delta = value;
@@ -138,8 +138,32 @@
     wheel.addEventListener('lostpointercapture',() => { dragging=false; pointerId=null; wheel.classList.remove('is-dragging'); });
 
     wheel.querySelectorAll('.nuclear-item').forEach((item) => {
-      item.addEventListener('pointerup',(event) => { if (moved) { event.preventDefault(); event.stopImmediatePropagation(); } },true);
-      item.addEventListener('click',() => { if (open && !moved) closeWheel(); });
+      item.addEventListener('pointerup',(event) => {
+        if (moved) {
+          event.preventDefault();
+          event.stopImmediatePropagation();
+        }
+      },true);
+
+      item.addEventListener('click',(event) => {
+        if (!open || moved) return;
+        event.preventDefault();
+        event.stopPropagation();
+
+        const target = item.dataset.target || '';
+        closeWheel();
+
+        requestAnimationFrame(() => {
+          if (!target) return;
+          if (target.startsWith('#')) {
+            const section = document.querySelector(target);
+            if (section) section.scrollIntoView({ behavior:'smooth', block:'start' });
+            else location.hash = target.slice(1);
+            return;
+          }
+          location.href = target;
+        });
+      });
     });
 
     document.addEventListener('keydown',(event) => { if (event.key === 'Escape' && open) { event.preventDefault(); closeWheel(); } });
