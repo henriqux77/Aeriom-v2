@@ -221,7 +221,7 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260918
   function openManage(type) {
     if(type==='faction') return openFactionManager();
     if(type==='vehicle') return openVehicleManager();
-    if(type==='npc') return toast('O editor de NPC está disponível pela ação ADICIONAR; edição avançada fica no próximo painel.');
+    if(type==='npc') return openNpcManager();
     if(type==='crafting') return openCraftManager();
     if(type==='horde') return toast('Use o radar do mapa para movimentar e atualizar as ondas.');
   }
@@ -414,6 +414,70 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260918
         },'Craft / forja atualizados.');
       });
     }catch(error){toast(error?.message||'Não foi possível abrir o craft/forja.','error')}
+  }
+
+  async function openNpcManager() {
+    try {
+      const [npcs,factions] = await Promise.all([
+        aeriom.from('campaign_npcs').select('id,name,profession,status,faction_id,latitude,longitude,personality,relationships,state,history').eq('campaign_id',campaignId).order('name'),
+        aeriom.from('campaign_factions').select('id,name').eq('campaign_id',campaignId).order('name')
+      ]);
+      if(npcs.error)throw npcs.error;if(factions.error)throw factions.error;
+      const rows=npcs.data||[];
+      if(!rows.length)return toast('Nenhum NPC persistente cadastrado.','info');
+
+      const root=modal('Gerenciar NPCs',
+        '<form class="afterlife-system-form" id="npcManagerForm">'+
+        '<label><span>NPC</span><select id="npcPick">'+rows.map(n=>'<option value="'+esc(n.id)+'">'+esc(n.name)+'</option>').join('')+'</select></label>'+
+        '<div class="afterlife-system-two">'+
+        field('NOME','npcName','text','maxlength="120" required')+
+        field('PROFISSÃO','npcProfession','text','maxlength="80")+
+        '</div>'+
+        '<div class="afterlife-system-two">'+
+        '<label><span>STATUS</span><select id="npcStatus"><option value="active">Ativo</option><option value="injured">Ferido</option><option value="dead">Morto</option><option value="missing">Desaparecido</option></select></label>'+
+        '<label><span>FACÇÃO</span><select id="npcFaction"><option value="">Sem facção</option>'+factions.data.map(f=>'<option value="'+esc(f.id)+'">'+esc(f.name)+'</option>').join('')+'</select></label>'+
+        '</div>'+
+        '<label><span>HISTÓRICO</span><textarea id="npcHistory" maxlength="3000" rows="4"></textarea></label>'+
+        '<div class="afterlife-system-two">'+
+        '<label><span>PERSONALIDADE JSON</span><textarea id="npcPersonality" rows="4" placeholder=\'{"traços":["cauteloso"]}\'></textarea></label>'+
+        '<label><span>ESTADO JSON</span><textarea id="npcState" rows="4" placeholder=\'{"hp_max":12,"defense":10,"movement":9,"initiative_die":8}\'></textarea></label>'+
+        '</div>'+
+        '<div class="afterlife-system-form-actions"><button type="button" class="system-secondary" data-close>FECHAR</button><button type="submit" class="system-primary">SALVAR NPC</button></div></form>'
+      );
+
+      const sync=()=>{
+        const n=rows.find(x=>x.id===$('#npcPick').value)||rows[0];
+        $('#npcName').value=n.name||'';
+        $('#npcProfession').value=n.profession||'';
+        $('#npcStatus').value=n.status||'active';
+        $('#npcFaction').value=n.faction_id||'';
+        $('#npcHistory').value=n.history||'';
+        $('#npcPersonality').value=JSON.stringify(n.personality||{},null,2);
+        $('#npcState').value=JSON.stringify(n.state||{},null,2);
+      };
+      $('#npcPick').addEventListener('change',sync);
+      sync();
+      root.querySelector('#npcManagerForm').addEventListener('submit',async e=>{
+        e.preventDefault();
+        try{
+          const personality=$('#npcPersonality').value.trim()?JSON.parse($('#npcPersonality').value):{};
+          const state=$('#npcState').value.trim()?JSON.parse($('#npcState').value):{};
+          await run(async()=>aeriom.rpc('update_campaign_npc',{
+            p_id:$('#npcPick').value,
+            p_name:$('#npcName').value.trim(),
+            p_profession:$('#npcProfession').value.trim()||null,
+            p_faction_id:$('#npcFaction').value||null,
+            p_status:$('#npcStatus').value,
+            p_latitude:null,
+            p_longitude:null,
+            p_state:state,
+            p_personality:personality,
+            p_relationships:{},
+            p_history:$('#npcHistory').value.trim()
+          }),'NPC atualizado.');
+        }catch(error){toast(error?.message||'JSON de NPC inválido.','error')}
+      });
+    }catch(error){toast(error?.message||'Não foi possível abrir os NPCs.','error')}
   }
 
   async function openVehicleManager() {
