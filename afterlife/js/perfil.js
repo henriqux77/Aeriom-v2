@@ -1,4 +1,4 @@
-import { aeriom, afterlifeReady, ensureAfterlifeSession } from './aeriom-client.js?v=20260914-30';
+import { aeriom, afterlifeReady, ensureAfterlifeSession } from './aeriom-client.js?v=20260918-2';
 
 const BUCKET = 'avatars';
 const MAX_SIZE = 5 * 1024 * 1024;
