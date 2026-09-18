@@ -111,6 +111,15 @@ import './members-presence.js?v=20260917-3';
   // Keeping this function as a no-op avoids any chance of duplicate listeners.
   function bindWheel() { return; }
 
+  window.addEventListener('afterlife:campaign-updated', async () => {
+    try {
+      const campaign = await loadCampaign();
+      applyCampaign(campaign);
+    } catch (error) {
+      console.warn('[AFTERLIFE][CAMPAIGN] Falha ao atualizar campanha após edição.', error);
+    }
+  });
+
   function bindQuickLinks() {
     document.querySelectorAll('[data-jump]').forEach((btn) => btn.addEventListener('click', () => {
       document.querySelector(btn.dataset.jump)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
