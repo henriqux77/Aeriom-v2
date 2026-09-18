@@ -1,13 +1,13 @@
-.nuclear-wheel{display:block!important;position:fixed!important;right:8px!important;bottom:8px!important;top:auto!important;width:214px!important;height:214px!important;z-index:3000!important;pointer-events:none;touch-action:none;overflow:visible!important;}
+.nuclear-wheel{display:block!important;position:fixed!important;right:14px!important;bottom:14px!important;top:auto!important;width:190px!important;height:190px!important;z-index:3000!important;pointer-events:none;touch-action:none;overflow:visible!important;}
 .nuclear-wheel.is-open{pointer-events:auto;}
 .nuclear-wheel::before{display:none!important;content:none!important;}
-.nuclear-wheel::after{content:'ARRASTE PARA GIRAR';position:absolute;right:29px;bottom:29px;width:112px;height:112px;border:1px dashed rgba(57,245,138,.16);border-radius:50%;display:grid;place-items:center;padding:0 28px;box-sizing:border-box;color:rgba(205,255,224,.34);font:800 6px/1.35 Inter,sans-serif;letter-spacing:.16em;text-align:center;pointer-events:none;opacity:0;transform:scale(.84);transition:opacity .2s ease,transform .24s ease;}
+.nuclear-wheel::after{content:'ARRASTE PARA GIRAR';position:absolute;right:24px;bottom:24px;width:104px;height:104px;border:1px dashed rgba(57,245,138,.16);border-radius:50%;display:grid;place-items:center;padding:0 28px;box-sizing:border-box;color:rgba(205,255,224,.34);font:800 6px/1.35 Inter,sans-serif;letter-spacing:.16em;text-align:center;pointer-events:none;opacity:0;transform:scale(.84);transition:opacity .2s ease,transform .24s ease;}
 .nuclear-wheel.is-open::after{opacity:1;transform:scale(1);}
 .nuclear-wheel__backdrop{position:fixed;inset:0;z-index:2990;border:0;padding:0;margin:0;background:rgba(0,0,0,.50);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .22s ease,visibility 0s linear .22s;cursor:default;}
 .nuclear-wheel__backdrop.is-visible{opacity:1;visibility:visible;pointer-events:auto;transition:opacity .22s ease,visibility 0s linear 0s;}
 .nuclear-wheel__orbit{position:absolute;inset:0;transform:rotate(var(--wheel-rotation,0deg));transform-origin:100% 100%;transition:transform .18s cubic-bezier(.2,.75,.25,1);will-change:transform;pointer-events:none;}
 .nuclear-wheel.is-dragging .nuclear-wheel__orbit{transition:none;}
-.nuclear-center{position:absolute!important;right:0!important;bottom:0!important;left:auto!important;top:auto!important;width:60px!important;height:60px!important;margin:0!important;z-index:4;pointer-events:auto!important;touch-action:manipulation!important;display:grid;place-items:center;font-size:27px!important;line-height:1!important;border-color:rgba(91,255,167,.72)!important;box-shadow:0 0 0 1px rgba(57,245,138,.08),0 8px 26px rgba(0,0,0,.42)!important;transform:none!important;transform-origin:center!important;transition:transform .18s ease,box-shadow .18s ease,filter .18s ease!important;}
+.nuclear-center{position:absolute!important;right:0!important;bottom:0!important;left:auto!important;top:auto!important;width:56px!important;height:56px!important;margin:0!important;z-index:4;pointer-events:auto!important;touch-action:manipulation!important;display:grid;place-items:center;font-size:27px!important;line-height:1!important;border-color:rgba(91,255,167,.72)!important;box-shadow:0 0 0 1px rgba(57,245,138,.08),0 8px 26px rgba(0,0,0,.42)!important;transform:none!important;transform-origin:center!important;transition:transform .18s ease,box-shadow .18s ease,filter .18s ease!important;}
 .nuclear-center:hover{transform:scale(1.06)!important;filter:brightness(1.08);box-shadow:0 0 26px rgba(57,245,138,.22),0 0 0 5px rgba(57,245,138,.04)!important;}
 .nuclear-center:active{transform:scale(.94)!important;}
 .nuclear-center:focus-visible{outline:2px solid rgba(157,251,193,.9);outline-offset:3px;}
@@ -56,7 +56,7 @@ body.afterlife-wheel-lock{overflow:hidden!important;touch-action:none!important;
     height:184px!important;
   }
   .nuclear-item{
-    --item-radius:70px!important;
+    --item-radius:74px!important;
   }
 }
 /* Legado: não deixa nenhuma posição antiga ressuscitar um sétimo item. */
