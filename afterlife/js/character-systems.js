@@ -70,13 +70,15 @@ import { aeriom, afterlifeReady } from './aeriom-client.js?v=20260918-1';
 
       const root=openModal('Inventário · '+activeCharacter.name,
         '<div class="character-system-capacity"><div><span>CAPACIDADE</span><strong>'+Number(s.slots_used||0)+' / '+Number(s.slots_max||0)+' slots</strong></div><div><span>PESO</span><strong>'+Number(s.weight_used_kg||0)+' / '+Number(s.weight_max_kg||0)+' kg</strong></div><b data-state="'+esc(s.state||'normal')+'">'+esc(s.state||'normal').toUpperCase()+'</b></div>'+
-        '<section class="character-system-section"><header><span>ITENS</span><b>'+itemRows.length+' pilhas</b></header><div class="character-system-list">'+(itemRows.length?itemRows.map(i=>'<article class="character-system-item"><div><strong>'+esc(i.custom_name||i.item_templates?.name||'Item')+'</strong><small>'+esc(i.item_templates?.category||'item')+' · '+esc(i.item_templates?.rarity||'common')+' · '+Number(i.item_templates?.weight_kg||0)+' kg</small></div><b>×'+Number(i.quantity||1)+'</b><div class="character-system-item-actions"><button type="button" data-inv-remove="'+esc(i.id)+'">USAR/REMOVER</button><button type="button" data-inv-equip="'+esc(i.id)+'">EQUIPAR</button></div></article>').join(''):'<div class="character-system-empty">Nenhum item. O loot e as recompensas passam a entrar aqui.</div>')+'</div></section>'+
+        '<section class="character-system-section"><header><span>ITENS</span><b>'+itemRows.length+' pilhas</b></header><div class="character-system-list">'+(itemRows.length?itemRows.map(i=>'<article class="character-system-item"><div><strong>'+esc(i.custom_name||i.item_templates?.name||'Item')+'</strong><small>'+esc(i.item_templates?.category||'item')+' · '+esc(i.item_templates?.rarity||'common')+' · '+Number(i.item_templates?.weight_kg||0)+' kg</small></div><b>×'+Number(i.quantity||1)+'</b><div class="character-system-item-actions"><button type="button" data-inv-remove="'+esc(i.id)+'">REMOVER ×1</button><button type="button" data-inv-equip="'+esc(i.id)+'">EQUIPAR</button><button type="button" data-inv-transfer="'+esc(i.id)+'">TRANSFERIR</button><button type="button" data-inv-store="'+esc(i.id)+'">ARMAZENAR</button></div></article>').join(''):'<div class="character-system-empty">Nenhum item. O loot e as recompensas passam a entrar aqui.</div>')+'</div></section>'+
         '<section class="character-system-section"><header><span>EQUIPAMENTO</span><b>'+equipment.length+' slots</b></header><div class="character-system-eq">'+(equipment.length?equipment.map(e=>'<div><strong>'+esc(e.slot_key)+'</strong><span>Inventário '+esc(e.inventory_id.slice(0,8))+'…</span><button type="button" data-eq-remove="'+esc(e.slot_key)+'">DESEQUIPAR</button></div>').join(''):'<div class="character-system-empty">Nada equipado.</div>')+'</div></section>'+
         '<section class="character-system-section"><header><span>CRAFT</span><b>'+recipeRows.length+' receitas</b></header><div class="character-system-recipes">'+(recipeRows.length?recipeRows.map(r=>{const mats=materialRows.filter(m=>m.recipe_id===r.id).map(m=>Number(m.quantity)+'× '+(m.item_templates?.name||'material')).join(' · ');return '<article><div><strong>'+esc(r.name)+'</strong><small>'+esc(mats||'Sem materiais configurados')+'</small></div><button type="button" data-craft="'+esc(r.id)+'">CRIAR ×'+Number(r.output_quantity||1)+'</button></article>'}).join(''):'<div class="character-system-empty">Nenhuma receita disponível.</div>')+'</div></section>'
       );
 
       root.querySelectorAll('[data-inv-remove]').forEach(b=>b.addEventListener('click',()=>removeItem(b.dataset.invRemove,1)));
       root.querySelectorAll('[data-inv-equip]').forEach(b=>b.addEventListener('click',()=>equipItem(b.dataset.invEquip)));
+      root.querySelectorAll('[data-inv-transfer]').forEach(b=>b.addEventListener('click',()=>transferItem(b.dataset.invTransfer)));
+      root.querySelectorAll('[data-inv-store]').forEach(b=>b.addEventListener('click',()=>storeItem(b.dataset.invStore)));
       root.querySelectorAll('[data-eq-remove]').forEach(b=>b.addEventListener('click',()=>unequipItem(b.dataset.eqRemove)));
       root.querySelectorAll('[data-craft]').forEach(b=>b.addEventListener('click',()=>craft(b.dataset.craft)));
       root.querySelector('input,button')?.focus();
@@ -86,6 +88,38 @@ import { aeriom, afterlifeReady } from './aeriom-client.js?v=20260918-1';
 
   async function removeItem(id,qty){
     if(busy)return;busy=true;try{const r=await aeriom.rpc('remove_character_inventory_item',{p_inventory_id:id,p_quantity:qty});if(r.error)throw r.error;toast('Item removido.','success');await openInventory(activeCharacter.id)}catch(e){toast(e?.message||'Não foi possível remover o item.','error')}finally{busy=false}
+  }
+
+  async function transferItem(inventoryId){
+    try{
+      const {data,error}=await aeriom.rpc('list_campaign_character_summaries',{p_campaign_id:activeCharacter.campaign_id});
+      if(error)throw error;
+      const others=(data||[]).filter(c=>c.id!==activeCharacter.id&&c.status==='completed');
+      if(!others.length)return toast('Não há outro sobrevivente disponível para receber o item.','error');
+      const root=openModal('Transferir item',
+        '<form class="character-system-form" id="transferForm"><label><span>DESTINO</span><select id="transferTarget">'+others.map(c=>'<option value="'+esc(c.id)+'">'+esc(c.name)+'</option>').join('')+'</select></label><label><span>QUANTIDADE</span><input id="transferQty" type="number" min="1" value="1"></label><div class="character-system-two"><button type="button" class="character-system-secondary" data-close>CANCELAR</button><button type="submit" class="character-system-primary">TRANSFERIR</button></div></form>');
+      root.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',closeModal));
+      root.querySelector('#transferForm').addEventListener('submit',async e=>{
+        e.preventDefault();
+        const r=await aeriom.rpc('transfer_character_inventory_item',{p_inventory_id:inventoryId,p_target_character_id:document.getElementById('transferTarget').value,p_quantity:Number(document.getElementById('transferQty').value)||1});
+        if(r.error)throw r.error;
+        toast('Item transferido.','success');await openInventory(activeCharacter.id);
+      });
+    }catch(e){toast(e?.message||'Não foi possível transferir.','error')}
+  }
+
+  async function storeItem(inventoryId){
+    try{
+      const root=openModal('Armazenar item',
+        '<form class="character-system-form" id="storeForm"><label><span>QUANTIDADE</span><input id="storeQty" type="number" min="1" value="1"></label><p class="character-system-note">O item será colocado no armazém compartilhado da campanha.</p><div class="character-system-two"><button type="button" class="character-system-secondary" data-close>CANCELAR</button><button type="submit" class="character-system-primary">ARMAZENAR</button></div></form>');
+      root.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',closeModal));
+      root.querySelector('#storeForm').addEventListener('submit',async e=>{
+        e.preventDefault();
+        const r=await aeriom.rpc('deposit_character_inventory_to_storage',{p_inventory_id:inventoryId,p_quantity:Number(document.getElementById('storeQty').value)||1,p_storage_id:null});
+        if(r.error)throw r.error;
+        toast('Item guardado no armazém.','success');await openInventory(activeCharacter.id);
+      });
+    }catch(e){toast(e?.message||'Não foi possível armazenar o item.','error')}
   }
 
   async function equipItem(id){
