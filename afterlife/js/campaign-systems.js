@@ -128,10 +128,11 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260918
 
     bindCreateButtons();
     bindMissionStatus();
+    bindManageButtons();
   }
 
   function systemCard(icon,title,count,items,createType) {
-    return '<section class="campaign-system-card"><header><div><span>'+icon+'</span><div><small>SISTEMA</small><strong>'+title+'</strong></div></div><b>'+Number(count||0)+'</b></header><div class="campaign-system-card-list">'+(items.length?items.map(x=>'<span>'+esc(x)+'</span>').join(''):'<span class="muted">Nenhum registrado.</span>')+'</div>'+(createType?'<button type="button" class="system-card-action" data-create="'+createType+'">＋ ADICIONAR</button>':'')+'</section>';
+    return '<section class="campaign-system-card"><header><div><span>'+icon+'</span><div><small>SISTEMA</small><strong>'+title+'</strong></div></div><b>'+Number(count||0)+'</b></header><div class="campaign-system-card-list">'+(items.length?items.map(x=>'<span>'+esc(x)+'</span>').join(''):'<span class="muted">Nenhum registrado.</span>')+'</div>'+(createType?'<div class="system-card-actions"><button type="button" class="system-card-action" data-create="'+createType+'">＋ ADICIONAR</button><button type="button" class="system-card-action" data-manage="'+createType+'">GERENCIAR</button></div>':'')+'</section>';
   }
 
   function ensureSystemsPanel() {
@@ -159,6 +160,21 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260918
       b.dataset.bound='1';
       b.addEventListener('click',()=>openMissionStatus(b.dataset.missionStatus));
     });
+  }
+
+  function bindManageButtons() {
+    document.querySelectorAll('[data-manage]').forEach(b=>{
+      if(b.dataset.bound==='1')return;
+      b.dataset.bound='1';
+      b.addEventListener('click',()=>openManage(b.dataset.manage));
+    });
+  }
+
+  function openManage(type) {
+    if(type==='faction') return openFactionManager();
+    if(type==='vehicle') return openVehicleManager();
+    if(type==='npc') return toast('O editor de NPC está disponível pela ação ADICIONAR; edição avançada fica no próximo painel.');
+    if(type==='horde') return toast('Use o radar do mapa para movimentar e atualizar as ondas.');
   }
 
   function openCreate(type) {
@@ -255,6 +271,102 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260918
     root.querySelector('form').addEventListener('submit',async e=>{
       e.preventDefault(); await run(async()=>aeriom.rpc('update_campaign_mission_status',{p_id:missionId,p_status:$('#sysStatus').value}),'Missão atualizada.');
     });
+  }
+
+  async function openFactionManager() {
+    try {
+      const [factions,chars] = await Promise.all([
+        aeriom.from('campaign_factions').select('id,name,faction_type,description,reputation_default').eq('campaign_id',campaignId).order('name'),
+        aeriom.rpc('list_campaign_character_summaries',{p_campaign_id:campaignId})
+      ]);
+      if(factions.error)throw factions.error;if(chars.error)throw chars.error;
+      const fs=factions.data||[], cs=chars.data||[];
+      const options=fs.map(f=>'<option value="'+esc(f.id)+'">'+esc(f.name)+'</option>').join('');
+      const root=modal('Gerenciar facções',
+        '<form class="afterlife-system-form" id="factionManagerForm">'+
+        '<label><span>FACÇÃO</span><select id="factionPick">'+options+'</select></label>'+
+        '<div id="factionManagerContent" class="system-manager-content"><small>Selecione uma facção.</small></div>'+
+        '<div class="afterlife-system-two">'+
+        '<label><span>MEMBRO</span><select id="factionCharacter">'+cs.map(c=>'<option value="'+esc(c.id)+'">'+esc(c.name)+'</option>').join('')+'</select></label>'+
+        '<label><span>POSTO</span><input id="factionRank" value="member" maxlength="40"></label></div>'+
+        '<div class="afterlife-system-two">'+
+        '<label><span>RELAÇÃO COM</span><select id="relationTarget">'+options+'</select></label>'+
+        '<label><span>RELAÇÃO</span><select id="relationType"><option value="allied">Aliada</option><option value="friendly">Amigável</option><option value="neutral" selected>Neutra</option><option value="hostile">Hostil</option><option value="war">Guerra</option></select></label></div>'+
+        '<div class="afterlife-system-form-actions"><button type="button" class="system-secondary" data-close>FECHAR</button><button type="submit" class="system-primary">APLICAR</button></div></form>'
+      );
+      const refreshFaction=async()=>{
+        const pick=$('#factionPick').value;
+        const [members,relations]=await Promise.all([
+          aeriom.from('campaign_faction_members').select('id,character_id,user_id,npc_id,rank,reputation,status,characters(name)').eq('faction_id',pick).order('rank'),
+          aeriom.from('campaign_faction_relations').select('target_faction_id,relation_type,reputation').eq('faction_id',pick)
+        ]);
+        if(members.error)throw members.error;if(relations.error)throw relations.error;
+        $('#factionManagerContent').innerHTML=
+          '<div class="system-manager-block"><strong>MEMBROS</strong>'+(members.data?.length?members.data.map(m=>'<div><span>'+esc(m.characters?.name||'NPC/Usuário')+'</span><small>'+esc(m.rank)+' · reputação '+Number(m.reputation||0)+'</small></div>').join(''):'<em>Nenhum membro.</em>')+'</div>'+
+          '<div class="system-manager-block"><strong>RELAÇÕES</strong>'+(relations.data?.length?relations.data.map(r=>'<div><span>'+esc(fs.find(f=>f.id===r.target_faction_id)?.name||'Facção')+'</span><small>'+esc(r.relation_type)+' · '+Number(r.reputation||0)+'</small></div>').join(''):'<em>Nenhuma relação.</em>')+'</div>';
+      };
+      $('#factionPick').addEventListener('change',()=>refreshFaction().catch(()=>{}));
+      await refreshFaction();
+      root.querySelector('form').addEventListener('submit',async e=>{
+        e.preventDefault();
+        if(busy)return;
+        busy=true;
+        try{
+          const faction=$('#factionPick').value,target=$('#relationTarget').value;
+          if(faction && $('#factionCharacter').value){
+            const mr=await aeriom.rpc('add_campaign_faction_character',{p_faction_id:faction,p_character_id:$('#factionCharacter').value,p_rank:$('#factionRank').value.trim()||'member'});
+            if(mr.error)throw mr.error;
+          }
+          if(faction && target && target!==faction){
+            const rr=await aeriom.rpc('set_campaign_faction_relation',{p_campaign_id:campaignId,p_faction_id:faction,p_target_faction_id:target,p_relation_type:$('#relationType').value,p_reputation:0});
+            if(rr.error)throw rr.error;
+          }
+          closeModal();toast('Facção atualizada.','success');await refresh();
+        }catch(error){toast(error?.message||'Não foi possível atualizar a facção.','error')}finally{busy=false}
+      });
+    }catch(error){toast(error?.message||'Não foi possível abrir as facções.','error')}
+  }
+
+  async function openVehicleManager() {
+    try{
+      const {data,error}=await aeriom.from('campaign_vehicles').select('id,name,vehicle_type,fuel_current,fuel_max,condition,speed_kmh,cargo_slots').eq('campaign_id',campaignId).order('name');
+      if(error)throw error;
+      const vehicles=data||[];
+      const options=vehicles.map(v=>'<option value="'+esc(v.id)+'">'+esc(v.name)+'</option>').join('');
+      const root=modal('Gerenciar veículos',
+        '<form class="afterlife-system-form" id="vehicleManagerForm">'+
+        '<label><span>VEÍCULO</span><select id="vehiclePick">'+options+'</select></label>'+
+        '<div id="vehicleManagerContent" class="system-manager-content"><small>Selecione um veículo.</small></div>'+
+        '<div class="afterlife-system-two"><label><span>PEÇA</span><input id="vehiclePartType" maxlength="50" placeholder="motor"></label><label><span>NOME</span><input id="vehiclePartName" maxlength="120" placeholder="Motor revisado"></label></div>'+
+        '<div class="afterlife-system-two"><label><span>UPGRADE</span><input id="vehicleUpgradeName" maxlength="120" placeholder="Blindagem"></label><label><span>TIPO</span><input id="vehicleUpgradeType" maxlength="60" placeholder="armor"></label></div>'+
+        '<div class="afterlife-system-form-actions"><button type="button" class="system-secondary" data-close>FECHAR</button><button type="submit" class="system-primary">APLICAR</button></div></form>'
+      );
+      const refreshVehicle=async()=>{
+        const vid=$('#vehiclePick').value;
+        const [parts,upgrades]=await Promise.all([
+          aeriom.from('vehicle_parts').select('part_type,name,durability').eq('vehicle_id',vid),
+          aeriom.from('vehicle_upgrades').select('name,upgrade_type,level').eq('vehicle_id',vid)
+        ]);
+        if(parts.error)throw parts.error;if(upgrades.error)throw upgrades.error;
+        $('#vehicleManagerContent').innerHTML='<div class="system-manager-block"><strong>PEÇAS</strong>'+(parts.data?.length?parts.data.map(p=>'<div><span>'+esc(p.name)+'</span><small>'+esc(p.part_type)+' · '+Number(p.durability||0)+'%</small></div>').join(''):'<em>Nenhuma peça.</em>')+'</div><div class="system-manager-block"><strong>UPGRADES</strong>'+(upgrades.data?.length?upgrades.data.map(u=>'<div><span>'+esc(u.name)+'</span><small>'+esc(u.upgrade_type)+' · nível '+Number(u.level||1)+'</small></div>').join(''):'<em>Nenhum upgrade.</em>')+'</div>';
+      };
+      $('#vehiclePick').addEventListener('change',()=>refreshVehicle().catch(()=>{}));await refreshVehicle();
+      root.querySelector('form').addEventListener('submit',async e=>{
+        e.preventDefault();if(busy)return;busy=true;
+        try{
+          const vid=$('#vehiclePick').value;
+          if($('#vehiclePartType').value.trim()&&$('#vehiclePartName').value.trim()){
+            const pr=await aeriom.rpc('add_vehicle_part',{p_vehicle_id:vid,p_part_type:$('#vehiclePartType').value.trim(),p_name:$('#vehiclePartName').value.trim(),p_durability:100,p_metadata:{}});
+            if(pr.error)throw pr.error;
+          }
+          if($('#vehicleUpgradeName').value.trim()&&$('#vehicleUpgradeType').value.trim()){
+            const ur=await aeriom.rpc('install_vehicle_upgrade',{p_vehicle_id:vid,p_name:$('#vehicleUpgradeName').value.trim(),p_upgrade_type:$('#vehicleUpgradeType').value.trim(),p_level:1,p_effects:{}});
+            if(ur.error)throw ur.error;
+          }
+          closeModal();toast('Veículo atualizado.','success');await refresh();
+        }catch(error){toast(error?.message||'Não foi possível atualizar o veículo.','error')}finally{busy=false}
+      });
+    }catch(error){toast(error?.message||'Não foi possível abrir os veículos.','error')}
   }
 
   async function run(action,success) {
