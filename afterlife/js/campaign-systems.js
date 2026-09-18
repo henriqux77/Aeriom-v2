@@ -122,6 +122,7 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260918
       systemCard('🏴','FACÇÕES',s.factions||factions.length,factions.slice(0,4).map(f=>f.name),masterOnly()?'faction':null),
       systemCard('👤','NPCs',s.npcs||npcs.length,npcs.slice(0,4).map(n=>n.name+(n.profession?' · '+n.profession:'')),masterOnly()?'npc':null),
       systemCard('🚙','VEÍCULOS',s.vehicles||vehicles.length,vehicles.slice(0,4).map(v=>v.name+' · '+Math.round(Number(v.condition||0))+'%'),masterOnly()?'vehicle':null),
+      systemCard('⚒','CRAFT / FORJA',s.crafting_recipes||0,[String(s.crafting_stations||0)+' estações',String(s.crafting_recipes||0)+' receitas'],masterOnly()?'crafting':null),
       systemCard('☢','RADAR DE HORDAS',s.hordes_active||hordes.length,hordes.slice(0,4).map(h=>h.name+' · '+h.size+' zumbis · ameaça '+h.threat_level),masterOnly()?'horde':null),
       '</div>'
     ].join('');
@@ -174,6 +175,7 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260918
     if(type==='faction') return openFactionManager();
     if(type==='vehicle') return openVehicleManager();
     if(type==='npc') return toast('O editor de NPC está disponível pela ação ADICIONAR; edição avançada fica no próximo painel.');
+    if(type==='crafting') return openCraftManager();
     if(type==='horde') return toast('Use o radar do mapa para movimentar e atualizar as ondas.');
   }
 
@@ -325,6 +327,43 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260918
         }catch(error){toast(error?.message||'Não foi possível atualizar a facção.','error')}finally{busy=false}
       });
     }catch(error){toast(error?.message||'Não foi possível abrir as facções.','error')}
+  }
+
+  async function openCraftManager() {
+    try {
+      const [items, recipes, stations] = await Promise.all([
+        aeriom.from('item_templates').select('id,name,category,rarity').order('name').limit(100),
+        aeriom.from('crafting_recipes').select('id,name,output_quantity,station_type,description,output_item_template_id').or('campaign_id.is.null,campaign_id.eq.'+campaignId).order('name'),
+        aeriom.from('crafting_stations').select('id,name,station_type,condition').eq('campaign_id',campaignId).order('name')
+      ]);
+      if(items.error)throw items.error;if(recipes.error)throw recipes.error;if(stations.error)throw stations.error;
+      const itemOptions=(items.data||[]).map(i=>'<option value="'+esc(i.id)+'">'+esc(i.name)+' · '+esc(i.category)+'</option>').join('');
+      const root=modal('Craft / Forja',formShell([
+        '<div class="system-manager-block"><strong>ESTAÇÕES ATIVAS</strong>'+(stations.data?.length?stations.data.map(s=>'<div><span>'+esc(s.name)+'</span><small>'+esc(s.station_type)+' · '+esc(s.condition)+'</small></div>').join(''):'<em>Nenhuma estação criada.</em>')+'</div>',
+        '<div class="afterlife-system-two">'+field('NOME DA ESTAÇÃO','sysStationName','text','maxlength="120" placeholder="Bancada improvisada"')+field('TIPO','sysStationType','text','maxlength="60" value="workbench"')+'</div>',
+        '<div class="system-manager-block"><strong>RECEITAS</strong>'+(recipes.data?.length?recipes.data.slice(0,8).map(r=>'<div><span>'+esc(r.name)+'</span><small>×'+Number(r.output_quantity||1)+' · '+esc(r.station_type||'livre')+'</small></div>').join(''):'<em>Nenhuma receita criada.</em>')+'</div>',
+        field('NOME DA RECEITA','sysRecipeName','text','maxlength="120" placeholder="Kit médico"'),
+        '<div class="afterlife-system-two"><label><span>ITEM DE SAÍDA</span><select id="sysOutputItem">'+itemOptions+'</select></label><label><span>ESTAÇÃO EXIGIDA</span><input id="sysRecipeStation" maxlength="60" placeholder="workbench"></label></div>',
+        '<div class="afterlife-system-two"><label><span>MATERIAL</span><select id="sysMaterialItem">'+itemOptions+'</select></label><label><span>QUANTIDADE</span><input id="sysMaterialQty" type="number" min="1" value="1"></label></div>'
+      ],'CRIAR / APLICAR'));
+      root.querySelector('#systemCreateForm').addEventListener('submit',async e=>{
+        e.preventDefault();
+        await run(async()=>{
+          let createdStation=null;
+          if($('#sysStationName').value.trim()){
+            const sr=await aeriom.rpc('create_campaign_crafting_station',{p_campaign_id:campaignId,p_name:$('#sysStationName').value.trim(),p_station_type:$('#sysStationType').value.trim()||'workbench',p_latitude:null,p_longitude:null});
+            if(sr.error)throw sr.error;createdStation=sr.data;
+          }
+          if($('#sysRecipeName').value.trim()){
+            const rr=await aeriom.rpc('create_campaign_recipe',{p_campaign_id:campaignId,p_name:$('#sysRecipeName').value.trim(),p_output_item_template_id:$('#sysOutputItem').value,p_output_quantity:1,p_station_type:$('#sysRecipeStation').value.trim()||null,p_description:''});
+            if(rr.error)throw rr.error;
+            const mr=await aeriom.rpc('add_campaign_recipe_material',{p_recipe_id:rr.data.id,p_item_template_id:$('#sysMaterialItem').value,p_quantity:Number($('#sysMaterialQty').value)||1});
+            if(mr.error)throw mr.error;
+          }
+          return {createdStation};
+        },'Craft / forja atualizados.');
+      });
+    }catch(error){toast(error?.message||'Não foi possível abrir o craft/forja.','error')}
   }
 
   async function openVehicleManager() {
