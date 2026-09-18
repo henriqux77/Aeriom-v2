@@ -25,3 +25,39 @@ body.afterlife-wheel-lock{overflow:hidden!important;touch-action:none!important;
   .nuclear-item{width:32px!important;height:32px!important;margin:0!important;--item-radius:70px;}
   .nuclear-item span{font-size:11px!important;}.nuclear-item b{font-size:4px!important;}
 }
+
+/* RADIAL FINAL — mantém o mesmo comportamento do desktop em telas menores */
+@media (max-width:900px){
+  .nuclear-wheel{
+    display:block!important;
+    visibility:visible!important;
+    opacity:1!important;
+    pointer-events:none!important;
+    position:fixed!important;
+    right:6px!important;
+    bottom:6px!important;
+    top:auto!important;
+    width:190px!important;
+    height:190px!important;
+  }
+  .nuclear-wheel.is-open{pointer-events:auto!important;}
+  .nuclear-wheel__orbit{display:block!important;visibility:visible!important;opacity:1!important;}
+  .nuclear-wheel.is-open .nuclear-item{
+    display:grid!important;
+    visibility:visible!important;
+    opacity:1!important;
+  }
+}
+@media (max-width:620px){
+  .nuclear-wheel{
+    right:4px!important;
+    bottom:4px!important;
+    width:184px!important;
+    height:184px!important;
+  }
+  .nuclear-item{
+    --item-radius:70px!important;
+  }
+}
+/* Legado: não deixa nenhuma posição antiga ressuscitar um sétimo item. */
+.nuclear-wheel .n7{display:none!important;visibility:hidden!important;pointer-events:none!important;}
