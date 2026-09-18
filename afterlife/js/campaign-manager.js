@@ -157,11 +157,14 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260915
       message('');
       const values = validate();
       setSaving(true);
-      let coverPath = state.campaign.cover_path;
+      const previousCoverPath = state.campaign.cover_path || null;
+      let coverPath = previousCoverPath;
+      let newCoverPath = null;
 
       if (state.imageFile) {
         message('Enviando nova capa…', 'info');
-        coverPath = await uploadCover(state.imageFile);
+        newCoverPath = await uploadCover(state.imageFile);
+        coverPath = newCoverPath;
       }
 
       message('Salvando campanha…', 'info');
@@ -182,10 +185,19 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260915
       if (result.error) throw result.error;
       if (!result.data) throw new Error('Nenhuma alteração foi salva. Verifique sua permissão na campanha.');
 
+      if (previousCoverPath && previousCoverPath !== coverPath) {
+        await aeriom.storage.from(BUCKET).remove([previousCoverPath]).catch((error) => {
+          console.warn('[AFTERLIFE][CAMPAIGN-MANAGER] Não foi possível remover a capa anterior.', error);
+        });
+      }
+
       message('Campanha atualizada.', 'success');
       window.dispatchEvent(new CustomEvent('afterlife:campaign-updated', { detail: result.data }));
       setTimeout(close, 360);
     } catch (error) {
+      if (typeof newCoverPath === 'string' && newCoverPath) {
+        await aeriom.storage.from(BUCKET).remove([newCoverPath]).catch(() => {});
+      }
       console.error('[AFTERLIFE][CAMPAIGN-MANAGER]', error);
       message(error?.message || 'Não foi possível salvar as alterações.', 'error');
     } finally {
