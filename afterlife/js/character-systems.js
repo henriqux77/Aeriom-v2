@@ -109,6 +109,7 @@ import { aeriom, afterlifeReady } from './aeriom-client.js?v=20260918-1';
     busy=true;
     try{
       activeCharacter=await getCharacter(id);
+      await aeriom.rpc('tick_character_survival',{p_character_id:id}).catch(()=>{});
       const [{data:survival,error:sErr},{data:injuries,error:iErr}]=await Promise.all([
         aeriom.from('character_survival').select('*').eq('character_id',id).maybeSingle(),
         aeriom.from('character_injuries').select('id,injury_type,body_part,severity,bleeding,pain,infected,treated,status,notes,created_at').eq('character_id',id).eq('status','active').order('created_at',{ascending:false})
