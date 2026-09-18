@@ -9,7 +9,7 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260915
   const TONES = ['Realista', 'Sobrevivência extrema', 'Horror', 'Ação', 'Exploração'];
   const SCALES = [['world', 'Mundo aberto'], ['regional', 'Regional'], ['city', 'Cidade'], ['local', 'Local']];
 
-  const state = { user: null, campaign: null, imageFile: null, imagePreviewUrl: '', saving: false };
+  const state = { user: null, campaign: null, imageFile: null, imagePreviewUrl: '', removeCover: false, saving: false };
   const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#039;' })[c]);
 
   function campaignId() {
@@ -38,6 +38,7 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260915
     document.getElementById('campaignManagerRoot')?.remove();
     revokePreview();
     state.imageFile = null;
+    state.removeCover = false;
   }
 
   function message(text, type) {
@@ -158,7 +159,7 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260915
       const values = validate();
       setSaving(true);
       const previousCoverPath = state.campaign.cover_path || null;
-      let coverPath = previousCoverPath;
+      let coverPath = state.removeCover ? null : previousCoverPath;
       let newCoverPath = null;
 
       if (state.imageFile) {
@@ -211,6 +212,7 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260915
     if (file.size > MAX_IMAGE_SIZE) return message('A imagem precisa ter no máximo 5 MB.', 'error');
     revokePreview();
     state.imageFile = file;
+    state.removeCover = false;
     state.imagePreviewUrl = URL.createObjectURL(file);
     const wrap = document.getElementById('campaignManagerCoverWrap');
     if (wrap) wrap.innerHTML = '<img id="campaignManagerCoverPreview" src="' + esc(state.imagePreviewUrl) + '" alt="">';
@@ -221,8 +223,8 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260915
 
   function clearCover() {
     state.imageFile = null;
+    state.removeCover = true;
     revokePreview();
-    state.campaign.cover_path = null;
     const wrap = document.getElementById('campaignManagerCoverWrap');
     if (wrap) wrap.innerHTML = '<div class="campaign-manager-cover-empty" id="campaignManagerCoverPreview">A CAPA SERÁ REMOVIDA</div>';
     const label = document.getElementById('campaignManagerFileName');
