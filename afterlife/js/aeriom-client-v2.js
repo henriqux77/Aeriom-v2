@@ -25,10 +25,24 @@ function parse(raw) {
 }
 
 function portalCandidates() {
-  return [
+  const candidates = [
     parse(localStorage.getItem(PORTAL_STORAGE_KEY)),
     parse(localStorage.getItem(HANDOFF_KEY)),
-  ].filter((value) => value?.access_token && value?.refresh_token);
+  ];
+  for (let i = 0; i < localStorage.length; i += 1) {
+    const key = localStorage.key(i) || '';
+    if (!key.startsWith('sb-')) continue;
+    const value = parse(localStorage.getItem(key));
+    if (value?.access_token && value?.refresh_token) candidates.push(value);
+  }
+  const seen = new Set();
+  return candidates.filter((value) => {
+    if (!value?.access_token || !value?.refresh_token) return false;
+    const id = value.access_token;
+    if (seen.has(id)) return false;
+    seen.add(id);
+    return true;
+  });
 }
 
 async function validatePortal(accessToken) {
