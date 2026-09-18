@@ -103,7 +103,7 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260918
   function renderAll(s,missions,diary,factions,npcs,vehicles,hordes,inventory) {
     const missionPanel = document.getElementById('missoes');
     if(missionPanel) {
-      missionPanel.innerHTML = '<header><h2>MISSÕES</h2><div class="system-panel-head-actions"><span>'+esc(s.missions_active||0)+' ativas</span>'+(masterOnly()?'<button type="button" class="system-mini-action" data-create="mission">＋ NOVA</button>':'')+'</div></header><div class="system-list">'+(missions.length?missions.slice(0,8).map(m=>'<article class="system-row mission-row" data-mission-id="'+esc(m.id)+'"><div class="system-row-icon">◎</div><div class="system-row-main"><strong>'+esc(m.title)+'</strong><small>'+esc(m.description||'Sem descrição.')+'</small></div><span class="system-badge" data-status="'+esc(m.status)+'">'+esc(m.status)+'</span>'+(masterOnly()?'<button class="system-row-more" type="button" data-mission-status="'+esc(m.id)+'">•••</button>':'')+'</article>').join(''):'<div class="system-empty"><strong>Nenhuma missão registrada</strong><small>O Mestre pode criar o primeiro objetivo da campanha.</small></div>')+'</div>';
+      missionPanel.innerHTML = '<header><h2>MISSÕES</h2><div class="system-panel-head-actions"><span>'+esc(s.missions_active||0)+' ativas</span>'+(masterOnly()?'<button type="button" class="system-mini-action" data-create="mission">＋ NOVA</button>':'')+'</div></header><div class="system-list">'+(missions.length?missions.slice(0,8).map(m=>'<article class="system-row mission-row" data-mission-id="'+esc(m.id)+'"><div class="system-row-icon">◎</div><div class="system-row-main"><strong>'+esc(m.title)+'</strong><small>'+esc(m.description||'Sem descrição.')+'</small></div><span class="system-badge" data-status="'+esc(m.status)+'">'+esc(m.status)+'</span>'+(masterOnly()?'<div class="system-row-tools"><button class="system-row-more" type="button" data-mission-manage="'+esc(m.id)+'">ETAPAS</button><button class="system-row-more" type="button" data-mission-status="'+esc(m.id)+'">STATUS</button></div>':'')+'</article>').join(''):'<div class="system-empty"><strong>Nenhuma missão registrada</strong><small>O Mestre pode criar o primeiro objetivo da campanha.</small></div>')+'</div>';
     }
 
     const diaryPanel = document.getElementById('diario');
@@ -129,6 +129,7 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260918
 
     bindCreateButtons();
     bindMissionStatus();
+    bindMissionManagers();
     bindManageButtons();
   }
 
@@ -161,6 +162,52 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260918
       b.dataset.bound='1';
       b.addEventListener('click',()=>openMissionStatus(b.dataset.missionStatus));
     });
+  }
+
+  function bindMissionManagers() {
+    document.querySelectorAll('[data-mission-manage]').forEach(b=>{
+      if(b.dataset.bound==='1')return;
+      b.dataset.bound='1';
+      b.addEventListener('click',()=>openMissionManager(b.dataset.missionManage));
+    });
+  }
+
+  async function openMissionManager(missionId) {
+    try {
+      const [steps,chars] = await Promise.all([
+        aeriom.from('campaign_mission_steps').select('id,step_order,title,description,status,optional').eq('mission_id',missionId).order('step_order'),
+        aeriom.rpc('list_campaign_character_summaries',{p_campaign_id:campaignId})
+      ]);
+      if(steps.error)throw steps.error;if(chars.error)throw chars.error;
+      const root=modal('Etapas da missão',
+        '<section class="system-manager-content"><div class="system-manager-block"><strong>ETAPAS</strong>'+
+        ((steps.data||[]).length?(steps.data||[]).map(s=>'<div><span>'+Number(s.step_order)+'. '+esc(s.title)+'</span><small>'+esc(s.status)+(s.optional?' · opcional':'')+'</small><button type="button" class="system-row-more" data-step-status="'+esc(s.id)+'">ALTERAR</button></div>').join(''):'<em>Nenhuma etapa criada.</em>')+
+        '</div></section>'+
+        '<form id="missionStepForm" class="afterlife-system-form">'+
+        '<div class="afterlife-system-two">'+field('ORDEM','missionStepOrder','number','min="1" value="'+(((steps.data||[]).length||0)+1)+'"')+field('TÍTULO','missionStepTitle','text','maxlength="160" required')+'</div>'+
+        '<label><span>DESCRIÇÃO</span><textarea id="missionStepDescription" rows="3" maxlength="600"></textarea></label>'+
+        '<div class="afterlife-system-two"><label><span>PARTICIPANTE</span><select id="missionStepCharacter"><option value="">Não adicionar</option>'+((chars.data||[]).filter(x=>x.status==='completed').map(x=>'<option value="'+esc(x.id)+'">'+esc(x.name)+'</option>').join(''))+'</select></label><label><span>ETAPA</span><select id="missionStepStatus"><option value="pending">Pendente</option><option value="active">Ativa</option><option value="completed">Concluída</option><option value="skipped">Ignorada</option></select></label></div>'+
+        '<div class="afterlife-system-form-actions"><button type="button" class="system-secondary" data-close>FECHAR</button><button class="system-primary" type="submit">SALVAR ETAPA</button></div></form>'
+      );
+      root.querySelectorAll('[data-step-status]').forEach(b=>b.addEventListener('click',async()=>{
+        const status=window.prompt('Novo estado: pending, active, completed ou skipped','completed');
+        if(!status)return;
+        await run(async()=>aeriom.rpc('update_campaign_mission_step',{p_step_id:b.dataset.stepStatus,p_status:status.trim()}),'Etapa atualizada.');
+      }));
+      root.querySelector('#missionStepForm').addEventListener('submit',async e=>{
+        e.preventDefault();
+        await run(async()=>{
+          const sr=await aeriom.rpc('upsert_campaign_mission_step',{p_mission_id:missionId,p_step_order:Number(root.querySelector('#missionStepOrder').value)||1,p_title:root.querySelector('#missionStepTitle').value.trim(),p_description:root.querySelector('#missionStepDescription').value.trim(),p_status:root.querySelector('#missionStepStatus').value});
+          if(sr.error)throw sr.error;
+          const character=root.querySelector('#missionStepCharacter').value;
+          if(character){
+            const pr=await aeriom.rpc('add_campaign_mission_participant',{p_mission_id:missionId,p_character_id:character});
+            if(pr.error)throw pr.error;
+          }
+          return sr;
+        },'Etapa salva.');
+      });
+    }catch(error){toast(error?.message||'Não foi possível abrir as etapas da missão.','error')}
   }
 
   function bindManageButtons() {
