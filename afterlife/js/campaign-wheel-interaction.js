@@ -13,10 +13,10 @@
     if (!orbit) {
       orbit = document.createElement('div');
       orbit.className = 'nuclear-wheel__orbit';
-      const angles = [0,18,36,54,72,90];
+      const angles = [0,-18,-36,-54,-72,-90];
       wheel.querySelectorAll('.nuclear-item').forEach((item,index) => {
-        item.style.setProperty('--item-angle', `${angles[index] ?? (index * 18)}deg`);
-        item.style.setProperty('--item-radius', '94px');
+        item.style.setProperty('--item-angle', `${angles[index] ?? (index * -18)}deg`);
+        item.style.setProperty('--item-radius', '84px');
         orbit.appendChild(item);
       });
       wheel.insertBefore(orbit, center);
