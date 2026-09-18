@@ -1,0 +1,43 @@
+.campaign-manager-root{position:fixed;inset:0;z-index:9000;display:grid;place-items:end center;padding:16px;background:transparent;pointer-events:auto}
+.campaign-manager-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.62);backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px);animation:afterlifeManagerFade .2s ease both}
+.campaign-manager-modal{position:relative;width:min(760px,100%);max-height:min(92vh,820px);overflow:auto;border:1px solid rgba(57,245,138,.15);border-radius:20px 20px 12px 12px;background:radial-gradient(circle at 85% 0%,rgba(57,245,138,.06),transparent 28%),linear-gradient(180deg,#0b120e,#070b09);box-shadow:0 35px 100px rgba(0,0,0,.58);color:#dfe8e2;animation:afterlifeManagerUp .24s cubic-bezier(.2,.8,.2,1) both;scrollbar-width:thin}
+.campaign-manager-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:20px;border-bottom:1px solid rgba(255,255,255,.06)}
+.campaign-manager-head h2{margin:3px 0 5px;font-size:22px;line-height:1.05;letter-spacing:-.5px}
+.campaign-manager-head p{margin:0;color:#6f8178;font-size:10px;line-height:1.45}
+.campaign-manager-eyebrow{color:#39f58a;font-size:8px;font-weight:900;letter-spacing:.16em}
+.campaign-manager-close{width:36px;height:36px;flex:none;border:1px solid rgba(255,255,255,.08);border-radius:10px;background:rgba(255,255,255,.02);color:#95a39c;font-size:24px;line-height:1;cursor:pointer;transition:.18s ease}
+.campaign-manager-close:hover{border-color:rgba(57,245,138,.3);color:#39f58a;transform:rotate(4deg)}
+.campaign-manager-form{display:grid;gap:14px;padding:18px 20px 20px}
+.campaign-manager-form label{display:grid;gap:6px;min-width:0}
+.campaign-manager-form label>span{color:#68776f;font-size:8px;font-weight:900;letter-spacing:.13em}
+.campaign-manager-form input,.campaign-manager-form textarea,.campaign-manager-form select{width:100%;box-sizing:border-box;min-height:44px;border:1px solid rgba(255,255,255,.08);border-radius:10px;background:rgba(255,255,255,.025);color:#e5eee9;padding:10px 12px;outline:none;font:600 11px/1.35 Inter,system-ui,sans-serif;transition:border-color .18s ease,box-shadow .18s ease,background .18s ease}
+.campaign-manager-form textarea{min-height:110px;resize:vertical}
+.campaign-manager-form select{cursor:pointer}
+.campaign-manager-form input:focus,.campaign-manager-form textarea:focus,.campaign-manager-form select:focus{border-color:rgba(57,245,138,.45);box-shadow:0 0 0 3px rgba(57,245,138,.055);background:rgba(57,245,138,.02)}
+.campaign-manager-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.campaign-manager-grid--wide{grid-template-columns:1.35fr 1fr}
+.campaign-manager-section{display:grid;gap:12px;padding:14px;border:1px solid rgba(255,255,255,.06);border-radius:14px;background:rgba(255,255,255,.012)}
+.campaign-manager-section-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.campaign-manager-section-head strong{display:block;color:#dbe5df;font-size:10px;letter-spacing:.1em}
+.campaign-manager-section-head small{display:block;margin-top:4px;color:#68776f;font-size:8px;line-height:1.45}
+.campaign-manager-file-name{max-width:210px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#788980;font-size:8px}
+.campaign-manager-cover{display:grid;grid-template-columns:180px minmax(0,1fr);gap:12px;align-items:stretch}
+.campaign-manager-cover-preview{min-height:120px;overflow:hidden;border:1px solid rgba(255,255,255,.07);border-radius:12px;background:#050806;display:grid;place-items:center}
+.campaign-manager-cover-preview img{display:block;width:100%;height:100%;min-height:120px;max-height:150px;object-fit:cover}
+.campaign-manager-cover-empty{color:#4d5a53;font-size:9px;font-weight:900;letter-spacing:.12em}
+.campaign-manager-cover-actions{display:grid;align-content:start;gap:8px}
+.campaign-manager-primary,.campaign-manager-secondary{min-height:44px;padding:0 15px;border-radius:10px;font:900 9px/1 Inter,system-ui,sans-serif;letter-spacing:.07em;cursor:pointer;transition:transform .16s ease,border-color .16s ease,background .16s ease,box-shadow .16s ease}
+.campaign-manager-primary{border:1px solid rgba(57,245,138,.48);background:rgba(57,245,138,.1);color:#8affbd;box-shadow:0 8px 24px rgba(57,245,138,.06)}
+.campaign-manager-primary:hover{transform:translateY(-1px);border-color:rgba(57,245,138,.76);background:rgba(57,245,138,.15);box-shadow:0 12px 30px rgba(57,245,138,.1)}
+.campaign-manager-secondary{border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.025);color:#aebbb4}
+.campaign-manager-secondary:hover{transform:translateY(-1px);border-color:rgba(57,245,138,.22);background:rgba(57,245,138,.035);color:#dce9e1}
+.campaign-manager-secondary.is-danger:hover{border-color:rgba(255,98,95,.28);background:rgba(255,98,95,.05);color:#ff9e9b}
+.campaign-manager-actions{display:flex;justify-content:flex-end;gap:8px;padding-top:3px}
+.campaign-manager-message{min-height:18px;color:#718178;font-size:9px;line-height:1.4}
+.campaign-manager-message.is-visible[data-type=success]{color:#61f3a0}.campaign-manager-message.is-visible[data-type=error]{color:#ff8f8b}.campaign-manager-message.is-visible[data-type=info]{color:#93b0a2}
+.afterlife-manager-toast{position:fixed;right:16px;bottom:16px;z-index:10000;max-width:min(360px,calc(100vw - 32px));padding:11px 13px;border:1px solid rgba(255,255,255,.08);border-radius:11px;background:#0b120e;color:#cbd7d0;font:700 9px/1.4 Inter,sans-serif;box-shadow:0 16px 45px rgba(0,0,0,.45);opacity:0;transform:translateY(8px);transition:.2s ease}
+.afterlife-manager-toast.is-visible{opacity:1;transform:none}
+body.afterlife-manager-lock{overflow:hidden!important}
+@keyframes afterlifeManagerFade{from{opacity:0}to{opacity:1}}@keyframes afterlifeManagerUp{from{opacity:0;transform:translateY(18px) scale(.985)}to{opacity:1;transform:none}}
+@media(max-width:620px){.campaign-manager-root{padding:7px}.campaign-manager-modal{max-height:96vh;border-radius:17px 17px 10px 10px}.campaign-manager-head{padding:16px}.campaign-manager-form{padding:14px}.campaign-manager-head h2{font-size:19px}.campaign-manager-grid,.campaign-manager-grid--wide{grid-template-columns:1fr}.campaign-manager-cover{grid-template-columns:1fr}.campaign-manager-cover-preview,.campaign-manager-cover-preview img{min-height:150px;max-height:190px}.campaign-manager-actions{display:grid;grid-template-columns:1fr 1.35fr}.campaign-manager-actions button{width:100%}}
+@media(prefers-reduced-motion:reduce){.campaign-manager-backdrop,.campaign-manager-modal,.afterlife-manager-toast,.campaign-manager-close,.campaign-manager-primary,.campaign-manager-secondary{animation:none!important;transition:none!important}}
