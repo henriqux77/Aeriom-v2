@@ -227,6 +227,7 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260918
   }
 
   function openCreate(type) {
+    if(type==='crafting') return openCraftManager();
     if(type==='mission') return openMissionForm();
     if(type==='diary') return openDiaryForm();
     if(type==='faction') return openFactionForm();
@@ -345,13 +346,15 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260918
       );
       const refreshFaction=async()=>{
         const pick=$('#factionPick').value;
-        const [members,relations]=await Promise.all([
-          aeriom.from('campaign_faction_members').select('id,character_id,user_id,npc_id,rank,reputation,status,characters(name)').eq('faction_id',pick).order('rank'),
-          aeriom.from('campaign_faction_relations').select('target_faction_id,relation_type,reputation').eq('faction_id',pick)
+        const [members,relations,characters]=await Promise.all([
+          aeriom.from('campaign_faction_members').select('id,character_id,user_id,npc_id,rank,reputation,status').eq('faction_id',pick).order('rank'),
+          aeriom.from('campaign_faction_relations').select('target_faction_id,relation_type,reputation').eq('faction_id',pick),
+          aeriom.rpc('list_campaign_character_summaries',{p_campaign_id:campaignId})
         ]);
-        if(members.error)throw members.error;if(relations.error)throw relations.error;
+        if(members.error)throw members.error;if(relations.error)throw relations.error;if(characters.error)throw characters.error;
+        const characterNames=new Map((characters.data||[]).map(x=>[x.id,x.name]));
         $('#factionManagerContent').innerHTML=
-          '<div class="system-manager-block"><strong>MEMBROS</strong>'+(members.data?.length?members.data.map(m=>'<div><span>'+esc(m.characters?.name||'NPC/Usuário')+'</span><small>'+esc(m.rank)+' · reputação '+Number(m.reputation||0)+'</small></div>').join(''):'<em>Nenhum membro.</em>')+'</div>'+
+          '<div class="system-manager-block"><strong>MEMBROS</strong>'+(members.data?.length?members.data.map(m=>'<div><span>'+esc((m.character_id&&characterNames.get(m.character_id))||'NPC/Usuário')+'</span><small>'+esc(m.rank)+' · reputação '+Number(m.reputation||0)+'</small></div>').join(''):'<em>Nenhum membro.</em>')+'</div>'+
           '<div class="system-manager-block"><strong>RELAÇÕES</strong>'+(relations.data?.length?relations.data.map(r=>'<div><span>'+esc(fs.find(f=>f.id===r.target_faction_id)?.name||'Facção')+'</span><small>'+esc(r.relation_type)+' · '+Number(r.reputation||0)+'</small></div>').join(''):'<em>Nenhuma relação.</em>')+'</div>';
       };
       $('#factionPick').addEventListener('change',()=>refreshFaction().catch(()=>{}));
