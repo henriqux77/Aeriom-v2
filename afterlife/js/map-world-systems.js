@@ -36,6 +36,7 @@ import { aeriom } from './aeriom-client-v2.js?v=20260918-2';
       compass.innerHTML='<button type="button" class="afterlife-compass-face" id="afterlifeCompassButton" aria-label="Ativar orientação da bússola"><span class="afterlife-compass-n">N</span><span class="afterlife-compass-e">E</span><span class="afterlife-compass-s">S</span><span class="afterlife-compass-w">W</span><i id="afterlifeCompassNeedle"></i></button><small id="afterlifeCompassReadout">N · 0°</small>';
       container.appendChild(compass);
       compass.querySelector('#afterlifeCompassButton')?.addEventListener('click',requestOrientation);
+      radar?.querySelector('#afterlifeAdvanceHordes')?.addEventListener('click',advanceHordes);
     }
 
     if(role==='master'){
@@ -43,7 +44,7 @@ import { aeriom } from './aeriom-client-v2.js?v=20260918-2';
       if(!radar){
         radar=document.createElement('aside');
         radar.className='afterlife-horde-radar';
-        radar.innerHTML='<header><div><span>☢ RADAR DO MESTRE</span><strong>ONDAS</strong></div><b id="afterlifeHordeCount">0</b></header><div id="afterlifeHordeList" class="afterlife-horde-list"><small>Buscando sinais…</small></div>';
+        radar.innerHTML='<header><div><span>☢ RADAR DO MESTRE</span><strong>ONDAS</strong></div><div class="afterlife-radar-head-actions"><button type="button" id="afterlifeAdvanceHordes" title="Avançar 10 minutos">+10m</button><b id="afterlifeHordeCount">0</b></div></header><div id="afterlifeHordeList" class="afterlife-horde-list"><small>Buscando sinais…</small></div>';
         container.appendChild(radar);
       }
     }
@@ -112,6 +113,21 @@ import { aeriom } from './aeriom-client-v2.js?v=20260918-2';
       map.flyTo([h.latitude,h.longitude],Math.max(map.getZoom(),14),{duration:.45});
       hordeMarkers.get(h.id)?.openPopup();
     }));
+  }
+
+  async function advanceHordes(){
+    if(role!=='master'||!campaignId)return;
+    const button=document.getElementById('afterlifeAdvanceHordes');
+    if(button)button.disabled=true;
+    try{
+      const {data,error}=await aeriom.rpc('advance_campaign_hordes',{p_campaign_id:campaignId,p_minutes:10});
+      if(error)throw error;
+      if(typeof window.afterlifeToast==='function')window.afterlifeToast((Number(data)||0)+' hordas avançaram 10 minutos.','success');
+      await loadRadar();
+    }catch(error){
+      console.warn('[AFTERLIFE][HORDE-SIM]',error);
+      if(typeof window.afterlifeToast==='function')window.afterlifeToast(error?.message||'Não foi possível avançar as hordas.','error');
+    }finally{if(button)button.disabled=false;}
   }
 
   async function loadRadar(){
