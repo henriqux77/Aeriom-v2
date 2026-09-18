@@ -431,7 +431,7 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260918
         '<label><span>NPC</span><select id="npcPick">'+rows.map(n=>'<option value="'+esc(n.id)+'">'+esc(n.name)+'</option>').join('')+'</select></label>'+
         '<div class="afterlife-system-two">'+
         field('NOME','npcName','text','maxlength="120" required')+
-        field('PROFISSÃO','npcProfession','text','maxlength="80")+
+        field('PROFISSÃO','npcProfession','text','maxlength="80"')+
         '</div>'+
         '<div class="afterlife-system-two">'+
         '<label><span>STATUS</span><select id="npcStatus"><option value="active">Ativo</option><option value="injured">Ferido</option><option value="dead">Morto</option><option value="missing">Desaparecido</option></select></label>'+
