@@ -131,6 +131,7 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260918
     bindMissionStatus();
     bindMissionManagers();
     bindManageButtons();
+    bindStorageButton();
   }
 
   function systemCard(icon,title,count,items,createType) {
@@ -208,6 +209,59 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260918
         },'Etapa salva.');
       });
     }catch(error){toast(error?.message||'Não foi possível abrir as etapas da missão.','error')}
+  }
+
+  function bindStorageButton() {
+    document.querySelectorAll('[data-open-storage]').forEach(b=>{
+      if(b.dataset.bound==='1')return;
+      b.dataset.bound='1';
+      b.addEventListener('click',openStorage);
+    });
+  }
+
+  async function openStorage(){
+    try{
+      const [storage,chars]=await Promise.all([
+        aeriom.from('campaign_storage').select('id,name,capacity_slots').eq('campaign_id',campaignId).order('name'),
+        aeriom.rpc('list_campaign_character_summaries',{p_campaign_id:campaignId})
+      ]);
+      if(storage.error)throw storage.error;if(chars.error)throw chars.error;
+      if(!(storage.data||[]).length){
+        if(!masterOnly())return toast('O armazém compartilhado ainda não foi criado pelo Mestre.','info');
+        const root=modal('Criar armazém',formShell([
+          field('NOME','storageName','text','maxlength="120" value="Armazém da campanha"')
+        ],'CRIAR ARMAZÉM'));
+        root.querySelector('form').addEventListener('submit',async e=>{
+          e.preventDefault();
+          await run(async()=>aeriom.rpc('ensure_campaign_storage',{p_campaign_id:campaignId,p_name:$('#storageName').value.trim()||'Armazém da campanha'}),'Armazém criado.');
+        });
+        return;
+      }
+      const s=storage.data[0];
+      const [items]=await Promise.all([
+        aeriom.from('campaign_storage_items').select('id,item_template_id,quantity,metadata,item_templates(name,category,rarity,weight_kg)').eq('storage_id',s.id).order('updated_at')
+      ]);
+      if(items.error)throw items.error;
+      const characters=chars.data||[];
+      const root=modal('Armazém · '+s.name,
+        '<div class="system-manager-block"><strong>ITENS ARMAZENADOS</strong>'+
+        ((items.data||[]).length?(items.data||[]).map(i=>'<div><span>'+esc(i.item_templates?.name||'Item')+' ×'+Number(i.quantity||1)+'</span><small>'+esc(i.item_templates?.category||'item')+' · '+esc(i.item_templates?.rarity||'common')+'</small><button type="button" class="system-row-more" data-storage-item="'+esc(i.id)+'">RETIRAR</button></div>').join(''):'<em>Armazém vazio.</em>')+'</div>'
+      );
+      root.querySelectorAll('[data-storage-item]').forEach(b=>b.addEventListener('click',()=>{
+        openStorageWithdraw(b.dataset.storageItem,s.id,characters);
+      }));
+    }catch(error){toast(error?.message||'Não foi possível abrir o armazém.','error')}
+  }
+
+  async function openStorageWithdraw(storageItemId,storageId,characters){
+    const root=modal('Retirar do armazém',formShell([
+      '<label><span>SOBREVIVENTE</span><select id="storageTarget">'+characters.filter(c=>c.status==='completed').map(c=>'<option value="'+esc(c.id)+'">'+esc(c.name)+'</option>').join('')+'</select></label>',
+      field('QUANTIDADE','storageQty','number','min="1" value="1"')
+    ],'RETIRAR'));
+    root.querySelector('form').addEventListener('submit',async e=>{
+      e.preventDefault();
+      await run(async()=>aeriom.rpc('withdraw_storage_item_to_character',{p_storage_item_id:storageItemId,p_character_id:$('#storageTarget').value,p_quantity:Number($('#storageQty').value)||1}),'Item retirado do armazém.');
+    });
   }
 
   function bindManageButtons() {
