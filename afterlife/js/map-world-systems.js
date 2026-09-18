@@ -78,7 +78,7 @@ import { aeriom } from './aeriom-client-v2.js?v=20260918-2';
     const level=Math.max(1,Math.min(10,Number(h.threat_level)||1));
     return L.divIcon({
       className:'afterlife-horde-icon-wrap',
-      html:'<div class="afterlife-horde-icon" data-threat="'+level+'"><span>'+Number(h.mutant_count||0)+'</span><i></i></div>',
+      html:'<div class="afterlife-horde-icon" data-threat="'+level+'" style="--dir:'+Number(h.direction_deg||0)+'deg"><span>'+Number(h.mutant_count||0)+'</span><i></i></div>',
       iconSize:[42,42],iconAnchor:[21,21]
     });
   }
@@ -102,7 +102,7 @@ import { aeriom } from './aeriom-client-v2.js?v=20260918-2';
     const count=document.getElementById('afterlifeHordeCount');
     if(count)count.textContent=rows.length;
     if(list)list.innerHTML=rows.length?rows.slice(0,6).map(h=>{
-      const center=map.getCenter();
+      const center=api?.getSelfPosition?.()||map.getCenter();
       const km=distanceKm(center,{lat:Number(h.latitude),lng:Number(h.longitude)});
       const br=bearing(center,{lat:Number(h.latitude),lng:Number(h.longitude)});
       return '<button type="button" data-horde-focus="'+esc(h.id)+'"><i data-threat="'+Math.max(1,Math.min(10,Number(h.threat_level)||1))+'"></i><span><strong>'+esc(h.name||'Horda')+'</strong><small>'+Number(h.size||0)+' zumbis · '+km.toFixed(1)+' km · '+cardinal(br)+'</small></span><b>'+Number(h.threat_level||1)+'</b></button>';
