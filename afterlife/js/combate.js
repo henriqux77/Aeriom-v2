@@ -52,6 +52,6 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260915
   function bind(){
     $('createCombat').onclick=createCombat;$('addCharacter').onclick=addCharacter;$('addCreature').onclick=addCreature;$('startCombat').onclick=startCombat;$('advanceTurn').onclick=advanceTurn;$('endCombat').onclick=endCombat;$('actorSelect')?.addEventListener('change',renderActions);$('targetSelect')?.addEventListener('change',renderActions);
   }
-  async function boot(){try{await bootData();bind();await loadCharacters();await loadCombats();subscribeCampaign();startPolling();render();status(combat?'Combate sincronizado em tempo real.':'Aguardando o Mestre criar um combate.');}catch(e){console.error('[AFTERLIFE][COMBAT][BOOT]',e);status(e?.message||'Não foi possível carregar o combate.');}}
+  async function boot(){try{await bootData();bind();await loadCharacters();await loadCombats();subscribeCampaign();startPolling();render();status(combat?'Combate sincronizado em tempo real.':'Aguardando o Mestre criar um combate.');window.dispatchEvent(new CustomEvent('afterlife:combat-ready',{detail:{campaign,combat}}));}catch(e){console.error('[AFTERLIFE][COMBAT][BOOT]',e);status(e?.message||'Não foi possível carregar o combate.');}}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 })();
