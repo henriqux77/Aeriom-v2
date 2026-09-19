@@ -39,11 +39,22 @@
       return node;
     })();
 
+    const layoutItems = () => {
+      items.forEach((item, index) => {
+        const angle = (fanAngles[index] ?? 0) * Math.PI / 180;
+        // 0deg is straight up; 90deg is straight left from the fixed pivot.
+        const x = -Math.sin(angle) * radius;
+        const y = -Math.cos(angle) * radius;
+        item.style.setProperty('--item-x', `${x.toFixed(2)}px`);
+        item.style.setProperty('--item-y', `${y.toFixed(2)}px`);
+      });
+    };
+
     const setRadius = () => {
       const width = window.innerWidth;
       radius = width <= 390 ? 88 : width <= 620 ? 96 : 112;
       wheel.style.setProperty('--wheel-radius', `${radius}px`);
-      wheel.style.setProperty('--wheel-size', `${Math.ceil(radius + 62)}px`);
+      layoutItems();
     };
 
     const clamp = (value) => Math.max(-12, Math.min(12, value));
@@ -94,9 +105,7 @@
 
     const pointerAngle = (event) => {
       const rect = wheel.getBoundingClientRect();
-      const cx = rect.right;
-      const cy = rect.bottom;
-      return Math.atan2(event.clientY - cy, event.clientX - cx) * 180 / Math.PI;
+      return Math.atan2(event.clientY - rect.bottom, event.clientX - rect.right) * 180 / Math.PI;
     };
 
     const normalizeDelta = (delta) => {
@@ -171,9 +180,7 @@
       wheel.classList.remove('is-dragging');
     });
 
-    items.forEach((item, index) => {
-      item.style.setProperty('--fan-angle', `${fanAngles[index] ?? 0}deg`);
-
+    items.forEach((item) => {
       item.addEventListener('click', (event) => {
         if (!open || moved) {
           if (moved) {
