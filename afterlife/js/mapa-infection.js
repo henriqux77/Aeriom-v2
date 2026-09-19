@@ -56,7 +56,13 @@ import { aeriom } from './aeriom-client-v2.js?v=20260915-6';
       button.id = 'toggleInfection';
       button.type = 'button';
       button.innerHTML = '☣ <span>INFECÇÃO</span>';
-      button.addEventListener('click', () => { enabled = !enabled; render(); updateUi(); });
+      button.addEventListener('click', () => {
+        enabled = !enabled;
+        render();
+        updateUi();
+        window.afterlifeToast?.(enabled ? 'Camada de infecção ativada.' : 'Camada de infecção ocultada.', enabled ? 'success' : 'info');
+        window.__afterlifeZombieDensity?.refresh?.();
+      });
       grid.appendChild(button);
     }
 
@@ -182,9 +188,15 @@ import { aeriom } from './aeriom-client-v2.js?v=20260915-6';
     await resolveCity();
     await loadZones();
     subscribe();
+    window.dispatchEvent(new CustomEvent('afterlife:infection-ready', { detail:{ map, campaign, zones } }));
   }
 
   window.addEventListener('afterlife:map-ready', (event) => boot(event.detail));
   if (window.__afterlifeCampaignMap?.map) boot(window.__afterlifeCampaignMap);
+  window.__afterlifeInfection = {
+    toggle: () => { enabled = !enabled; render(); updateUi(); window.__afterlifeZombieDensity?.refresh?.(); },
+    refresh: loadZones,
+    getZones: () => zones
+  };
   window.addEventListener('pagehide', teardown, { once:true });
 })();
