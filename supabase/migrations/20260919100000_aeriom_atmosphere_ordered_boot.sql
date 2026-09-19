@@ -1,0 +1,4 @@
+-- AERION: atmosphere runtime modules must load after persisted atmosphere hydration.
+-- The implementation lives in js/core/campaign-ui-repair.js and
+-- js/core/atmosphere-ui.js.
+-- This migration is documentation-only.
