@@ -20,13 +20,13 @@
 
     const items = [...orbit.querySelectorAll('.nuclear-item')];
 
-    // AERION-style radial layout: one fixed pivot in the lower-right corner,
-    // with every action distributed only through the visible upper-left arc.
-    // The previous -160..-10 range was mathematically wrong for the CSS
-    // translateY-based orbit and pushed several actions below/off-screen.
-    const angles = [-82, -66, -50, -34, -18, -2];
+    // The pivot is the fixed bottom-right center.  The six actions form one
+    // clean 90-degree fan from left to top, matching the Aeriom radial feel.
+    // The old 16-degree spacing was too tight for the button diameter and
+    // caused overlap/collision on mobile.
+    const angles = [-90, -72, -54, -36, -18, 0];
     items.forEach((item, index) => {
-      item.style.setProperty('--item-angle', `${angles[index] ?? -2}deg`);
+      item.style.setProperty('--item-angle', `${angles[index] ?? 0}deg`);
     });
 
     let backdrop = document.querySelector('.nuclear-wheel__backdrop');
@@ -48,11 +48,10 @@
     let velocity = 0;
     let animationFrame = 0;
 
-    // Keep the whole fan inside the visible upper-left quadrant. A small
-    // rotation range preserves the AERION-style draggable feel without ever
-    // throwing an item behind the viewport edge.
-    const MIN_ROTATION = -8;
-    const MAX_ROTATION = 8;
+    // Keep the fan inside the viewport. A tiny rotation range preserves the
+    // drag interaction without allowing the end buttons to leave the screen.
+    const MIN_ROTATION = -4;
+    const MAX_ROTATION = 4;
 
     const normalizeDelta = (value) => {
       let delta = value;
