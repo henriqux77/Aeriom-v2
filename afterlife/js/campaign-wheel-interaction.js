@@ -19,11 +19,14 @@
     }
 
     const items = [...orbit.querySelectorAll('.nuclear-item')];
-    // Same radial concept as the AERION campaign control: one fixed pivot in
-    // the corner, with the actions distributed around the upper arc.
-    const angles = [-160, -130, -100, -70, -40, -10];
+
+    // AERION-style radial layout: one fixed pivot in the lower-right corner,
+    // with every action distributed only through the visible upper-left arc.
+    // The previous -160..-10 range was mathematically wrong for the CSS
+    // translateY-based orbit and pushed several actions below/off-screen.
+    const angles = [-82, -66, -50, -34, -18, -2];
     items.forEach((item, index) => {
-      item.style.setProperty('--item-angle', `${angles[index] ?? -10}deg`);
+      item.style.setProperty('--item-angle', `${angles[index] ?? -2}deg`);
     });
 
     let backdrop = document.querySelector('.nuclear-wheel__backdrop');
@@ -45,8 +48,11 @@
     let velocity = 0;
     let animationFrame = 0;
 
-    const MIN_ROTATION = -26;
-    const MAX_ROTATION = 26;
+    // Keep the whole fan inside the visible upper-left quadrant. A small
+    // rotation range preserves the AERION-style draggable feel without ever
+    // throwing an item behind the viewport edge.
+    const MIN_ROTATION = -8;
+    const MAX_ROTATION = 8;
 
     const normalizeDelta = (value) => {
       let delta = value;
@@ -55,8 +61,6 @@
       return delta;
     };
 
-    // The wheel's pivot is its bottom-right corner. This is intentional: the
-    // compact launcher stays in the corner while the actions fan into the page.
     const angleFor = (event) => {
       const rect = wheel.getBoundingClientRect();
       return Math.atan2(event.clientY - rect.bottom, event.clientX - rect.right) * 180 / Math.PI;
