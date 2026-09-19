@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const RELEASE = "20260912-master-shell4";
+  const RELEASE = "20260919-atmosphere-order1";
 
   function loadStyles() {
     if (document.getElementById("aeriom-campaign-repair-css")) return;
