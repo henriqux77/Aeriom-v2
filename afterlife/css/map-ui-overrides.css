@@ -19,3 +19,29 @@
 
 @media(max-width:900px){.map-head .page-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%;}}
 @media(max-width:620px){.map-head .page-actions{grid-template-columns:1fr 1fr;}.map-head .page-actions .btn{min-height:40px;padding:0 10px;font-size:9px;}.afterlife-poi-icon{width:27px;height:27px;font-size:16px;border-radius:8px;}.infection-summary b{font-size:15px;}}
+
+/* MAP WORLD SYSTEMS v2 */
+.afterlife-map-compass{
+  position:absolute;right:12px;top:12px;z-index:1200;display:grid;justify-items:center;gap:4px;pointer-events:auto;
+}
+.afterlife-compass-face{
+  position:relative;width:68px;height:68px;border:1px solid rgba(57,245,138,.24);border-radius:50%;
+  background:rgba(3,9,6,.82);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  box-shadow:0 10px 28px rgba(0,0,0,.35),inset 0 0 18px rgba(57,245,138,.04);cursor:pointer;
+}
+.afterlife-compass-face.is-active{border-color:rgba(57,245,138,.5);box-shadow:0 0 22px rgba(57,245,138,.12),inset 0 0 18px rgba(57,245,138,.06);}
+.afterlife-compass-n,.afterlife-compass-e,.afterlife-compass-s,.afterlife-compass-w{position:absolute;color:#7e9186;font:900 7px/1 Inter,sans-serif}
+.afterlife-compass-n{top:6px;left:50%;transform:translateX(-50%);color:#39f58a}.afterlife-compass-e{right:7px;top:50%;transform:translateY(-50%)}.afterlife-compass-s{bottom:6px;left:50%;transform:translateX(-50%)}.afterlife-compass-w{left:7px;top:50%;transform:translateY(-50%)}
+.afterlife-compass-face:before,.afterlife-compass-face:after{content:"";position:absolute;border:1px solid rgba(255,255,255,.045);border-radius:50%;inset:17px}.afterlife-compass-face:after{inset:25px;border-color:rgba(57,245,138,.07)}
+.afterlife-compass-face i{position:absolute;left:50%;top:50%;width:2px;height:24px;transform:translate(-50%,-50%);transform-origin:50% 50%;border-radius:99px;background:linear-gradient(#39f58a 0 50%,#4f5c54 50%);box-shadow:0 0 10px rgba(57,245,138,.22)}
+.afterlife-compass-readout{padding:4px 6px;border:1px solid rgba(255,255,255,.06);border-radius:999px;background:rgba(3,8,6,.78);color:#718278;font:800 6px/1 Inter,sans-serif;letter-spacing:.08em}
+.afterlife-horde-icon-wrap,.afterlife-zombie-density-wrap{background:transparent!important;border:0!important}
+.afterlife-horde-icon{width:36px;height:36px;display:grid;place-items:center;border-radius:50%;background:rgba(9,8,5,.94);border:1px solid rgba(240,103,97,.45);box-shadow:0 0 0 4px rgba(240,103,97,.04),0 7px 20px rgba(0,0,0,.28);animation:afterlifeHordePulse 1.9s ease-in-out infinite}
+.afterlife-horde-icon span{font:900 8px/1 Inter,sans-serif;color:#fff}.afterlife-horde-icon i{position:absolute;inset:8px;border:1px dashed rgba(255,255,255,.2);border-radius:50%}
+.afterlife-zombie-density{display:block;width:var(--dot-size);height:var(--dot-size);border-radius:50%;background:#d85b58;box-shadow:0 0 0 2px rgba(216,91,88,.10),0 0 8px rgba(216,91,88,.22)}
+.afterlife-zombie-density[data-threat="1"],.afterlife-zombie-density[data-threat="2"],.afterlife-zombie-density[data-threat="3"]{background:#52d987;box-shadow:0 0 0 2px rgba(82,217,135,.10)}
+.afterlife-zombie-density[data-threat="4"],.afterlife-zombie-density[data-threat="5"],.afterlife-zombie-density[data-threat="6"]{background:#e3bd52;box-shadow:0 0 0 2px rgba(227,189,82,.10)}
+.afterlife-horde-radar{position:absolute;left:12px;top:12px;z-index:1200;width:min(250px,calc(100% - 100px));max-height:48%;overflow:auto;border:1px solid rgba(255,255,255,.08);border-radius:13px;background:rgba(3,8,6,.84);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);box-shadow:0 16px 40px rgba(0,0,0,.34);pointer-events:auto}
+.afterlife-horde-radar>header{display:flex;align-items:center;justify-content:space-between;padding:9px;border-bottom:1px solid rgba(255,255,255,.05)}.afterlife-horde-radar>header span{display:block;color:#c6d3cc;font:900 6px/1 Inter,sans-serif;letter-spacing:.12em}.afterlife-horde-radar>header strong{display:block;margin-top:3px;color:#39f58a;font:800 9px/1 Space Grotesk,sans-serif}.afterlife-radar-head-actions{display:flex;align-items:center;gap:6px}.afterlife-radar-head-actions>b{color:#efca72;font:900 16px/1 Space Grotesk,sans-serif}.afterlife-radar-head-actions>button{min-width:32px;height:24px;border:1px solid rgba(57,245,138,.16);border-radius:7px;background:rgba(57,245,138,.035);color:#7fe9a5;font:900 6px/1 Inter,sans-serif}
+.afterlife-horde-list button{display:grid;grid-template-columns:6px minmax(0,1fr) auto;gap:7px;align-items:center;width:100%;padding:8px 9px;border:0;border-bottom:1px solid rgba(255,255,255,.04);background:transparent;text-align:left;cursor:pointer}.afterlife-horde-list button:hover{background:rgba(255,255,255,.025)}.afterlife-horde-list button>i{width:5px;height:30px;border-radius:99px;background:#f06761}.afterlife-horde-list button>i[data-threat="1"],.afterlife-horde-list button>i[data-threat="2"],.afterlife-horde-list button>i[data-threat="3"]{background:#39f58a}.afterlife-horde-list button>i[data-threat="4"],.afterlife-horde-list button>i[data-threat="5"],.afterlife-horde-list button>i[data-threat="6"]{background:#e3bd52}.afterlife-horde-list strong{display:block;color:#d6e0da;font:800 8px/1.2 Inter,sans-serif}.afterlife-horde-list small{display:block;margin-top:2px;color:#6c7f74;font:600 6px/1.3 Inter,sans-serif}.afterlife-horde-list>b{color:#9bad9f;font:900 9px/1 Space Grotesk,sans-serif}
+@media(max-width:620px){.afterlife-map-compass{right:7px;top:7px}.afterlife-compass-face{width:58px;height:58px}.afterlife-horde-radar{left:7px;top:7px;width:min(210px,calc(100% - 78px));max-height:42%}}
