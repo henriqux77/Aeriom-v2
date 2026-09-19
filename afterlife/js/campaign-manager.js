@@ -154,14 +154,13 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260915
     event.preventDefault();
     if (state.saving) return;
 
+    let newCoverPath = null;
     try {
       message('');
       const values = validate();
       setSaving(true);
       const previousCoverPath = state.campaign.cover_path || null;
       let coverPath = state.removeCover ? null : previousCoverPath;
-      let newCoverPath = null;
-
       if (state.imageFile) {
         message('Enviando nova capa…', 'info');
         newCoverPath = await uploadCover(state.imageFile);
