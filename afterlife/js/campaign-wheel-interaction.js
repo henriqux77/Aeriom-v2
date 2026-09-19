@@ -1,97 +1,82 @@
 (() => {
   'use strict';
+
   if (window.__afterlifeCampaignWheelBooted) return;
   window.__afterlifeCampaignWheelBooted = true;
 
-  function boot() {
+  const boot = () => {
     const wheel = document.getElementById('nuclearWheel');
     const center = document.getElementById('nuclearCenter');
     if (!wheel || !center) return;
 
-    wheel.dataset.controller = 'campaign-wheel-interaction';
-
-    let orbit = wheel.querySelector('.nuclear-wheel__orbit');
-    if (!orbit) {
-      orbit = document.createElement('div');
-      orbit.className = 'nuclear-wheel__orbit';
-      wheel.querySelectorAll('.nuclear-item').forEach((item) => orbit.appendChild(item));
-      wheel.insertBefore(orbit, center);
-    }
+    const orbit = wheel.querySelector('.nuclear-wheel__orbit') || (() => {
+      const node = document.createElement('div');
+      node.className = 'nuclear-wheel__orbit';
+      wheel.querySelectorAll('.nuclear-item').forEach((item) => node.appendChild(item));
+      wheel.insertBefore(node, center);
+      return node;
+    })();
 
     const items = [...orbit.querySelectorAll('.nuclear-item')];
-
-    // The pivot is the fixed bottom-right center.  The six actions form one
-    // clean 90-degree fan from left to top, matching the Aeriom radial feel.
-    // The old 16-degree spacing was too tight for the button diameter and
-    // caused overlap/collision on mobile.
-    const angles = [-90, -72, -54, -36, -18, 0];
-    items.forEach((item, index) => {
-      item.style.setProperty('--item-angle', `${angles[index] ?? 0}deg`);
-    });
-
-    let backdrop = document.querySelector('.nuclear-wheel__backdrop');
-    if (!backdrop) {
-      backdrop = document.createElement('button');
-      backdrop.className = 'nuclear-wheel__backdrop';
-      backdrop.type = 'button';
-      backdrop.tabIndex = -1;
-      backdrop.setAttribute('aria-label', 'Fechar ferramentas rápidas');
-      document.body.appendChild(backdrop);
-    }
-
+    const fanAngles = [0, 18, 36, 54, 72, 90];
+    let radius = 112;
+    let rotation = 0;
     let open = false;
     let dragging = false;
     let moved = false;
     let pointerId = null;
-    let rotation = 0;
-    let lastAngle = 0;
+    let lastPointerAngle = 0;
     let velocity = 0;
-    let animationFrame = 0;
+    let momentumFrame = 0;
 
-    // Keep the fan inside the viewport. A tiny rotation range preserves the
-    // drag interaction without allowing the end buttons to leave the screen.
-    const MIN_ROTATION = -4;
-    const MAX_ROTATION = 4;
+    const backdrop = document.querySelector('.nuclear-wheel__backdrop') || (() => {
+      const node = document.createElement('button');
+      node.className = 'nuclear-wheel__backdrop';
+      node.type = 'button';
+      node.setAttribute('aria-label', 'Fechar ferramentas rápidas');
+      node.tabIndex = -1;
+      document.body.appendChild(node);
+      return node;
+    })();
 
-    const normalizeDelta = (value) => {
-      let delta = value;
-      while (delta > 180) delta -= 360;
-      while (delta < -180) delta += 360;
-      return delta;
+    const setRadius = () => {
+      const width = window.innerWidth;
+      radius = width <= 390 ? 88 : width <= 620 ? 96 : 112;
+      wheel.style.setProperty('--wheel-radius', `${radius}px`);
+      wheel.style.setProperty('--wheel-size', `${Math.ceil(radius + 62)}px`);
     };
 
-    const angleFor = (event) => {
-      const rect = wheel.getBoundingClientRect();
-      return Math.atan2(event.clientY - rect.bottom, event.clientX - rect.right) * 180 / Math.PI;
-    };
+    const clamp = (value) => Math.max(-12, Math.min(12, value));
 
-    const clampRotation = (value) => Math.max(MIN_ROTATION, Math.min(MAX_ROTATION, value));
-    const setRotation = (value) => {
-      rotation = clampRotation(value);
+    const applyRotation = (value) => {
+      rotation = clamp(value);
       wheel.style.setProperty('--wheel-rotation', `${rotation}deg`);
     };
 
-    const lock = () => {
-      document.body.classList.add('afterlife-wheel-lock');
-      document.documentElement.classList.add('afterlife-wheel-lock');
-    };
-    const unlock = () => {
-      document.body.classList.remove('afterlife-wheel-lock');
-      document.documentElement.classList.remove('afterlife-wheel-lock');
-    };
     const stopMomentum = () => {
-      if (animationFrame) cancelAnimationFrame(animationFrame);
-      animationFrame = 0;
+      if (momentumFrame) cancelAnimationFrame(momentumFrame);
+      momentumFrame = 0;
+    };
+
+    const lockPage = () => {
+      document.documentElement.classList.add('afterlife-wheel-lock');
+      document.body.classList.add('afterlife-wheel-lock');
+    };
+
+    const unlockPage = () => {
+      document.documentElement.classList.remove('afterlife-wheel-lock');
+      document.body.classList.remove('afterlife-wheel-lock');
     };
 
     const openWheel = () => {
       stopMomentum();
+      setRadius();
+      applyRotation(0);
       open = true;
       wheel.classList.add('is-open');
       wheel.setAttribute('aria-expanded', 'true');
       backdrop.classList.add('is-visible');
-      lock();
-      setRotation(rotation);
+      lockPage();
     };
 
     const closeWheel = () => {
@@ -100,31 +85,42 @@
       dragging = false;
       moved = false;
       pointerId = null;
-      wheel.classList.remove('is-open', 'is-dragging', 'is-settling');
+      applyRotation(0);
+      wheel.classList.remove('is-open', 'is-dragging');
       wheel.setAttribute('aria-expanded', 'false');
       backdrop.classList.remove('is-visible');
-      unlock();
+      unlockPage();
+    };
+
+    const pointerAngle = (event) => {
+      const rect = wheel.getBoundingClientRect();
+      const cx = rect.right;
+      const cy = rect.bottom;
+      return Math.atan2(event.clientY - cy, event.clientX - cx) * 180 / Math.PI;
+    };
+
+    const normalizeDelta = (delta) => {
+      while (delta > 180) delta -= 360;
+      while (delta < -180) delta += 360;
+      return delta;
     };
 
     center.addEventListener('click', (event) => {
       event.preventDefault();
       event.stopPropagation();
-      if (open) closeWheel();
-      else openWheel();
+      open ? closeWheel() : openWheel();
     });
 
     backdrop.addEventListener('click', closeWheel);
 
     wheel.addEventListener('pointerdown', (event) => {
-      if (!open) return;
-      if (event.target.closest('.nuclear-item') || event.target === center) return;
-
+      if (!open || event.target === center) return;
       stopMomentum();
       pointerId = event.pointerId;
       dragging = true;
       moved = false;
-      lastAngle = angleFor(event);
       velocity = 0;
+      lastPointerAngle = pointerAngle(event);
       wheel.classList.add('is-dragging');
       try { wheel.setPointerCapture(pointerId); } catch {}
       event.preventDefault();
@@ -132,64 +128,63 @@
 
     wheel.addEventListener('pointermove', (event) => {
       if (!dragging || event.pointerId !== pointerId) return;
-
-      const angle = angleFor(event);
-      const delta = normalizeDelta(angle - lastAngle);
-      if (Math.abs(delta) > 0.1) moved = true;
-
-      const next = clampRotation(rotation + delta);
+      const current = pointerAngle(event);
+      const delta = normalizeDelta(current - lastPointerAngle);
+      if (Math.abs(delta) >= 1.5) moved = true;
+      if (Math.abs(delta) < 0.01) return;
+      const next = clamp(rotation + delta);
       velocity = next - rotation;
-      setRotation(next);
-      lastAngle = angle;
+      applyRotation(next);
+      lastPointerAngle = current;
       event.preventDefault();
     }, { passive: false });
 
-    const release = (event) => {
+    const releasePointer = (event) => {
       if (!dragging || event.pointerId !== pointerId) return;
-
       try { wheel.releasePointerCapture(pointerId); } catch {}
       dragging = false;
       pointerId = null;
       wheel.classList.remove('is-dragging');
 
-      if (Math.abs(velocity) > 0.35 && rotation > MIN_ROTATION && rotation < MAX_ROTATION) {
-        const animateMomentum = () => {
-          velocity *= 0.90;
-          const next = clampRotation(rotation + velocity);
-          setRotation(next);
-          if (Math.abs(velocity) > 0.05 && rotation > MIN_ROTATION && rotation < MAX_ROTATION && open) {
-            animationFrame = requestAnimationFrame(animateMomentum);
+      if (Math.abs(velocity) > 0.35 && rotation > -12 && rotation < 12) {
+        const tick = () => {
+          velocity *= 0.82;
+          const next = clamp(rotation + velocity);
+          applyRotation(next);
+          if (open && Math.abs(velocity) > 0.05 && rotation > -12 && rotation < 12) {
+            momentumFrame = requestAnimationFrame(tick);
           } else {
-            animationFrame = 0;
+            momentumFrame = 0;
           }
         };
-        animationFrame = requestAnimationFrame(animateMomentum);
+        momentumFrame = requestAnimationFrame(tick);
       }
 
-      setTimeout(() => { moved = false; }, 90);
+      window.setTimeout(() => { moved = false; }, 100);
     };
 
-    wheel.addEventListener('pointerup', release);
-    wheel.addEventListener('pointercancel', release);
+    wheel.addEventListener('pointerup', releasePointer);
+    wheel.addEventListener('pointercancel', releasePointer);
     wheel.addEventListener('lostpointercapture', () => {
       dragging = false;
       pointerId = null;
       wheel.classList.remove('is-dragging');
     });
 
-    items.forEach((item) => {
-      item.addEventListener('pointerup', (event) => {
-        if (moved) {
-          event.preventDefault();
-          event.stopImmediatePropagation();
-        }
-      }, true);
+    items.forEach((item, index) => {
+      item.style.setProperty('--fan-angle', `${fanAngles[index] ?? 0}deg`);
 
       item.addEventListener('click', (event) => {
-        if (!open || moved) return;
+        if (!open || moved) {
+          if (moved) {
+            event.preventDefault();
+            event.stopPropagation();
+          }
+          return;
+        }
+
         event.preventDefault();
         event.stopPropagation();
-
         const target = item.dataset.target || '';
         closeWheel();
 
@@ -199,9 +194,9 @@
             const section = document.querySelector(target);
             if (section) section.scrollIntoView({ behavior: 'smooth', block: 'start' });
             else location.hash = target.slice(1);
-            return;
+          } else {
+            location.href = target;
           }
-          location.href = target;
         });
       });
     });
@@ -213,9 +208,15 @@
       }
     });
 
+    window.addEventListener('resize', setRadius, { passive: true });
     window.addEventListener('pagehide', closeWheel, { once: true });
-  }
+    setRadius();
+    applyRotation(0);
+  };
 
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, { once: true });
-  else boot();
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', boot, { once: true });
+  } else {
+    boot();
+  }
 })();
