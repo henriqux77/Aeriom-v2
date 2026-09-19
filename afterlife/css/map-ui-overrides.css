@@ -45,3 +45,30 @@
 .afterlife-horde-radar>header{display:flex;align-items:center;justify-content:space-between;padding:9px;border-bottom:1px solid rgba(255,255,255,.05)}.afterlife-horde-radar>header span{display:block;color:#c6d3cc;font:900 6px/1 Inter,sans-serif;letter-spacing:.12em}.afterlife-horde-radar>header strong{display:block;margin-top:3px;color:#39f58a;font:800 9px/1 Space Grotesk,sans-serif}.afterlife-radar-head-actions{display:flex;align-items:center;gap:6px}.afterlife-radar-head-actions>b{color:#efca72;font:900 16px/1 Space Grotesk,sans-serif}.afterlife-radar-head-actions>button{min-width:32px;height:24px;border:1px solid rgba(57,245,138,.16);border-radius:7px;background:rgba(57,245,138,.035);color:#7fe9a5;font:900 6px/1 Inter,sans-serif}
 .afterlife-horde-list button{display:grid;grid-template-columns:6px minmax(0,1fr) auto;gap:7px;align-items:center;width:100%;padding:8px 9px;border:0;border-bottom:1px solid rgba(255,255,255,.04);background:transparent;text-align:left;cursor:pointer}.afterlife-horde-list button:hover{background:rgba(255,255,255,.025)}.afterlife-horde-list button>i{width:5px;height:30px;border-radius:99px;background:#f06761}.afterlife-horde-list button>i[data-threat="1"],.afterlife-horde-list button>i[data-threat="2"],.afterlife-horde-list button>i[data-threat="3"]{background:#39f58a}.afterlife-horde-list button>i[data-threat="4"],.afterlife-horde-list button>i[data-threat="5"],.afterlife-horde-list button>i[data-threat="6"]{background:#e3bd52}.afterlife-horde-list strong{display:block;color:#d6e0da;font:800 8px/1.2 Inter,sans-serif}.afterlife-horde-list small{display:block;margin-top:2px;color:#6c7f74;font:600 6px/1.3 Inter,sans-serif}.afterlife-horde-list>b{color:#9bad9f;font:900 9px/1 Space Grotesk,sans-serif}
 @media(max-width:620px){.afterlife-map-compass{right:7px;top:7px}.afterlife-compass-face{width:58px;height:58px}.afterlife-horde-radar{left:7px;top:7px;width:min(210px,calc(100% - 78px));max-height:42%}}
+
+/* EXPLORATION / DENSITY FINAL */
+.afterlife-map-page #worldMap{overflow:hidden}
+.afterlife-map-page .afterlife-exploration-overlay{
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  z-index:740!important;
+  pointer-events:none!important;
+}
+.afterlife-map-page .afterlife-exploration-overlay #afterlifeExplorationFog{
+  transition:opacity .2s ease;
+}
+.afterlife-map-page .afterlife-sighted-location{stroke:#e3bd52!important;fill:#e3bd52!important}
+.afterlife-map-page .afterlife-discovered-location{stroke:#56ffad!important;fill:#56ffad!important}
+.afterlife-map-page .afterlife-map-member-wrap{z-index:800!important}
+.afterlife-map-page .afterlife-map-member__avatar{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:rgba(3,9,6,.96);border:2px solid var(--marker-accent,#39f58a);color:#effff4;font:900 10px/1 Inter,sans-serif;box-shadow:0 0 0 4px rgba(3,9,6,.72),0 0 18px color-mix(in srgb,var(--marker-accent,#39f58a) 30%,transparent)}
+.afterlife-map-page .afterlife-map-member span{display:block;width:7px;height:7px;border-radius:50%;background:#39f58a;margin:-3px auto 0;box-shadow:0 0 8px rgba(57,245,138,.55)}
+.afterlife-map-page .afterlife-zombie-density-wrap{z-index:350!important;pointer-events:auto}
+.afterlife-map-page .afterlife-zombie-density{transition:transform .14s ease,filter .14s ease}
+.afterlife-map-page .afterlife-zombie-density-wrap:hover .afterlife-zombie-density{transform:scale(1.7);filter:brightness(1.18)}
+.afterlife-map-page .leaflet-tooltip.afterlife-density-tooltip{background:#07100c;border:1px solid rgba(240,103,97,.18);color:#dce9e1;box-shadow:0 6px 20px rgba(0,0,0,.25);font-size:7px}
+@media(max-width:620px){
+  .afterlife-map-page .afterlife-map-member__avatar{width:30px;height:30px}
+  .afterlife-map-page .afterlife-zombie-density{box-shadow:0 0 0 1px rgba(216,91,88,.1)}
+}
