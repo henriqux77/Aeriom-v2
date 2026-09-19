@@ -7,13 +7,13 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260915
   const CELL_SIZE_METERS = 150;
   const PLAYER_VISION_METERS = 380;
   const REGION_RESET_METERS = 200000;
-  const MAX_CELLS = 12000;
+  const MAX_CELLS = 240;
   const DISCOVERY_MIN_INTERVAL = 900;
   const POI_ENDPOINTS = [
     'https://overpass-api.de/api/interpreter',
     'https://overpass.kumi.systems/api/interpreter'
   ];
-  const POI_QUERY = `[out:json][timeout:18];(nwr(around:1000,{LAT},{LNG})[shop];nwr(around:1000,{LAT},{LNG})[amenity~"cafe|restaurant|bar|fast_food|pharmacy|hospital|clinic|fuel|bank|post_office|police|fire_station|supermarket|marketplace|school|college|university"];nwr(around:1000,{LAT},{LNG})[tourism~"hotel|hostel|museum|attraction"];nwr(around:1000,{LAT},{LNG})[craft];);out center tags;`;
+  const POI_QUERY = `[out:json][timeout:10];(nwr(around:650,{LAT},{LNG})[name][shop~"supermarket|convenience|bakery|butcher|hardware|electronics|car_repair|pet|mall|department_store"];nwr(around:650,{LAT},{LNG})[name][amenity~"restaurant|fast_food|cafe|bar|pub|pharmacy|hospital|clinic|doctors|dentist|veterinary|fuel|charging_station|bank|atm|police|fire_station|school|college|university|library|place_of_worship|shelter|marketplace|cinema|theatre"];nwr(around:650,{LAT},{LNG})[name][leisure~"park|sports_centre|stadium|swimming_pool|fitness_centre"];nwr(around:650,{LAT},{LNG})[name][tourism~"hotel|hostel|museum|attraction|camp_site"];nwr(around:650,{LAT},{LNG})[name][craft];);out center tags;`;
   const $ = (id) => document.getElementById(id);
 
   let map = null;
@@ -143,18 +143,8 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260915
     overlay.setAttribute('width', String(width));
     overlay.setAttribute('height', String(height));
 
-    for (const key of state.cells) {
-      const [xs, ys] = key.split(':'); const x = Number(xs); const y = Number(ys);
-      if (!Number.isFinite(x) || !Number.isFinite(y)) continue;
-      const bounds = cellBounds(x, y);
-      const p1 = screenPoint(bounds.nw.lat, bounds.nw.lng);
-      const p2 = screenPoint(bounds.nw.lat, bounds.se.lng);
-      const p3 = screenPoint(bounds.se.lat, bounds.se.lng);
-      const p4 = screenPoint(bounds.se.lat, bounds.nw.lng);
-      const left = Math.min(p1.x, p4.x), top = Math.min(p1.y, p2.y), right = Math.max(p2.x, p3.x), bottom = Math.max(p4.y, p3.y);
-      if (right < -20 || left > width + 20 || bottom < -20 || top > height + 20) continue;
-      addHole(holes, left, top, right - left, bottom - top, 3);
-    }
+    // A survivor sees only the current perception radius. Previously discovered
+    // places are remembered as data/markers, but do not permanently reveal map tiles.
     if (position) {
       const p = screenPoint(position.lat, position.lng);
       addCircleHole(holes, p.x, p.y, metersToPixels(position.lat, PLAYER_VISION_METERS));
@@ -181,11 +171,26 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260915
     });
   }
 
+  let correctingView = false;
+  function enforcePlayerView() {
+    if (role !== 'player' || !map || correctingView) return;
+    const self = getSelfPosition();
+    if (!self) return;
+    const center = map.getCenter();
+    const d = map.distance(center, [self.lat, self.lng]);
+    if (d > 460) {
+      correctingView = true;
+      map.setView([self.lat, self.lng], Math.max(map.getZoom(), 16), { animate: true });
+      window.setTimeout(() => { correctingView = false; }, 420);
+    }
+    if (map.getZoom() < 16) map.setZoom(16, { animate: false });
+  }
+
   function hookMapEvents() {
     if (!map || map.__afterlifeExplorationBound) return;
     map.__afterlifeExplorationBound = true;
-    map.on('moveend zoomend resize', queueRender);
-    window.addEventListener('resize', queueRender, { passive: true });
+    map.on('moveend zoomend resize dragend', () => { enforcePlayerView(); queueRender(); });
+    window.addEventListener('resize', () => { enforcePlayerView(); queueRender(); }, { passive: true });
   }
 
   function showToast(title, text, kind = 'info') {
@@ -222,7 +227,7 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260915
   function renderDiscoveredMarkers(position) {
     if (!map || role !== 'player') return;
     clearDiscoveredMarkers();
-    const maxKnownDistance = Math.max(PLAYER_VISION_METERS * 2.5, 1000);
+    const maxKnownDistance = PLAYER_VISION_METERS;
     for (const location of knownLocations.values()) {
       const lat = Number(location.latitude); const lng = Number(location.longitude);
       if (!Number.isFinite(lat) || !Number.isFinite(lng)) continue;
@@ -375,7 +380,7 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260915
     if (!ready?.map || !ready.campaign) return;
     map = ready.map; role = ready.role || 'player'; campaign = ready.campaign; userId = session.user.id;
     if (role === 'master') return;
-    loadState(); buildOverlay(); hookMapEvents();
+    loadState(); buildOverlay(); hookMapEvents(); enforcePlayerView();
     await loadKnownLocations();
     subscribeLocations();
     queueRender();
