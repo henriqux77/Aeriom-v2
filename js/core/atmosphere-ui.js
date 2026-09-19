@@ -71,6 +71,49 @@ import { getAvailableThemes, getTheme, applyCampaignTheme } from "./theme.js";
   async function save(){if(!isMaster()||!state.supabase||!state.campaignId||state.saving)return;state.saving=true;clearTimeout(state.saveTimer);try{const payload={...state.settings,updated_by:ctx()?.user?.id||null,updated_at:new Date().toISOString()};delete payload.id;delete payload.created_at;const r=await state.supabase.from('campaign_atmosphere_settings').upsert(payload,{onConflict:'campaign_id'}).select('*').single();if(r.error)throw r.error;state.settings=normalize(r.data);await state.supabase.from('campaigns').update({theme:state.settings.preset}).eq('id',state.campaignId);applyPalette();setDirty(false);render();}catch(e){console.error('[AERIOM][ATMOSPHERE SAVE]',e);setDirty(true);}finally{state.saving=false;}}
   async function load(){state.campaignId=campaignId();if(!state.campaignId){state.settings=defaults();state.hydrated=true;render();return;}state.supabase=ctx()?.supabase||null;if(!state.supabase){try{state.supabase=await getSupabase();}catch(e){console.error('[AERIOM][ATMOSPHERE SUPABASE]',e);}}try{if(state.supabase){const c=await state.supabase.from('campaigns').select('id,theme,background_path,cover_url').eq('id',state.campaignId).maybeSingle();if(!c.error&&c.data)state.campaign=c.data;const r=await state.supabase.from('campaign_atmosphere_settings').select('*').eq('campaign_id',state.campaignId).maybeSingle();state.settings=normalize(r.error?{preset:state.campaign?.theme||'default'}:r.data||{preset:state.campaign?.theme||'default'});}else state.settings=defaults();}catch(e){console.error('[AERIOM][ATMOSPHERE LOAD]',e);state.settings=defaults(state.campaign?.theme||'default');}state.hydrated=true;applyPalette();render();subscribe();}
   function subscribe(){if(state.channel||!state.supabase||!state.campaignId)return;state.channel=state.supabase.channel(`aeriom-atmosphere:${state.campaignId}`).on('postgres_changes',{event:'*',schema:'public',table:'campaign_atmosphere_settings',filter:`campaign_id=eq.${state.campaignId}`},p=>{state.settings=p.eventType==='DELETE'?defaults(state.campaign?.theme||'default'):normalize(p.new);applyPalette();render();}).subscribe();}
-  async function start(){if(state.started)return;state.started=true;injectStyle();await load();}
-  window.addEventListener('aeriom:campaign:ready',()=>{state.started=false;void start();});window.addEventListener('aeriom:campaigntabchange',e=>{if(e.detail?.tab==='theme'){injectStyle();if(!state.hydrated){state.started=false;void start();}else render();}});if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>void start(),{once:true});else void start();
+  function start(){
+    if(state.started && state.startPromise) return state.startPromise;
+
+    state.started=true;
+    injectStyle();
+
+    state.startPromise=(async()=>{
+      await load();
+      window.dispatchEvent(new CustomEvent('aeriom:atmosphere:ready',{
+        detail:{campaignId:state.campaignId,settings:state.settings}
+      }));
+      return state.settings;
+    })();
+
+    window.__AERIOM_ATMOSPHERE_READY_PROMISE__=state.startPromise;
+    return state.startPromise;
+  }
+
+  function resetAndRestart(){
+    try{if(state.channel && state.supabase) state.supabase.removeChannel(state.channel);}catch{}
+    state.channel=null;
+    state.campaignId=null;
+    state.campaign=null;
+    state.settings=null;
+    state.hydrated=false;
+    state.started=false;
+    state.startPromise=null;
+    window.__AERIOM_ATMOSPHERE_READY_PROMISE__=null;
+    void start();
+  }
+
+  window.addEventListener('aeriom:campaign:ready',resetAndRestart);
+  window.addEventListener('aeriom:campaigntabchange',e=>{
+    if(e.detail?.tab==='theme'){
+      injectStyle();
+      if(!state.hydrated) resetAndRestart();
+      else render();
+    }
+  });
+
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',()=>void start(),{once:true});
+  }else{
+    void start();
+  }
 })();
