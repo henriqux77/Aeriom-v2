@@ -31,3 +31,65 @@ body.afterlife-wheel-lock,html.afterlife-wheel-lock{overflow:hidden!important;to
   .nuclear-item{--item-radius:clamp(58px,20vw,66px)!important;width:32px!important;height:32px!important;}
   .nuclear-center{width:50px!important;height:50px!important;font-size:22px!important;}
 }
+
+/* FINAL RADIAL GEOMETRY: one fixed lower-right pivot, no overlap. */
+.nuclear-wheel{
+  width:225px!important;
+  height:225px!important;
+  right:max(16px,env(safe-area-inset-right))!important;
+  bottom:max(16px,env(safe-area-inset-bottom))!important;
+}
+.nuclear-wheel__orbit{
+  inset:0!important;
+  transform-origin:100% 100%!important;
+}
+.nuclear-center{
+  width:54px!important;
+  height:54px!important;
+  right:0!important;
+  bottom:0!important;
+  font-size:24px!important;
+}
+.nuclear-item{
+  width:34px!important;
+  height:34px!important;
+  --item-radius:108px;
+}
+.nuclear-wheel::after{
+  width:92px!important;
+  height:92px!important;
+  right:0!important;
+  bottom:0!important;
+  padding:0 17px!important;
+  font-size:5px!important;
+  border-color:rgba(57,245,138,.14)!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+.nuclear-item span{font-size:12px!important;}
+.nuclear-item b{font-size:5px!important;}
+
+@media(max-width:620px){
+  .nuclear-wheel{
+    width:210px!important;
+    height:210px!important;
+    right:max(10px,env(safe-area-inset-right))!important;
+    bottom:max(10px,env(safe-area-inset-bottom))!important;
+  }
+  .nuclear-center{width:50px!important;height:50px!important;font-size:22px!important;}
+  .nuclear-item{width:30px!important;height:30px!important;--item-radius:96px!important;}
+  .nuclear-item span{font-size:11px!important;}
+  .nuclear-item b{font-size:4px!important;}
+  .nuclear-wheel::after{width:82px!important;height:82px!important;padding:0 14px!important;font-size:4.5px!important;}
+}
+
+@media(max-width:390px){
+  .nuclear-wheel{
+    width:205px!important;
+    height:205px!important;
+    right:max(7px,env(safe-area-inset-right))!important;
+    bottom:max(7px,env(safe-area-inset-bottom))!important;
+  }
+  .nuclear-center{width:48px!important;height:48px!important;font-size:21px!important;}
+  .nuclear-item{width:30px!important;height:30px!important;--item-radius:94px!important;}
+}
