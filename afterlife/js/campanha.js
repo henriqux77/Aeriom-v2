@@ -90,7 +90,7 @@ import './members-presence.js?v=20260917-3';
     const membersCount = Number.isFinite(Number(campaign.membersCount)) ? Number(campaign.membersCount) : 0;
     $('campaignMembersCount') && ($('campaignMembersCount').textContent = String(membersCount));
     $('membersPanelCount') && ($('membersPanelCount').textContent = `(${membersCount})`);
-    $('manageCampaign')?.toggleAttribute('hidden', !isMaster);
+    $('manageCampaign')?.toggleAttribute('hidden', !isMaster); $('campaignMenuButton')?.toggleAttribute('hidden', !isMaster);
 
     const scaleLabel = campaign.scale === 'local' ? 'Local' : campaign.scale === 'city' ? 'Cidade' : campaign.scale === 'regional' ? 'Regional' : 'Mundo aberto';
     $('campaignScaleLabel') && ($('campaignScaleLabel').textContent = scaleLabel);
@@ -129,7 +129,7 @@ import './members-presence.js?v=20260917-3';
       else alert('Controles da campanha em preparação.');
     });
     $('campaignMenuButton')?.addEventListener('click', () => {
-      document.querySelector('.campaign-actions-menu')?.classList.toggle('is-open');
+      if (typeof window.openCampaignManager === 'function') window.openCampaignManager();
     });
   }
 
