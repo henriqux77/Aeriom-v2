@@ -415,7 +415,7 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260920
           '<div class="system-manager-block"><strong>MEMBROS</strong>'+(members.data?.length?members.data.map(m=>'<div><span>'+esc((m.character_id&&characterNames.get(m.character_id))||'NPC/Usuário')+'</span><small>'+esc(m.rank)+' · reputação '+Number(m.reputation||0)+'</small></div>').join(''):'<em>Nenhum membro.</em>')+'</div>'+
           '<div class="system-manager-block"><strong>RELAÇÕES</strong>'+(relations.data?.length?relations.data.map(r=>'<div><span>'+esc(fs.find(f=>f.id===r.target_faction_id)?.name||'Facção')+'</span><small>'+esc(r.relation_type)+' · '+Number(r.reputation||0)+'</small></div>').join(''):'<em>Nenhuma relação.</em>')+'</div>';
       };
-      $('#factionPick').addEventListener('change',()=>refreshFaction().catch(()=>{}));
+      $('#factionPick').addEventListener('change',()=>refreshFaction().catch(error=>console.warn('[AFTERLIFE][CAMPAIGN-SYSTEMS][FACTION-REFRESH]',error)));
       await refreshFaction();
       root.querySelector('form').addEventListener('submit',async e=>{
         e.preventDefault();
@@ -561,7 +561,7 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260920
         if(parts.error)throw parts.error;if(upgrades.error)throw upgrades.error;
         $('#vehicleManagerContent').innerHTML='<div class="system-manager-block"><strong>PEÇAS</strong>'+(parts.data?.length?parts.data.map(p=>'<div><span>'+esc(p.name)+'</span><small>'+esc(p.part_type)+' · '+Number(p.durability||0)+'%</small></div>').join(''):'<em>Nenhuma peça.</em>')+'</div><div class="system-manager-block"><strong>UPGRADES</strong>'+(upgrades.data?.length?upgrades.data.map(u=>'<div><span>'+esc(u.name)+'</span><small>'+esc(u.upgrade_type)+' · nível '+Number(u.level||1)+'</small></div>').join(''):'<em>Nenhum upgrade.</em>')+'</div>';
       };
-      $('#vehiclePick').addEventListener('change',()=>refreshVehicle().catch(()=>{}));await refreshVehicle();
+      $('#vehiclePick').addEventListener('change',()=>refreshVehicle().catch(error=>console.warn('[AFTERLIFE][CAMPAIGN-SYSTEMS][VEHICLE-REFRESH]',error)));await refreshVehicle();
       root.querySelector('form').addEventListener('submit',async e=>{
         e.preventDefault();if(busy)return;busy=true;
         try{
