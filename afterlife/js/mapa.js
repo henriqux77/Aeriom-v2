@@ -361,7 +361,30 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260920
     '</div>';
   }
 
-  function bindModal(){const b=$('mapModalBody');if(!b)return;b.querySelectorAll('[data-area-action]').forEach(x=>x.onclick=()=>resolveArea(x.dataset.area,x.dataset.areaAction));b.querySelector('[id="editLocation"]')?.addEventListener('click',()=>openLocationEditor(state.selected));b.querySelector('[id="createArea"]')?.addEventListener('click',()=>openCreateArea(state.selected));}
+  async function resolveLocationAction(locationId,action){
+    const out=$('mapActionResult');if(out)out.innerHTML='<div class="map-spinner">EXECUTANDO TESTE…</div>';
+    try{
+      const r=await aeriom.rpc('resolve_location_action',{p_location_id:locationId,p_action_key:action});if(r.error)throw r.error;
+      const d=r.data||{},loot=Array.isArray(d.loot)?d.loot:[];
+      if(out)out.innerHTML='<div class="action-stepper"><span class="done">01 PREPARAR</span><i></i><span class="done">02 TESTE</span><i></i><span class="active">03 RESULTADO</span><i></i><span>04 REGISTRAR</span></div><div class="map-result-head"><span>'+esc(d.skill_label||'PERÍCIA')+' · '+esc(d.attribute_label||'ATRIBUTO')+'</span><strong>'+esc(String(d.result||'RESULTADO').replaceAll('_',' ').toUpperCase())+'</strong></div><div class="map-roll-line"><b>'+esc(d.die||'D?')+'</b><strong>'+n(d.natural_roll)+' + '+n(d.training_bonus)+' + '+n(d.modifier)+' = '+n(d.total)+'</strong><small>Dificuldade '+n(d.difficulty,10)+'</small></div><p>'+esc(d.consequence||'O Mestre narra o que acontece.')+'</p>'+(d.discovery_text?'<div class="map-result-block"><span>DESCOBERTA</span><p>'+esc(d.discovery_text)+'</p></div>':'')+(d.revealed_information?'<div class="map-result-block"><span>INFORMAÇÃO</span><p>'+esc(d.revealed_information)+'</p></div>':'')+(loot.length?'<div class="map-result-block"><span>SAQUE DISPONÍVEL</span><div class="map-loot-list">'+loot.map(x=>'<button type="button" data-loot="'+esc(x.id)+'"><span>◆</span><b>'+esc(x.item_name)+'</b><small>'+esc(x.item_category||'item')+' · x'+n(x.quantity,1)+' · '+esc(x.rarity||'comum')+'</small></button>').join('')+'</div></div>':'');
+      bindLootButtons(out);
+      if(d.discovered){await refreshLocations();renderEverything();if(state.selected){state.selected=state.locations.find(x=>x.id===locationId)||state.selected;renderSelection();}}
+      toast('Ação resolvida.');
+    }catch(err){report('map-location-action-error',{message:err?.message||String(err),locationId,action});if(out)out.innerHTML='<div class="map-result-error">'+esc(err?.message||'Não foi possível resolver a ação.')+'</div>';toast(err?.message||'Falha no teste.','error');}
+  }
+
+  function bindLootButtons(root){
+    root?.querySelectorAll('[data-loot]').forEach(btn=>btn.onclick=()=>claimLoot(btn));
+  }
+
+  async function claimLoot(btn){
+    try{
+      const r=await aeriom.rpc('claim_area_loot',{p_loot_id:btn.dataset.loot});if(r.error)throw r.error;
+      btn.disabled=true;btn.innerHTML='<span>✓</span><b>COLETADO</b><small>Adicionado ao inventário.</small>';toast('Saque coletado.');
+    }catch(err){report('map-loot-claim-error',{message:err?.message||String(err)});toast(err?.message||'Não foi possível coletar o saque.','error');}
+  }
+
+  function bindModal(){const b=$('mapModalBody');if(!b)return;b.querySelectorAll('[data-area-action]').forEach(x=>x.onclick=()=>resolveArea(x.dataset.area,x.dataset.areaAction));b.querySelectorAll('[data-location-action]').forEach(x=>x.onclick=()=>resolveLocationAction(state.selected?.id,x.dataset.locationAction));bindLootButtons(b);b.querySelector('[id="editLocation"]')?.addEventListener('click',()=>openLocationEditor(state.selected));b.querySelector('[id="createArea"]')?.addEventListener('click',()=>openCreateArea(state.selected));}
 
   function openModal(title,html){$('mapModalTitle').textContent=title;$('mapModalBody').innerHTML=html;$('mapModalBackdrop').hidden=false;bindModal();}
   function closeModal(){$('mapModalBackdrop').hidden=true;}
