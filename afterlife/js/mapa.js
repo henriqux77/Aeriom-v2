@@ -195,7 +195,7 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260920
     state.locations=Array.isArray(r.data)?r.data:[];
   }
 
-  async function refreshEntities(){const r=await aeriom.rpc('list_campaign_map_entities',{p_campaign_id:state.campaign.id});if(r.error)throw r.error;state.entities=Array.isArray(r.data)?r.data:[];}
+  async function refreshEntities(){const r=isMaster()?await aeriom.rpc('list_campaign_map_entities',{p_campaign_id:state.campaign.id}):await aeriom.rpc('list_campaign_visible_map_entities',{p_campaign_id:state.campaign.id});if(r.error)throw r.error;state.entities=Array.isArray(r.data)?r.data:[];}
   async function refreshFactions(){const r=isMaster()?await aeriom.from('campaign_factions').select('*').eq('campaign_id',state.campaign.id).limit(120):await aeriom.rpc('list_campaign_visible_factions',{p_campaign_id:state.campaign.id});if(r.error)throw r.error;state.factions=r.data||[];}
   async function refreshNpcs(){const r=isMaster()?await aeriom.from('campaign_npcs').select('*').eq('campaign_id',state.campaign.id).limit(100):await aeriom.rpc('list_campaign_visible_npcs',{p_campaign_id:state.campaign.id});if(r.error)throw r.error;state.npcs=r.data||[];}
   async function refreshVehicles(){const r=isMaster()?await aeriom.from('campaign_vehicles').select('*').eq('campaign_id',state.campaign.id).limit(80):await aeriom.rpc('list_campaign_visible_vehicles',{p_campaign_id:state.campaign.id});if(r.error)throw r.error;state.vehicles=r.data||[];}
@@ -620,7 +620,7 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260920
     if(!isMaster()&&!state.playerLayerTimer){
       state.playerLayerTimer=setInterval(async()=>{
         try{
-          await Promise.all([refreshFactions(),refreshNpcs(),refreshVehicles(),refreshStations()]);
+          await Promise.all([refreshEntities(),refreshFactions(),refreshNpcs(),refreshVehicles(),refreshStations()]);
           renderFactions();renderNpcs();renderVehicles();renderStations();
         }catch(err){report('map-player-layer-refresh',{message:err?.message||String(err)});}
       },30000);
