@@ -1,4 +1,4 @@
-import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260918-2';
+import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260920-2';
 
 (() => {
   'use strict';
@@ -91,7 +91,7 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260918
     const [snapshot,missions,diary,factions,npcs,vehicles,hordes,inventory] = await Promise.all([
       aeriom.rpc('get_campaign_system_snapshot',{p_campaign_id:campaignId}),
       aeriom.from('campaign_missions').select('id,title,description,status,priority,reward_xp,deadline,created_at,location_id').eq('campaign_id',campaignId).order('created_at',{ascending:false}).limit(20),
-      aeriom.from('campaign_diary_entries').select('id,title,body,event_type,occurred_at,source_type').eq('campaign_id',campaignId).order('occurred_at',{ascending:false}).limit(16),
+      aeriom.rpc('list_campaign_visible_diary_entries',{p_campaign_id:campaignId}),
       masterOnly()?aeriom.from('campaign_factions').select('id,name,faction_type,description,reputation_default,resources,territory').eq('campaign_id',campaignId).order('name'):aeriom.rpc('list_campaign_visible_factions',{p_campaign_id:campaignId}),
       masterOnly()?aeriom.from('campaign_npcs').select('id,name,profession,status,faction_id,latitude,longitude').eq('campaign_id',campaignId).order('name').limit(20):aeriom.rpc('list_campaign_visible_npcs',{p_campaign_id:campaignId}),
       masterOnly()?aeriom.from('campaign_vehicles').select('id,name,vehicle_type,fuel_current,fuel_max,condition,speed_kmh,cargo_slots').eq('campaign_id',campaignId).order('name').limit(20):aeriom.rpc('list_campaign_visible_vehicles',{p_campaign_id:campaignId}),
