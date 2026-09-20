@@ -125,6 +125,31 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260920
     return variants[Math.abs(h)%variants.length];
   }
 
+  function houseProfile(key){
+    const states=['Abandonada','Parcialmente saqueada','Intacta','Fechada','Ocupada recentemente'];
+    const loot=['Baixo','Moderado','Alto'];
+    const interiors=['Pequena','Média','Ampla'];
+    let h=2166136261;
+    for(const ch of String(key||'')){h^=ch.charCodeAt(0);h=Math.imul(h,16777619);}
+    const pick=(arr,offset)=>arr[Math.abs((h+offset)|0)%arr.length];
+    return {condition:pick(states,17),loot:pick(loot,31),size:pick(interiors,47)};
+  }
+
+  function seededSparsePoiSelect(items,max,cell=.0012){
+    const groups=new Map();
+    for(const item of items||[]){
+      const key=Math.round(item.lat/cell)+':'+Math.round(item.lng/cell);
+      if(!groups.has(key))groups.set(key,[]);
+      groups.get(key).push(item);
+    }
+    const flat=[...groups.values()].flat();
+    flat.sort((a,b)=>{
+      const score=x=>{let h=2166136261;for(const ch of String(x.key||'')){h^=ch.charCodeAt(0);h=Math.imul(h,16777619);}return h>>>0;};
+      return score(a)-score(b);
+    });
+    return flat.slice(0,max);
+  }
+
 
   function mapIcon(symbol, kind='poi', label='Marcador'){
     const html='<span class="afterlife-map-icon afterlife-map-icon--'+esc(kind)+'" role="img" aria-label="'+esc(label)+'">'+esc(symbol)+'</span>';
@@ -739,13 +764,13 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260920
     const k=poiKey(),old=state.poiCache.get(k);if(old&&Date.now()-old.ts<10*60*1000){drawPois(old.items);return;}
     const c=state.map.getCenter();
     const housePart=state.map.getZoom()>=18?'nwr(around:450,'+c.lat+','+c.lng+')[building~"^(house|detached|semidetached|residential)$"];':'';
-    const q='[out:json][timeout:6];(nwr(around:800,'+c.lat+','+c.lng+')[name][amenity];nwr(around:800,'+c.lat+','+c.lng+')[name][shop];nwr(around:800,'+c.lat+','+c.lng+')[name][tourism];nwr(around:800,'+c.lat+','+c.lng+')[name][craft];nwr(around:800,'+c.lat+','+c.lng+')[name][leisure];nwr(around:800,'+c.lat+','+c.lng+')[name][historic];'+housePart+');out center tags;';
+    const q='[out:json][timeout:6];(nwr(around:800,'+c.lat+','+c.lng+')[name][amenity];nwr(around:800,'+c.lat+','+c.lng+')[name][shop];nwr(around:800,'+c.lat+','+c.lng+')[name][healthcare];nwr(around:800,'+c.lat+','+c.lng+')[name][tourism];nwr(around:800,'+c.lat+','+c.lng+')[name][craft];nwr(around:800,'+c.lat+','+c.lng+')[name][leisure];nwr(around:800,'+c.lat+','+c.lng+')[name][historic];nwr(around:800,'+c.lat+','+c.lng+')[name][office];nwr(around:800,'+c.lat+','+c.lng+')[name][emergency];nwr(around:800,'+c.lat+','+c.lng+')[name][sport];nwr(around:800,'+c.lat+','+c.lng+')[name][man_made];'+housePart+');out center tags;';
     let data=null;
     for(const ep of ['https://overpass-api.de/api/interpreter','https://overpass.kumi.systems/api/interpreter']){
       try{const ac=new AbortController(),tm=setTimeout(()=>ac.abort(),6500),r=await fetch(ep,{method:'POST',body:q,headers:{'Content-Type':'text/plain;charset=UTF-8'},signal:ac.signal});clearTimeout(tm);if(r.ok){data=await r.json();break;}}catch{}
     }
     if(!data)return;
-    const items=(data.elements||[]).map(e=>{const tags=e.tags||{},p=pt(e.lat??e.center?.lat,e.lon??e.center?.lon),type=tags.amenity||tags.shop||tags.tourism||tags.craft||tags.leisure||tags.historic||tags.building||'POI';return p?{key:'osm:'+e.type+':'+e.id,name:tags.name||tags.brand||(String(type).toLowerCase().includes('house')?houseFlavor('osm:'+e.type+':'+e.id):'Local'),type,category:poiCategory({name:tags.name||tags.brand,type,tags}),lat:p.lat,lng:p.lng,address:tags['addr:full']||[tags['addr:street'],tags['addr:housenumber']].filter(Boolean).join(', '),tags}:null;}).filter(Boolean).filter(p=>!['bus_stop','stop_position','platform'].includes(String(p.type).toLowerCase()));
+    const items=(data.elements||[]).map(e=>{const tags=e.tags||{},p=pt(e.lat??e.center?.lat,e.lon??e.center?.lon),type=tags.amenity||tags.shop||tags.tourism||tags.craft||tags.leisure||tags.historic||tags.building||'POI';const key='osm:'+e.type+':'+e.id,isHouse=['house','detached','semidetached','residential'].includes(String(type).toLowerCase());return p?{key,name:tags.name||tags.brand||(isHouse?houseFlavor(key):'Local'),type,category:poiCategory({name:tags.name||tags.brand,type,tags}),houseProfile:isHouse?houseProfile(key):null,lat:p.lat,lng:p.lng,address:tags['addr:full']||[tags['addr:street'],tags['addr:housenumber']].filter(Boolean).join(', '),tags}:null;}).filter(Boolean).filter(p=>!['bus_stop','stop_position','platform'].includes(String(p.type).toLowerCase()));
     state.poiCache.set(k,{ts:Date.now(),items});drawPois(items);
   }
 
@@ -764,8 +789,8 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260920
     state.layer.pois.clearLayers();
     const bounds=state.map.getBounds().pad(.03);
     const raw=(items||[]).filter(p=>bounds.contains([p.lat,p.lng]));
-    const houses=sparsePoiSelect(raw.filter(p=>['house','detached','semidetached','residential'].includes(String(p.type).toLowerCase())),MAX_VISIBLE.houses,.0025);
-    const normal=sparsePoiSelect(raw.filter(p=>!['house','detached','semidetached','residential'].includes(String(p.type).toLowerCase())),MAX_VISIBLE.pois,.0011);
+    const houses=seededSparsePoiSelect(raw.filter(p=>['house','detached','semidetached','residential'].includes(String(p.type).toLowerCase())),MAX_VISIBLE.houses,.0025);
+    const normal=seededSparsePoiSelect(raw.filter(p=>!['house','detached','semidetached','residential'].includes(String(p.type).toLowerCase())),MAX_VISIBLE.pois,.0011);
     [...normal,...houses].forEach(p=>{
       const isHouse=['house','detached','semidetached','residential'].includes(String(p.type).toLowerCase());
       const category=isHouse?'house':(p.category||poiCategory(p));
