@@ -266,7 +266,7 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260915
 
   async function ensureLocation(poi) {
     const externalId = locationKey(poi);
-    const { data, error } = await aeriom.rpc('upsert_campaign_world_location', {
+    const { data, error } = await aeriom.rpc('discover_campaign_world_location', {
       p_campaign_id: campaign.id,
       p_source: 'osm',
       p_external_id: externalId,
@@ -333,7 +333,7 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260915
   async function loadKnownLocations() {
     if (!campaign) return;
     try {
-      const { data, error } = await aeriom.from('campaign_world_locations').select('id,name,category,latitude,longitude,discovered,danger,state,last_visited_at,updated_at').eq('campaign_id', campaign.id).order('updated_at', { ascending: false }).limit(250);
+      const { data, error } = await aeriom.rpc('list_campaign_visible_world_locations', { p_campaign_id: campaign.id });
       if (error) throw error;
       knownLocations.clear();
       (data || []).forEach((location) => {
