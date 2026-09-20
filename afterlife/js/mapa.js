@@ -16,7 +16,7 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260920
       factions: null, npcs: null, vehicles: null, stations: null, pois: null, vision: null, device: null, drawing: null
     },
     compass: { active: false, bound: false, heading: 0 },
-    sync: { ok: true }
+    sync: { ok: true }, playerLayerTimer: null
   };
 
   const MAX_VISIBLE = { locations: 80, entities: 70, members: 30, npcs: 35, vehicles: 35, stations: 25, pois: 30 };
@@ -151,7 +151,6 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260920
     if(isMaster()){jobs.push(['infection',refreshInfection],['hordes',refreshHordes]);}
     const results=await Promise.allSettled(jobs.map(x=>safeCall(x[0],x[1])));
     const failed=results.map((r,i)=>r.status==='rejected'?jobs[i][0]:null).filter(Boolean);
-    await refreshMembers();
     if(!isMaster()) await refreshPlayerPosition();
     renderEverything();
     if(!isMaster()&&state.mapPosition) centerTo(state.mapPosition,Math.max(15,state.map.getZoom()));
@@ -197,10 +196,10 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260920
   }
 
   async function refreshEntities(){const r=await aeriom.rpc('list_campaign_map_entities',{p_campaign_id:state.campaign.id});if(r.error)throw r.error;state.entities=Array.isArray(r.data)?r.data:[];}
-  async function refreshFactions(){const r=await aeriom.from('campaign_factions').select('*').eq('campaign_id',state.campaign.id).limit(120);if(r.error)throw r.error;state.factions=r.data||[];}
-  async function refreshNpcs(){const r=await aeriom.from('campaign_npcs').select('*').eq('campaign_id',state.campaign.id).limit(100);if(r.error)throw r.error;state.npcs=r.data||[];}
-  async function refreshVehicles(){const r=await aeriom.from('campaign_vehicles').select('*').eq('campaign_id',state.campaign.id).limit(80);if(r.error)throw r.error;state.vehicles=r.data||[];}
-  async function refreshStations(){const r=await aeriom.from('crafting_stations').select('*').eq('campaign_id',state.campaign.id).limit(80);if(r.error)throw r.error;state.stations=r.data||[];}
+  async function refreshFactions(){const r=isMaster()?await aeriom.from('campaign_factions').select('*').eq('campaign_id',state.campaign.id).limit(120):await aeriom.rpc('list_campaign_visible_factions',{p_campaign_id:state.campaign.id});if(r.error)throw r.error;state.factions=r.data||[];}
+  async function refreshNpcs(){const r=isMaster()?await aeriom.from('campaign_npcs').select('*').eq('campaign_id',state.campaign.id).limit(100):await aeriom.rpc('list_campaign_visible_npcs',{p_campaign_id:state.campaign.id});if(r.error)throw r.error;state.npcs=r.data||[];}
+  async function refreshVehicles(){const r=isMaster()?await aeriom.from('campaign_vehicles').select('*').eq('campaign_id',state.campaign.id).limit(80):await aeriom.rpc('list_campaign_visible_vehicles',{p_campaign_id:state.campaign.id});if(r.error)throw r.error;state.vehicles=r.data||[];}
+  async function refreshStations(){const r=isMaster()?await aeriom.from('crafting_stations').select('*').eq('campaign_id',state.campaign.id).limit(80):await aeriom.rpc('list_campaign_visible_stations',{p_campaign_id:state.campaign.id});if(r.error)throw r.error;state.stations=r.data||[];}
   async function refreshHordes(){const r=await aeriom.from('campaign_hordes').select('*').eq('campaign_id',state.campaign.id).limit(120);if(r.error)throw r.error;state.hordes=r.data||[];}
   async function refreshInfection(){const r=await aeriom.rpc('list_campaign_infection_zones',{p_campaign_id:state.campaign.id});if(r.error)throw r.error;state.infection=Array.isArray(r.data)?r.data:[];}
   async function refreshTravels(){const r=await aeriom.rpc('list_campaign_travels',{p_campaign_id:state.campaign.id,p_limit:12});if(r.error)throw r.error;state.travels=Array.isArray(r.data)?r.data:[];$('statTravels').textContent=String(state.travels.length);}
@@ -618,7 +617,17 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260920
       }).subscribe(s=>{if(['CHANNEL_ERROR','TIMED_OUT','CLOSED'].includes(s)){setStatus('Realtime do mapa indisponível.','error');report('map-realtime-state',{table,state:s});}});
       state.realtime.push(ch);
     });
+    if(!isMaster()&&!state.playerLayerTimer){
+      state.playerLayerTimer=setInterval(async()=>{
+        try{
+          await Promise.all([refreshFactions(),refreshNpcs(),refreshVehicles(),refreshStations()]);
+          renderFactions();renderNpcs();renderVehicles();renderStations();
+        }catch(err){report('map-player-layer-refresh',{message:err?.message||String(err)});}
+      },30000);
+    }
   }
+
+  window.addEventListener('pagehide',()=>{if(state.playerLayerTimer)clearInterval(state.playerLayerTimer);state.realtime.forEach(ch=>{try{aeriom.removeChannel(ch);}catch{}});},{once:true});
 
   boot();
 })();
