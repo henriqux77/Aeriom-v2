@@ -8,7 +8,7 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260920
 
   const state = {
     session: null, campaign: null, role: 'player', map: null,
-    members: [], locations: [], entities: [], factions: [], npcs: [], vehicles: [], stations: [],
+    members: [], characters: [], locations: [], entities: [], factions: [], npcs: [], vehicles: [], stations: [],
     hordes: [], infection: [], travels: [], selected: null, mapPosition: null, devicePosition: null,
     editorMode: null, drawing: null, realtime: [], poiCache: new Map(), poiTimer: null, refreshTimer: null, weatherCache: new Map(), weather: null, weatherTimer: null,
     renderer: null, selectedMarker: null, layer: {
@@ -296,6 +296,8 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260920
     $('mapCenterMe').onclick=()=>centerTo(currentPoint(),Math.max(state.map.getZoom(),15));
     $('mapFocusMe')?.addEventListener('click',()=>centerTo(currentPoint(),15));
     $('mapLocateDevice').onclick=locateDevice;
+    $('mapCharacterFab')?.addEventListener('click',openCharacterSheet);
+    updateCharacterFab();
     $('clearSelection').onclick=()=>{state.selected=null;state.selectedMarker?.remove();state.selectedMarker=null;renderSelection();};
     $('mapCompass').onclick=toggleCompass;
     $('mobileOpenPanel').onclick=()=>openSheet('systems');
@@ -342,7 +344,7 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260920
   function exposeApi(){
     window.__afterlifeCampaignMap={
       map:state.map,campaign:state.campaign,role:state.role,user:state.session.user,
-      refresh:refreshAll,refreshMembers:refreshMembers,getSelfPosition:currentPoint,
+      refresh:refreshAll,refreshMembers:refreshMapCharacters,refreshCharacters:refreshMapCharacters,getSelfPosition:currentPoint,
       openLocation,centerTo
     };
     window.dispatchEvent(new CustomEvent('afterlife:map-ready',{detail:window.__afterlifeCampaignMap}));
@@ -363,30 +365,35 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260920
     if(isMaster()){jobs.push(['infection',refreshInfection],['hordes',refreshHordes]);}
     const results=await Promise.allSettled(jobs.map(x=>safeCall(x[0],x[1])));
     const failed=results.map((r,i)=>r.status==='rejected'?jobs[i][0]:null).filter(Boolean);
-    if(!isMaster()) await refreshPlayerPosition();
+    if(!isMaster() && !state.characters.find(x=>String(x.user_id)===String(state.session.user.id))) state.mapPosition=null;
     renderEverything();
     if(!isMaster()&&state.mapPosition) centerTo(state.mapPosition,Math.max(15,state.map.getZoom()));
     if(isMaster()){
-      const party=state.members.map(validMemberPoint).filter(Boolean), base=campaignCenter();
+      const party=state.characters.map(validCharacterPoint).filter(Boolean), base=campaignCenter();
       if(party.length) state.map.fitBounds([base,...party].map(p=>[p.lat,p.lng]),{padding:[90,90],maxZoom:10,animate:false});
     }
     if(failed.length){setStatus('Mapa carregado com falhas: '+failed.join(', ')+'.','error');report('map-refresh-partial',{failed});}
     else setStatus('Mundo pronto para a mesa.');
   }
 
-  async function refreshMembers(){
-    const r=await aeriom.rpc('list_campaign_map_members',{p_campaign_id:state.campaign.id});
+  async function refreshMapCharacters(){
+    const r=await aeriom.rpc('list_campaign_map_characters',{p_campaign_id:state.campaign.id});
     if(r.error) throw r.error;
-    state.members=Array.isArray(r.data)?r.data:[];
-    const me=state.members.find(x=>String(x.user_id)===String(state.session.user.id));
-    state.mapPosition=validMemberPoint(me);
+    state.characters=Array.isArray(r.data)?r.data:[];
+    const me=state.characters.find(x=>String(x.user_id)===String(state.session.user.id));
+    state.mapPosition=validCharacterPoint(me);
     renderMembers();
     renderPartyList();
-    $('partyCount').textContent=String(state.members.length);
+    $('partyCount').textContent=String(state.characters.length);
+    updateCharacterFab();
   }
 
-  function validMemberPoint(m){
-    const p=pt(m?.latitude,m?.longitude);
+  async function refreshMembers(){
+    return refreshMapCharacters();
+  }
+
+  function validCharacterPoint(ch){
+    const p=pt(ch?.latitude,ch?.longitude);
     if(p && !(Math.abs(p.lat)<0.00001 && Math.abs(p.lng)<0.00001)) return p;
     return null;
   }
@@ -421,21 +428,21 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260920
 
   function renderMembers(){
     state.layer.members.clearLayers();
-    const pts=state.members.map(m=>({m,p:validMemberPoint(m)})).filter(x=>x.p).slice(0,MAX_VISIBLE.members);
-    pts.forEach(({m,p})=>{
-      const me=String(m.user_id)===String(state.session.user.id), masterRow=m.role==='master';
-      const symbol=masterRow?'♛':initials(m.display_name);
-      const marker=L.marker([p.lat,p.lng],{icon:mapIcon(symbol,'member',m.display_name||'Sobrevivente'),zIndexOffset:me?500:masterRow?400:300}).addTo(state.layer.members);
-      marker.on('click',e=>{L.DomEvent.stopPropagation(e);openMember(m,p);});
-      marker.bindTooltip(markerLabel(m.display_name,m.role==='master'?'Mestre':'Sobrevivente'),{direction:'top',offset:[0,-17]});
+    const pts=state.characters.map(ch=>({ch,p:validCharacterPoint(ch)})).filter(x=>x.p).slice(0,MAX_VISIBLE.members);
+    pts.forEach(({ch,p})=>{
+      const me=String(ch.user_id)===String(state.session.user.id);
+      const symbol=initials(ch.name);
+      const marker=L.marker([p.lat,p.lng],{icon:mapIcon(symbol,'character',ch.name||'Sobrevivente'),zIndexOffset:me?520:420}).addTo(state.layer.members);
+      marker.on('click',e=>{L.DomEvent.stopPropagation(e);openCharacterMarker(ch,p);});
+      marker.bindTooltip(markerLabel(ch.name||'Sobrevivente',ch.class||'Sobrevivente'),{direction:'top',offset:[0,-18]});
     });
   }
 
-
-  function openMember(m,p){
-    const isMe=String(m?.user_id)===String(state.session.user.id);
-    openModal('SOBREVIVENTE','<div class="map-location-sheet"><div class="selected-location-hero"><div class="selected-location-icon">'+esc(initials(m?.display_name))+'</div><div><strong>'+esc(m?.display_name||'Sobrevivente')+'</strong><small>'+esc(m?.role==='master'?'MESTRE':'SOBREVIVENTE')+(isMe?' · VOCÊ':'')+'</small></div></div><div class="map-location-kpis"><div><span>POSIÇÃO</span><b>'+ (p?'ATIVA':'SEM POSIÇÃO') +'</b></div><div><span>DISTÂNCIA</span><b>'+ (p?km(distance(currentPoint(),p)):'—') +'</b></div><div><span>REALTIME</span><b>AO VIVO</b></div></div><div class="selection-actions"><button type="button" id="centerMember">CENTRALIZAR</button></div></div>');
-    $('centerMember').onclick=()=>{closeModal();centerTo(p,Math.max(15,state.map.getZoom()));};
+  function openCharacterMarker(ch,p){
+    const isMe=String(ch?.user_id)===String(state.session.user.id);
+    const body='<div class="map-location-sheet"><div class="selected-location-hero"><div class="selected-location-icon">'+esc(initials(ch?.name))+'</div><div><strong>'+esc(ch?.name||'Sobrevivente')+'</strong><small>'+esc(ch?.class||'Sobrevivente')+(ch?.race?' · '+esc(ch.race):'')+(isMe?' · VOCÊ':'')+'</small></div></div><div class="map-location-kpis"><div><span>POSIÇÃO</span><b>'+ (p?'ATIVA':'SEM POSIÇÃO') +'</b></div><div><span>DONO</span><b>PERSONAGEM</b></div><div><span>STATUS</span><b>'+esc(ch?.status||'completed')+'</b></div></div><div class="selection-actions"><button type="button" id="centerCharacter">CENTRALIZAR</button></div></div>';
+    openModal('PERSONAGEM',body);
+    $('centerCharacter').onclick=()=>{closeModal();centerTo(p,Math.max(15,state.map.getZoom()));};
   }
 
   function renderLocations(){
@@ -517,11 +524,11 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260920
 
   function renderPartyList(){
     const el=$('partyList'); if(!el)return;
-    el.innerHTML=state.members.map(m=>{
-      const me=String(m.user_id)===String(state.session.user.id),p=validMemberPoint(m);
-      return '<div class="party-row"><span class="party-avatar">'+esc(initials(m.display_name))+'<i></i></span><span><strong>'+esc(m.display_name||'Sobrevivente')+(me?' · você':'')+'</strong><small>'+esc(m.role==='master'?'MESTRE':'SOBREVIVENTE')+' · '+(p?'POSIÇÃO ATIVA':'SEM GPS')+'</small></span><b>'+ (p?'●':'—') +'</b></div>';
-    }).join('') || '<div class="selection-placeholder">Nenhum membro encontrado.</div>';
-    const vs=$('visionStatus'); if(vs)vs.textContent=state.mapPosition?'Posição sincronizada':'Posição ainda não definida';
+    el.innerHTML=state.characters.map(ch=>{
+      const me=String(ch.user_id)===String(state.session.user.id),p=validCharacterPoint(ch);
+      return '<div class="party-row"><span class="party-avatar">'+esc(initials(ch.name))+'<i></i></span><span><strong>'+esc(ch.name||'Sobrevivente')+(me?' · você':'')+'</strong><small>'+esc(ch.class||'Sobrevivente')+' · '+esc(ch.race||'Humano')+' · '+(p?'POSIÇÃO ATIVA':'SEM POSIÇÃO')+'</small></span><b>'+ (p?'●':'—') +'</b></div>';
+    }).join('') || '<div class="selection-placeholder">Nenhum personagem adicionado à campanha.</div>';
+    const vs=$('visionStatus'); if(vs)vs.textContent=state.mapPosition?'Posição do personagem sincronizada':'Adicione um personagem para ativar sua posição';
   }
 
   function renderSelection(){
@@ -732,6 +739,51 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260920
     }
     openModal(titleMap[kind]||'SISTEMA',html);
     $('mapModalBody').querySelectorAll('[data-modal-location]').forEach(b=>b.onclick=()=>{const l=state.locations.find(x=>x.id===b.dataset.modalLocation);if(l){closeModal();openLocation(l);}});
+  }
+
+  function updateCharacterFab(){
+    const btn=$('mapCharacterFab'), label=$('mapCharacterFabLabel');
+    if(!btn)return;
+    const mine=state.characters.find(x=>String(x.user_id)===String(state.session.user.id));
+    btn.classList.toggle('has-character',!!mine);
+    if(label)label.textContent=mine?(mine.name||'FICHA'):'ADICIONAR';
+    btn.setAttribute('aria-label',mine?'Abrir meu personagem':'Adicionar personagem');
+  }
+
+  async function loadAvailableCharacters(){
+    const r=await aeriom.from('characters')
+      .select('id,name,age,race,class,origin,status,hp_current,hp_max,defense,xp_total,updated_at')
+      .eq('user_id',state.session.user.id)
+      .eq('status','completed')
+      .is('campaign_id',null)
+      .order('updated_at',{ascending:false});
+    if(r.error)throw r.error;
+    return Array.isArray(r.data)?r.data:[];
+  }
+
+  async function openCharacterSheet(){
+    const mine=state.characters.find(x=>String(x.user_id)===String(state.session.user.id));
+    if(mine){
+      openModal('MEU PERSONAGEM',
+        '<div class="map-character-sheet"><div class="selected-location-hero"><div class="selected-location-icon">'+esc(initials(mine.name))+'</div><div><strong>'+esc(mine.name||'Sobrevivente')+'</strong><small>'+esc(mine.class||'Sobrevivente')+' · '+esc(mine.race||'Humano')+'</small></div></div>'+
+        '<div class="map-location-kpis"><div><span>HP</span><b>'+n(mine.hp_current)+' / '+n(mine.hp_max)+'</b></div><div><span>DEF</span><b>'+n(mine.defense,10)+'</b></div><div><span>XP</span><b>'+n(mine.xp_total)+'</b></div></div>'+
+        '<div class="selection-actions"><a class="map-character-action" href="./personagens.html">ABRIR FICHA</a><a class="map-character-action" href="./inventario.html?campaign='+encodeURIComponent(state.campaign.id)+'">INVENTÁRIO</a><a class="map-character-action" href="./diario.html?campaign='+encodeURIComponent(state.campaign.id)+'">DIÁRIO</a></div></div>');
+      return;
+    }
+    let available=[];
+    try{available=await loadAvailableCharacters();}catch(error){console.error('[AFTERLIFE][MAP][AVAILABLE-CHARACTERS]',error);toast(error?.message||'Não foi possível carregar suas fichas.','error');return;}
+    const rows=available.map(ch=>'<button type="button" class="map-character-choice" data-character-id="'+esc(ch.id)+'"><span class="selected-location-icon">'+esc(initials(ch.name))+'</span><span><strong>'+esc(ch.name||'Sobrevivente')+'</strong><small>'+esc(ch.class||'Sobrevivente')+' · '+esc(ch.race||'Humano')+'</small></span><b>ADICIONAR</b></button>').join('');
+    openModal('ADICIONAR PERSONAGEM',
+      '<div class="map-character-picker">'+(rows||'<div class="map-empty-state">Você não tem nenhuma ficha concluída disponível. Crie uma em Personagens.</div>')+
+      (available.length?'':'<div class="selection-actions"><a class="map-character-action" href="./personagens.html">CRIAR FICHA</a></div>')+'</div>');
+    document.querySelectorAll('[data-character-id]').forEach(btn=>btn.onclick=async()=>{
+      btn.disabled=true;btn.querySelector('b').textContent='ADICIONANDO…';
+      try{
+        const r=await aeriom.rpc('add_campaign_character',{p_campaign_id:state.campaign.id,p_character_id:btn.dataset.characterId});
+        if(r.error)throw r.error;
+        closeModal();await refreshMapCharacters();renderEverything();toast('Personagem adicionado à campanha.','success');
+      }catch(error){btn.disabled=false;btn.querySelector('b').textContent='ADICIONAR';toast(error?.message||'Não foi possível adicionar o personagem.','error');}
+    });
   }
 
   function buildMasterSheet(){if(!isMaster())return '<div class="map-empty-state">Controles do Mestre.</div>';return '<div class="sheet-section"><div class="sheet-section-title">FERRAMENTAS</div><div class="sheet-actions"><button type="button" data-sheet-mode="entity">✦ ELEMENTO</button><button type="button" data-sheet-mode="horde">☢ HORDA</button><button type="button" data-sheet-mode="territory">🏴 TERRITÓRIO</button><button type="button" data-sheet-mode="travel">➜ VIAGEM</button></div></div><div class="sheet-section"><div class="sheet-section-title">INFECÇÃO</div><div class="sheet-party">'+state.infection.slice(0,12).map(z=>'<button class="sheet-card" type="button" data-sheet-zone="'+esc(z.id)+'"><strong>'+esc(z.zone_name||'Zona')+'</strong><small>'+Math.round(n(z.infection_percent))+'% · '+esc(z.outbreak_stage||'active')+'</small></button>').join('')+'</div></div>';}
