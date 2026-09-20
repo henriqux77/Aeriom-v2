@@ -223,7 +223,7 @@ import './afterlife-sidebar.js?v=20260920-nav21';
       toggleCreate(false);
       await refresh();
     } catch (error) {
-      if (coverPath) await aeriom.storage.from(BUCKET).remove([coverPath]).catch(() => {});
+      if (coverPath) await aeriom.storage.from(BUCKET).remove([coverPath]).catch((cleanupError) => console.warn('[AFTERLIFE][CAMPAIGNS][CREATE-COVER-CLEANUP]', cleanupError));
       console.error('[AFTERLIFE][CAMPAIGNS][CREATE]', error);
       const message = String(error?.message || '').toLowerCase();
       if (message.includes('not_authenticated') || error?.code === '42501') {
@@ -249,7 +249,7 @@ import './afterlife-sidebar.js?v=20260920-nav21';
     const { error: deleteError } = await aeriom.from('campaigns').delete().eq('id', id).eq('created_by', user.id);
     if (deleteError) return setMessage(deleteError.message, 'error');
 
-    if (data?.cover_path) await aeriom.storage.from(BUCKET).remove([data.cover_path]).catch(() => {});
+    if (data?.cover_path) await aeriom.storage.from(BUCKET).remove([data.cover_path]).catch((cleanupError) => console.warn('[AFTERLIFE][CAMPAIGNS][DELETE-COVER-CLEANUP]', cleanupError));
     await refresh();
   }
 
