@@ -173,7 +173,7 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260920
   function validMemberPoint(m){
     const p=pt(m?.latitude,m?.longitude);
     if(p && !(Math.abs(p.lat)<0.00001 && Math.abs(p.lng)<0.00001)) return p;
-    return campaignCenter();
+    return null;
   }
 
   async function refreshPlayerPosition(){
@@ -260,7 +260,7 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260920
   function renderThreats(){
     state.layer.hordes.clearLayers();state.layer.infection.clearLayers();
     if(!isMaster()) return;
-    state.hordes.filter(h=>validMemberPoint(h)).slice(0,60).forEach(h=>{
+    state.hordes.slice(0,60).forEach(h=>{
       const p=pt(h.latitude,h.longitude);
       const c=L.circleMarker([p.lat,p.lng],{renderer:state.renderer,radius:9,color:'#0b0808',weight:2,fillColor:'#d85a54',fillOpacity:1}).addTo(state.layer.hordes);
       c.on('click',ev=>{L.DomEvent.stopPropagation(ev);openHordeEditor(h);});
