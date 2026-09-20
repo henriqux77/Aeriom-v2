@@ -24,7 +24,7 @@
 <div class="toolbar"><a id="backCampaign" href="./campanhas.html">← Campanhas</a><a id="backMap" href="./mapa-mundial.html">◇ Mapa</a></div>
 <div class="inventory-grid" id="inventoryGrid"><div class="empty">Carregando inventário…</div></div></section></main></div>
 <script type="module">
-import './js/error-monitor.js?v=20260920';import './js/afterlife-sidebar.js?v=20260920';
+import './js/error-monitor.js?v=20260920';import './js/afterlife-sidebar.js?v=20260920-nav21';
 import {aeriom,ensureAfterlifeSession} from './js/aeriom-client-v2.js?v=20260920';
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
 const grid=document.getElementById('inventoryGrid'),status=document.getElementById('inventoryStatus'),label=document.getElementById('campaignLabel'),qs=new URLSearchParams(location.search);
