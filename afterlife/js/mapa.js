@@ -162,7 +162,7 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260920
     renderEverything();
     if(!isMaster()&&state.mapPosition) centerTo(state.mapPosition,Math.max(15,state.map.getZoom()));
     if(isMaster()){
-      const party=state.members.map(validMemberPoint).filter(Boolean), base=center();
+      const party=state.members.map(validMemberPoint).filter(Boolean), base=campaignCenter();
       if(party.length) state.map.fitBounds([base,...party].map(p=>[p.lat,p.lng]),{padding:[90,90],maxZoom:10,animate:false});
     }
     if(failed.length){setStatus('Mapa carregado com falhas: '+failed.join(', ')+'.','error');report('map-refresh-partial',{failed});}
