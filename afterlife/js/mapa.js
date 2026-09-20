@@ -1,99 +1,548 @@
-import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260919-map3';
+import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260920-map20';
 
 (() => {
   'use strict';
+
+  const $ = (id) => document.getElementById(id);
   const qs = new URLSearchParams(location.search);
-  const $ = id => document.getElementById(id);
-  const esc = v => String(v ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
-  const num = (v,f=0)=>{const n=Number(v);return Number.isFinite(n)?n:f};
-  const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
-  const point=(lat,lng)=>Number.isFinite(Number(lat))&&Number.isFinite(Number(lng))?{lat:Number(lat),lng:Number(lng)}:null;
-  const hav=(a,b)=>{const R=6371000,r=Math.PI/180,p1=num(a.lat)*r,p2=num(b.lat)*r,dp=(num(b.lat)-num(a.lat))*r,dl=(num(b.lng)-num(a.lng))*r,x=Math.sin(dp/2)**2+Math.sin(dl/2)**2*Math.cos(p1)*Math.cos(p2);return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(Math.max(0,1-x)))};
-  const bearing=(a,b)=>{const r=Math.PI/180,p1=num(a.lat)*r,p2=num(b.lat)*r,dl=(num(b.lng)-num(a.lng))*r,y=Math.sin(dl)*Math.cos(p2),x=Math.cos(p1)*Math.sin(p2)-Math.sin(p1)*Math.cos(p2)*Math.cos(dl);return (Math.atan2(y,x)/r+360)%360};
-  const cardinal=d=>['N','NE','E','SE','S','SW','W','NW'][Math.round((((num(d)%360)+360)%360)/45)%8];
-  const fmtKm=m=>m<1000?Math.round(m)+' m':(m/1000).toFixed(m<10000?1:0)+' km';
-  const poiIcon=t=>({Hospital:'🏥',Clínica:'🩺',Médico:'⚕️',Farmácia:'💊','Posto de combustível':'⛽',Banco:'🏦','Caixa eletrônico':'💳',Delegacia:'🚓',Bombeiros:'🚒',Restaurante:'🍽️',Café:'☕','Fast food':'🍔','Bar / Pub':'🍺',Mercado:'🛒',Conveniência:'🛍️',Padaria:'🥖',Açougue:'🥩',Ferragens:'🔩',Eletrônicos:'📱',Informática:'💻',Oficina:'🔧',Bicicletas:'🚲','Artigos esportivos':'⚽',Livraria:'📚','Pet shop':'🐾',Shopping:'🏬','Loja de departamentos':'🏬','Loja de roupas':'👕','Calçados':'👟',Escola:'🏫',Universidade:'🎓',Biblioteca:'📚','Igreja / culto':'✚','Centro comunitário':'🤝',Abrigo:'🏠',Parque:'🌳',Jardim:'🌿',Parquinho:'🛝','Centro esportivo':'🏋️',Estádio:'🏟️',Piscina:'🏊',Academia:'💪',Hotel:'🏨',Hostel:'🛏️',Museu:'🏛️',Atração:'📍',Mirante:'🔭',Camping:'🏕️',Floresta:'🌲',Praia:'🏖️',Montanha:'⛰️',Água:'💧',Monumento:'🗿',Memorial:'🕯️',Ruínas:'🏚️','Castelo / ruínas':'🏰','Sítio arqueológico':'🏺'})[t]||'📍';
-  const poiType=tags=>{const a=String(tags.amenity||'').toLowerCase(),s=String(tags.shop||'').toLowerCase(),l=String(tags.leisure||'').toLowerCase(),t=String(tags.tourism||'').toLowerCase(),n=String(tags.natural||'').toLowerCase(),h=String(tags.historic||'').toLowerCase();const A={hospital:'Hospital',clinic:'Clínica',doctors:'Médico',dentist:'Dentista',pharmacy:'Farmácia',fuel:'Posto de combustível',bank:'Banco',atm:'Caixa eletrônico',police:'Delegacia',fire_station:'Bombeiros',restaurant:'Restaurante',cafe:'Café',fast_food:'Fast food',bar:'Bar / Pub',pub:'Bar / Pub',marketplace:'Mercado',school:'Escola',university:'Universidade',library:'Biblioteca',place_of_worship:'Igreja / culto',community_centre:'Centro comunitário',shelter:'Abrigo'},S={supermarket:'Mercado',convenience:'Conveniência',bakery:'Padaria',butcher:'Açougue',hardware:'Ferragens',electronics:'Eletrônicos',computer:'Informática',car_repair:'Oficina',bicycle:'Bicicletas',sports:'Artigos esportivos',books:'Livraria',pet:'Pet shop',mall:'Shopping',department_store:'Loja de departamentos',clothes:'Loja de roupas',shoes:'Calçados'},L={park:'Parque',garden:'Jardim',playground:'Parquinho',sports_centre:'Centro esportivo',stadium:'Estádio',swimming_pool:'Piscina',fitness_centre:'Academia'},T={hotel:'Hotel',hostel:'Hostel',museum:'Museu',attraction:'Atração',viewpoint:'Mirante',camp_site:'Camping'},N={forest:'Floresta',wood:'Floresta',beach:'Praia',peak:'Montanha',water:'Água'},H={monument:'Monumento',memorial:'Memorial',ruins:'Ruínas',castle:'Castelo / ruínas',archaeological_site:'Sítio arqueológico'};return A[a]||S[s]||L[l]||T[t]||N[n]||H[h]||(tags.craft?'Oficina':null)};
 
-  const state={map:null,campaign:null,session:null,role:'player',members:[],locations:[],entities:[],infection:[],hordes:[],factions:[],npcs:[],vehicles:[],stations:[],travels:[],positions:new Map(),mapPosition:null,geoloc:null,selected:null,poiCache:new Map(),realtime:[],compass:{active:false,bound:false,heading:0},editorMode:null,drawing:null,layers:{locations:L.layerGroup(),members:L.layerGroup(),entities:L.layerGroup(),pois:L.layerGroup(),infection:L.layerGroup(),hordes:L.layerGroup(),factions:L.layerGroup(),npcs:L.layerGroup(),vehicles:L.layerGroup(),stations:L.layerGroup(),route:L.layerGroup(),vision:L.layerGroup(),device:L.layerGroup()}};
-  const master=()=>state.role==='master';
-  const center=()=>point(state.campaign?.latitude,state.campaign?.longitude)||{lat:-14.235,lng:-51.925};
-  const current=()=>state.mapPosition||state.geoloc||center();
-  function status(t,type='info'){if($('mapStatus'))$('mapStatus').textContent=t;if($('mapLiveText'))$('mapLiveText').textContent=type==='error'?'ERRO':type==='loading'?'SINCRONIZANDO':'SINCRONIZADO'}
-  function toast(t,type='info'){status(t,type)}
-  function icon(emoji,kind='default'){return L.divIcon({className:'al-mini-wrap',html:'<div class="al-mini al-mini--'+esc(kind)+'">'+esc(emoji)+'</div>',iconSize:[34,34],iconAnchor:[17,17]})}
-  function entityEmoji(t){return ({house:'🏚️',commerce:'🏪',fuel:'⛽',hospital:'🏥',workshop:'🔧',factory:'🏭',police:'🚓',military:'🪖',school:'🏫',forest:'🌲',abandoned:'🏢',contaminated:'☢️',zombie:'🧟',horde:'🧟‍♂️',npc:'👤',survivors:'👥',faction:'🏴',shelter:'🏕️',vehicle:'🚙',barricade:'🚧',watchtower:'🗼',station:'⚒️',hazard:'☣️',custom:'✦'}[t]||'✦')}
-  function marker(emoji,label,kind='default'){return L.divIcon({className:'al-marker-wrap',html:'<div class="al-marker al-marker--'+esc(kind)+'"><span>'+esc(emoji)+'</span><b>'+esc(String(label||'').slice(0,18))+'</b></div>',iconSize:[104,40],iconAnchor:[52,40]})}
+  const state = {
+    session: null, campaign: null, role: 'player', map: null,
+    members: [], locations: [], entities: [], factions: [], npcs: [], vehicles: [], stations: [],
+    hordes: [], infection: [], travels: [], selected: null, mapPosition: null, devicePosition: null,
+    editorMode: null, drawing: null, realtime: [], poiCache: new Map(), poiTimer: null, refreshTimer: null,
+    renderer: null, selectedMarker: null, layer: {
+      locations: null, members: null, entities: null, hordes: null, infection: null,
+      factions: null, npcs: null, vehicles: null, stations: null, pois: null, vision: null, device: null, drawing: null
+    },
+    compass: { active: false, bound: false, heading: 0 },
+    sync: { ok: true }
+  };
 
-  async function boot(){try{state.session=await ensureAfterlifeSession();if(!state.session?.user){location.href='../index.html';return}const id=qs.get('campaign')||qs.get('id')||sessionStorage.getItem('afterlife_current_campaign_id');if(!id)throw Error('Campanha não informada.');const c=await aeriom.from('campaigns').select('id,created_by,name,description,country,tone,scale,latitude,longitude').eq('id',id).maybeSingle();if(c.error)throw c.error;if(!c.data)throw Error('Campanha não encontrada.');state.campaign=c.data;const m=await aeriom.rpc('list_campaign_members',{p_campaign_id:id});if(m.error)throw m.error;state.members=Array.isArray(m.data)?m.data:[];const me=state.members.find(x=>String(x.user_id)===state.session.user.id);if(!me)throw Error('Você não participa desta campanha.');state.role=me.role==='master'||state.campaign.created_by===state.session.user.id?'master':'player';setup();initMap();window.__afterlifeCampaignMap={map:state.map,campaign:state.campaign,role:state.role,user:state.session.user,refresh,refreshMembers:members,getSelfPosition:current};await refresh();subscribe();window.dispatchEvent(new CustomEvent('afterlife:map-ready',{detail:window.__afterlifeCampaignMap}));status('Mundo pronto para a mesa.')}catch(e){console.error('[AFTERLIFE][MAP]',e);status(e.message||'Falha ao carregar mapa.','error');openModal('MAPA INDISPONÍVEL','<div class="map-empty-state">'+esc(e.message||'Erro desconhecido')+'</div>')}}
-  function setup(){$('mapCampaignName').textContent=state.campaign.name||'Campanha';$('mapTitle').textContent=state.campaign.name||'Mapa da campanha';$('mapRoleBadge').textContent=master()?'MESTRE':'SOBREVIVENTE';$('mapRoleBadge').dataset.role=state.role;$('drawerTitle').textContent=master()?'Mapa + Controle do Mestre':'Mapa + Exploração';const b=$('mapBackCampaign');if(b)b.href='./campanha.html?campaign='+encodeURIComponent(state.campaign.id);$('mapOpenPanel').onclick=()=>drawer(true);$('mapClosePanel').onclick=()=>drawer(false);$('mapCenterCampaign').onclick=()=>go(center(),13);$('mapCenterMe').onclick=()=>go(current(),15);$('mapLocateDevice').onclick=locate;$('mapZoomIn').onclick=()=>state.map.zoomIn();$('mapZoomOut').onclick=()=>state.map.zoomOut();$('mapCompass').onclick=compass;document.querySelectorAll('[data-map-tab]').forEach(x=>x.onclick=()=>tab(x.dataset.mapTab));document.querySelectorAll('[data-open-tab]').forEach(x=>x.onclick=()=>tab(x.dataset.openTab));document.querySelectorAll('[data-open-systems]').forEach(x=>x.onclick=()=>tab('systems',x.dataset.openSystems));$('masterTab').hidden=!master();$('mapModalClose').onclick=closeModal;$('mapModalBackdrop').onclick=e=>{if(e.target===$('mapModalBackdrop'))closeModal()}}
-  function initMap(){const c=center();state.map=L.map('worldMap',{center:[c.lat,c.lng],zoom:5,minZoom:2,maxZoom:19,worldCopyJump:false,zoomControl:false,preferCanvas:true,zoomAnimation:false,fadeAnimation:false,markerZoomAnimation:false,inertia:true,easeLinearity:.18,wheelDebounceTime:80,wheelPxPerZoomLevel:120});L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{subdomains:['a','b','c'],maxZoom:19,noWrap:true,updateWhenZooming:false,updateWhenIdle:true,keepBuffer:1,crossOrigin:true,attribution:'&copy; OpenStreetMap contributors'}).addTo(state.map);Object.values(state.layers).forEach(x=>x.addTo(state.map));let moveTimer;state.map.on('moveend zoomend',()=>{readout();clearTimeout(moveTimer);moveTimer=setTimeout(()=>{if(state.map.getZoom()>=16)loadPois().catch(()=>{})},120)});state.map.on('click',mapClick);readout()}
-  function readout(){if(!state.map)return;const c=state.map.getCenter(),z=state.map.getZoom();if($('mapCoordinates'))$('mapCoordinates').textContent=c.lat.toFixed(6)+'°, '+c.lng.toFixed(6)+'°';if($('mapZoomLabel'))$('mapZoomLabel').textContent='Z'+z;if($('mapScaleLabel'))$('mapScaleLabel').textContent=z<7?'MUNDO':z<12?'REGIÃO':z<15?'CIDADE':'RUA'}
-  function drawer(open){$('mapDrawer').classList.toggle('is-open',open);$('mapDrawer').setAttribute('aria-hidden',String(!open));$('mapOpenPanel').setAttribute('aria-expanded',String(open))}
-  function go(p,z){if(p)state.map.setView([p.lat,p.lng],clamp(z,2,19),{animate:true})}
-  function tab(name,focus){document.querySelectorAll('[data-map-tab]').forEach(x=>x.classList.toggle('is-active',x.dataset.mapTab===name));document.querySelectorAll('[data-map-panel]').forEach(x=>x.classList.toggle('is-active',x.dataset.mapPanel===name));if(name==='explore'){renderLocationList();renderPoiList()}if(name==='systems')systems(focus);if(name==='master')masterPanel()}
-  function openModal(title,html){$('mapModalEyebrow').textContent=master()?'CONTROLE DA MESA':'AFTERLIFE · MAPA';$('mapModalTitle').textContent=title;$('mapModalBody').innerHTML=html;$('mapModalBackdrop').hidden=false}
-  function closeModal(){$('mapModalBackdrop').hidden=true}
+  const MAX_VISIBLE = { locations: 80, entities: 70, members: 30, npcs: 35, vehicles: 35, stations: 25, pois: 30 };
+  const VISION_M = 380;
 
-  async function refresh(){status('Sincronizando mundo…','loading');const jobs=[['membros',members],['locais',locations],['entidades',entities],['infecção',infection],['hordas',hordes],['facções',factions],['NPCs',npcs],['veículos',vehicles],['craft',stations],['viagens',travels]];const results=await Promise.allSettled(jobs.map(([,fn])=>fn()));const failed=results.map((r,i)=>r.status==='rejected'?jobs[i][0]:null).filter(Boolean);if(!master())await playerPosition();renderAll();systems();masterPanel();if(failed.length){status('Mapa carregado com falhas: '+failed.join(', ')+'.','error');console.warn('[AFTERLIFE][MAP][REFRESH][FAILED]',failed)}else status('Mundo pronto para a mesa.')}
-  async function members(){const r=await aeriom.rpc('list_campaign_map_members',{p_campaign_id:state.campaign.id});if(r.error)return;state.members=Array.isArray(r.data)?r.data:[];state.positions.clear();state.members.forEach(m=>{const p=point(m.latitude,m.longitude);if(p)state.positions.set(String(m.user_id),p);if(String(m.user_id)===state.session.user.id&&p)state.mapPosition=p});renderMembers()}
-  async function locations(){const r=master()?await aeriom.from('campaign_world_locations').select('*').eq('campaign_id',state.campaign.id).order('updated_at',{ascending:false}).limit(450):await aeriom.rpc('list_campaign_visible_world_locations',{p_campaign_id:state.campaign.id});if(r.error){console.warn('[AFTERLIFE][MAP][LOCATIONS]',r.error);state.locations=[];return}state.locations=Array.isArray(r.data)?r.data:[]}
-  async function entities(){try{const r=await aeriom.rpc('list_campaign_map_entities',{p_campaign_id:state.campaign.id});state.entities=r.error?[]:(Array.isArray(r.data)?r.data:[])}catch{state.entities=[]}}
-  async function infection(){if(!master()){state.infection=[];return}let r=await aeriom.rpc('list_campaign_infection_zones',{p_campaign_id:state.campaign.id});if(r.error||!Array.isArray(r.data)||!r.data.length)r=await aeriom.rpc('ensure_campaign_infection_zones',{p_campaign_id:state.campaign.id,p_city_name:state.campaign.name||'Cidade'});state.infection=r.error?[]:(Array.isArray(r.data)?r.data:[])}
-  async function hordes(){if(!master()){state.hordes=[];return}const r=await aeriom.from('campaign_hordes').select('*').eq('campaign_id',state.campaign.id).limit(180);state.hordes=r.error?[]:(r.data||[])}
-  async function listTable(t){try{const r=await aeriom.from(t).select('*').eq('campaign_id',state.campaign.id);return r.error?[]:(r.data||[])}catch{return[]}}
-  async function factions(){state.factions=await listTable('campaign_factions')}
-  async function npcs(){state.npcs=await listTable('campaign_npcs')}
-  async function vehicles(){state.vehicles=await listTable('campaign_vehicles')}
-  async function stations(){state.stations=await listTable('crafting_stations')}
-  async function travels(){const r=await aeriom.rpc('list_campaign_travels',{p_campaign_id:state.campaign.id,p_limit:12});state.travels=r.error?[]:(Array.isArray(r.data)?r.data:[])}
-  async function playerPosition(){try{const r=await aeriom.rpc('ensure_campaign_map_position',{p_campaign_id:state.campaign.id});if(r.error)throw r.error;const p=point(r.data?.latitude,r.data?.longitude);if(p){state.mapPosition=p;return}state.mapPosition=null;throw Error('Posição da campanha indisponível.')}catch(e){state.mapPosition=null;console.warn('[AFTERLIFE][MAP][POSITION]',e);return null}}
+  const esc = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+  const n = (v, f=0) => { const x=Number(v); return Number.isFinite(x) ? x : f; };
+  const pt = (lat,lng) => Number.isFinite(Number(lat)) && Number.isFinite(Number(lng)) ? {lat:Number(lat),lng:Number(lng)} : null;
+  const campaignCenter = () => pt(state.campaign?.latitude,state.campaign?.longitude) || {lat:-23.55,lng:-46.63};
+  const currentPoint = () => state.mapPosition || state.devicePosition || campaignCenter();
+  const meters = (a,b) => { const R=6371000,r=Math.PI/180,p1=n(a.lat)*r,p2=n(b.lat)*r,dp=(n(b.lat)-n(a.lat))*r,dl=(n(b.lng)-n(a.lng))*r,x=Math.sin(dp/2)**2+Math.sin(dl/2)**2*Math.cos(p1)*Math.cos(p2); return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(Math.max(0,1-x))); };
+  const km = m => n(m) < 1000 ? Math.round(n(m))+' m' : (n(m)/1000).toFixed(n(m)<10000?1:0)+' km';
+  const initials = s => String(s||'S').trim().charAt(0).toUpperCase() || 'S';
+  const isMaster = () => state.role === 'master';
+  const iconByCategory = c => ({hospital:'🏥',clinic:'🩺',pharmacy:'💊',fuel:'⛽',police:'🚓',restaurant:'🍽',cafe:'☕',supermarket:'🛒',marketplace:'🛒',hotel:'🏨',park:'🌳',forest:'🌲',school:'🏫',museum:'🏛',ruins:'🏚',monument:'🗿',station:'⚒',shelter:'⌂',commerce:'⌂'}[String(c||'').toLowerCase()] || '⌖');
 
-  function renderAll(){renderLocations();renderMembers();renderEntities();renderInfection();renderHordes();renderFactions();renderNpcs();renderStations();renderVehicles();renderVision();renderSelected();readout();stats()}
-  function renderLocations(){state.layers.locations.clearLayers();const bounds=state.map?.getBounds()?.pad(.12);const source=master()?state.locations:state.locations.filter(l=>l.discovered!==false||(state.mapPosition&&hav(state.mapPosition,{lat:num(l.latitude),lng:num(l.longitude)})<760));const list=source.map(l=>({l,p:point(l.latitude,l.longitude)})).filter(x=>x.p&&(!bounds||bounds.contains([x.p.lat,x.p.lng]))).slice(0,state.map.getZoom()<=7?45:state.map.getZoom()<=11?70:110);list.forEach(({l,p})=>{if(!p)return;const m=L.marker([p.lat,p.lng],{icon:icon(poiIcon(l.category||''),'location'),title:l.name}).addTo(state.layers.locations);m.on('click',e=>{L.DomEvent.stopPropagation(e);openLocation(l)})})}
-  function renderMembers(){state.layers.members.clearLayers();const bounds=state.map?.getBounds()?.pad(.12);state.members.forEach(m=>{const p=point(m.latitude,m.longitude);if(!p||(!bounds||bounds.contains([p.lat,p.lng])))return;const me=String(m.user_id)===state.session.user.id,isM=m.role==='master';L.marker([p.lat,p.lng],{icon:icon(isM?'♛':me?'◎':'●',isM?'master':me?'me':'player'),zIndexOffset:800}).addTo(state.layers.members).bindTooltip((m.display_name||'Sobrevivente')+(me?' · VOCÊ':''))});const list=$('mapMemberList');if(list)list.innerHTML=state.members.map(m=>'<div class="map-member-row"><span class="map-member-avatar">'+esc((m.display_name||'S').charAt(0).toUpperCase())+'</span><span><strong>'+esc(m.display_name||'Sobrevivente')+'</strong><small>'+esc(m.role==='master'?'MESTRE':'SOBREVIVENTE')+'</small></span></div>').join('')}
-  
-  function openEntity(e){if(!e)return;openModal('ELEMENTO DO MUNDO','<div class="entity-sheet"><div class="entity-badge">'+esc(entityEmoji(e.entity_type))+'</div><h3>'+esc(e.name||'Elemento')+'</h3><span>'+esc(e.entity_type||'world')+'</span><p>'+esc(e.description||'Sem descrição.')+'</p><div class="map-location-kpis"><div><span>ESTADO</span><b>'+esc(e.state?.status||'—')+'</b></div><div><span>PERIGO</span><b>'+esc(e.state?.danger||'—')+'</b></div></div>'+(master()&&e.id?'<button type="button" class="system-primary" data-edit-entity>EDITAR</button>':'')+'</div>');$('mapModalBody').querySelector('[data-edit-entity]')?.addEventListener('click',()=>openEntityEditor(e));}
-function renderEntities(){state.layers.entities.clearLayers();const bounds=state.map?.getBounds()?.pad(.12);state.entities.slice(0,state.map.getZoom()<=9?60:120).forEach(e=>{const g=e.geometry||{};let l;if(g.type==='polygon'&&Array.isArray(g.coordinates))l=L.polygon(g.coordinates,{color:'#d6b66c',fillColor:'#d6b66c',fillOpacity:.12});else if(g.type==='polyline'&&Array.isArray(g.coordinates))l=L.polyline(g.coordinates,{color:'#63f6a8',weight:5});else{const p=point(e.latitude,e.longitude);if(!p||(!bounds||bounds.contains([p.lat,p.lng])))return;l=L.marker([p.lat,p.lng],{icon:marker(entityEmoji(e.entity_type),e.name,e.entity_type),draggable:master()});if(master())l.on('dragend',ev=>moveEntity(e,ev.target.getLatLng()))}l.addTo(state.layers.entities).on('click',ev=>{L.DomEvent.stopPropagation(ev);openEntity(e)})})}
-  function renderInfection(){state.layers.infection.clearLayers();if(!master())return;state.infection.forEach(z=>{const p=point(z.latitude,z.longitude);if(!p)return;const n=num(z.infection_percent),c=n>80?'#ff5b63':n>60?'#ff9f43':n>40?'#ffc95c':'#63f6a8';L.circle([p.lat,p.lng],{radius:Math.max(120,num(z.radius_m,650)),color:c,fillColor:c,fillOpacity:.1,weight:2}).addTo(state.layers.infection).bindTooltip('☣ '+esc(z.zone_name||'Zona')+' · '+Math.round(n)+'%')})}
-  function renderHordes(){state.layers.hordes.clearLayers();if(!master())return;state.hordes.forEach(h=>{const p=point(h.latitude,h.longitude);if(!p)return;const m=L.marker([p.lat,p.lng],{icon:icon('☢','horde'),zIndexOffset:900}).addTo(state.layers.hordes);m.bindTooltip('🧟 '+esc(h.name||'Horda')+' · '+Math.round(num(h.size))+' zumbis · '+cardinal(num(h.direction_deg)))} )}
-  function renderFactions(){state.layers.factions.clearLayers();const bounds=state.map?.getBounds()?.pad(.08);state.factions.slice(0,24).forEach(f=>{const t=f.territory||{},c=t.coordinates||t.polygon;if(Array.isArray(c)&&c.length>=3)L.polygon(c,{color:'#d6b66c',fillColor:'#d6b66c',fillOpacity:.07,dashArray:'8 7'}).addTo(state.layers.factions)})}
-  function renderNpcs(){state.layers.npcs.clearLayers();const bounds=state.map?.getBounds()?.pad(.08);state.npcs.slice(0,60).forEach(n=>{const p=point(n.latitude,n.longitude);if(p&&(!bounds||bounds.contains([p.lat,p.lng])))L.marker([p.lat,p.lng],{icon:icon('👤','npc')}).addTo(state.layers.npcs)})}
-  function renderStations(){state.layers.stations.clearLayers();const bounds=state.map?.getBounds()?.pad(.08);state.stations.slice(0,40).forEach(s=>{const p=point(s.latitude,s.longitude);if(p&&(!bounds||bounds.contains([p.lat,p.lng])))L.marker([p.lat,p.lng],{icon:icon('⚒️','station')}).addTo(state.layers.stations)})}
-  function renderVehicles(){state.layers.vehicles.clearLayers();const bounds=state.map?.getBounds()?.pad(.08);state.vehicles.slice(0,40).forEach(v=>{const p=point(v.latitude,v.longitude);if(p&&(!bounds||bounds.contains([p.lat,p.lng])))L.marker([p.lat,p.lng],{icon:icon('🚙','vehicle')}).addTo(state.layers.vehicles)})}
-  function renderVision(){state.layers.vision.clearLayers();if(master()||!state.mapPosition)return;L.circle([state.mapPosition.lat,state.mapPosition.lng],{radius:380,color:'#63f6a8',fillColor:'#63f6a8',fillOpacity:.03,dashArray:'6 6'}).addTo(state.layers.vision)}
-  function stats(){if($('statMembers'))$('statMembers').textContent=state.members.length;if($('statLocations'))$('statLocations').textContent=state.locations.length;if($('statThreats'))$('statThreats').textContent=state.hordes.length}
+  function setStatus(message, type='ok') {
+    const el=$('mapStatus'); if(el){el.textContent=message;el.dataset.state=type;}
+    const live=$('mapLiveText'), wrap=live?.parentElement;
+    if(live) live.textContent=type==='error'?'ERRO DE SINCRONIA':type==='loading'?'SINCRONIZANDO':'AO VIVO';
+    if(wrap) wrap.dataset.state=type;
+    const dot=$('syncDot'); if(dot) dot.dataset.state=type;
+  }
+  function toast(message,type='ok'){setStatus(message,type);clearTimeout(state.refreshTimer);state.refreshTimer=setTimeout(()=>setStatus('Mundo pronto para a mesa.'),4200);}
+  function report(type, details){ try { window.AFTERLIFE_ERROR_MONITOR?.record(type, details || {}); } catch {} }
+  function safeCall(name, fn){ return Promise.resolve().then(fn).catch(err=>{ report('map-api-error',{name,message:err?.message||String(err),stack:err?.stack||''}); throw err; }); }
 
-    async function openLocation(l){state.selected=l;renderSelected();drawer(true);tab('explore');let areas=[];try{const r=await aeriom.rpc('list_campaign_visible_location_areas',{p_location_id:l.id});if(r.error)throw r.error;areas=Array.isArray(r.data)?r.data:[]}catch(e){toast(e?.message||'Não foi possível carregar as áreas.','error');}const cards=areas.length?areas.map(a=>'<article class="map-area-card"><strong>'+esc(a.name)+'</strong><small>'+esc(a.category||'Área')+' · '+esc(a.danger||'unknown')+(a.difficulty?' · CD '+a.difficulty:'')+'</small><p>'+esc(a.description||'Nenhuma descrição.')+'</p><div class="map-area-actions"><button type="button" data-area-action="observe" data-area="'+esc(a.id)+'">OBSERVAR</button><button type="button" data-area-action="search" data-area="'+esc(a.id)+'">VASCULHAR</button><button type="button" data-area-action="investigate" data-area="'+esc(a.id)+'">INVESTIGAR</button></div></article>').join(''):'<div class="map-empty-state">Nenhuma área disponível neste momento.</div>';openModal('FICHA DO LOCAL','<div class="map-location-sheet"><div class="map-location-kpis"><div><span>PERIGO</span><b>'+esc(l.danger||'unknown')+'</b></div><div><span>ESTADO</span><b>'+esc(l.state?.condition||'unknown')+'</b></div><div><span>SAQUE</span><b>'+num(l.state?.looted_percent)+'%</b></div></div><p class="map-location-address">'+esc(l.address||'Local registrado no mundo da campanha.')+'</p>'+(master()?'<div class="map-sheet-actions"><button type="button" data-edit-location>EDITAR LOCAL</button></div>':'')+'<div class="map-section-title">ÁREAS DO LOCAL</div><div class="map-area-list">'+cards+'</div><div id="mapActionResult" class="map-action-result"></div></div>');const body=$('mapModalBody');body.querySelectorAll('[data-area-action]').forEach(btn=>btn.onclick=()=>resolveAreaAction(btn.dataset.area,btn.dataset.areaAction));body.querySelector('[data-edit-location]')?.addEventListener('click',()=>openLocationEditor(l));}
-    function renderSelected(){const box=$('selectedLocationCard');if(!box)return;if(!state.selected){box.classList.add('is-empty');box.innerHTML='<div class="map-selected-icon">⌖</div><div><strong>Nenhum local selecionado</strong><small>Clique em um marcador para abrir a ficha.</small></div>';return}const l=state.selected;box.classList.remove('is-empty');box.innerHTML='<div class="map-selected-icon">'+esc(poiIcon(l.category||''))+'</div><div><strong>'+esc(l.name||'Local')+'</strong><small>'+esc(l.category||'Local')+' · '+fmtKm(hav(current(),{lat:num(l.latitude),lng:num(l.longitude)}))+'</small><div class="map-selected-actions"><button type="button" data-selected-open>FICHA</button><button type="button" data-selected-center>CENTRALIZAR</button></div></div>';box.querySelector('[data-selected-open]').onclick=()=>openLocation(l);box.querySelector('[data-selected-center]').onclick=()=>go(point(l.latitude,l.longitude),16)}
-  function renderLocationList(){const list=$('locationList');if(!list)return;const p=current(),source=master()?state.locations:state.locations.filter(l=>l.discovered===true);const rows=source.slice().sort((a,b)=>hav(p,{lat:num(a.latitude),lng:num(a.longitude)})-hav(p,{lat:num(b.latitude),lng:num(b.longitude)})).slice(0,20);list.innerHTML=rows.length?rows.map(l=>'<button class="map-list-row" type="button" data-loc="'+esc(l.id)+'"><span class="map-list-icon">'+esc(poiIcon(l.category||''))+'</span><span><strong>'+esc(l.name)+'</strong><small>'+esc(l.category||'Local')+' · '+fmtKm(hav(p,{lat:num(l.latitude),lng:num(l.longitude)}))+'</small></span><b>→</b></button>').join(''):'<div class="map-empty-state">Nenhum local salvo.</div>';list.querySelectorAll('[data-loc]').forEach(b=>b.onclick=()=>{const l=state.locations.find(x=>x.id===b.dataset.loc);if(l)openLocation(l)})}
-  function renderPoiList(){const list=$('poiList');if(!list)return;const p=visiblePois();list.innerHTML=p.slice(0,20).map(x=>'<button class="map-list-row" type="button" data-poi="'+esc(x.key)+'"><span class="map-list-icon">'+esc(poiIcon(x.type))+'</span><span><strong>'+esc(x.name)+'</strong><small>'+esc(x.type)+' · '+fmtKm(hav(current(),x))+'</small></span><b>+</b></button>').join('')||'<div class="map-empty-state">Aproxime até a rua para carregar locais.</div>';list.querySelectorAll('[data-poi]').forEach(b=>b.onclick=()=>{const x=visiblePois().find(v=>v.key===b.dataset.poi);if(x)openPoi(x)})}
-  function visiblePois(){let out=[];for(const x of state.poiCache.values())out.push(...x.items);const seen=new Set();return out.filter(x=>!seen.has(x.key)&&seen.add(x.key))}
-  function poiKey(){const c=state.map.getCenter();return c.lat.toFixed(3)+':'+c.lng.toFixed(3)+':'+Math.floor(state.map.getZoom())}
-  async function loadPois(){if(state.map.getZoom()<15){state.layers.pois.clearLayers();renderPoiList();return}const k=poiKey(),old=state.poiCache.get(k);if(old&&Date.now()-old.ts<300000){drawPois(old.items);return}const c=state.map.getCenter(),q='[out:json][timeout:7];(nwr(around:1000,'+c.lat+','+c.lng+')[name][amenity];nwr(around:1000,'+c.lat+','+c.lng+')[name][shop];nwr(around:1000,'+c.lat+','+c.lng+')[name][tourism];nwr(around:1000,'+c.lat+','+c.lng+')[name][craft];nwr(around:1000,'+c.lat+','+c.lng+')[name][historic];);out center tags;';let data=null;for(const ep of ['https://overpass-api.de/api/interpreter','https://overpass.kumi.systems/api/interpreter']){try{const ac=new AbortController(),tm=setTimeout(()=>ac.abort(),7000),r=await fetch(ep,{method:'POST',body:q,signal:ac.signal,headers:{'Content-Type':'text/plain;charset=UTF-8'}});clearTimeout(tm);if(r.ok){data=await r.json();break}}catch{}}if(!data)return;const items=(data.elements||[]).map(e=>{const tags=e.tags||{},type=poiType(tags);return{key:'osm:'+e.type+':'+e.id,name:tags.name||tags.brand||'Local sem nome',type,lat:num(e.lat??e.center?.lat),lng:num(e.lon??e.center?.lon),tags}}).filter(x=>x.lat&&x.lng&&x.type).slice(0,35);state.poiCache.set(k,{ts:Date.now(),items});drawPois(items)}
-  function drawPois(items){state.layers.pois.clearLayers();const bounds=state.map?.getBounds()?.pad(.03);items.slice(0,35).forEach(p=>{if(!bounds||bounds.contains([p.lat,p.lng]))L.marker([p.lat,p.lng],{icon:icon(poiIcon(p.type),'poi'),zIndexOffset:100}).addTo(state.layers.pois).on('click',e=>{L.DomEvent.stopPropagation(e);openPoi(p)})});renderPoiList()}
-  function openPoi(p){go(p,16);openModal('PONTO REAL','<div class="entity-sheet"><div class="entity-badge">'+esc(poiIcon(p.type))+'</div><h3>'+esc(p.name)+'</h3><span>'+esc(p.type)+'</span><p>Fonte: OpenStreetMap</p><div class="map-location-kpis"><div><span>DISTÂNCIA</span><b>'+fmtKm(hav(current(),p))+'</b></div><div><span>TIPO</span><b>'+esc(p.type)+'</b></div></div></div>')}
+  async function boot() {
+    try {
+      state.session=await ensureAfterlifeSession();
+      if(!state.session?.user){ location.href='../index.html'; return; }
+      const cid=qs.get('campaign')||qs.get('id')||sessionStorage.getItem('afterlife_current_campaign_id');
+      if(!cid) throw new Error('Campanha não informada.');
+      const c=await aeriom.from('campaigns').select('id,created_by,name,description,country,tone,scale,latitude,longitude').eq('id',cid).maybeSingle();
+      if(c.error) throw c.error;
+      if(!c.data) throw new Error('Campanha não encontrada.');
+      state.campaign=c.data;
+      await safeCall('ensure_campaign_map_positions',()=>aeriom.rpc('ensure_campaign_map_positions',{p_campaign_id:cid}));
+      const m=await aeriom.rpc('list_campaign_map_members',{p_campaign_id:cid});
+      if(m.error) throw m.error;
+      state.members=Array.isArray(m.data)?m.data:[];
+      const me=state.members.find(x=>String(x.user_id)===String(state.session.user.id));
+      if(!me) throw new Error('Você não participa desta campanha.');
+      state.role=me.role==='master'||String(state.campaign.created_by)===String(state.session.user.id)?'master':'player';
+      setupUi(); initMap(); exposeApi();
+      await refreshAll();
+      subscribeRealtime();
+      setStatus('Mundo pronto para a mesa.');
+    } catch(err) {
+      console.error('[AFTERLIFE][MAP][BOOT]',err);
+      report('map-boot-error',{message:err?.message||String(err),stack:err?.stack||''});
+      setStatus(err?.message||'Falha ao iniciar o mapa.','error');
+      openModal('MAPA INDISPONÍVEL','<div class="map-empty-state">'+esc(err?.message||'Não foi possível iniciar o mapa.')+'</div>');
+    }
+  }
 
-  function systems(focus){const h=$('systemsCards');if(!h)return;const w=focus||'world';h.innerHTML='<div class="systems-switch">'+['world','radar','travel','survival'].map(k=>'<button type="button" class="'+(k===w?'is-active':'')+'" data-sys="'+k+'">'+k.toUpperCase()+'</button>').join('')+'</div>'+(w==='radar'?radar():w==='survival'?'<div class="system-intro"><span>VISÃO</span><strong>'+fmtKm(380)+'</strong><small>O sobrevivente vê apenas a região próxima.</small></div>':w==='travel'?'<div class="system-intro"><span>VIAGENS</span><strong>'+state.travels.length+' registrada(s)</strong></div>':'<div class="system-intro"><span>MUNDO</span><strong>Facções, NPCs e infraestrutura.</strong></div>');h.querySelectorAll('[data-sys]').forEach(b=>b.onclick=()=>systems(b.dataset.sys))}
-  function radar(){if(!master())return '<div class="system-intro"><span>RADAR</span><strong>Controlado pelo Mestre.</strong></div>';return '<div class="system-intro"><span>☢ RADAR DE HORDAS</span><strong>'+state.hordes.length+' onda(s)</strong><small>Distância e direção calculadas a partir da posição atual.</small></div><div class="radar-list">'+state.hordes.map(h=>{const p=point(h.latitude,h.longitude)||center();return '<div class="radar-row"><span class="radar-signal"></span><span><strong>'+esc(h.name||'Horda')+'</strong><small>'+fmtKm(hav(current(),p))+' · '+cardinal(bearing(current(),p))+'</small></span><b>'+Math.round(num(h.size))+'</b></div>'}).join('')+'</div>'}
-  function masterPanel(){const h=$('masterPanel');if(!h)return;if(!master()){h.innerHTML='<div class="system-intro"><span>MAPA</span><strong>Visão de sobrevivente.</strong><small>O controle do mundo pertence ao Mestre.</small></div>';return}h.innerHTML='<div class="system-intro"><span>MESTRE · CONTROLE</span><strong>Editor do mundo vivo</strong><small>Infecção: '+state.infection.length+' · Hordas: '+state.hordes.length+' · Elementos: '+state.entities.length+'</small></div><div class="master-tools-grid"><button type="button" data-mode="entity"><span>✦</span><b>ELEMENTO</b></button><button type="button" data-mode="horde"><span>☢</span><b>HORDA</b></button><button type="button" data-mode="territory"><span>🏴</span><b>TERRITÓRIO</b></button><button type="button" data-mode="barricade"><span>🚧</span><b>BARRICADA</b></button><button type="button" data-mode="travel"><span>➜</span><b>VIAGEM</b></button></div><div class="master-tool-note" id="masterToolNote">Escolha uma ferramenta e depois clique no mapa.</div><div class="map-section-title">ZONAS DE INFECÇÃO</div><div class="master-zone-list">'+state.infection.slice(0,12).map(z=>'<button type="button" class="zone-row" data-zone="'+esc(z.id)+'"><span>☣</span><span><strong>'+esc(z.zone_name||'Zona')+'</strong><small>'+Math.round(num(z.infection_percent))+'%</small></span><b>→</b></button>').join('')+'</div>';h.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{state.editorMode=b.dataset.mode;if(b.dataset.mode==='territory'||b.dataset.mode==='barricade')state.map.doubleClickZoom.disable();const n=$('masterToolNote');if(n)n.textContent='Modo '+b.textContent.trim()+' ativo · clique no mapa. Duplo clique finaliza desenho.'});h.querySelectorAll('[data-zone]').forEach(b=>b.onclick=()=>{const z=state.infection.find(x=>x.id===b.dataset.zone);if(z)openInfectionEditor(z)})}
+  function setupUi(){
+    $('mapCampaignName').textContent=state.campaign.name||'Campanha';
+    $('mapTitle').textContent=state.campaign.name||'Mapa da campanha';
+    $('mapRoleBadge').textContent=isMaster()?'MESTRE':'SOBREVIVENTE';
+    $('mapBackCampaign').href='./campanha.html?campaign='+encodeURIComponent(state.campaign.id);
+    $('masterCard').setAttribute('aria-hidden',String(!isMaster()));
+    $('mobileMasterBtn').classList.toggle('is-hidden',!isMaster());
+    $('mapCenterCampaign').onclick=()=>centerTo(campaignCenter(),Math.max(state.map.getZoom(),13));
+    $('mapCenterMe').onclick=()=>centerTo(currentPoint(),Math.max(state.map.getZoom(),15));
+    $('mapFocusMe')?.addEventListener('click',()=>centerTo(currentPoint(),15));
+    $('mapLocateDevice').onclick=locateDevice;
+    $('clearSelection').onclick=()=>{state.selected=null;state.selectedMarker?.remove();state.selectedMarker=null;renderSelection();};
+    $('mapCompass').onclick=toggleCompass;
+    $('mobileOpenPanel').onclick=()=>openSheet('systems');
+    $('sheetClose').onclick=closeSheet;
+    document.querySelectorAll('[data-system-view]').forEach(b=>b.addEventListener('click',()=>openSheet(b.dataset.systemView)));
+    document.querySelectorAll('[data-mobile-panel]').forEach(b=>b.addEventListener('click',()=>openSheet(b.dataset.mobilePanel)));
+    $('mapModalClose').onclick=closeModal;
+    $('mapModalBackdrop').addEventListener('click',e=>{if(e.target===$('mapModalBackdrop'))closeModal();});
+  }
 
-  function mapClick(e){if(state.editorMode==='entity'){state.editorMode=null;return openEntityEditor(null,e.latlng)}if(state.editorMode==='horde'){state.editorMode=null;return openHordeEditor(null,e.latlng)}if(state.editorMode==='territory'||state.editorMode==='barricade'){return drawPoint(e.latlng)}if(state.editorMode==='travel'){state.editorMode=null;return openTravelCreator(e.latlng)}if($('mapCoordinates'))$('mapCoordinates').textContent=e.latlng.lat.toFixed(6)+'°, '+e.latlng.lng.toFixed(6)+'°'}
-  function resolveAreaAction(areaId,action){const out=$('mapActionResult');if(out)out.innerHTML='<div class="map-spinner">ROLANDO TESTE…</div>';return aeriom.rpc('resolve_location_area_action',{p_area_id:areaId,p_action_key:action}).then(async r=>{if(r.error)throw r.error;const d=r.data||{},loot=Array.isArray(d.loot)?d.loot:[];if(out)out.innerHTML='<div class="map-result-head"><span>'+esc(d.die||'D?')+' · '+num(d.natural_roll)+' + '+num(d.training_bonus)+' + '+num(d.modifier)+'</span><strong>'+esc(String(d.result||'RESULTADO').replaceAll('_',' ').toUpperCase())+'</strong></div><p>'+esc(d.consequence||'')+'</p>'+(d.discovery_text?'<div class="map-result-block"><span>DESCOBERTA</span><p>'+esc(d.discovery_text)+'</p></div>':'')+(d.revealed_information?'<div class="map-result-block"><span>INFORMAÇÃO</span><p>'+esc(d.revealed_information)+'</p></div>':'')+(loot.length?'<div class="map-result-block"><span>SAQUE</span><div class="map-loot-list">'+loot.map(x=>'<button type="button" data-loot="'+esc(x.id)+'"><span>◆</span><b>'+esc(x.item_name)+'</b><small>'+esc(x.item_category)+' · x'+num(x.quantity,1)+' · '+esc(x.rarity)+'</small></button>').join('')+'</div></div>':'');out?.querySelectorAll('[data-loot]').forEach(b=>b.onclick=async()=>{const x=await aeriom.rpc('claim_area_loot',{p_loot_id:b.dataset.loot});if(x.error){toast(x.error.message||'Falha ao coletar saque.','error');return}b.disabled=true;b.textContent='COLETADO'});if(d.discovered){const fresh=await aeriom.rpc('list_campaign_visible_world_locations',{p_campaign_id:state.campaign.id});if(!fresh.error){state.locations=Array.isArray(fresh.data)?fresh.data:[];renderLocations();renderLocationList();renderSelected()}}return d}).catch(e=>{if(out)out.innerHTML='<div class="map-result-error">'+esc(e?.message||'Não foi possível realizar o teste.')+'</div>';toast(e?.message||'Falha no teste.','error');throw e})}
-  function openLocationEditor(l){if(!master())return;openModal('EDITAR LOCAL','<form id="locEditForm" class="map-form"><label>CONDIÇÃO<input name="condition" value="'+esc(l.state?.condition||'unknown')+'"></label><label>PERIGO<input name="danger" value="'+esc(l.danger||'unknown')+'"></label><label>NOTA<textarea name="note" rows="4">'+esc(l.note||'')+'</textarea></label><footer><button type="button" data-close>Cancelar</button><button type="submit">SALVAR</button></footer></form>');const f=$('locEditForm');f.onsubmit=async e=>{e.preventDefault();const r=await aeriom.rpc('update_campaign_world_location',{p_id:l.id,p_condition:f.condition.value,p_resources:l.resources||{},p_danger:f.danger.value,p_note:f.note.value});if(r.error){toast(r.error.message||'Falha ao salvar local.','error');return}await locations();renderLocations();closeModal();toast('Local atualizado.','info')};f.querySelector('[data-close]').onclick=closeModal}
-  function openInfectionEditor(z){openModal('ZONA DE INFECÇÃO','<form id="infectionForm" class="map-form"><label>INFECÇÃO <output id="infOut">'+Math.round(num(z.infection_percent))+'%</output><input name="infection" type="range" min="0" max="100" value="'+num(z.infection_percent)+'"></label><label>DENSIDADE <output id="densOut">'+Math.round(num(z.zombie_density_percent))+'%</output><input name="density" type="range" min="0" max="100" value="'+num(z.zombie_density_percent)+'"></label><label>PROPAGAÇÃO<input name="spread" type="range" min="0" max="100" value="'+num(z.spread_rate)+'"></label><label>ESTÁGIO<select name="stage">'+['contained','active','severe','critical'].map(k=>'<option '+(z.outbreak_stage===k?'selected':'')+'>'+k+'</option>').join('')+'</select></label><footer><button type="button" data-close>Cancelar</button><button type="submit">SALVAR ZONA</button></footer></form>');const f=$('infectionForm');f.infection.oninput=()=>f.querySelector('#infOut').textContent=f.infection.value+'%';f.density.oninput=()=>f.querySelector('#densOut').textContent=f.density.value+'%';f.onsubmit=async e=>{e.preventDefault();const r=await aeriom.rpc('update_campaign_infection_zone',{p_id:z.id,p_infection:num(f.infection.value),p_zombie_density:num(f.density.value),p_spread_rate:num(f.spread.value),p_stage:f.stage.value});if(r.error){toast(r.error.message||'Falha ao salvar zona.','error');return}await infection();renderInfection();masterPanel();closeModal();toast('Zona atualizada.','info')};f.querySelector('[data-close]').onclick=closeModal}
-function drawPoint(p){if(!state.drawing)state.drawing={type:state.editorMode,points:[],layer:null};state.drawing.points.push([p.lat,p.lng]);if(!state.drawing.layer)state.drawing.layer=(state.editorMode==='territory'?L.polygon(state.drawing.points,{color:'#d6b66c',fillColor:'#d6b66c',fillOpacity:.08,weight:2,dashArray:'7 6'}):L.polyline(state.drawing.points,{color:'#63f6a8',weight:5,dashArray:'8 6'})).addTo(state.map);else state.drawing.layer.setLatLngs(state.drawing.points);toast(state.drawing.points.length+' ponto(s). Toque duas vezes para finalizar.','info');if(!state.drawBound){state.drawBound=true;state.map.on('dblclick',()=>finishDrawing())}}
-function finishDrawing(){if(!state.drawing)return;const d=state.drawing;state.drawing=null;d.layer?.remove();state.map?.doubleClickZoom.enable();state.editorMode=null;if((d.type==='territory'&&d.points.length>=3))return openTerritoryEditor(d.points);if(d.type==='barricade'&&d.points.length>=2)return openEntityEditor({entity_type:'barricade',name:'Barricada',geometry:{type:'polyline',coordinates:d.points}});toast('Desenho cancelado: pontos insuficientes.','error')}
-function openTerritoryEditor(points){const opts=state.factions.map(f=>'<option value="'+esc(f.id)+'">'+esc(f.name)+'</option>').join('');if(!opts){toast('Cadastre uma facção antes de desenhar um território.','error');return}openModal('TERRITÓRIO DE FACÇÃO','<form id="territoryForm" class="map-form"><label>FACÇÃO<select name="faction">'+opts+'</select></label><footer><button type="button" data-close>Cancelar</button><button type="submit">SALVAR TERRITÓRIO</button></footer></form>');const f=$('territoryForm');f.onsubmit=async e=>{e.preventDefault();const fac=state.factions.find(x=>x.id===f.faction.value);const r=await aeriom.rpc('update_campaign_faction',{p_id:fac.id,p_name:fac.name,p_description:fac.description||null,p_reputation_default:num(fac.reputation_default),p_resources:fac.resources||{},p_territory:{type:'polygon',coordinates:points}});if(r.error){toast(r.error.message||'Falha ao salvar território.','error');return}await factions();renderFactions();closeModal();toast('Território salvo.','info')};f.querySelector('[data-close]').onclick=closeModal}
-function openTravelCreator(destination){const origin=current();const d=point(destination?.lat,destination?.lng);if(!d)return;const participants=state.members.filter(m=>m.role!=='master');openModal('PLANEJAR VIAGEM','<form id="travelForm" class="map-form"><div class="travel-current"><span>ORIGEM</span><strong>'+origin.lat.toFixed(5)+'°, '+origin.lng.toFixed(5)+'°</strong><small>DESTINO · '+d.lat.toFixed(5)+'°, '+d.lng.toFixed(5)+'°</small></div><label>DESTINO<input name="name" required value="Destino no mapa"></label><div class="map-form-grid"><label>KM/H<input name="speed" type="number" min=".1" step=".1" value="5"></label><label>EXPOSIÇÃO/KM<input name="exposure" type="number" min="0" step=".1" value="0"></label></div><div class="map-section-title">PARTICIPANTES</div>'+(participants.length?participants.map(m=>'<label class="check-row"><input type="checkbox" name="participant" value="'+esc(m.user_id)+'"> '+esc(m.display_name||'Sobrevivente')+'</label>').join(''):'<div class="map-empty-state">Nenhum sobrevivente disponível.</div>')+'<footer><button type="button" data-close>Cancelar</button><button type="submit">CRIAR VIAGEM</button></footer></form>');const f=$('travelForm');f.onsubmit=async e=>{e.preventDefault();const ids=[...f.querySelectorAll('[name="participant"]:checked')].map(x=>x.value);if(!ids.length)return toast('Selecione ao menos um sobrevivente.','error');const dist=hav(origin,d);const r=await aeriom.rpc('create_campaign_travel',{p_campaign_id:state.campaign.id,p_origin_latitude:origin.lat,p_origin_longitude:origin.lng,p_destination_latitude:d.lat,p_destination_longitude:d.lng,p_destination_location_id:null,p_destination_name:f.name.value.trim(),p_route:{provider:'straight',geometry:{coordinates:[[origin.lng,origin.lat],[d.lng,d.lat]]}},p_distance_m:dist,p_speed_kmh:num(f.speed.value,5),p_fuel_per_km:0,p_energy_per_km:0,p_exposure_per_km:num(f.exposure.value),p_participant_user_ids:ids});if(r.error){toast(r.error.message||'Falha ao criar viagem.','error');return}await travels();closeModal();toast('Viagem planejada.','info')};f.querySelector('[data-close]').onclick=closeModal}
-function openEntityEditor(entity,p){openModal('NOVO ELEMENTO','<form id="mapEntityForm" class="map-form"><label>TIPO<select name="type"><option value="commerce">🏪 Comércio</option><option value="hospital">🏥 Hospital</option><option value="fuel">⛽ Posto</option><option value="shelter">🏕️ Abrigo</option><option value="barricade">🚧 Barricada</option><option value="custom">✦ Outro</option></select></label><label>NOME<input name="name" required value="'+esc(entity?.name||'Elemento')+'"></label><label>DESCRIÇÃO<textarea name="description"></textarea></label><input type="hidden" name="lat" value="'+(p?.lat??entity?.latitude??'')+'"><input type="hidden" name="lng" value="'+(p?.lng??entity?.longitude??'')+'"><footer><button type="button" data-close>Cancelar</button><button type="submit">SALVAR</button></footer></form>');const f=$('mapEntityForm');f.onsubmit=async e=>{e.preventDefault();const r=await aeriom.rpc('create_campaign_map_entity',{p_campaign_id:state.campaign.id,p_entity_type:f.type.value,p_name:f.name.value.trim(),p_description:f.description.value.trim()||null,p_latitude:num(f.lat.value),p_longitude:num(f.lng.value),p_geometry:null,p_state:{},p_metadata:{}});if(r.error)return toast(r.error.message,'error');await entities();renderEntities();closeModal();toast('Elemento salvo.')}}
-  function openHordeEditor(h,p){openModal('NOVA HORDA','<form id="hordeForm" class="map-form"><input type="hidden" name="lat" value="'+(p?.lat??'')+'"><input type="hidden" name="lng" value="'+(p?.lng??'')+'"><label>NOME<input name="name" value="Horda detectada"></label><label>ZUMBIS<input name="size" type="number" min="1" value="30"></label><footer><button type="button" data-close>Cancelar</button><button type="submit">CRIAR HORDA</button></footer></form>');const f=$('hordeForm');f.onsubmit=async e=>{e.preventDefault();const r=await aeriom.rpc('create_campaign_horde',{p_campaign_id:state.campaign.id,p_latitude:num(f.lat.value),p_longitude:num(f.lng.value),p_size:num(f.size.value),p_speed_kmh:10,p_direction_deg:0,p_source_zone_id:null});if(r.error)return toast(r.error.message,'error');await hordes();renderHordes();closeModal();toast('Horda criada.')}}
-  function locate(){if(!navigator.geolocation)return toast('GPS indisponível.','error');navigator.geolocation.getCurrentPosition(async p=>{state.geoloc={lat:p.coords.latitude,lng:p.coords.longitude};state.layers.device.clearLayers();L.marker([state.geoloc.lat,state.geoloc.lng],{icon:icon('◎','gps')}).addTo(state.layers.device);go(state.geoloc,16);if(!master()){try{await aeriom.from('campaign_map_positions').upsert({campaign_id:state.campaign.id,user_id:state.session.user.id,latitude:state.geoloc.lat,longitude:state.geoloc.lng,updated_at:new Date().toISOString()},{onConflict:'campaign_id,user_id'});state.mapPosition=state.geoloc;renderVision()}catch{}}},()=>toast('Não foi possível obter o GPS.','error'),{enableHighAccuracy:true,timeout:9000,maximumAge:15000})}
-  async function compass(){try{if(typeof DeviceOrientationEvent!=='undefined'&&typeof DeviceOrientationEvent.requestPermission==='function'){if(await DeviceOrientationEvent.requestPermission()!=='granted')return toast('Permissão da bússola recusada.','error')}if(!state.compass.bound){state.compass.bound=true;addEventListener('deviceorientationabsolute',orient,true);addEventListener('deviceorientation',orient,true)}state.compass.active=!state.compass.active;$('mapCompass').classList.toggle('is-active',state.compass.active)}catch{toast('Bússola indisponível.','error')}}
-  function orient(e){if(!state.compass.active)return;const h=Number.isFinite(e.webkitCompassHeading)?e.webkitCompassHeading:Number.isFinite(e.alpha)?360-e.alpha:null;if(h!=null){state.compass.heading=(h+360)%360;$('mapCompass').textContent=cardinal(state.compass.heading)}}
-  function moveEntity(e,p){return aeriom.rpc('update_campaign_map_entity',{p_entity_id:e.id,p_name:e.name,p_description:e.description||null,p_latitude:p.lat,p_longitude:p.lng,p_geometry:e.geometry||null,p_state:e.state||{},p_metadata:e.metadata||{}}).then(()=>entities().then(renderEntities))}
-  function subscribe(){const cid=state.campaign.id;const handlers={campaign_map_positions:async()=>{await members();renderMembers()},campaign_world_locations:async()=>{await locations();renderLocations();renderLocationList()},campaign_map_entities:async()=>{await entities();renderEntities();masterPanel()},campaign_hordes:async()=>{await hordes();renderHordes();systems('radar')},campaign_infection_zones:async()=>{await infection();renderInfection();masterPanel()},campaign_factions:async()=>{await factions();renderFactions();systems('world')},campaign_npcs:async()=>{await npcs();renderNpcs()},crafting_stations:async()=>{await stations();renderStations()},campaign_vehicles:async()=>{await vehicles();renderVehicles()},campaign_travels:async()=>{await travels()}};Object.entries(handlers).forEach(([table,handler])=>{const ch=aeriom.channel('afterlife-map-'+table+'-'+cid);ch.on('postgres_changes',{event:'*',schema:'public',table,filter:'campaign_id=eq.'+cid},()=>{clearTimeout(ch.__timer);ch.__timer=setTimeout(()=>handler().catch(e=>console.warn('[AFTERLIFE][MAP][REALTIME]',table,e)),220)}).subscribe((s)=>{if(s==='CHANNEL_ERROR'||s==='TIMED_OUT'||s==='CLOSED')console.warn('[AFTERLIFE][MAP][REALTIME][STATE]',table,s)});state.realtime.push(ch)})}
+  function initMap(){
+    const c=campaignCenter();
+    const canvas=L.canvas({padding:.4});
+    state.renderer=canvas;
+    state.map=L.map('worldMap',{
+      center:[c.lat,c.lng], zoom:5, minZoom:2, maxZoom:19,
+      zoomControl:false, preferCanvas:true, worldCopyJump:false,
+      zoomAnimation:false, fadeAnimation:false, markerZoomAnimation:false,
+      inertia:true, wheelDebounceTime:90, wheelPxPerZoomLevel:120,
+      renderer:canvas, tap:true
+    });
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+      subdomains:['a','b','c'],maxZoom:19,noWrap:true,updateWhenZooming:false,
+      updateWhenIdle:true,keepBuffer:1,attribution:'&copy; OpenStreetMap contributors'
+    }).addTo(state.map);
+    state.layer.locations=L.layerGroup().addTo(state.map);
+    state.layer.members=L.layerGroup().addTo(state.map);
+    state.layer.entities=L.layerGroup().addTo(state.map);
+    state.layer.hordes=L.layerGroup().addTo(state.map);
+    state.layer.infection=L.layerGroup().addTo(state.map);
+    state.layer.factions=L.layerGroup().addTo(state.map);
+    state.layer.npcs=L.layerGroup().addTo(state.map);
+    state.layer.vehicles=L.layerGroup().addTo(state.map);
+    state.layer.stations=L.layerGroup().addTo(state.map);
+    state.layer.pois=L.layerGroup().addTo(state.map);
+    state.layer.vision=L.layerGroup().addTo(state.map);
+    state.layer.device=L.layerGroup().addTo(state.map);
+    state.map.on('moveend zoomend',scheduleViewport);
+    state.map.on('click',onMapClick);
+    state.map.on('mousemove',e=>setCoordinates(e.latlng));
+    updateReadout();
+  }
 
-  window.__afterlifeCampaignMap={map:state.map,campaign:state.campaign,role:state.role,user:state.session?.user||null,refresh,refreshMembers:members,getSelfPosition:current};
+  function exposeApi(){
+    window.__afterlifeCampaignMap={
+      map:state.map,campaign:state.campaign,role:state.role,user:state.session.user,
+      refresh:refreshAll,refreshMembers:refreshMembers,getSelfPosition:currentPoint,
+      openLocation,centerTo
+    };
+    window.dispatchEvent(new CustomEvent('afterlife:map-ready',{detail:window.__afterlifeCampaignMap}));
+  }
+
+  async function refreshAll(){
+    setStatus('Sincronizando mundo…','loading');
+    const jobs=[
+      ['members',refreshMembers],
+      ['locations',refreshLocations],
+      ['entities',refreshEntities],
+      ['factions',refreshFactions],
+      ['npcs',refreshNpcs],
+      ['vehicles',refreshVehicles],
+      ['stations',refreshStations],
+      ['travels',refreshTravels]
+    ];
+    if(isMaster()){jobs.push(['infection',refreshInfection],['hordes',refreshHordes]);}
+    const results=await Promise.allSettled(jobs.map(x=>safeCall(x[0],x[1])));
+    const failed=results.map((r,i)=>r.status==='rejected'?jobs[i][0]:null).filter(Boolean);
+    await refreshMembers();
+    if(!isMaster()) await refreshPlayerPosition();
+    renderEverything();
+    if(failed.length){setStatus('Mapa carregado com falhas: '+failed.join(', ')+'.','error');report('map-refresh-partial',{failed});}
+    else setStatus('Mundo pronto para a mesa.');
+  }
+
+  async function refreshMembers(){
+    const r=await aeriom.rpc('list_campaign_map_members',{p_campaign_id:state.campaign.id});
+    if(r.error) throw r.error;
+    state.members=Array.isArray(r.data)?r.data:[];
+    const me=state.members.find(x=>String(x.user_id)===String(state.session.user.id));
+    state.mapPosition=validMemberPoint(me);
+    renderMembers();
+    renderPartyList();
+    $('partyCount').textContent=String(state.members.length);
+  }
+
+  function validMemberPoint(m){
+    const p=pt(m?.latitude,m?.longitude);
+    if(!p || (Math.abs(p.lat)<0.00001 && Math.abs(p.lng)<0.00001)) return null;
+    return p;
+  }
+
+  async function refreshPlayerPosition(){
+    const r=await aeriom.rpc('ensure_campaign_map_position',{p_campaign_id:state.campaign.id});
+    if(r.error){ state.mapPosition=null; report('map-position-error',{message:r.error.message}); return null; }
+    state.mapPosition=pt(r.data?.latitude,r.data?.longitude);
+    if(state.mapPosition && (Math.abs(state.mapPosition.lat)<.00001 && Math.abs(state.mapPosition.lng)<.00001)) state.mapPosition=null;
+    return state.mapPosition;
+  }
+
+  async function refreshLocations(){
+    const r=isMaster()
+      ? await aeriom.from('campaign_world_locations').select('*').eq('campaign_id',state.campaign.id).order('updated_at',{ascending:false}).limit(450)
+      : await aeriom.rpc('list_campaign_visible_world_locations',{p_campaign_id:state.campaign.id});
+    if(r.error) throw r.error;
+    state.locations=Array.isArray(r.data)?r.data:[];
+  }
+
+  async function refreshEntities(){const r=await aeriom.rpc('list_campaign_map_entities',{p_campaign_id:state.campaign.id});if(r.error)throw r.error;state.entities=Array.isArray(r.data)?r.data:[];}
+  async function refreshFactions(){const r=await aeriom.from('campaign_factions').select('*').eq('campaign_id',state.campaign.id).limit(120);if(r.error)throw r.error;state.factions=r.data||[];}
+  async function refreshNpcs(){const r=await aeriom.from('campaign_npcs').select('*').eq('campaign_id',state.campaign.id).limit(100);if(r.error)throw r.error;state.npcs=r.data||[];}
+  async function refreshVehicles(){const r=await aeriom.from('campaign_vehicles').select('*').eq('campaign_id',state.campaign.id).limit(80);if(r.error)throw r.error;state.vehicles=r.data||[];}
+  async function refreshStations(){const r=await aeriom.from('crafting_stations').select('*').eq('campaign_id',state.campaign.id).limit(80);if(r.error)throw r.error;state.stations=r.data||[];}
+  async function refreshHordes(){const r=await aeriom.from('campaign_hordes').select('*').eq('campaign_id',state.campaign.id).limit(120);if(r.error)throw r.error;state.hordes=r.data||[];}
+  async function refreshInfection(){const r=await aeriom.rpc('list_campaign_infection_zones',{p_campaign_id:state.campaign.id});if(r.error)throw r.error;state.infection=Array.isArray(r.data)?r.data:[];}
+  async function refreshTravels(){const r=await aeriom.rpc('list_campaign_travels',{p_campaign_id:state.campaign.id,p_limit:12});if(r.error)throw r.error;state.travels=Array.isArray(r.data)?r.data:[];$('statTravels').textContent=String(state.travels.length);}
+
+  function renderEverything(){renderMembers();renderLocations();renderEntities();renderFactions();renderNpcs();renderVehicles();renderStations();renderThreats();renderVision();renderSelection();renderStats();renderMasterTools();updateReadout();}
+  function inView(p,pad=.08){const b=state.map?.getBounds()?.pad(pad);return !b||b.contains([p.lat,p.lng]);}
+
+  function renderMembers(){
+    state.layer.members.clearLayers();
+    const pts=state.members.map(m=>({m,p:validMemberPoint(m)})).filter(x=>x.p && inView(x.p,.12)).slice(0,MAX_VISIBLE.members);
+    pts.forEach(({m,p})=>{
+      const me=String(m.user_id)===String(state.session.user.id), masterRow=m.role==='master';
+      const circle=L.circleMarker([p.lat,p.lng],{
+        renderer:state.renderer,radius:me?8:7,
+        color:masterRow?'#f0cf84':me?'#7fe7a7':'#c7c0b4',
+        fillColor:masterRow?'#f0cf84':me?'#7fe7a7':'#c7c0b4',
+        fillOpacity:1,weight:2
+      }).addTo(state.layer.members);
+      circle.bindTooltip((m.display_name||'Sobrevivente')+(me?' · VOCÊ':''),{direction:'top'});
+      circle.on('click',()=>centerTo(p,Math.max(15,state.map.getZoom())));
+    });
+  }
+
+  function renderLocations(){
+    state.layer.locations.clearLayers();
+    const bounds=state.map?.getBounds()?.pad(.1);
+    const visible=state.locations.filter(l=>{
+      const p=pt(l.latitude,l.longitude);
+      if(!p||!inView(p,.1)) return false;
+      if(isMaster()) return true;
+      return l.discovered===true;
+    }).slice(0,state.map.getZoom()<=7?45:state.map.getZoom()<=11?65:MAX_VISIBLE.locations);
+    visible.forEach(l=>{
+      const p=pt(l.latitude,l.longitude); if(!p)return;
+      const c=L.circleMarker([p.lat,p.lng],{renderer:state.renderer,radius:7,color:'#090908',weight:2,fillColor:'#d5b46c',fillOpacity:.95}).addTo(state.layer.locations);
+      c.bindTooltip(esc(l.name||'Local'),{direction:'top'});
+      c.on('click',()=>openLocation(l));
+    });
+  }
+
+  function renderEntities(){
+    state.layer.entities.clearLayers();
+    const zoom=state.map.getZoom();
+    state.entities.slice(0,zoom<9?45:MAX_VISIBLE.entities).forEach(e=>{
+      const g=e.geometry||{};
+      if(g.type==='polygon'&&Array.isArray(g.coordinates)){L.polygon(g.coordinates,{renderer:state.renderer,color:'#d5b46c',weight:1,fillColor:'#d5b46c',fillOpacity:.06,dashArray:'6 6'}).addTo(state.layer.entities);return;}
+      if(g.type==='polyline'&&Array.isArray(g.coordinates)){L.polyline(g.coordinates,{renderer:state.renderer,color:'#7fe7a7',weight:3,opacity:.7}).addTo(state.layer.entities);return;}
+      const p=pt(e.latitude,e.longitude);if(!p||!inView(p,.1))return;
+      const c=L.circleMarker([p.lat,p.lng],{renderer:state.renderer,radius:6,color:'#0b0b0a',weight:2,fillColor:entityColor(e.entity_type),fillOpacity:.95}).addTo(state.layer.entities);
+      c.bindTooltip((e.name||'Elemento')+' · '+(e.entity_type||'mundo'),{direction:'top'});
+      c.on('click',()=>openEntity(e));
+    });
+  }
+
+  function entityColor(t){return ({hospital:'#dbe6db',shelter:'#d5b46c',commerce:'#a9b5a5',fuel:'#d5b46c',barricade:'#b5aaa0',hazard:'#d85a54',military:'#89958c',custom:'#c7c0b4',station:'#d5b46c',vehicle:'#9ba59d'}[t]||'#b0aa9e');}
+
+  function renderThreats(){
+    state.layer.hordes.clearLayers();state.layer.infection.clearLayers();
+    if(!isMaster()) return;
+    state.hordes.filter(h=>validMemberPoint(h)).slice(0,60).forEach(h=>{
+      const p=pt(h.latitude,h.longitude);
+      const c=L.circleMarker([p.lat,p.lng],{renderer:state.renderer,radius:9,color:'#0b0808',weight:2,fillColor:'#d85a54',fillOpacity:1}).addTo(state.layer.hordes);
+      c.bindTooltip('☢ '+(h.name||'Horda')+' · '+Math.round(n(h.size))+' zumbis',{direction:'top'});
+      c.on('click',()=>openHordeEditor(h));
+    });
+    state.infection.slice(0,25).forEach(z=>{
+      const p=pt(z.latitude,z.longitude);if(!p)return;
+      const pct=n(z.infection_percent);
+      const col=pct>=80?'#d85a54':pct>=60?'#c08c5a':'#d5b46c';
+      L.circle([p.lat,p.lng],{renderer:state.renderer,radius:Math.max(150,n(z.radius_m,650)),color:col,weight:1,opacity:.65,fillColor:col,fillOpacity:.055}).addTo(state.layer.infection);
+    });
+  }
+
+  function renderFactions(){
+    state.layer.factions.clearLayers();
+    if(state.map.getZoom()<5) return;
+    state.factions.slice(0,24).forEach(f=>{
+      const g=f.territory||{},coords=g.coordinates||g.polygon;
+      if(Array.isArray(coords)&&coords.length>=3)L.polygon(coords,{renderer:state.renderer,color:'#d5b46c',weight:1,fillColor:'#d5b46c',fillOpacity:.035,dashArray:'8 8'}).addTo(state.layer.factions);
+    });
+  }
+  function renderNpcs(){state.layer.npcs.clearLayers();state.npcs.filter(x=>inView(pt(x.latitude,x.longitude)||campaignCenter(),.08)).slice(0,35).forEach(x=>{const p=pt(x.latitude,x.longitude);if(p)L.circleMarker([p.lat,p.lng],{renderer:state.renderer,radius:5,color:'#0a0a09',weight:2,fillColor:'#b6aea1',fillOpacity:.95}).addTo(state.layer.npcs).bindTooltip('👤 '+(x.name||'NPC'))})}
+  function renderVehicles(){state.layer.vehicles.clearLayers();state.vehicles.filter(x=>inView(pt(x.latitude,x.longitude)||campaignCenter(),.08)).slice(0,35).forEach(x=>{const p=pt(x.latitude,x.longitude);if(p)L.circleMarker([p.lat,p.lng],{renderer:state.renderer,radius:5,color:'#0a0a09',weight:2,fillColor:'#9ba59d',fillOpacity:.95}).addTo(state.layer.vehicles).bindTooltip('🚙 '+(x.name||'Veículo'))})}
+  function renderStations(){state.layer.stations.clearLayers();state.stations.filter(x=>inView(pt(x.latitude,x.longitude)||campaignCenter(),.08)).slice(0,25).forEach(x=>{const p=pt(x.latitude,x.longitude);if(p)L.circleMarker([p.lat,p.lng],{renderer:state.renderer,radius:5,color:'#0a0a09',weight:2,fillColor:'#d5b46c',fillOpacity:.95}).addTo(state.layer.stations).bindTooltip('⚒ '+(x.name||'Estação'))})}
+
+  function renderVision(){
+    state.layer.vision.clearLayers();
+    if(isMaster()||!state.mapPosition)return;
+    L.circle([state.mapPosition.lat,state.mapPosition.lng],{renderer:state.renderer,radius:VISION_M,color:'#7fe7a7',weight:1,dashArray:'5 6',fillColor:'#7fe7a7',fillOpacity:.025}).addTo(state.layer.vision);
+  }
+
+  function renderPartyList(){
+    const el=$('partyList'); if(!el)return;
+    el.innerHTML=state.members.map(m=>{
+      const me=String(m.user_id)===String(state.session.user.id),p=validMemberPoint(m);
+      return '<div class="party-row"><span class="party-avatar">'+esc(initials(m.display_name))+'<i></i></span><span><strong>'+esc(m.display_name||'Sobrevivente')+(me?' · você':'')+'</strong><small>'+esc(m.role==='master'?'MESTRE':'SOBREVIVENTE')+' · '+(p?'POSIÇÃO ATIVA':'SEM GPS')+'</small></span><b>'+ (p?'●':'—') +'</b></div>';
+    }).join('') || '<div class="selection-placeholder">Nenhum membro encontrado.</div>';
+    const vs=$('visionStatus'); if(vs)vs.textContent=state.mapPosition?'Posição sincronizada':'Posição ainda não definida';
+  }
+
+  function renderSelection(){
+    const title=$('selectionTitle'), body=$('selectionBody');
+    if(!title||!body)return;
+    if(!state.selected){title.textContent='Nenhum local';body.innerHTML='<div class="selection-placeholder">Toque em um marcador para abrir a ficha do local.</div>';return;}
+    const l=state.selected;
+    title.textContent=l.name||'Local';
+    const dist=km(meters(currentPoint(),pt(l.latitude,l.longitude)||currentPoint()));
+    body.innerHTML='<div class="selected-location-preview"><div class="selected-location-hero"><div class="selected-location-icon">'+esc(iconByCategory(l.category))+'</div><div><strong>'+esc(l.name)+'</strong><small>'+esc(l.category||'Local')+' · '+dist+'</small></div></div><div class="selected-location-stats"><div><span>TIPO</span><b>'+esc(l.category||'—')+'</b></div><div><span>PERIGO</span><b>'+esc(l.danger||'—')+'</b></div><div><span>DESCOBERTO</span><b>'+ (l.discovered?'SIM':'NÃO') +'</b></div></div><div class="selection-actions"><button type="button" id="selectionOpen">ABRIR FICHA</button><button type="button" id="selectionCenter">CENTRALIZAR</button></div></div>';
+    $('selectionOpen').onclick=()=>openLocation(l);
+    $('selectionCenter').onclick=()=>centerTo(pt(l.latitude,l.longitude),16);
+  }
+
+  function renderStats(){
+    $('statLocations').textContent=String(state.locations.filter(x=>x.discovered!==false).length);
+    $('statThreats').textContent=String(isMaster()?state.hordes.length:0);
+    $('statTravels').textContent=String(state.travels.length);
+  }
+
+  async function openLocation(l){
+    state.selected=l;renderSelection();
+    centerTo(pt(l.latitude,l.longitude),Math.max(15,state.map.getZoom()));
+    let areas=[];
+    try{
+      const r=await aeriom.rpc(isMaster()?'list_campaign_location_areas':'list_campaign_visible_location_areas',{p_location_id:l.id});
+      if(r.error)throw r.error; areas=Array.isArray(r.data)?r.data:[];
+    }catch(err){report('map-location-areas-error',{message:err?.message||String(err)});}
+    const safeStatus=l.danger||'descoberto';
+    openModal('FICHA DO LOCAL',renderLocationHtml(l,areas,safeStatus));
+  }
+
+  function renderLocationHtml(l,areas,status){
+    const areaHtml=areas.length?areas.map(a=>'<article class="map-area-card"><strong>'+esc(a.name)+'</strong><small>'+esc(a.category||'Área')+' · '+esc(a.danger||'unknown')+(a.difficulty?' · CD '+a.difficulty:'')+'</small><p>'+esc(a.description||'Nenhuma descrição revelada.')+'</p><div class="map-area-actions"><button type="button" data-area-action="observe" data-area="'+esc(a.id)+'">OBSERVAR</button><button type="button" data-area-action="search" data-area="'+esc(a.id)+'">VASCULHAR</button><button type="button" data-area-action="investigate" data-area="'+esc(a.id)+'">INVESTIGAR</button></div></article>').join(''):'<div class="map-empty-state">'+(isMaster()?'Nenhuma área cadastrada neste local.':'Nenhuma área visível ainda. Explore o local para descobrir mais.')+'</div>';
+    const tools=isMaster()?'<div class="map-sheet-actions"><button type="button" id="editLocation">EDITAR LOCAL</button><button type="button" id="createArea">+ CRIAR ÁREA</button></div>':'';
+    return '<div class="map-location-sheet"><div class="map-location-kpis"><div><span>PERIGO</span><b>'+esc(status)+'</b></div><div><span>CONDIÇÃO</span><b>'+esc(l.state?.condition||'descoberto')+'</b></div><div><span>SAQUE</span><b>'+String(n(l.state?.looted_percent,0))+'%</b></div></div><p class="map-location-address">'+esc(l.address||'Local registrado no mundo da campanha.')+'</p>'+tools+'<div class="map-section-title">ÁREAS</div><div class="map-area-list">'+areaHtml+'</div><div id="mapActionResult" class="map-action-result"></div></div>';
+  }
+
+  async function resolveArea(areaId,action){
+    const out=$('mapActionResult');if(out)out.innerHTML='<div class="map-spinner">RESOLVENDO AÇÃO…</div>';
+    try{
+      const r=await aeriom.rpc('resolve_location_area_action',{p_area_id:areaId,p_action_key:action}); if(r.error)throw r.error;
+      const d=r.data||{},loot=Array.isArray(d.loot)?d.loot:[];
+      if(out)out.innerHTML='<div class="map-result-head"><span>'+esc(d.die||'D?')+' · '+n(d.natural_roll)+' + '+n(d.training_bonus)+' + '+n(d.modifier)+'</span><strong>'+esc(String(d.result||'resultado').replaceAll('_',' ').toUpperCase())+'</strong></div><p>'+esc(d.consequence||'')+'</p>'+(d.discovery_text?'<div class="map-result-block"><span>DESCOBERTA</span><p>'+esc(d.discovery_text)+'</p></div>':'')+(d.revealed_information?'<div class="map-result-block"><span>INFORMAÇÃO</span><p>'+esc(d.revealed_information)+'</p></div>':'')+(loot.length?'<div class="map-result-block"><span>SAQUE</span><div class="map-loot-list">'+loot.map(x=>'<button type="button" data-loot="'+esc(x.id)+'"><span>◆</span><b>'+esc(x.item_name)+'</b><small>'+esc(x.item_category||'item')+' · x'+n(x.quantity,1)+' · '+esc(x.rarity||'comum')+'</small></button>').join('')+'</div></div>':'');
+      out.querySelectorAll('[data-loot]').forEach(b=>b.onclick=async()=>{const c=await aeriom.rpc('claim_area_loot',{p_loot_id:b.dataset.loot});if(c.error){toast(c.error.message||'Não foi possível coletar o saque.','error');return;}b.disabled=true;b.textContent='COLETADO';});
+      if(d.discovered){await refreshLocations();renderLocations();renderStats();}
+      toast('Ação resolvida.');
+    }catch(err){if(out)out.innerHTML='<div class="map-empty-state">'+esc(err?.message||'Não foi possível resolver a ação.')+'</div>';toast(err?.message||'Falha no teste.','error');}
+  }
+
+  function bindModal(){const b=$('mapModalBody');if(!b)return;b.querySelectorAll('[data-area-action]').forEach(x=>x.onclick=()=>resolveArea(x.dataset.area,x.dataset.areaAction));b.querySelector('[id="editLocation"]')?.addEventListener('click',()=>openLocationEditor(state.selected));b.querySelector('[id="createArea"]')?.addEventListener('click',()=>openCreateArea(state.selected));}
+
+  function openModal(title,html){$('mapModalTitle').textContent=title;$('mapModalBody').innerHTML=html;$('mapModalBackdrop').hidden=false;bindModal();}
+  function closeModal(){$('mapModalBackdrop').hidden=true;}
+
+  function openLocationEditor(l){
+    if(!isMaster())return;
+    openModal('EDITAR LOCAL','<form id="locForm" class="map-form"><label>CONDIÇÃO<input name="condition" value="'+esc(l.state?.condition||'unknown')+'"></label><label>PERIGO<input name="danger" value="'+esc(l.danger||'unknown')+'"></label><label>NOTA<textarea name="note" rows="4">'+esc(l.note||'')+'</textarea></label><footer><button type="button" id="cancelForm">CANCELAR</button><button type="submit">SALVAR</button></footer></form>');
+    const f=$('locForm');$('cancelForm').onclick=closeModal;
+    f.onsubmit=async e=>{e.preventDefault();const r=await aeriom.rpc('update_campaign_world_location',{p_id:l.id,p_condition:f.condition.value,p_resources:l.resources||{},p_danger:f.danger.value,p_note:f.note.value});if(r.error){toast(r.error.message||'Falha ao salvar.','error');return;}await refreshLocations();renderEverything();closeModal();toast('Local atualizado.');};
+  }
+
+  function openCreateArea(l){
+    if(!isMaster())return;
+    openModal('NOVA ÁREA','<form id="areaForm" class="map-form"><label>NOME<input name="name" required value="Área principal"></label><label>CATEGORIA<input name="category" value="área"></label><label>DESCRIÇÃO<textarea name="description" rows="3"></textarea></label><div class="map-form-grid"><label>CD<input name="difficulty" type="number" value="10" min="1" max="20"></label><label>PERIGO<select name="danger"><option>unknown</option><option>low</option><option selected>medium</option><option>high</option><option>critical</option></select></label></div><label>INFORMAÇÃO DO MESTRE<textarea name="information" rows="3"></textarea></label><footer><button type="button" id="cancelForm">CANCELAR</button><button type="submit">CRIAR ÁREA</button></footer></form>');
+    const f=$('areaForm');$('cancelForm').onclick=closeModal;
+    f.onsubmit=async e=>{e.preventDefault();const r=await aeriom.rpc('create_campaign_location_area',{p_location_id:l.id,p_name:f.name.value.trim(),p_category:f.category.value.trim(),p_description:f.description.value.trim()||null,p_difficulty:n(f.difficulty.value,10),p_danger:f.danger.value,p_information:f.information.value.trim()||null,p_event:{},p_loot_profile:{},p_creatures:[],p_secrets:[]});if(r.error){toast(r.error.message||'Falha ao criar área.','error');return;}closeModal();toast('Área criada.');openLocation(l);};
+  }
+
+  function openEntity(e){
+    openModal('ELEMENTO DO MUNDO','<div class="map-location-sheet"><div class="selected-location-hero"><div class="selected-location-icon">'+esc(iconByCategory(e.entity_type))+'</div><div><strong>'+esc(e.name||'Elemento')+'</strong><small>'+esc(e.entity_type||'mundo')+'</small></div></div><p class="map-location-address">'+esc(e.description||'Sem descrição.')+'</p>'+(isMaster()&&e.id?'<div class="selection-actions"><button type="button" id="deleteEntity">EXCLUIR</button></div>':'')+'</div>');
+    $('deleteEntity')?.addEventListener('click',async()=>{if(!confirm('Excluir este elemento?'))return;const r=await aeriom.rpc('delete_campaign_map_entity',{p_entity_id:e.id});if(r.error){toast(r.error.message||'Falha ao excluir.','error');return;}await refreshEntities();renderEntities();renderMasterTools();closeModal();toast('Elemento excluído.');});
+  }
+
+  function openEntityEditor(p){
+    const types=[['house','🏚 Casa'],['commerce','⌂ Comércio'],['hospital','🏥 Hospital'],['fuel','⛽ Posto'],['shelter','⌂ Abrigo'],['barricade','🚧 Barricada'],['hazard','☣ Perigo'],['station','⚒ Estação'],['custom','✦ Outro']];
+    openModal('NOVO ELEMENTO','<form id="entityForm" class="map-form"><label>TIPO<select name="type">'+types.map(x=>'<option value="'+x[0]+'">'+x[1]+'</option>').join('')+'</select></label><label>NOME<input name="name" required value="Elemento do mundo"></label><label>DESCRIÇÃO<textarea name="description" rows="3"></textarea></label><input type="hidden" name="lat" value="'+n(p.lat)+'"><input type="hidden" name="lng" value="'+n(p.lng)+'"><footer><button type="button" id="cancelForm">CANCELAR</button><button type="submit">SALVAR</button></footer></form>');
+    const f=$('entityForm');$('cancelForm').onclick=closeModal;
+    f.onsubmit=async e=>{e.preventDefault();const r=await aeriom.rpc('create_campaign_map_entity',{p_campaign_id:state.campaign.id,p_entity_type:f.type.value,p_name:f.name.value.trim(),p_description:f.description.value.trim()||null,p_latitude:n(f.lat.value),p_longitude:n(f.lng.value),p_geometry:null,p_state:{},p_metadata:{}});if(r.error){toast(r.error.message||'Falha ao criar.','error');return;}await refreshEntities();renderEntities();renderMasterTools();closeModal();toast('Elemento criado.');};
+  }
+
+  function openHordeEditor(existing,p){
+    if(!isMaster())return;
+    const e=existing||{};
+    openModal(existing?'EDITAR HORDA':'NOVA HORDA','<form id="hordeForm" class="map-form"><input type="hidden" name="id" value="'+esc(e.id||'')+'"><input type="hidden" name="lat" value="'+(e.latitude??p?.lat??'')+'"><input type="hidden" name="lng" value="'+(e.longitude??p?.lng??'')+'"><label>NOME<input name="name" value="'+esc(e.name||'Onda detectada')+'"></label><div class="map-form-grid"><label>ZUMBIS<input type="number" name="size" value="'+n(e.size,30)+'" min="1"></label><label>VELOCIDADE<input type="number" name="speed" value="'+n(e.speed_kmh,10)+'" min="0"></label></div><div class="map-form-grid"><label>DIREÇÃO<input type="number" name="direction" value="'+n(e.direction_deg,0)+'" min="0" max="359"></label><label>ETA<input type="number" name="eta" value="'+n(e.eta_minutes,0)+'" min="0"></label></div><footer><button type="button" id="cancelForm">CANCELAR</button><button type="submit">SALVAR</button></footer></form>');
+    const f=$('hordeForm');$('cancelForm').onclick=closeModal;
+    f.onsubmit=async e2=>{e2.preventDefault();const r=f.id.value?await aeriom.rpc('update_campaign_horde',{p_id:f.id.value,p_latitude:n(f.lat.value),p_longitude:n(f.lng.value),p_size:n(f.size.value,30),p_speed_kmh:n(f.speed.value,10),p_direction_deg:n(f.direction.value),p_detected:true,p_status:'moving',p_eta_minutes:n(f.eta.value)||null}):await aeriom.rpc('create_campaign_horde',{p_campaign_id:state.campaign.id,p_latitude:n(f.lat.value),p_longitude:n(f.lng.value),p_size:n(f.size.value,30),p_speed_kmh:n(f.speed.value,10),p_direction_deg:n(f.direction.value),p_source_zone_id:null});if(r.error){toast(r.error.message||'Falha ao salvar horda.','error');return;}await refreshHordes();renderThreats();renderStats();closeModal();toast('Horda sincronizada.');};
+  }
+
+  function renderMasterTools(){
+    const host=$('masterTools');if(!host)return;
+    if(!isMaster()){host.innerHTML='';return;}
+    const tools=[['entity','✦','ELEMENTO'],['horde','☢','HORDA'],['territory','🏴','TERRITÓRIO'],['barricade','🚧','BARRICADA'],['travel','➜','VIAGEM']];
+    host.innerHTML=tools.map(t=>'<button type="button" class="master-tool" data-mode="'+t[0]+'"><span>'+t[1]+'</span><b>'+t[2]+'</b></button>').join('');
+    host.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>activateEditor(b.dataset.mode));
+  }
+
+  function activateEditor(mode){
+    state.editorMode=mode;
+    state.drawing=null;
+    document.querySelectorAll('.master-tool').forEach(b=>b.classList.toggle('is-active',b.dataset.mode===mode));
+    const text={entity:'Clique no mapa para colocar um elemento.',horde:'Clique no mapa para criar uma horda.',territory:'Clique no mapa para desenhar o território. Duplo clique finaliza.',barricade:'Clique no mapa para desenhar uma barricada. Duplo clique finaliza.',travel:'Clique no mapa para escolher o destino da viagem.'}[mode];
+    toast(text);
+    if(mode==='territory'||mode==='barricade'){state.map.doubleClickZoom.disable();ensureDrawingListener();}
+  }
+
+  function ensureDrawingListener(){if(state.drawingBound)return;state.drawingBound=true;state.map.on('dblclick',finishDrawing);}
+  function onMapClick(e){
+    setCoordinates(e.latlng);
+    if(!isMaster()||!state.editorMode)return;
+    if(state.editorMode==='entity'){state.editorMode=null;openEntityEditor(e.latlng);return;}
+    if(state.editorMode==='horde'){state.editorMode=null;openHordeEditor(null,e.latlng);return;}
+    if(state.editorMode==='travel'){state.editorMode=null;openTravelCreator(e.latlng);return;}
+    if(state.editorMode==='territory'||state.editorMode==='barricade'){addDrawingPoint(e.latlng);}
+  }
+
+  function addDrawingPoint(p){
+    if(!state.drawing)state.drawing={type:state.editorMode,points:[],layer:null};
+    state.drawing.points.push([p.lat,p.lng]);
+    if(!state.drawing.layer){
+      state.drawing.layer=state.drawing.type==='territory'
+        ? L.polygon(state.drawing.points,{renderer:state.renderer,color:'#d5b46c',weight:2,fillColor:'#d5b46c',fillOpacity:.08,dashArray:'6 6'})
+        : L.polyline(state.drawing.points,{renderer:state.renderer,color:'#7fe7a7',weight:4,dashArray:'8 7'});
+      state.drawing.layer.addTo(state.map);
+    } else state.drawing.layer.setLatLngs(state.drawing.points);
+  }
+
+  function finishDrawing(){
+    if(!state.drawing)return;
+    const d=state.drawing;state.drawing=null;d.layer?.remove();state.map.doubleClickZoom.enable();
+    if(d.type==='territory'){openTerritoryEditor(d.points);}
+    else if(d.type==='barricade'&&d.points.length>=2){openEntityEditor({lat:d.points[0][0],lng:d.points[0][1],geometry:{type:'polyline',coordinates:d.points}});}
+    state.editorMode=null;
+    document.querySelectorAll('.master-tool').forEach(b=>b.classList.remove('is-active'));
+  }
+
+  function openTerritoryEditor(points){
+    if(!state.factions.length){toast('Cadastre uma facção antes de desenhar um território.','error');return;}
+    const opts=state.factions.map(f=>'<option value="'+esc(f.id)+'">'+esc(f.name)+'</option>').join('');
+    openModal('TERRITÓRIO','<form id="territoryForm" class="map-form"><label>FACÇÃO<select name="faction">'+opts+'</select></label><footer><button type="button" id="cancelForm">CANCELAR</button><button type="submit">SALVAR TERRITÓRIO</button></footer></form>');
+    const f=$('territoryForm');$('cancelForm').onclick=closeModal;
+    f.onsubmit=async e=>{e.preventDefault();const fac=state.factions.find(x=>x.id===f.faction.value);const r=await aeriom.rpc('update_campaign_faction',{p_id:fac.id,p_name:fac.name,p_description:fac.description||null,p_reputation_default:n(fac.reputation_default),p_resources:fac.resources||{},p_territory:{type:'polygon',coordinates:points}});if(r.error){toast(r.error.message||'Falha ao salvar território.','error');return;}await refreshFactions();renderFactions();closeModal();toast('Território salvo.');};
+  }
+
+  function openTravelCreator(destination){
+    const origin=currentPoint(),d=pt(destination?.lat,destination?.lng);if(!d)return;
+    const players=state.members.filter(m=>m.role!=='master');
+    openModal('PLANEJAR VIAGEM','<form id="travelForm" class="map-form"><div class="selected-location-hero"><div class="selected-location-icon">➜</div><div><strong>Origem → destino</strong><small>'+origin.lat.toFixed(5)+'°, '+origin.lng.toFixed(5)+'° → '+d.lat.toFixed(5)+'°, '+d.lng.toFixed(5)+'°</small></div></div><label>NOME DO DESTINO<input name="name" required value="Destino no mapa"></label><div class="map-form-grid"><label>KM/H<input name="speed" type="number" min=".1" value="5"></label><label>EXPOSIÇÃO/KM<input name="exposure" type="number" min="0" value="0"></label></div><div class="map-section-title">PARTICIPANTES</div>'+players.map(m=>'<label><span><input type="checkbox" name="participant" value="'+esc(m.user_id)+'"> '+esc(m.display_name||'Sobrevivente')+'</span></label>').join('')+'<footer><button type="button" id="cancelForm">CANCELAR</button><button type="submit">CRIAR VIAGEM</button></footer></form>');
+    const f=$('travelForm');$('cancelForm').onclick=closeModal;
+    f.onsubmit=async e=>{e.preventDefault();const ids=[...f.querySelectorAll('[name="participant"]:checked')].map(x=>x.value);if(!ids.length){toast('Selecione ao menos um sobrevivente.','error');return;}const dist=meters(origin,d),r=await aeriom.rpc('create_campaign_travel',{p_campaign_id:state.campaign.id,p_origin_latitude:origin.lat,p_origin_longitude:origin.lng,p_destination_latitude:d.lat,p_destination_longitude:d.lng,p_destination_location_id:null,p_destination_name:f.name.value.trim(),p_route:{provider:'straight',geometry:{coordinates:[[origin.lng,origin.lat],[d.lng,d.lat]]}},p_distance_m:dist,p_speed_kmh:n(f.speed.value,5),p_fuel_per_km:0,p_energy_per_km:0,p_exposure_per_km:n(f.exposure.value),p_participant_user_ids:ids});if(r.error){toast(r.error.message||'Falha na viagem.','error');return;}await refreshTravels();renderStats();closeModal();toast('Viagem planejada.');};
+  }
+
+  function openSheet(kind){
+    const sheet=$('mapPanelSheet'),title=$('sheetTitle'),body=$('sheetBody'); if(!sheet||!body)return;
+    let t='Painel',html='';
+    if(kind==='party'){t='Grupo';html='<div class="sheet-section"><div class="sheet-section-title">SOBREVIVENTES</div><div class="sheet-party">'+state.members.map(m=>'<div class="sheet-card"><strong>'+esc(m.display_name||'Sobrevivente')+'</strong><small>'+esc(m.role==='master'?'MESTRE':'SOBREVIVENTE')+' · '+(validMemberPoint(m)?'posição ativa':'sem posição')+'</small></div>').join('')+'</div></div>';}
+    else if(kind==='explore'){t='Explorar';html='<div class="sheet-section"><div class="sheet-section-title">LOCAIS DESCOBERTOS</div><div class="sheet-party">'+state.locations.filter(x=>x.discovered!==false).slice(0,20).map(l=>'<button class="sheet-card" type="button" data-sheet-location="'+esc(l.id)+'"><strong>'+esc(l.name)+'</strong><small>'+esc(l.category||'Local')+'</small></button>').join('')+'</div></div>';}
+    else if(kind==='master'){t='Mestre';html=buildMasterSheet();}
+    else {t='Sistemas';html='<div class="sheet-actions"><button type="button" data-sheet-system="radar">☢ RADAR</button><button type="button" data-sheet-system="travel">➜ VIAGENS</button><button type="button" data-sheet-system="world">✦ MUNDO</button><button type="button" data-sheet-system="explore">⌁ EXPLORAR</button></div>';}
+    title.textContent=t;body.innerHTML=html;sheet.classList.add('is-open');sheet.setAttribute('aria-hidden','false');
+    body.querySelectorAll('[data-sheet-location]').forEach(b=>b.onclick=()=>{const l=state.locations.find(x=>x.id===b.dataset.sheetLocation);if(l){closeSheet();openLocation(l);}});
+    body.querySelectorAll('[data-sheet-system]').forEach(b=>b.onclick=()=>{closeSheet();openSheet(b.dataset.sheetSystem);});
+    bindMasterSheet(body);
+  }
+
+  function buildMasterSheet(){if(!isMaster())return '<div class="map-empty-state">Controles do Mestre.</div>';return '<div class="sheet-section"><div class="sheet-section-title">FERRAMENTAS</div><div class="sheet-actions"><button type="button" data-sheet-mode="entity">✦ ELEMENTO</button><button type="button" data-sheet-mode="horde">☢ HORDA</button><button type="button" data-sheet-mode="territory">🏴 TERRITÓRIO</button><button type="button" data-sheet-mode="travel">➜ VIAGEM</button></div></div><div class="sheet-section"><div class="sheet-section-title">INFECÇÃO</div><div class="sheet-party">'+state.infection.slice(0,12).map(z=>'<button class="sheet-card" type="button" data-sheet-zone="'+esc(z.id)+'"><strong>'+esc(z.zone_name||'Zona')+'</strong><small>'+Math.round(n(z.infection_percent))+'% · '+esc(z.outbreak_stage||'active')+'</small></button>').join('')+'</div></div>';}
+  function bindMasterSheet(body){body.querySelectorAll('[data-sheet-mode]').forEach(b=>b.onclick=()=>{closeSheet();activateEditor(b.dataset.sheetMode);});body.querySelectorAll('[data-sheet-zone]').forEach(b=>b.onclick=()=>{const z=state.infection.find(x=>x.id===b.dataset.sheetZone);if(z){closeSheet();openInfectionEditor(z);}});}
+
+  function openInfectionEditor(z){
+    openModal('ZONA DE INFECÇÃO','<form id="infectionForm" class="map-form"><label>INFECÇÃO <output id="infVal">'+Math.round(n(z.infection_percent))+'%</output><input name="infection" type="range" min="0" max="100" value="'+n(z.infection_percent)+'"></label><label>DENSIDADE <output id="densVal">'+Math.round(n(z.zombie_density_percent))+'%</output><input name="density" type="range" min="0" max="100" value="'+n(z.zombie_density_percent)+'"></label><label>PROPAGAÇÃO<input name="spread" type="range" min="0" max="100" value="'+n(z.spread_rate)+'"></label><label>ESTÁGIO<select name="stage">'+['contained','active','severe','critical'].map(k=>'<option '+(z.outbreak_stage===k?'selected':'')+'>'+k+'</option>').join('')+'</select></label><footer><button type="button" id="cancelForm">CANCELAR</button><button type="submit">SALVAR ZONA</button></footer></form>');
+    const f=$('infectionForm');$('cancelForm').onclick=closeModal;f.infection.oninput=()=>{$('infVal').textContent=f.infection.value+'%';};f.density.oninput=()=>{$('densVal').textContent=f.density.value+'%';};
+    f.onsubmit=async e=>{e.preventDefault();const r=await aeriom.rpc('update_campaign_infection_zone',{p_id:z.id,p_infection:n(f.infection.value),p_zombie_density:n(f.density.value),p_spread_rate:n(f.spread.value),p_stage:f.stage.value});if(r.error){toast(r.error.message||'Falha ao salvar zona.','error');return;}await refreshInfection();renderThreats();closeModal();toast('Zona de infecção atualizada.');};
+  }
+
+  function centerTo(p,z){if(!p||!state.map)return;state.map.setView([p.lat,p.lng],Math.min(19,Math.max(2,n(z,5))),{animate:false});}
+  function setCoordinates(p){$('mapCoordinates').textContent=n(p?.lat).toFixed(6)+'°, '+n(p?.lng).toFixed(6)+'°';}
+  function updateReadout(){if(!state.map)return;const z=state.map.getZoom();$('mapZoomLabel').textContent='Z'+z;$('mapScaleLabel').textContent=z<7?'MUNDO':z<12?'REGIÃO':z<15?'CIDADE':'RUA';}
+  function scheduleViewport(){updateReadout();clearTimeout(state.viewportTimer);state.viewportTimer=setTimeout(()=>{renderEverything();if(state.map.getZoom()>=16)loadPoisAroundView();},120);}
+  function renderStats(){renderPartyList();renderSelection();$('statLocations').textContent=String(state.locations.filter(x=>x.discovered!==false).length);$('statThreats').textContent=String(isMaster()?state.hordes.length:0);$('statTravels').textContent=String(state.travels.length);}
+  function renderMasterTools(){if(isMaster()){$('masterCard').removeAttribute('aria-hidden');}else{$('masterCard').setAttribute('aria-hidden','true');}}
+
+  function poiKey(){const c=state.map.getCenter();return c.lat.toFixed(2)+':'+c.lng.toFixed(2)+':'+Math.floor(state.map.getZoom());}
+  async function loadPoisAroundView(){
+    const k=poiKey(),old=state.poiCache.get(k);if(old&&Date.now()-old.ts<10*60*1000){drawPois(old.items);return;}
+    const c=state.map.getCenter();
+    const q='[out:json][timeout:6];(nwr(around:800,'+c.lat+','+c.lng+')[name][amenity];nwr(around:800,'+c.lat+','+c.lng+')[name][shop];nwr(around:800,'+c.lat+','+c.lng+')[name][tourism];nwr(around:800,'+c.lat+','+c.lng+')[name][craft];nwr(around:800,'+c.lat+','+c.lng+')[name][leisure];nwr(around:800,'+c.lat+','+c.lng+')[name][historic];);out center tags;';
+    let data=null;
+    for(const ep of ['https://overpass-api.de/api/interpreter','https://overpass.kumi.systems/api/interpreter']){
+      try{const ac=new AbortController(),tm=setTimeout(()=>ac.abort(),6500),r=await fetch(ep,{method:'POST',body:q,headers:{'Content-Type':'text/plain;charset=UTF-8'},signal:ac.signal});clearTimeout(tm);if(r.ok){data=await r.json();break;}}catch{}
+    }
+    if(!data)return;
+    const items=(data.elements||[]).map(e=>{const tags=e.tags||{},p=pt(e.lat??e.center?.lat,e.lon??e.center?.lon);return p?{key:'osm:'+e.type+':'+e.id,name:tags.name||tags.brand||'Local',type:tags.amenity||tags.shop||tags.tourism||tags.craft||tags.leisure||tags.historic||'POI',lat:p.lat,lng:p.lng,address:tags['addr:full']||'',tags}:null;}).filter(Boolean).slice(0,MAX_VISIBLE.pois);
+    state.poiCache.set(k,{ts:Date.now(),items});drawPois(items);
+  }
+
+  function drawPois(items){
+    state.layer.pois.clearLayers();
+    const bounds=state.map.getBounds().pad(.03);
+    (items||[]).filter(p=>bounds.contains([p.lat,p.lng])).slice(0,MAX_VISIBLE.pois).forEach(p=>{const c=L.circleMarker([p.lat,p.lng],{renderer:state.renderer,radius:4,color:'#090908',weight:1,fillColor:'#aca497',fillOpacity:.9}).addTo(state.layer.pois);c.bindTooltip(esc(p.name)+' · '+esc(p.type),{direction:'top'});c.on('click',()=>openPoi(p));});
+  }
+  function openPoi(p){centerTo(p,16);openModal('PONTO REAL','<div class="map-location-sheet"><div class="selected-location-hero"><div class="selected-location-icon">'+esc(iconByCategory(p.type))+'</div><div><strong>'+esc(p.name)+'</strong><small>'+esc(p.type)+' · OpenStreetMap</small></div></div><p class="map-location-address">'+esc(p.address||'Ponto descoberto no mundo real.')+'</p><div class="selection-actions"><button type="button" id="savePoi">SALVAR NA CAMPANHA</button></div></div>');$('savePoi').onclick=async()=>{const r=await aeriom.rpc('discover_campaign_world_location',{p_campaign_id:state.campaign.id,p_source:'osm',p_external_id:p.key,p_name:p.name,p_category:p.type,p_latitude:p.lat,p_longitude:p.lng,p_address:p.address||null,p_metadata:{tags:p.tags||{}}});if(r.error){toast(r.error.message||'Falha ao salvar o ponto.','error');return;}await refreshLocations();renderLocations();renderStats();closeModal();toast('Local salvo na campanha.');};}
+
+  function locateDevice(){
+    if(!navigator.geolocation){toast('GPS indisponível neste navegador.','error');return;}
+    toast('Buscando GPS…','loading');
+    navigator.geolocation.getCurrentPosition(async p=>{
+      state.devicePosition={lat:p.coords.latitude,lng:p.coords.longitude};
+      state.layer.device.clearLayers();
+      L.circleMarker([state.devicePosition.lat,state.devicePosition.lng],{renderer:state.renderer,radius:8,color:'#0a0a09',weight:2,fillColor:'#7fe7a7',fillOpacity:1}).addTo(state.layer.device).bindTooltip('Sua posição física');
+      centerTo(state.devicePosition,16);
+      if(!isMaster()){
+        const r=await aeriom.from('campaign_map_positions').upsert({campaign_id:state.campaign.id,user_id:state.session.user.id,latitude:state.devicePosition.lat,longitude:state.devicePosition.lng,updated_at:new Date().toISOString()},{onConflict:'campaign_id,user_id'});
+        if(r.error){toast('GPS encontrado, mas não foi salvo na campanha.','error');return;}
+        state.mapPosition=state.devicePosition;renderMembers();renderVision();renderPartyList();toast('Posição sincronizada.');
+      }
+    },err=>toast(err?.message||'Não foi possível obter o GPS.','error'),{enableHighAccuracy:true,timeout:9000,maximumAge:15000});
+  }
+
+  async function toggleCompass(){
+    try{
+      if(typeof DeviceOrientationEvent!=='undefined'&&typeof DeviceOrientationEvent.requestPermission==='function'){const p=await DeviceOrientationEvent.requestPermission();if(p!=='granted'){toast('Permissão da bússola recusada.','error');return;}}
+      if(!state.compass.bound){state.compass.bound=true;addEventListener('deviceorientationabsolute',onOrientation,true);addEventListener('deviceorientation',onOrientation,true);}
+      state.compass.active=!state.compass.active;$('mapCompass').classList.toggle('is-active',state.compass.active);toast(state.compass.active?'Bússola ativa.':'Bússola pausada.');
+    }catch{toast('Bússola indisponível.','error');}
+  }
+  function onOrientation(e){if(!state.compass.active)return;const h=Number.isFinite(e.webkitCompassHeading)?e.webkitCompassHeading:Number.isFinite(e.alpha)?360-e.alpha:null;if(h!=null){state.compass.heading=(h+360)%360;$('mapCompass').textContent=['N','NE','E','SE','S','SW','W','NW'][Math.round(state.compass.heading/45)%8];}}
+
+  function subscribeRealtime(){
+    const cid=state.campaign.id;
+    const specs=[
+      ['campaign_map_positions',()=>refreshMembers().then(renderVision)],
+      ['campaign_world_locations',()=>refreshLocations().then(()=>{renderLocations();renderStats();})],
+      ['campaign_map_entities',()=>refreshEntities().then(renderEntities)],
+      ['campaign_factions',()=>refreshFactions().then(renderFactions)],
+      ['campaign_npcs',()=>refreshNpcs().then(renderNpcs)],
+      ['campaign_vehicles',()=>refreshVehicles().then(renderVehicles)],
+      ['crafting_stations',()=>refreshStations().then(renderStations)],
+      ['campaign_travels',()=>refreshTravels().then(renderStats)],
+      ['campaign_hordes',()=>refreshHordes().then(()=>{renderThreats();renderStats();})]
+    ];
+    if(isMaster()) specs.push(['campaign_infection_zones',()=>refreshInfection().then(renderThreats)],['campaign_horde_events',()=>refreshHordes().then(()=>{renderThreats();renderStats();})]);
+    specs.forEach(([table,handler])=>{
+      const ch=aeriom.channel('afterlife-map20-'+table+'-'+cid);
+      ch.on('postgres_changes',{event:'*',schema:'public',table,filter:'campaign_id=eq.'+cid},()=>{
+        clearTimeout(ch.__timer);ch.__timer=setTimeout(()=>handler().catch(err=>report('map-realtime-handler',{table,message:err?.message||String(err)})),160);
+      }).subscribe(s=>{if(['CHANNEL_ERROR','TIMED_OUT','CLOSED'].includes(s)){setStatus('Realtime do mapa indisponível.','error');report('map-realtime-state',{table,state:s});}});
+      state.realtime.push(ch);
+    });
+  }
+
   boot();
 })();
