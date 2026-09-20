@@ -859,7 +859,7 @@ body.aeriom-page--character{
 }
 [data-panel="race"] #race-grid::before{content:"✦ SELEÇÃO OBRIGATÓRIA · escolha uma raça para avançar";}
 [data-panel="class"] #class-grid::before{content:"✦ SELEÇÃO OBRIGATÓRIA · escolha uma classe para avançar";}
-[data-panel="attributes"] #attribute-grid::before{content:"✦ TODOS OS 8 ATRIBUTOS SÃO OBRIGATÓRIOS · distribua um dado em cada atributo";}
+[data-panel="attributes"] #attribute-grid::before{content:"✦ TODOS OS 7 ATRIBUTOS SÃO OBRIGATÓRIOS · distribua um dado em cada atributo";}
 [data-panel="appearance"] #character-age{
   border-color:rgba(227,195,109,.28);
 }
