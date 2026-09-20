@@ -130,7 +130,7 @@
 
   async function boot(){
     loadCss(); applyBrandLogo(); startCombatAnimationGuard();
-    if(!isAfterlifeHome())try{await import('./afterlife-sidebar.js?v=20260914-30')}catch(error){console.warn('[AFTERLIFE] sidebar:',error)}
+    if(!isAfterlifeHome())try{await import('./afterlife-sidebar.js?v=20260920-nav21')}catch(error){console.warn('[AFTERLIFE] sidebar:',error)}
     await bootProfile();
   }
 
