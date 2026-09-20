@@ -60,7 +60,7 @@
 
     <div class="nuclear-wheel" id="nuclearWheel" aria-label="Ferramentas rápidas da campanha" aria-expanded="false">
       <button class="nuclear-center" id="nuclearCenter" type="button" aria-label="Abrir ferramentas rápidas">☣</button>
-      <button class="nuclear-item n1" data-target="./personagens.html" type="button"><span>♙</span><b>Ficha</b></button>
+      <button class="nuclear-item n1" data-target="#campaignCharacters" type="button"><span>♙</span><b>Ficha</b></button>
       <button class="nuclear-item n2" data-target="#inventario" type="button"><span>▣</span><b>Inventário</b></button>
       <button class="nuclear-item n3" data-target="./personagens.html#atributos" type="button"><span>▥</span><b>Atributos</b></button>
       <button class="nuclear-item n4" data-target="./personagens.html#pericias" type="button"><span>▤</span><b>Perícias</b></button>
@@ -77,6 +77,8 @@
       </div>
 
       <section class="members-panel panel-card" id="personagens"><header><h2>MEMBROS <small id="membersPanelCount">(1)</small></h2><button type="button" id="inviteMember">＋ CONVIDAR</button></header><div class="member-list" id="memberList"><div class="member"><span class="member-avatar">S</span><div><strong>Sobrevivente</strong><small>Você · Mestre</small></div><i class="online-dot"></i></div><button class="member member-invite" id="inviteMemberCard" type="button"><span class="member-avatar ghost">＋</span><div><strong>Convidar</strong><small>Adicionar jogador</small></div></button></div></section>
+
+<section class="campaign-characters-panel panel-card" id="campaignCharacters"><header><div><span class="campaign-section-kicker">FICHAS DA MESA</span><h2>PERSONAGENS</h2><small id="campaignCharactersCount">0 na campanha</small></div><button type="button" id="addCampaignCharacter" class="campaign-character-add-button">＋ ADICIONAR MINHA FICHA</button></header><div id="campaignCharacterSummary" class="campaign-character-summary"><div class="campaign-character-loading">Carregando personagens…</div></div></section>
 
       <section class="world-panel panel-card"><header><h2>MUNDO</h2><a href="./mapa-mundial.html">ABRIR MAPA →</a></header><a class="world-preview" href="./mapa-mundial.html"><div class="world-preview__map" aria-hidden="true"><svg viewBox="0 0 640 300" role="img"><defs><linearGradient id="worldMapGrid" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#123b29"/><stop offset="1" stop-color="#06100b"/></linearGradient></defs><rect width="640" height="300" fill="url(#worldMapGrid)"/><g fill="none" stroke="rgba(103,255,166,.09)" stroke-width="1"><path d="M0 60H640M0 120H640M0 180H640M0 240H640"/><path d="M80 0V300M160 0V300M240 0V300M320 0V300M400 0V300M480 0V300M560 0V300"/></g><g fill="#214c36" stroke="#3de991" stroke-opacity=".22" stroke-width="1.2"><path d="M76 51l35-20 43 7 27 27-19 25-24-8-15 24-21-10-30-27z"/><path d="M178 122l27 17 9 35-18 47-18-29-12-42z"/><path d="M293 59l18-8 25 13 26-4 30 20-10 25-31 5-13 23-19-4-12-31-25-9 12-17z"/><path d="M332 113l24 7 18 31 11 49-21 53-29-36-12-39 9-26z"/><path d="M420 64l42-9 44 18 36 30-21 21-46-5-37-17-36-19z"/><path d="M487 165l31 1 27 23-10 32-30 6-27-23z"/><path d="M568 242l24 6 12 17-24 13-24-14z"/></g><circle cx="317" cy="145" r="5" fill="#56ffad"/><circle cx="317" cy="145" r="13" fill="none" stroke="#56ffad" stroke-opacity=".22"/><text x="331" y="141" fill="#9bf8c5" font-family="Inter, sans-serif" font-size="9" font-weight="800" letter-spacing="2">BRASIL</text><text x="331" y="153" fill="#618a72" font-family="Inter, sans-serif" font-size="7">MUNDO · VISÃO ESTÁTICA</text></svg></div><div class="world-preview__copy"><strong id="campaignLocation">Local inicial não definido</strong><small id="campaignCoordinates">Escolha um ponto no mapa mundial.</small></div><span>→</span></a></section>
 
@@ -95,7 +97,8 @@
 <script type="module" src="./js/afterlife-sidebar.js?v=20260920-nav21"></script>
 <script type="module" src="./js/campaign-nav-patch.js?v=20260917-1"></script>
 <script type="module" src="./js/campaign-wheel-interaction.js?v=20260919-11"></script>
-<script type="module" src="./js/campaign-manager.js?v=20260918-3"></script><script type="module" src="./js/campaign-systems.js?v=20260920-2"></script>
-<script type="module" src="./js/campanha.js?v=20260918-1"></script>
+<script type="module" src="./js/campaign-manager.js?v=20260918-3"></script><script type="module" src="./js/campaign-systems.js?v=20260920-3"></script>
+<script type="module" src="./js/campanha.js?v=20260920-2"></script>
+<script type="module" src="./js/campaign-characters.js?v=20260920-1"></script>
 </body>
 </html>
