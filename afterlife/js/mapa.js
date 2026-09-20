@@ -28,6 +28,7 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260920
   const campaignCenter = () => pt(state.campaign?.latitude,state.campaign?.longitude) || {lat:-23.55,lng:-46.63};
   const currentPoint = () => state.mapPosition || state.devicePosition || campaignCenter();
   const meters = (a,b) => { const R=6371000,r=Math.PI/180,p1=n(a.lat)*r,p2=n(b.lat)*r,dp=(n(b.lat)-n(a.lat))*r,dl=(n(b.lng)-n(a.lng))*r,x=Math.sin(dp/2)**2+Math.sin(dl/2)**2*Math.cos(p1)*Math.cos(p2); return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(Math.max(0,1-x))); };
+  const distance = meters;
   const km = m => n(m) < 1000 ? Math.round(n(m))+' m' : (n(m)/1000).toFixed(n(m)<10000?1:0)+' km';
   const initials = s => String(s||'S').trim().charAt(0).toUpperCase() || 'S';
   const isMaster = () => state.role === 'master';
@@ -655,7 +656,8 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260920
   async function loadPoisAroundView(){
     const k=poiKey(),old=state.poiCache.get(k);if(old&&Date.now()-old.ts<10*60*1000){drawPois(old.items);return;}
     const c=state.map.getCenter();
-    const q='[out:json][timeout:6];(nwr(around:800,'+c.lat+','+c.lng+')[name][amenity];nwr(around:800,'+c.lat+','+c.lng+')[name][shop];nwr(around:800,'+c.lat+','+c.lng+')[name][tourism];nwr(around:800,'+c.lat+','+c.lng+')[name][craft];nwr(around:800,'+c.lat+','+c.lng+')[name][leisure];nwr(around:800,'+c.lat+','+c.lng+')[name][historic];nwr(around:800,'+c.lat+','+c.lng+')[building~"^(house|detached|semidetached|residential)$"];);out center tags;';
+    const housePart=state.map.getZoom()>=18?'nwr(around:450,'+c.lat+','+c.lng+')[building~"^(house|detached|semidetached|residential)$"];':'';
+    const q='[out:json][timeout:6];(nwr(around:800,'+c.lat+','+c.lng+')[name][amenity];nwr(around:800,'+c.lat+','+c.lng+')[name][shop];nwr(around:800,'+c.lat+','+c.lng+')[name][tourism];nwr(around:800,'+c.lat+','+c.lng+')[name][craft];nwr(around:800,'+c.lat+','+c.lng+')[name][leisure];nwr(around:800,'+c.lat+','+c.lng+')[name][historic];'+housePart+');out center tags;';
     let data=null;
     for(const ep of ['https://overpass-api.de/api/interpreter','https://overpass.kumi.systems/api/interpreter']){
       try{const ac=new AbortController(),tm=setTimeout(()=>ac.abort(),6500),r=await fetch(ep,{method:'POST',body:q,headers:{'Content-Type':'text/plain;charset=UTF-8'},signal:ac.signal});clearTimeout(tm);if(r.ok){data=await r.json();break;}}catch{}
@@ -689,7 +691,7 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260920
       m.bindTooltip(markerLabel(p.name,isHouse?'Casa':p.type),{direction:'top',offset:[0,-14]});
     });
   }
-  function openPoi(p){centerTo(p,16);openModal('PONTO REAL','<div class="map-location-sheet"><div class="selected-location-hero"><div class="selected-location-icon">'+esc(iconByCategory(p.type))+'</div><div><strong>'+esc(p.name)+'</strong><small>'+esc(p.type)+' · OpenStreetMap</small></div></div><p class="map-location-address">'+esc(p.address||'Ponto descoberto no mundo real.')+'</p><div class="selection-actions"><button type="button" id="savePoi">SALVAR NA CAMPANHA</button></div></div>');$('savePoi').onclick=async()=>{const r=await aeriom.rpc('discover_campaign_world_location',{p_campaign_id:state.campaign.id,p_source:'osm',p_external_id:p.key,p_name:p.name,p_category:p.type,p_latitude:p.lat,p_longitude:p.lng,p_address:p.address||null,p_metadata:{tags:p.tags||{}}});if(r.error){toast(r.error.message||'Falha ao salvar o ponto.','error');return;}await refreshLocations();renderLocations();renderStats();closeModal();toast('Local salvo na campanha.');};}
+  function openPoi(p){const isHouse=['house','detached','semidetached','residential'].includes(String(p.type||'').toLowerCase());centerTo(p,Math.max(16,state.map.getZoom()));openModal(isHouse?'CASA · PONTO REAL':'PONTO REAL','<div class="map-location-sheet"><div class="selected-location-hero"><div class="selected-location-icon">'+esc(iconByCategory(p.type))+'</div><div><strong>'+esc(p.name)+'</strong><small>'+esc(isHouse?'Casa · possível loot':p.type)+' · OpenStreetMap</small></div></div><p class="map-location-address">'+esc(p.address||(isHouse?'Imóvel residencial no mundo real.':'Ponto descoberto no mundo real.'))+'</p><div class="selection-actions"><button type="button" id="savePoi">'+(isHouse?'MARCAR COMO LOOTÁVEL':'SALVAR NA CAMPANHA')+'</button></div></div>');$('savePoi').onclick=async()=>{const r=await aeriom.rpc('discover_campaign_world_location',{p_campaign_id:state.campaign.id,p_source:'osm',p_external_id:p.key,p_name:isHouse?(p.name||'Casa'):p.name,p_category:isHouse?'house':p.type,p_latitude:p.lat,p_longitude:p.lng,p_address:p.address||null,p_metadata:{tags:p.tags||{},lootable:isHouse}});if(r.error){toast(r.error.message||'Falha ao salvar o ponto.','error');return;}await refreshLocations();renderLocations();renderStats();closeModal();toast(isHouse?'Casa marcada como ponto lootável.':'Local salvo na campanha.');};}
 
   function locateDevice(){
     if(!navigator.geolocation){toast('GPS indisponível neste navegador.','error');return;}
