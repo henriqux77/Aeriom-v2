@@ -1,4 +1,4 @@
-import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260918-2';
+import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260920-2';
 
 (() => {
   'use strict';
@@ -59,7 +59,8 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260918
       personality:getInput('characterPersonality'),
       objective:getInput('characterObjective'),
       fear:getInput('characterFear'),
-      history:getInput('characterHistory')
+      history:getInput('characterHistory'),
+      image_prompt:getInput('characterImagePrompt')
     };
   }
 
@@ -98,13 +99,7 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260918
 
     if(!existing){
       const s=snapshot();
-      const r=await aeriom.from('characters').insert({
-        id:draftId,user_id:user.id,status:'draft',name:s.name||null,age:Number(s.age)||null,
-        gender:s.gender,race:'Humano',origin:s.origin_name,class:s.class,
-        hp_current:10,hp_max:10,defense:10,movement:9,initiative:0,
-        attributes:s.attributes,inventory:[],equipment:{},conditions:[],
-        creation_state:s,updated_at:new Date().toISOString()
-      }).select('id,status,creation_state').maybeSingle();
+      const r=await aeriom.rpc('save_afterlife_character_draft',{p_character_id:draftId,p_data:s});
       if(r.error)throw r.error;
       existing=r.data;
     }
@@ -122,7 +117,7 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260918
       name:'characterName',nickname:'characterNickname',gender:'characterGender',age:'characterAge',
       skin:'appearanceSkin',hair:'appearanceHair',eyes:'appearanceEyes',eye_shape:'appearanceEyeShape',
       style:'appearanceStyle',height:'appearanceHeight',weight:'appearanceWeight',scar:'appearanceScar',
-      features:'appearanceFeatures',appearance:'appearanceDescription',personality:'characterPersonality',
+      features:'appearanceFeatures',appearance:'appearanceDescription',image_prompt:'characterImagePrompt',personality:'characterPersonality',
       objective:'characterObjective',fear:'characterFear',history:'characterHistory'
     };
     Object.entries(map).forEach(([k,id])=>{if(s[k]!=null)setInput(id,s[k])});
@@ -153,7 +148,7 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260918
         hp_current:f.hp,hp_max:f.hp,defense:f.defense,movement:f.movement,
         attributes:s.attributes,creation_state:s,status:'draft',updated_at:new Date().toISOString()
       };
-      const r=await aeriom.from('characters').update(payload).eq('id',draftId).eq('user_id',user.id).select('id').maybeSingle();
+      const r=await aeriom.rpc('save_afterlife_character_draft',{p_character_id:draftId,p_data:s});
       if(r.error)throw r.error;
       setStatus('SALVO AGORA','ok');
     }catch(error){
@@ -172,18 +167,8 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260918
 
     saving=true;setStatus('FINALIZANDO…');
     try{
-      const f=formulas(s.attributes);
-      const payload={
-        name:s.name,age:Number(s.age)||null,gender:s.gender||null,race:'Humano',origin:s.origin_name||s.origin,
-        class:s.class,hp_current:f.hp,hp_max:f.hp,defense:f.defense,movement:f.movement,
-        initiative:0,mana_current:0,mana_max:0,attributes:s.attributes,conditions:[],
-        creation_state:s,status:'completed',campaign_id:null,updated_at:new Date().toISOString()
-      };
-      const r=await aeriom.from('characters').update(payload).eq('id',draftId).eq('user_id',user.id).select('id,status').maybeSingle();
-      if(r.error)throw r.error;if(!r.data)throw new Error('A ficha não pôde ser finalizada.');
-      const survival=await aeriom.rpc('advance_character_survival',{p_character_id:draftId,p_hunger_delta:0,p_thirst_delta:0,p_fatigue_delta:0,p_stress_delta:0,p_temperature:37,p_contamination_delta:0});
-      if(survival.error)throw survival.error;
-      if(!survival.data)throw new Error('O estado de sobrevivência não pôde ser inicializado.');
+      const r=await aeriom.rpc('finalize_afterlife_character',{p_character_id:draftId,p_data:s});
+      if(r.error)throw r.error;
       localStorage.removeItem(keyPrefix+user.id);
       setStatus('FICHA FINALIZADA','ok');
       setTimeout(()=>location.replace('./personagens.html'),450);
