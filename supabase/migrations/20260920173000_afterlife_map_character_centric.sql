@@ -118,3 +118,27 @@ $$;
 
 revoke all on function public.add_campaign_character(uuid,uuid) from public,anon;
 grant execute on function public.add_campaign_character(uuid,uuid) to authenticated;
+
+
+-- Character movement permission is implemented as a SECURITY DEFINER RPC.
+create or replace function public.move_campaign_character(
+  p_campaign_id uuid,
+  p_character_id uuid,
+  p_latitude double precision,
+  p_longitude double precision
+)
+returns jsonb language plpgsql security definer set search_path=public as $$
+declare uid uuid := (select auth.uid()); ch public.characters%rowtype;
+begin
+  if uid is null then raise exception 'not_authenticated' using errcode='42501'; end if;
+  if p_latitude is null or p_longitude is null or p_latitude < -90 or p_latitude > 90 or p_longitude < -180 or p_longitude > 180 then raise exception 'INVALID_COORDINATES' using errcode='22023'; end if;
+  select * into ch from public.characters where id=p_character_id and campaign_id=p_campaign_id and status='completed' for update;
+  if ch.id is null then raise exception 'CHARACTER_NOT_IN_CAMPAIGN' using errcode='42501'; end if;
+  if ch.user_id<>uid and not public.afterlife_is_master(p_campaign_id,uid) then raise exception 'CHARACTER_MOVE_FORBIDDEN' using errcode='42501'; end if;
+  insert into public.campaign_map_positions(campaign_id,user_id,latitude,longitude,updated_at)
+  values(p_campaign_id,ch.user_id,p_latitude,p_longitude,now())
+  on conflict(campaign_id,user_id) do update set latitude=excluded.latitude,longitude=excluded.longitude,updated_at=now();
+  return jsonb_build_object('character_id',ch.id,'user_id',ch.user_id,'latitude',p_latitude,'longitude',p_longitude,'updated_at',now());
+end $$;
+revoke all on function public.move_campaign_character(uuid,uuid,double precision,double precision) from public,anon;
+grant execute on function public.move_campaign_character(uuid,uuid,double precision,double precision) to authenticated;
