@@ -2,21 +2,25 @@
 -- Raw tables remain master-only; players read minimal projections via RPCs.
 
 DROP POLICY IF EXISTS al_faction_read ON public.campaign_factions;
+DROP POLICY IF EXISTS al_faction_read_master ON public.campaign_factions;
 CREATE POLICY al_faction_read_master ON public.campaign_factions
   FOR SELECT TO authenticated
   USING (afterlife_is_master(campaign_id, (SELECT auth.uid() AS uid)));
 
 DROP POLICY IF EXISTS al_npc_read ON public.campaign_npcs;
+DROP POLICY IF EXISTS al_npc_read_master ON public.campaign_npcs;
 CREATE POLICY al_npc_read_master ON public.campaign_npcs
   FOR SELECT TO authenticated
   USING (afterlife_is_master(campaign_id, (SELECT auth.uid() AS uid)));
 
 DROP POLICY IF EXISTS al_vehicle_read ON public.campaign_vehicles;
+DROP POLICY IF EXISTS al_vehicle_read_master ON public.campaign_vehicles;
 CREATE POLICY al_vehicle_read_master ON public.campaign_vehicles
   FOR SELECT TO authenticated
   USING (afterlife_is_master(campaign_id, (SELECT auth.uid() AS uid)));
 
 DROP POLICY IF EXISTS al_station_read ON public.crafting_stations;
+DROP POLICY IF EXISTS al_station_read_master ON public.crafting_stations;
 CREATE POLICY al_station_read_master ON public.crafting_stations
   FOR SELECT TO authenticated
   USING (afterlife_is_master(campaign_id, (SELECT auth.uid() AS uid)));
