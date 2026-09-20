@@ -1,4 +1,4 @@
-import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260920-map40';
+import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260920-map41';
 
 (() => {
   'use strict';
