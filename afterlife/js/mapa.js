@@ -507,7 +507,20 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260920
   function centerTo(p,z){if(!p||!state.map)return;state.map.setView([p.lat,p.lng],Math.min(19,Math.max(2,n(z,5))),{animate:false});}
   function setCoordinates(p){$('mapCoordinates').textContent=n(p?.lat).toFixed(6)+'°, '+n(p?.lng).toFixed(6)+'°';}
   function updateReadout(){if(!state.map)return;const z=state.map.getZoom();$('mapZoomLabel').textContent='Z'+z;$('mapScaleLabel').textContent=z<7?'MUNDO':z<12?'REGIÃO':z<15?'CIDADE':'RUA';$('mapScaleHint').textContent=z>=16?'MODO RUA':'ARRASTE PARA EXPLORAR';}
-  function scheduleViewport(){updateReadout();clearTimeout(state.viewportTimer);state.viewportTimer=setTimeout(()=>{renderLocations();renderEntities();renderFactions();renderNpcs();renderVehicles();renderStations();renderThreats();if(state.map.getZoom()>=16){clearTimeout(state.poiTimer);state.poiTimer=setTimeout(()=>loadPoisAroundView(),260);}else{state.layer.pois.clearLayers();}},140);}
+  function scheduleViewport(){
+    updateReadout();
+    clearTimeout(state.viewportTimer);
+    state.viewportTimer=setTimeout(()=>{
+      if(state.map.getZoom()>=16){
+        clearTimeout(state.poiTimer);
+        state.poiTimer=setTimeout(()=>loadPoisAroundView(),320);
+      }else{
+        state.layer.pois.clearLayers();
+      }
+      if(!isMaster())renderVision();
+    },120);
+  }
+
   function renderStats(){renderPartyList();renderSelection();$('statLocations').textContent=String(state.locations.filter(x=>x.discovered!==false).length);$('statThreats').textContent=String(isMaster()?state.hordes.length:0);$('statTravels').textContent=String(state.travels.length);}
   function renderMasterTools(){if(isMaster()){$('masterCard').removeAttribute('aria-hidden');}else{$('masterCard').setAttribute('aria-hidden','true');}}
 
