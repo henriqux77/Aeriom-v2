@@ -21,7 +21,7 @@ import { getSupabase } from "./supabase.js";
   ];
   const ATTRS = [
     ["forca", "Força"], ["agilidade", "Agilidade"], ["percepcao", "Percepção"], ["vigor", "Vigor"],
-    ["intelecto", "Intelecto"], ["presenca", "Presença"], ["controle", "Controle"], ["precisao", "Precisão"]
+    ["intelecto", "Intelecto"], ["presenca", "Presença"], ["controle", "Controle"]
   ];
 
   let sb = null;
