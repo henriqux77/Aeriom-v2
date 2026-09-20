@@ -95,7 +95,6 @@ function buildStandardActions(combatant) {
   const strengthDie = attrDie(profile, "forca", 8);
   const agilityDie = attrDie(profile, "agilidade", 8);
   const vigorDie = attrDie(profile, "vigor", 8);
-  const precisionDie = attrDie(profile, "precisao", 8);
   const perceptionDie = attrDie(profile, "percepcao", 8);
   const strength = physicalTier(strengthDie);
   const agility = physicalTier(agilityDie);
@@ -194,10 +193,10 @@ function allCombatActions(combatant) {
     const damage = String(technique?.damage || technique?.dano || "").match(/(\d+d\d+(?:[+-]\d+)?)/i)?.[1] || "";
     const manaCost = numeric(technique?.cost ?? technique?.manaCost, 0);
     const test = String(technique?.test || technique?.teste || "").toLowerCase();
-    const attackAttr = test.includes("precis") ? "precisao" :
+    const attackAttr = test.includes("precis") ? "agilidade" :
       test.includes("controle") || test.includes("mana") ? "controle" :
       test.includes("intelect") ? "intelecto" : "forca";
-    const bonusSkill = attackAttr === "precisao" ? "pontaria" :
+    const bonusSkill = attackAttr === "agilidade" ? "pontaria" :
       attackAttr === "controle" ? "oficio" :
       attackAttr === "intelecto" ? "conhecimento" : "atletismo";
     return {
