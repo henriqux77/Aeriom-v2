@@ -2,7 +2,7 @@ import './aeriom-client-v2.js?v=20260915-6';
 import './error-monitor.js?v=20260914-1';
 import './profile-global.js?v=20260914-30';
 import './shared-profile.js?v=20260916-1';
-import './afterlife-sidebar.js?v=20260915-4';
+import './afterlife-sidebar.js?v=20260920-nav21';
 
 (() => {
   'use strict';
