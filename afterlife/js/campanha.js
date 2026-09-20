@@ -1,6 +1,6 @@
 import './error-monitor.js?v=20260915-9';
 import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260915-6';
-import './afterlife-sidebar.js?v=20260917-1';
+import './afterlife-sidebar.js?v=20260920-nav21';
 import './shared-profile.js?v=20260915-6';
 import './invites.js?v=20260915-3';
 import './members-presence.js?v=20260917-3';
