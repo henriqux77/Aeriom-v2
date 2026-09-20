@@ -3,26 +3,27 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#050807">
-<title>AFTERLIFE — Mapa Vivo</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap">
-<link rel="stylesheet" href="./css/afterlife.css?v=20260919-map1">
-<link rel="stylesheet" href="./css/afterlife-sidebar.css?v=20260919-map1">
-<link rel="stylesheet" href="./css/afterlife-profile-global.css?v=20260919-map1">
-<link rel="stylesheet" href="./css/mapa.css?v=20260920-mapfix1">
+<meta name="theme-color" content="#050504">
+<title>AFTERLIFE — Mapa</title>
+<link rel="stylesheet" href="./css/afterlife.css?v=20260920-map20">
+<link rel="stylesheet" href="./css/afterlife-sidebar.css?v=20260920-map20">
+<link rel="stylesheet" href="./css/afterlife-profile-global.css?v=20260920-map20">
+<link rel="stylesheet" href="./css/mapa.css?v=20260920-map20">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+<script src="./js/error-monitor.js?v=20260920-map20"></script>
 </head>
 <body class="afterlife-map-page">
 <div class="app-shell">
   <aside class="sidebar" id="sidebar">
     <div class="brand"><div class="brand__title"><img class="brand__logo" src="https://i.ibb.co/BH2Hqr3P/file-00000000b47c820e88b788de23f77e3e.png" alt="AFTERLIFE"></div></div>
-    <nav class="side-nav" aria-label="Navegação">
+    <nav class="side-nav">
       <a class="side-nav__item" href="./index.html"><span class="icon">⌂</span><span>Início</span></a>
-      <a class="side-nav__item" href="./campanhas.html"><span class="icon">◈</span><span>Campanhas</span></a>
-      <a class="side-nav__item" href="./personagens.html"><span class="icon">●</span><span>Personagens</span></a>
-      <a class="side-nav__item is-active" href="./mapa-mundial.html"><span class="icon">◇</span><span>Mapa Vivo</span></a>
+      <a class="side-nav__item" href="./campanhas.html"><span class="icon">◈</span><span>Campanha</span></a>
+      <a class="side-nav__item" href="./personagens.html"><span class="icon">●</span><span>Ficha</span></a>
+      <a class="side-nav__item is-active" href="./mapa-mundial.html"><span class="icon">◇</span><span>Mapa</span></a>
       <a class="side-nav__item" href="./combate.html"><span class="icon">⚔</span><span>Combate</span></a>
+      <a class="side-nav__item" href="./inventario.html"><span class="icon">▣</span><span>Inventário</span></a>
+      <a class="side-nav__item" href="./diario.html"><span class="icon">▤</span><span>Diário</span></a>
     </nav>
     <div class="sidebar-spacer"></div>
     <a class="side-nav__item" href="./perfil.html"><span class="icon">⚙</span><span>Perfil</span></a>
@@ -30,11 +31,14 @@
 
   <main class="main afterlife-map-main">
     <header class="topbar afterlife-map-topbar">
-      <button class="mobile-menu" id="mobileMenu" aria-label="Abrir menu"><span aria-hidden="true"></span></button>
-      <div class="map-topline">
-        <a class="map-back" id="mapBackCampaign" href="./campanhas.html">← <span>Campanha</span></a>
-        <div class="map-title-wrap"><small>AFTERLIFE · MUNDO VIVO</small><strong id="mapTitle">Mapa da campanha</strong></div>
-        <span id="mapRoleBadge" class="map-role-badge">CARREGANDO</span>
+      <button class="mobile-menu" id="mobileMenu" type="button" aria-label="Abrir menu"></button>
+      <div class="map-header-title">
+        <a href="./campanhas.html" id="mapBackCampaign">← VOLTAR</a>
+        <div><small>AFTERLIFE · MUNDO VIVO</small><strong id="mapTitle">Mapa da campanha</strong></div>
+      </div>
+      <div class="map-header-status">
+        <span id="mapRoleBadge">CARREGANDO</span>
+        <span class="map-sync"><i id="syncDot"></i><b id="mapLiveText">SINCRONIZANDO</b></span>
       </div>
       <div class="top-actions">
         <button class="profile-chip" id="profileChip" type="button" aria-label="Abrir perfil">
@@ -45,106 +49,112 @@
       </div>
     </header>
 
-    <section class="map-commandbar">
-      <div class="map-campaign-copy"><span id="mapCampaignName">Campanha</span><small id="mapStatus">Iniciando mapa…</small></div>
-      <div class="map-command-actions">
-        <button class="map-command-btn" id="mapCenterCampaign" type="button"><span>⌖</span> INÍCIO</button>
-        <button class="map-command-btn" id="mapCenterMe" type="button"><span>◎</span> MINHA POSIÇÃO</button>
-        <button class="map-command-btn" id="mapLocateDevice" type="button"><span>◉</span> GPS</button>
+    <section class="map-scene" id="mapScene">
+      <div class="map-top-strip">
+        <div class="map-campaign-ident">
+          <span class="map-campaign-kicker">CAMPANHA</span>
+          <strong id="mapCampaignName">Carregando…</strong>
+          <small id="mapStatus">Preparando o mundo.</small>
+        </div>
+        <div class="map-top-actions">
+          <button type="button" class="map-hud-btn" id="mapCenterCampaign">⌖ <span>BASE</span></button>
+          <button type="button" class="map-hud-btn" id="mapCenterMe">◎ <span>EU</span></button>
+          <button type="button" class="map-hud-btn" id="mapLocateDevice">◉ <span>GPS</span></button>
+        </div>
       </div>
-    </section>
 
-    <section class="map-stage" id="mapStage">
-      <div class="map-canvas-shell">
-        <div id="worldMap"></div>
-        <div class="map-vignette"></div>
-        <div class="map-scale-readout"><span id="mapScaleLabel">MUNDO</span><b id="mapZoomLabel">Z5</b></div>
+      <div id="worldMap" aria-label="Mapa do mundo da campanha"></div>
+
+      <div class="map-overlay map-overlay--left">
+        <section class="map-card expedition-card">
+          <div class="map-card-head">
+            <div><span>EXPEDIÇÃO</span><h2>Quem está na mesa</h2></div>
+            <span class="map-count" id="partyCount">0</span>
+          </div>
+          <div id="partyList" class="party-list"></div>
+          <div class="map-divider"></div>
+          <div class="vision-card">
+            <div class="vision-icon">◉</div>
+            <div><span>RAIO DE PERCEPÇÃO</span><strong>380 m</strong><small id="visionStatus">Posição da campanha</small></div>
+            <button type="button" id="mapFocusMe" aria-label="Centralizar minha percepção">→</button>
+          </div>
+        </section>
+
+        <section class="map-card location-card" id="selectionCard">
+          <div class="map-card-head">
+            <div><span>LOCAL SELECIONADO</span><h2 id="selectionTitle">Nenhum local</h2></div>
+            <button class="map-icon-btn" id="clearSelection" type="button" aria-label="Limpar seleção">×</button>
+          </div>
+          <div id="selectionBody" class="selection-body">
+            <div class="selection-placeholder">Toque em um marcador para abrir a ficha do local.</div>
+          </div>
+        </section>
+      </div>
+
+      <div class="map-overlay map-overlay--right">
+        <section class="map-card region-card">
+          <div class="map-card-head">
+            <div><span>SITUAÇÃO</span><h2>Estado da região</h2></div>
+            <span class="region-pulse"><i></i> AO VIVO</span>
+          </div>
+          <div class="region-grid">
+            <div><span>LOCAIS</span><b id="statLocations">0</b><small>descobertos</small></div>
+            <div><span>AMEAÇAS</span><b id="statThreats">0</b><small>conhecidas</small></div>
+            <div><span>VIAGENS</span><b id="statTravels">0</b><small>registradas</small></div>
+          </div>
+          <div class="map-divider"></div>
+          <div class="map-card-section-title">SISTEMAS</div>
+          <div class="system-chip-grid">
+            <button type="button" data-system-view="explore">⌁<span>Explorar</span></button>
+            <button type="button" data-system-view="radar">☢<span>Radar</span></button>
+            <button type="button" data-system-view="travel">➜<span>Viagem</span></button>
+            <button type="button" data-system-view="world">✦<span>Mundo</span></button>
+          </div>
+        </section>
+
+        <section class="map-card master-card" id="masterCard">
+          <div class="map-card-head">
+            <div><span>MESTRE</span><h2>Controle do mundo</h2></div>
+          </div>
+          <div id="masterTools" class="master-tools"></div>
+        </section>
+      </div>
+
+      <div class="map-hud-bottom">
+        <div class="map-readout"><span id="mapScaleLabel">MUNDO</span><b id="mapZoomLabel">Z5</b></div>
         <div class="map-coordinates" id="mapCoordinates">0.000000°, 0.000000°</div>
-
-        <div class="map-float-stack map-float-stack--left">
-          <button class="map-float-btn" id="mapZoomIn" type="button" aria-label="Aumentar zoom">+</button>
-          <button class="map-float-btn" id="mapZoomOut" type="button" aria-label="Diminuir zoom">−</button>
-          <button class="map-float-btn" id="mapCompass" type="button" aria-label="Ativar bússola" aria-pressed="false">N</button>
+        <div class="map-compass-wrap">
+          <button type="button" class="map-compass" id="mapCompass" aria-label="Ativar bússola">N</button>
+          <small id="mapScaleHint">ARRASTE PARA EXPLORAR</small>
         </div>
-
-        <div class="map-live-badge" id="mapLiveBadge"><i></i><span id="mapLiveText">SINCRONIZADO</span></div>
-        <button class="map-open-panel" id="mapOpenPanel" type="button" aria-expanded="false"><span>☷</span><b>PAINEL</b></button>
       </div>
 
-      <aside class="map-drawer" id="mapDrawer" aria-hidden="true">
-        <div class="map-drawer-head">
-          <div><span>CONTROLE TÁTICO</span><strong id="drawerTitle">Mapa Vivo</strong></div>
-          <button id="mapClosePanel" type="button" aria-label="Fechar painel">×</button>
-        </div>
-
-        <div class="map-tabs" role="tablist">
-          <button class="is-active" data-map-tab="overview" type="button">VISÃO</button>
-          <button data-map-tab="explore" type="button">EXPLORAR</button>
-          <button data-map-tab="systems" type="button">SISTEMAS</button>
-          <button data-map-tab="master" type="button" id="masterTab">MESTRE</button>
-        </div>
-
-        <div class="map-tab-panels">
-          <section class="map-tab-panel is-active" data-map-panel="overview">
-            <div class="map-stat-grid">
-              <div><span>MEMBROS</span><b id="statMembers">0</b></div>
-              <div><span>LOCAIS</span><b id="statLocations">0</b></div>
-              <div><span>AMEAÇAS</span><b id="statThreats">0</b></div>
-              <div><span>ÁREAS</span><b id="statAreas">0</b></div>
-            </div>
-            <div class="map-section-title">PRESENÇA NA MESA</div>
-            <div id="mapMemberList" class="map-member-list"></div>
-            <div class="map-section-title">ATALHOS</div>
-            <div class="map-quick-grid">
-              <button class="map-quick" data-open-tab="explore" type="button"><span>⌁</span><b>Explorar</b><small>Locais e testes</small></button>
-              <button class="map-quick" data-open-systems="radar" type="button"><span>☢</span><b>Radar</b><small>Ondas e infecção</small></button>
-              <button class="map-quick" data-open-systems="travel" type="button"><span>➜</span><b>Viagem</b><small>Deslocamento</small></button>
-              <button class="map-quick" data-open-systems="world" type="button"><span>✦</span><b>Mundo</b><small>Facções e NPCs</small></button>
-            </div>
-          </section>
-
-          <section class="map-tab-panel" data-map-panel="explore">
-            <div class="map-panel-intro"><span>EXPLORAÇÃO</span><strong>Transforme o mapa em jogo.</strong><small>Locais salvos podem conter áreas, perigos, eventos, criaturas, segredos e saque.</small></div>
-            <div id="selectedLocationCard" class="map-selected-card is-empty">
-              <div class="map-selected-icon">⌖</div><div><strong>Nenhum local selecionado</strong><small>Clique em um marcador para abrir a ficha.</small></div>
-            </div>
-            <div class="map-section-title">LOCAIS PRÓXIMOS</div>
-            <div id="locationList" class="map-location-list"></div>
-            <div class="map-section-title">LOCAIS REAIS</div>
-            <div class="map-real-poi-status" id="poiStatus">Aproxime o mapa para descobrir comércio, hospitais, postos e outros pontos.</div>
-            <div id="poiList" class="map-location-list"></div>
-          </section>
-
-          <section class="map-tab-panel" data-map-panel="systems">
-            <div id="systemsCards"></div>
-          </section>
-
-          <section class="map-tab-panel" data-map-panel="master">
-            <div id="masterPanel"></div>
-          </section>
-        </div>
-      </aside>
+      <div class="map-mobile-actions">
+        <button type="button" data-mobile-panel="party">♟<span>GRUPO</span></button>
+        <button type="button" data-mobile-panel="explore">⌁<span>EXPLORAR</span></button>
+        <button type="button" class="is-main" id="mobileOpenPanel">☷<span>PAINEL</span></button>
+        <button type="button" data-mobile-panel="systems">☢<span>SISTEMAS</span></button>
+        <button type="button" data-mobile-panel="master" id="mobileMasterBtn">♛<span>MESTRE</span></button>
+      </div>
     </section>
   </main>
 </div>
 
-<div class="afterlife-profile-menu" id="profileMenu" aria-hidden="true">
-  <div class="afterlife-profile-head"><span class="afterlife-profile-avatar" id="profileMenuAvatar">A</span><div><strong id="profileMenuName">Sobrevivente</strong><small id="profileMenuEmail">Conta Afterlife</small></div></div>
-  <div class="afterlife-profile-actions"><a href="./perfil.html">Editar perfil</a><a href="../index.html">Trocar sistema</a><button id="profileLogout" class="danger" type="button">Sair da conta</button></div>
+<div class="map-panel-sheet" id="mapPanelSheet" aria-hidden="true">
+  <div class="map-sheet-grab"></div>
+  <div class="map-sheet-head"><div><small>AFTERLIFE</small><strong id="sheetTitle">Painel</strong></div><button type="button" id="sheetClose">×</button></div>
+  <div id="sheetBody"></div>
 </div>
 
 <div class="map-modal-backdrop" id="mapModalBackdrop" hidden>
-  <div class="map-modal" id="mapModal" role="dialog" aria-modal="true" aria-labelledby="mapModalTitle">
-    <header><div><small id="mapModalEyebrow">MAPA</small><h2 id="mapModalTitle">Detalhes</h2></div><button id="mapModalClose" type="button" aria-label="Fechar">×</button></header>
+  <div class="map-modal" role="dialog" aria-modal="true" aria-labelledby="mapModalTitle">
+    <header><div><small id="mapModalEyebrow">AFTERLIFE · MAPA</small><h2 id="mapModalTitle">Detalhes</h2></div><button id="mapModalClose" type="button">×</button></header>
     <div id="mapModalBody"></div>
   </div>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin></script>
-<script type="module" src="./js/afterlife-sidebar.js?v=20260919-map1"></script>
-<script type="module" src="./js/profile-global.js?v=20260919-map1"></script>
-<script src="./js/error-monitor.js?v=20260920-mapfix2"></script>
-<script type="module" src="./js/mapa.js?v=20260920-mapfix3"></script>
-<script type="module" src="./js/mapa-exploration.js?v=20260920-mapfix2"></script>
+<script type="module" src="./js/afterlife-sidebar.js?v=20260920-map20"></script>
+<script type="module" src="./js/mapa.js?v=20260920-map20"></script>
 </body>
 </html>
