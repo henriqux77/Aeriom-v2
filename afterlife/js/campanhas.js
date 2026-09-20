@@ -1,6 +1,6 @@
 import './error-monitor.js?v=20260915-8';
 import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=1';
-import './afterlife-sidebar.js?v=20260915-8';
+import './afterlife-sidebar.js?v=20260920-nav21';
 
 (() => {
   'use strict';
