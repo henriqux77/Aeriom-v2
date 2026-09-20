@@ -181,7 +181,9 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260918
       };
       const r=await aeriom.from('characters').update(payload).eq('id',draftId).eq('user_id',user.id).select('id,status').maybeSingle();
       if(r.error)throw r.error;if(!r.data)throw new Error('A ficha não pôde ser finalizada.');
-      const survival=await aeriom.rpc('advance_character_survival',{p_character_id:draftId,p_hunger_delta:0,p_thirst_delta:0,p_fatigue_delta:0,p_stress_delta:0,p_temperature:37,p_contamination_delta:0});\n      if(survival.error)throw survival.error;\n      if(!survival.data)throw new Error('O estado de sobrevivência não pôde ser inicializado.');
+      const survival=await aeriom.rpc('advance_character_survival',{p_character_id:draftId,p_hunger_delta:0,p_thirst_delta:0,p_fatigue_delta:0,p_stress_delta:0,p_temperature:37,p_contamination_delta:0});
+      if(survival.error)throw survival.error;
+      if(!survival.data)throw new Error('O estado de sobrevivência não pôde ser inicializado.');
       localStorage.removeItem(keyPrefix+user.id);
       setStatus('FICHA FINALIZADA','ok');
       setTimeout(()=>location.replace('./personagens.html'),450);
