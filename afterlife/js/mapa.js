@@ -171,8 +171,8 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260920
 
   function validMemberPoint(m){
     const p=pt(m?.latitude,m?.longitude);
-    if(!p || (Math.abs(p.lat)<0.00001 && Math.abs(p.lng)<0.00001)) return null;
-    return p;
+    if(p && !(Math.abs(p.lat)<0.00001 && Math.abs(p.lng)<0.00001)) return p;
+    return campaignCenter();
   }
 
   async function refreshPlayerPosition(){
@@ -447,6 +447,9 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260920
   }
 
   function openSheet(kind){
+    if(window.matchMedia && !window.matchMedia('(max-width:700px)').matches){
+      return openSystemModal(kind);
+    }
     const sheet=$('mapPanelSheet'),title=$('sheetTitle'),body=$('sheetBody'); if(!sheet||!body)return;
     let t='Painel',html='';
     if(kind==='party'){t='Grupo';html='<div class="sheet-section"><div class="sheet-section-title">SOBREVIVENTES</div><div class="sheet-party">'+state.members.map(m=>'<div class="sheet-card"><strong>'+esc(m.display_name||'Sobrevivente')+'</strong><small>'+esc(m.role==='master'?'MESTRE':'SOBREVIVENTE')+' · '+(validMemberPoint(m)?'posição ativa':'sem posição')+'</small></div>').join('')+'</div></div>';}
@@ -457,6 +460,26 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260920
     body.querySelectorAll('[data-sheet-location]').forEach(b=>b.onclick=()=>{const l=state.locations.find(x=>x.id===b.dataset.sheetLocation);if(l){closeSheet();openLocation(l);}});
     body.querySelectorAll('[data-sheet-system]').forEach(b=>b.onclick=()=>{closeSheet();openSheet(b.dataset.sheetSystem);});
     bindMasterSheet(body);
+  }
+
+  function openSystemModal(kind){
+    const titleMap={explore:'EXPLORAÇÃO',radar:'RADAR DE HORDA',travel:'VIAGENS',world:'MUNDO'};
+    let html='';
+    if(kind==='explore'){
+      const rows=state.locations.filter(x=>x.discovered!==false).slice(0,16).map(l=>'<button type="button" class="map-list-row" data-modal-location="'+esc(l.id)+'"><span class="map-list-icon">'+esc(iconByCategory(l.category))+'</span><span><strong>'+esc(l.name)+'</strong><small>'+esc(l.category||'Local')+'</small></span><b>→</b></button>').join('');
+      html='<div class="map-area-list">'+(rows||'<div class="map-empty-state">Nenhum local descoberto.</div>')+'</div>';
+    } else if(kind==='radar'){
+      html=isMaster()
+        ? '<div class="map-area-list">'+(state.hordes.slice(0,24).map(h=>'<div class="map-area-card"><strong>☢ '+esc(h.name||'Horda')+'</strong><small>'+Math.round(n(h.size))+' zumbis · '+Math.round(n(h.threat_level,1))+'/10 · '+Math.round(n(h.direction_deg))+'°</small></div>').join('')||'<div class="map-empty-state">Nenhuma horda ativa.</div>')+'</div>'
+        : '<div class="map-empty-state">O radar de hordas é informação controlada pelo Mestre.</div>';
+    } else if(kind==='travel'){
+      const t=state.travels.slice(0,12).map(x=>'<div class="map-area-card"><strong>➜ '+esc(x.destination_name||'Destino')+'</strong><small>'+esc(x.status||'planejada')+' · '+Math.round(n(x.progress_percent))+'%</small></div>').join('');
+      html='<div class="map-area-list">'+(t||'<div class="map-empty-state">Nenhuma viagem registrada.</div>')+'</div>';
+    } else {
+      html='<div class="map-location-sheet"><div class="map-location-kpis"><div><span>FACÇÕES</span><b>'+state.factions.length+'</b></div><div><span>NPCs</span><b>'+state.npcs.length+'</b></div><div><span>VEÍCULOS</span><b>'+state.vehicles.length+'</b></div></div><p class="map-location-address">Infraestrutura e atores do mundo ficam sincronizados com a campanha.</p></div>';
+    }
+    openModal(titleMap[kind]||'SISTEMA',html);
+    $('mapModalBody').querySelectorAll('[data-modal-location]').forEach(b=>b.onclick=()=>{const l=state.locations.find(x=>x.id===b.dataset.modalLocation);if(l){closeModal();openLocation(l);}});
   }
 
   function buildMasterSheet(){if(!isMaster())return '<div class="map-empty-state">Controles do Mestre.</div>';return '<div class="sheet-section"><div class="sheet-section-title">FERRAMENTAS</div><div class="sheet-actions"><button type="button" data-sheet-mode="entity">✦ ELEMENTO</button><button type="button" data-sheet-mode="horde">☢ HORDA</button><button type="button" data-sheet-mode="territory">🏴 TERRITÓRIO</button><button type="button" data-sheet-mode="travel">➜ VIAGEM</button></div></div><div class="sheet-section"><div class="sheet-section-title">INFECÇÃO</div><div class="sheet-party">'+state.infection.slice(0,12).map(z=>'<button class="sheet-card" type="button" data-sheet-zone="'+esc(z.id)+'"><strong>'+esc(z.zone_name||'Zona')+'</strong><small>'+Math.round(n(z.infection_percent))+'% · '+esc(z.outbreak_stage||'active')+'</small></button>').join('')+'</div></div>';}
