@@ -33,20 +33,48 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260920
   const initials = s => String(s||'S').trim().charAt(0).toUpperCase() || 'S';
   const isMaster = () => state.role === 'master';
   const iconByCategory = c => ({
-    hospital:'🏥',clinic:'🩺',pharmacy:'💊',doctors:'🩺',dentist:'🦷',veterinary:'🐾',
-    fuel:'⛽',police:'🚓',fire_station:'🚒',bank:'🏦',atm:'🏧',post_office:'📮',
-    restaurant:'🍽️',fast_food:'🍔',cafe:'☕',bar:'🍺',pub:'🍻',bakery:'🥖',
-    supermarket:'🛒',marketplace:'🛒',convenience:'🏪',butcher:'🥩',pet:'🐾',
-    pet_grooming:'🐾',hardware:'🧰',electronics:'📱',books:'📚',clothes:'👕',
-    bicycle:'🚲',car:'🚗',car_repair:'🔧',mall:'🏬',hotel:'🏨',hostel:'🛏️',
-    park:'🌳',playground:'🛝',forest:'🌲',school:'🏫',university:'🎓',
-    kindergarten:'🧸',museum:'🏛️',library:'📚',theatre:'🎭',cinema:'🎬',
-    stadium:'🏟️',sports_centre:'🏋️',pool:'🏊',station:'🚉',bus_station:'🚌',
-    ruins:'🏚️',monument:'🗿',memorial:'🪦',castle:'🏰',church:'⛪',
+    hospital:'🏥',clinic:'🩺',pharmacy:'💊',chemist:'💊',healthcare:'🩺',doctors:'🩺',dentist:'🦷',
+    veterinary:'🐾',animal_boarding:'🐾',optometrist:'👓',
+    fuel:'⛽',charging_station:'⚡',police:'🚓',fire_station:'🚒',bank:'🏦',atm:'🏧',post_office:'📮',
+    restaurant:'🍽️',fast_food:'🍔',cafe:'☕',bar:'🍺',pub:'🍻',bakery:'🥖',food_court:'🍴',
+    supermarket:'🛒',marketplace:'🛒',convenience:'🏪',variety_store:'🏪',department_store:'🏬',
+    butcher:'🥩',greengrocer:'🥬',seafood:'🐟',beverages:'🧃',pet:'🐾',pet_grooming:'🐾',
+    hardware:'🧰',electronics:'📱',books:'📚',clothes:'👕',shoes:'👟',bicycle:'🚲',car:'🚗',car_repair:'🔧',
+    mall:'🏬',hotel:'🏨',hostel:'🛏️',motel:'🛏️',
+    park:'🌳',playground:'🛝',forest:'🌲',school:'🏫',university:'🎓',kindergarten:'🧸',
+    museum:'🏛️',library:'📚',theatre:'🎭',cinema:'🎬',stadium:'🏟️',sports_centre:'🏋️',pool:'🏊',
+    station:'🚉',bus_station:'🚌',train_station:'🚉',
+    ruins:'🏚️',monument:'🗿',memorial:'🪦',castle:'🏰',church:'⛪',place_of_worship:'⛪',
     shelter:'⌂',house:'🏠',detached:'🏠',semidetached:'🏠',residential:'🏠',
     npc:'🧍',vehicle:'🚙',station_crafting:'⚒️',faction:'⚑',horde:'☣️',
-    hospital_area:'🏥',hazard:'⚠️',military:'⚔️',barricade:'🚧',commerce:'🏪'
-  }[String(c||'').toLowerCase()] || '⌖');
+    hospital_area:'🏥',hazard:'⚠️',military:'⚔️',barricade:'🚧',commerce:'🏪',
+    office:'🏢',industrial:'🏭',warehouse:'📦'
+  }[String(c||'').toLowerCase()] || '🏢');
+
+  function poiCategory(p){
+    const tags=p?.tags||{};
+    const name=String(p?.name||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+    const values=[
+      tags.amenity,tags.shop,tags.healthcare,tags.tourism,tags.craft,tags.leisure,tags.historic,tags.building,
+      p?.type
+    ].map(v=>String(v||'').trim().toLowerCase()).filter(Boolean);
+    const all=values.join(' ');
+    if(/pharmacy|chemist/.test(all)||/farmacia|drogasil|pague menos|drogaria|ultrafarma|droga raia/.test(name))return 'pharmacy';
+    if(/veterinary/.test(all)||/pet shop|petshop|petz|cobasi/.test(name))return 'veterinary';
+    if(/bank/.test(all)||/banco |itau|itaú|bradesco|santander|caixa economica|sicredi|sicoob/.test(name))return 'bank';
+    if(/fuel/.test(all)||/posto|shell|ipiranga|petrobras|ale /.test(name))return 'fuel';
+    if(/supermarket|grocery/.test(all)||/mercado|supermercado|carrefour|extra|assai|atacadao|atacadão|dalben/.test(name))return 'supermarket';
+    if(/restaurant|fast_food|food_court/.test(all)||/restaurante|lanchonete|hamburg|pizza|churrasc|outback/.test(name))return 'restaurant';
+    if(/cafe/.test(all)||/cafe |café |starbucks/.test(name))return 'cafe';
+    if(/hospital/.test(all)||/hospital|pronto socorro|pronto-socorro/.test(name))return 'hospital';
+    if(/clinic|doctors|dentist|healthcare/.test(all)||/clinica|clínica|consultorio|consultório|odont|medic/.test(name))return 'clinic';
+    if(/police/.test(all)||/policia|polícia|delegacia/.test(name))return 'police';
+    if(/school|university|kindergarten/.test(all)||/escola|colegio|colégio|faculdade|universidade/.test(name))return 'school';
+    if(/park|playground|forest/.test(all)||/parque|praca|praça/.test(name))return 'park';
+    if(/pet|pet_grooming/.test(all))return 'pet';
+    if(/house|detached|semidetached|residential/.test(all))return 'house';
+    return values.find(v=>iconByCategory(v)!=='🏢')||p?.type||'commerce';
+  }
 
   function mapIcon(symbol, kind='poi', label='Marcador'){
     const html='<span class="afterlife-map-icon afterlife-map-icon--'+esc(kind)+'" role="img" aria-label="'+esc(label)+'">'+esc(symbol)+'</span>';
@@ -667,7 +695,7 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260920
       try{const ac=new AbortController(),tm=setTimeout(()=>ac.abort(),6500),r=await fetch(ep,{method:'POST',body:q,headers:{'Content-Type':'text/plain;charset=UTF-8'},signal:ac.signal});clearTimeout(tm);if(r.ok){data=await r.json();break;}}catch{}
     }
     if(!data)return;
-    const items=(data.elements||[]).map(e=>{const tags=e.tags||{},p=pt(e.lat??e.center?.lat,e.lon??e.center?.lon),type=tags.amenity||tags.shop||tags.tourism||tags.craft||tags.leisure||tags.historic||tags.building||'POI';return p?{key:'osm:'+e.type+':'+e.id,name:tags.name||tags.brand||(String(type).toLowerCase().includes('house')?'Casa':'Local'),type,lat:p.lat,lng:p.lng,address:tags['addr:full']||[tags['addr:street'],tags['addr:housenumber']].filter(Boolean).join(', '),tags}:null;}).filter(Boolean).filter(p=>!['bus_stop','stop_position','platform'].includes(String(p.type).toLowerCase()));
+    const items=(data.elements||[]).map(e=>{const tags=e.tags||{},p=pt(e.lat??e.center?.lat,e.lon??e.center?.lon),type=tags.amenity||tags.shop||tags.tourism||tags.craft||tags.leisure||tags.historic||tags.building||'POI';return p?{key:'osm:'+e.type+':'+e.id,name:tags.name||tags.brand||(String(type).toLowerCase().includes('house')?'Casa':'Local'),type,category:poiCategory({name:tags.name||tags.brand,type,tags}),lat:p.lat,lng:p.lng,address:tags['addr:full']||[tags['addr:street'],tags['addr:housenumber']].filter(Boolean).join(', '),tags}:null;}).filter(Boolean).filter(p=>!['bus_stop','stop_position','platform'].includes(String(p.type).toLowerCase()));
     state.poiCache.set(k,{ts:Date.now(),items});drawPois(items);
   }
 
@@ -690,12 +718,13 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260920
     const normal=sparsePoiSelect(raw.filter(p=>!['house','detached','semidetached','residential'].includes(String(p.type).toLowerCase())),MAX_VISIBLE.pois,.0011);
     [...normal,...houses].forEach(p=>{
       const isHouse=['house','detached','semidetached','residential'].includes(String(p.type).toLowerCase());
-      const m=L.marker([p.lat,p.lng],{icon:mapIcon(iconByCategory(p.type),isHouse?'house':'poi',markerLabel(p.name,isHouse?'Casa':p.type)),zIndexOffset:isHouse?40:60}).addTo(state.layer.pois);
+      const category=isHouse?'house':(p.category||poiCategory(p));
+      const m=L.marker([p.lat,p.lng],{icon:mapIcon(iconByCategory(category),isHouse?'house':'poi',markerLabel(p.name,isHouse?'Casa':category)),zIndexOffset:isHouse?40:60}).addTo(state.layer.pois);
       m.on('click',e=>{L.DomEvent.stopPropagation(e);openPoi(p);});
-      m.bindTooltip(markerLabel(p.name,isHouse?'Casa':p.type),{direction:'top',offset:[0,-14]});
+      m.bindTooltip(markerLabel(p.name,isHouse?'Casa':(p.category||poiCategory(p))),{direction:'top',offset:[0,-14]});
     });
   }
-  function openPoi(p){const isHouse=['house','detached','semidetached','residential'].includes(String(p.type||'').toLowerCase());centerTo(p,Math.max(16,state.map.getZoom()));openModal(isHouse?'CASA · PONTO REAL':'PONTO REAL','<div class="map-location-sheet"><div class="selected-location-hero"><div class="selected-location-icon">'+esc(iconByCategory(p.type))+'</div><div><strong>'+esc(p.name)+'</strong><small>'+esc(isHouse?'Casa · possível loot':p.type)+' · OpenStreetMap</small></div></div><p class="map-location-address">'+esc(p.address||(isHouse?'Imóvel residencial no mundo real.':'Ponto descoberto no mundo real.'))+'</p><div class="selection-actions"><button type="button" id="savePoi">'+(isHouse?'MARCAR COMO LOOTÁVEL':'SALVAR NA CAMPANHA')+'</button></div></div>');$('savePoi').onclick=async()=>{const r=await aeriom.rpc('discover_campaign_world_location',{p_campaign_id:state.campaign.id,p_source:'osm',p_external_id:p.key,p_name:isHouse?(p.name||'Casa'):p.name,p_category:isHouse?'house':p.type,p_latitude:p.lat,p_longitude:p.lng,p_address:p.address||null,p_metadata:{tags:p.tags||{},lootable:isHouse}});if(r.error){toast(r.error.message||'Falha ao salvar o ponto.','error');return;}await refreshLocations();renderLocations();renderStats();closeModal();toast(isHouse?'Casa marcada como ponto lootável.':'Local salvo na campanha.');};}
+  function openPoi(p){const isHouse=['house','detached','semidetached','residential'].includes(String(p.type||'').toLowerCase());centerTo(p,Math.max(16,state.map.getZoom()));openModal(isHouse?'CASA · PONTO REAL':'PONTO REAL','<div class="map-location-sheet"><div class="selected-location-hero"><div class="selected-location-icon">'+esc(iconByCategory(p.category||poiCategory(p)))+'</div><div><strong>'+esc(p.name)+'</strong><small>'+esc(isHouse?'Casa · possível loot':(p.category||poiCategory(p)))+' · OpenStreetMap</small></div></div><p class="map-location-address">'+esc(p.address||(isHouse?'Imóvel residencial no mundo real.':'Ponto descoberto no mundo real.'))+'</p><div class="selection-actions"><button type="button" id="savePoi">'+(isHouse?'MARCAR COMO LOOTÁVEL':'SALVAR NA CAMPANHA')+'</button></div></div>');$('savePoi').onclick=async()=>{const r=await aeriom.rpc('discover_campaign_world_location',{p_campaign_id:state.campaign.id,p_source:'osm',p_external_id:p.key,p_name:isHouse?(p.name||'Casa'):p.name,p_category:isHouse?'house':p.type,p_latitude:p.lat,p_longitude:p.lng,p_address:p.address||null,p_metadata:{tags:p.tags||{},lootable:isHouse}});if(r.error){toast(r.error.message||'Falha ao salvar o ponto.','error');return;}await refreshLocations();renderLocations();renderStats();closeModal();toast(isHouse?'Casa marcada como ponto lootável.':'Local salvo na campanha.');};}
 
   function locateDevice(){
     if(!navigator.geolocation){toast('GPS indisponível neste navegador.','error');return;}
