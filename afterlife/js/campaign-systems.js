@@ -12,6 +12,7 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260918
   let user = null;
   let role = 'player';
   let busy = false;
+  let playerPollTimer = null;
 
   const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
   const $ = s => document.querySelector(s);
@@ -72,12 +73,15 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260918
       const channel = aeriom.channel('afterlife-campaign-systems:'+campaignId)
         .on('postgres_changes',{event:'*',schema:'public',table:'campaign_missions',filter:'campaign_id=eq.'+campaignId},refresh)
         .on('postgres_changes',{event:'*',schema:'public',table:'campaign_diary_entries',filter:'campaign_id=eq.'+campaignId},refresh)
-        .on('postgres_changes',{event:'*',schema:'public',table:'campaign_factions',filter:'campaign_id=eq.'+campaignId},refresh)
-        .on('postgres_changes',{event:'*',schema:'public',table:'campaign_npcs',filter:'campaign_id=eq.'+campaignId},refresh)
-        .on('postgres_changes',{event:'*',schema:'public',table:'campaign_vehicles',filter:'campaign_id=eq.'+campaignId},refresh)
+        .on('postgres_changes',{event:'*',schema:'public',table:'campaign_factions',filter:'campaign_id=eq.'+campaignId},()=>{if(masterOnly())refresh()})
+        .on('postgres_changes',{event:'*',schema:'public',table:'campaign_npcs',filter:'campaign_id=eq.'+campaignId},()=>{if(masterOnly())refresh()})
+        .on('postgres_changes',{event:'*',schema:'public',table:'campaign_vehicles',filter:'campaign_id=eq.'+campaignId},()=>{if(masterOnly())refresh()})
         .on('postgres_changes',{event:'*',schema:'public',table:'campaign_hordes',filter:'campaign_id=eq.'+campaignId},refresh)
         .subscribe();
-      window.addEventListener('pagehide',()=>{try{aeriom.removeChannel(channel)}catch{}},{once:true});
+      if(!masterOnly()){
+        playerPollTimer=setInterval(()=>refresh().catch(error=>console.warn('[AFTERLIFE][CAMPAIGN-SYSTEMS][POLL]',error)),30000);
+      }
+      window.addEventListener('pagehide',()=>{try{aeriom.removeChannel(channel)}catch{} if(playerPollTimer)clearInterval(playerPollTimer)},{once:true});
     } catch(error) {
       console.warn('[AFTERLIFE][CAMPAIGN-SYSTEMS]',error);
     }
@@ -88,9 +92,9 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260918
       aeriom.rpc('get_campaign_system_snapshot',{p_campaign_id:campaignId}),
       aeriom.from('campaign_missions').select('id,title,description,status,priority,reward_xp,deadline,created_at,location_id').eq('campaign_id',campaignId).order('created_at',{ascending:false}).limit(20),
       aeriom.from('campaign_diary_entries').select('id,title,body,event_type,occurred_at,source_type').eq('campaign_id',campaignId).order('occurred_at',{ascending:false}).limit(16),
-      aeriom.from('campaign_factions').select('id,name,faction_type,description,reputation_default,resources,territory').eq('campaign_id',campaignId).order('name'),
-      aeriom.from('campaign_npcs').select('id,name,profession,status,faction_id,latitude,longitude').eq('campaign_id',campaignId).order('name').limit(20),
-      aeriom.from('campaign_vehicles').select('id,name,vehicle_type,fuel_current,fuel_max,condition,speed_kmh,cargo_slots').eq('campaign_id',campaignId).order('name').limit(20),
+      masterOnly()?aeriom.from('campaign_factions').select('id,name,faction_type,description,reputation_default,resources,territory').eq('campaign_id',campaignId).order('name'):aeriom.rpc('list_campaign_visible_factions',{p_campaign_id:campaignId}),
+      masterOnly()?aeriom.from('campaign_npcs').select('id,name,profession,status,faction_id,latitude,longitude').eq('campaign_id',campaignId).order('name').limit(20):aeriom.rpc('list_campaign_visible_npcs',{p_campaign_id:campaignId}),
+      masterOnly()?aeriom.from('campaign_vehicles').select('id,name,vehicle_type,fuel_current,fuel_max,condition,speed_kmh,cargo_slots').eq('campaign_id',campaignId).order('name').limit(20):aeriom.rpc('list_campaign_visible_vehicles',{p_campaign_id:campaignId}),
       aeriom.from('campaign_hordes').select('id,name,size,speed_kmh,direction_deg,threat_level,mutant_count,detected,status,eta_minutes,latitude,longitude').eq('campaign_id',campaignId).order('updated_at',{ascending:false}).limit(20),
       aeriom.rpc('list_campaign_inventory',{p_campaign_id:campaignId})
     ]);
@@ -438,7 +442,7 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260918
       const [items, recipes, stations] = await Promise.all([
         aeriom.from('item_templates').select('id,name,category,rarity').order('name').limit(100),
         aeriom.from('crafting_recipes').select('id,name,output_quantity,station_type,description,output_item_template_id').or('campaign_id.is.null,campaign_id.eq.'+campaignId).order('name'),
-        aeriom.from('crafting_stations').select('id,name,station_type,condition').eq('campaign_id',campaignId).order('name')
+        masterOnly()?aeriom.from('crafting_stations').select('id,name,station_type,condition').eq('campaign_id',campaignId).order('name'):aeriom.rpc('list_campaign_visible_stations',{p_campaign_id:campaignId})
       ]);
       if(items.error)throw items.error;if(recipes.error)throw recipes.error;if(stations.error)throw stations.error;
       const itemOptions=(items.data||[]).map(i=>'<option value="'+esc(i.id)+'">'+esc(i.name)+' · '+esc(i.category)+'</option>').join('');
