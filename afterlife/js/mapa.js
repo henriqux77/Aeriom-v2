@@ -73,6 +73,13 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260920
     }
   }
 
+  function closeSheet(){
+    const sheet=$('mapPanelSheet');
+    if(!sheet)return;
+    sheet.classList.remove('is-open');
+    sheet.setAttribute('aria-hidden','true');
+  }
+
   function setupUi(){
     $('mapCampaignName').textContent=state.campaign.name||'Campanha';
     $('mapTitle').textContent=state.campaign.name||'Mapa da campanha';
