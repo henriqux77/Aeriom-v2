@@ -8,7 +8,7 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260920
 
   const state = {
     session: null, campaign: null, role: 'player', map: null,
-    members: [], characters: [], locations: [], entities: [], factions: [], npcs: [], vehicles: [], stations: [],
+    members: [], characters: [], movingCharacterId: null, moveRequest: 0, locations: [], entities: [], factions: [], npcs: [], vehicles: [], stations: [],
     hordes: [], infection: [], travels: [], selected: null, mapPosition: null, devicePosition: null,
     editorMode: null, drawing: null, realtime: [], poiCache: new Map(), poiTimer: null, refreshTimer: null, weatherCache: new Map(), weather: null, weatherTimer: null,
     renderer: null, selectedMarker: null, layer: {
@@ -426,13 +426,70 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260920
   function renderEverything(){renderMembers();renderLocations();renderEntities();renderFactions();renderNpcs();renderVehicles();renderStations();renderThreats();renderVision();renderSelection();renderStats();renderMasterTools();updateReadout();}
   function inView(p,pad=.08){const b=state.map?.getBounds()?.pad(pad);return !b||b.contains([p.lat,p.lng]);}
 
+  function canMoveCharacter(ch){
+    return !!ch && (String(ch.user_id)===String(state.session.user.id) || isMaster());
+  }
+
+  async function persistCharacterPosition(ch,position){
+    const token=++state.moveRequest;
+    const r=await aeriom.rpc('move_campaign_character',{
+      p_campaign_id:state.campaign.id,
+      p_character_id:ch.character_id||ch.id,
+      p_latitude:position.lat,
+      p_longitude:position.lng
+    });
+    if(r.error)throw r.error;
+    if(token!==state.moveRequest)return;
+    const target=state.characters.find(x=>String(x.character_id||x.id)===String(ch.character_id||ch.id));
+    if(target){
+      target.latitude=position.lat;
+      target.longitude=position.lng;
+    }
+    state.mapPosition=String(ch.user_id)===String(state.session.user.id)?position:state.mapPosition;
+    renderEverything();
+    if(state.movingCharacterId===String(ch.character_id||ch.id))setStatus('Personagem movido.','ok');
+  }
+
+  function startCharacterMove(ch){
+    if(!canMoveCharacter(ch)){toast('Você não pode mover este personagem.','error');return;}
+    state.movingCharacterId=String(ch.character_id||ch.id);
+    closeModal();
+    setStatus('Toque no mapa para escolher o novo local.','loading');
+    $('mapScaleHint').textContent='TOQUE NO DESTINO';
+    state.map.getContainer().classList.add('is-moving-character');
+  }
+
+  async function moveCharacterTo(ch,position,marker){
+    if(!canMoveCharacter(ch)){state.movingCharacterId=null;return;}
+    marker?.setLatLng([position.lat,position.lng]);
+    try{
+      setStatus('Salvando posição…','loading');
+      await persistCharacterPosition(ch,position);
+      toast(ch.name+' foi movido.','success');
+    }catch(error){
+      console.error('[AFTERLIFE][MAP][CHARACTER-MOVE]',error);
+      toast(error?.message||'Não foi possível mover o personagem.','error');
+      const fallback=validCharacterPoint(ch);
+      if(fallback)marker?.setLatLng([fallback.lat,fallback.lng]);
+      setStatus('Não foi possível salvar a posição.','error');
+    }
+  }
+
   function renderMembers(){
     state.layer.members.clearLayers();
     const pts=state.characters.map(ch=>({ch,p:validCharacterPoint(ch)})).filter(x=>x.p).slice(0,MAX_VISIBLE.members);
     pts.forEach(({ch,p})=>{
       const me=String(ch.user_id)===String(state.session.user.id);
       const symbol=initials(ch.name);
-      const marker=L.marker([p.lat,p.lng],{icon:mapIcon(symbol,'character',ch.name||'Sobrevivente'),zIndexOffset:me?520:420}).addTo(state.layer.members);
+      const marker=L.marker([p.lat,p.lng],{
+        icon:mapIcon(symbol,'character',ch.name||'Sobrevivente'),
+        zIndexOffset:me?520:420,
+        draggable:canMoveCharacter(ch)
+      }).addTo(state.layer.members);
+      if(canMoveCharacter(ch)){
+        marker.on('dragstart',()=>{state.movingCharacterId=String(ch.character_id||ch.id);setStatus('Solte para mover o personagem.','loading');});
+        marker.on('dragend',async()=>{const p2=marker.getLatLng();await moveCharacterTo(ch,{lat:p2.lat,lng:p2.lng},marker);state.movingCharacterId=null;});
+      }
       marker.on('click',e=>{L.DomEvent.stopPropagation(e);openCharacterMarker(ch,p);});
       marker.bindTooltip(markerLabel(ch.name||'Sobrevivente',ch.class||'Sobrevivente'),{direction:'top',offset:[0,-18]});
     });
@@ -440,9 +497,12 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260920
 
   function openCharacterMarker(ch,p){
     const isMe=String(ch?.user_id)===String(state.session.user.id);
-    const body='<div class="map-location-sheet"><div class="selected-location-hero"><div class="selected-location-icon">'+esc(initials(ch?.name))+'</div><div><strong>'+esc(ch?.name||'Sobrevivente')+'</strong><small>'+esc(ch?.class||'Sobrevivente')+(ch?.race?' · '+esc(ch.race):'')+(isMe?' · VOCÊ':'')+'</small></div></div><div class="map-location-kpis"><div><span>POSIÇÃO</span><b>'+ (p?'ATIVA':'SEM POSIÇÃO') +'</b></div><div><span>DONO</span><b>PERSONAGEM</b></div><div><span>STATUS</span><b>'+esc(ch?.status||'completed')+'</b></div></div><div class="selection-actions"><button type="button" id="centerCharacter">CENTRALIZAR</button></div></div>';
+    const cid=String(ch?.character_id||ch?.id||'');
+    const moveButton=canMoveCharacter(ch)?'<button type="button" id="moveCharacter">MOVER PERSONAGEM</button>':'';
+    const body='<div class="map-location-sheet"><div class="selected-location-hero"><div class="selected-location-icon">'+esc(initials(ch?.name))+'</div><div><strong>'+esc(ch?.name||'Sobrevivente')+'</strong><small>'+esc(ch?.class||'Sobrevivente')+(ch?.race?' · '+esc(ch.race):'')+(isMe?' · VOCÊ':'')+'</small></div></div><div class="map-location-kpis"><div><span>POSIÇÃO</span><b>'+ (p?'ATIVA':'SEM POSIÇÃO') +'</b></div><div><span>DONO</span><b>PERSONAGEM</b></div><div><span>STATUS</span><b>'+esc(ch?.status||'completed')+'</b></div></div><div class="selection-actions"><button type="button" id="centerCharacter">CENTRALIZAR</button>'+moveButton+'</div></div>';
     openModal('PERSONAGEM',body);
-    $('centerCharacter').onclick=()=>{closeModal();centerTo(p,Math.max(15,state.map.getZoom()));};
+    $('centerCharacter')?.addEventListener('click',()=>{closeModal();centerTo(p,Math.max(15,state.map.getZoom()));});
+    $('moveCharacter')?.addEventListener('click',()=>startCharacterMove(ch));
   }
 
   function renderLocations(){
@@ -661,6 +721,13 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260920
   function ensureDrawingListener(){if(state.drawingBound)return;state.drawingBound=true;state.map.on('dblclick',finishDrawing);}
   function onMapClick(e){
     setCoordinates(e.latlng);
+    if(state.movingCharacterId){
+      const ch=state.characters.find(x=>String(x.character_id||x.id)===String(state.movingCharacterId));
+      state.movingCharacterId=null;
+      state.map.getContainer().classList.remove('is-moving-character');
+      if(ch)moveCharacterTo(ch,{lat:e.latlng.lat,lng:e.latlng.lng},null).catch(error=>console.error('[AFTERLIFE][MAP][CLICK-MOVE]',error));
+      return;
+    }
     if(!isMaster()||!state.editorMode)return;
     if(state.editorMode==='entity'){state.editorMode=null;openEntityEditor(e.latlng);return;}
     if(state.editorMode==='horde'){state.editorMode=null;openHordeEditor(null,e.latlng);return;}
