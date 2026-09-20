@@ -218,6 +218,13 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260920
     });
   }
 
+
+  function openMember(m,p){
+    const isMe=String(m?.user_id)===String(state.session.user.id);
+    openModal('SOBREVIVENTE','<div class="map-location-sheet"><div class="selected-location-hero"><div class="selected-location-icon">'+esc(initials(m?.display_name))+'</div><div><strong>'+esc(m?.display_name||'Sobrevivente')+'</strong><small>'+esc(m?.role==='master'?'MESTRE':'SOBREVIVENTE')+(isMe?' · VOCÊ':'')+'</small></div></div><div class="map-location-kpis"><div><span>POSIÇÃO</span><b>'+ (p?'ATIVA':'SEM POSIÇÃO') +'</b></div><div><span>DISTÂNCIA</span><b>'+ (p?km(distance(currentPoint(),p)):'—') +'</b></div><div><span>REALTIME</span><b>AO VIVO</b></div></div><div class="selection-actions"><button type="button" id="centerMember">CENTRALIZAR</button></div></div>');
+    $('centerMember').onclick=()=>{closeModal();centerTo(p,Math.max(15,state.map.getZoom()));};
+  }
+
   function renderLocations(){
     state.layer.locations.clearLayers();
     const bounds=state.map?.getBounds()?.pad(.1);
