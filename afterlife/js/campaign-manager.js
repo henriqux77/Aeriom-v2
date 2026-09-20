@@ -196,7 +196,7 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260915
       setTimeout(close, 360);
     } catch (error) {
       if (typeof newCoverPath === 'string' && newCoverPath) {
-        await aeriom.storage.from(BUCKET).remove([newCoverPath]).catch(() => {});
+        await aeriom.storage.from(BUCKET).remove([newCoverPath]).catch((cleanupError) => console.warn('[AFTERLIFE][CAMPAIGN-MANAGER][COVER-CLEANUP]', cleanupError));
       }
       console.error('[AFTERLIFE][CAMPAIGN-MANAGER]', error);
       message(error?.message || 'Não foi possível salvar as alterações.', 'error');
