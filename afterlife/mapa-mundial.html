@@ -56,7 +56,7 @@
           <strong id="mapCampaignName">Carregando…</strong>
           <small id="mapStatus">Preparando o mundo.</small>
         </div>
-        <div class="map-top-actions">
+        <div class="map-top-actions"><div class="map-weather-quick" id="mapWeatherQuick" aria-live="polite"><span id="weatherQuickIcon">🌤️</span><div><b id="weatherQuickTemp">--°</b><small id="weatherQuickTime">--:--</small></div></div>
           <button type="button" class="map-hud-btn" id="mapCenterCampaign">⌖ <span>BASE</span></button>
           <button type="button" class="map-hud-btn" id="mapCenterMe">◎ <span>EU</span></button>
           <button type="button" class="map-hud-btn" id="mapLocateDevice">◉ <span>GPS</span></button>
@@ -103,6 +103,12 @@
             <div><span>AMEAÇAS</span><b id="statThreats">0</b><small>conhecidas</small></div>
             <div><span>VIAGENS</span><b id="statTravels">0</b><small>registradas</small></div>
           </div>
+          <div class="map-divider"></div>
+          <section class="map-weather-card" id="mapWeatherCard" aria-live="polite">
+            <div class="map-weather-head"><div class="map-weather-icon" id="weatherIcon">🌤️</div><div class="map-weather-main"><strong id="weatherSummary">Carregando clima…</strong><small>Condições da região visualizada</small></div><b class="map-weather-temp" id="weatherTemp">--°C</b></div>
+            <div class="map-weather-meta"><div><span>SENSAÇÃO</span><b id="weatherFeels">--°C</b></div><div><span>CHUVA</span><b id="weatherRain">-- mm</b></div><div><span>VENTO</span><b id="weatherWind">-- km/h</b></div><div><span>HORA</span><b id="weatherTime">--:--</b></div></div>
+            <div class="map-weather-local" id="weatherZone">hora local</div>
+          </section>
           <div class="map-divider"></div>
           <div class="map-card-section-title">SISTEMAS</div>
           <div class="system-chip-grid">
