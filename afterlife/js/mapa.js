@@ -205,7 +205,7 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260920
 
   function renderMembers(){
     state.layer.members.clearLayers();
-    const pts=state.members.map(m=>({m,p:validMemberPoint(m)})).filter(x=>x.p && inView(x.p,.12)).slice(0,MAX_VISIBLE.members);
+    const pts=state.members.map(m=>({m,p:validMemberPoint(m)})).filter(x=>x.p).slice(0,MAX_VISIBLE.members);
     pts.forEach(({m,p})=>{
       const me=String(m.user_id)===String(state.session.user.id), masterRow=m.role==='master';
       const circle=L.circleMarker([p.lat,p.lng],{
@@ -214,8 +214,7 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260920
         fillColor:masterRow?'#f0cf84':me?'#7fe7a7':'#c7c0b4',
         fillOpacity:1,weight:2
       }).addTo(state.layer.members);
-      circle.bindTooltip((m.display_name||'Sobrevivente')+(me?' · VOCÊ':''),{direction:'top'});
-      circle.on('click',()=>centerTo(p,Math.max(15,state.map.getZoom())));
+      circle.on('click',e=>{L.DomEvent.stopPropagation(e);openMember(m,p);});
     });
   }
 
@@ -231,8 +230,7 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260920
     visible.forEach(l=>{
       const p=pt(l.latitude,l.longitude); if(!p)return;
       const c=L.circleMarker([p.lat,p.lng],{renderer:state.renderer,radius:7,color:'#090908',weight:2,fillColor:'#d5b46c',fillOpacity:.95}).addTo(state.layer.locations);
-      c.bindTooltip(esc(l.name||'Local'),{direction:'top'});
-      c.on('click',()=>openLocation(l));
+      c.on('click',e=>{L.DomEvent.stopPropagation(e);openLocation(l);});
     });
   }
 
@@ -245,8 +243,7 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260920
       if(g.type==='polyline'&&Array.isArray(g.coordinates)){L.polyline(g.coordinates,{renderer:state.renderer,color:'#7fe7a7',weight:3,opacity:.7}).addTo(state.layer.entities);return;}
       const p=pt(e.latitude,e.longitude);if(!p||!inView(p,.1))return;
       const c=L.circleMarker([p.lat,p.lng],{renderer:state.renderer,radius:6,color:'#0b0b0a',weight:2,fillColor:entityColor(e.entity_type),fillOpacity:.95}).addTo(state.layer.entities);
-      c.bindTooltip((e.name||'Elemento')+' · '+(e.entity_type||'mundo'),{direction:'top'});
-      c.on('click',()=>openEntity(e));
+      c.on('click',ev=>{L.DomEvent.stopPropagation(ev);openEntity(e);});
     });
   }
 
@@ -258,8 +255,7 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260920
     state.hordes.filter(h=>validMemberPoint(h)).slice(0,60).forEach(h=>{
       const p=pt(h.latitude,h.longitude);
       const c=L.circleMarker([p.lat,p.lng],{renderer:state.renderer,radius:9,color:'#0b0808',weight:2,fillColor:'#d85a54',fillOpacity:1}).addTo(state.layer.hordes);
-      c.bindTooltip('☢ '+(h.name||'Horda')+' · '+Math.round(n(h.size))+' zumbis',{direction:'top'});
-      c.on('click',()=>openHordeEditor(h));
+      c.on('click',ev=>{L.DomEvent.stopPropagation(ev);openHordeEditor(h);});
     });
     state.infection.slice(0,25).forEach(z=>{
       const p=pt(z.latitude,z.longitude);if(!p)return;
@@ -277,9 +273,9 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260920
       if(Array.isArray(coords)&&coords.length>=3)L.polygon(coords,{renderer:state.renderer,color:'#d5b46c',weight:1,fillColor:'#d5b46c',fillOpacity:.035,dashArray:'8 8'}).addTo(state.layer.factions);
     });
   }
-  function renderNpcs(){state.layer.npcs.clearLayers();state.npcs.filter(x=>inView(pt(x.latitude,x.longitude)||campaignCenter(),.08)).slice(0,35).forEach(x=>{const p=pt(x.latitude,x.longitude);if(p)L.circleMarker([p.lat,p.lng],{renderer:state.renderer,radius:5,color:'#0a0a09',weight:2,fillColor:'#b6aea1',fillOpacity:.95}).addTo(state.layer.npcs).bindTooltip('👤 '+(x.name||'NPC'))})}
-  function renderVehicles(){state.layer.vehicles.clearLayers();state.vehicles.filter(x=>inView(pt(x.latitude,x.longitude)||campaignCenter(),.08)).slice(0,35).forEach(x=>{const p=pt(x.latitude,x.longitude);if(p)L.circleMarker([p.lat,p.lng],{renderer:state.renderer,radius:5,color:'#0a0a09',weight:2,fillColor:'#9ba59d',fillOpacity:.95}).addTo(state.layer.vehicles).bindTooltip('🚙 '+(x.name||'Veículo'))})}
-  function renderStations(){state.layer.stations.clearLayers();state.stations.filter(x=>inView(pt(x.latitude,x.longitude)||campaignCenter(),.08)).slice(0,25).forEach(x=>{const p=pt(x.latitude,x.longitude);if(p)L.circleMarker([p.lat,p.lng],{renderer:state.renderer,radius:5,color:'#0a0a09',weight:2,fillColor:'#d5b46c',fillOpacity:.95}).addTo(state.layer.stations).bindTooltip('⚒ '+(x.name||'Estação'))})}
+  function renderNpcs(){state.layer.npcs.clearLayers();const bounds=state.map.getBounds().pad(.08);state.npcs.slice(0,35).forEach(x=>{const p=pt(x.latitude,x.longitude);if(p&&bounds.contains([p.lat,p.lng]))L.circleMarker([p.lat,p.lng],{renderer:state.renderer,radius:5,color:'#0a0a09',weight:2,fillColor:'#b6aea1',fillOpacity:.95}).addTo(state.layer.npcs).on('click',e=>{L.DomEvent.stopPropagation(e);openEntity({entity_type:'npc',name:x.name,description:x.profession||x.description,latitude:p.lat,longitude:p.lng,state:x.state||{},metadata:x});})})}
+  function renderVehicles(){state.layer.vehicles.clearLayers();const bounds=state.map.getBounds().pad(.08);state.vehicles.slice(0,35).forEach(x=>{const p=pt(x.latitude,x.longitude);if(p&&bounds.contains([p.lat,p.lng]))L.circleMarker([p.lat,p.lng],{renderer:state.renderer,radius:5,color:'#0a0a09',weight:2,fillColor:'#9ba59d',fillOpacity:.95}).addTo(state.layer.vehicles).on('click',e=>{L.DomEvent.stopPropagation(e);openEntity({entity_type:'vehicle',name:x.name,description:x.vehicle_type||x.description,latitude:p.lat,longitude:p.lng,state:x.state||{},metadata:x});})})}
+  function renderStations(){state.layer.stations.clearLayers();const bounds=state.map.getBounds().pad(.08);state.stations.slice(0,25).forEach(x=>{const p=pt(x.latitude,x.longitude);if(p&&bounds.contains([p.lat,p.lng]))L.circleMarker([p.lat,p.lng],{renderer:state.renderer,radius:5,color:'#0a0a09',weight:2,fillColor:'#d5b46c',fillOpacity:.95}).addTo(state.layer.stations).on('click',e=>{L.DomEvent.stopPropagation(e);openEntity({entity_type:'station',name:x.name,description:x.station_type,latitude:p.lat,longitude:p.lng,state:{condition:x.condition},metadata:x});})})}
 
   function renderVision(){
     state.layer.vision.clearLayers();
@@ -493,8 +489,8 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260920
 
   function centerTo(p,z){if(!p||!state.map)return;state.map.setView([p.lat,p.lng],Math.min(19,Math.max(2,n(z,5))),{animate:false});}
   function setCoordinates(p){$('mapCoordinates').textContent=n(p?.lat).toFixed(6)+'°, '+n(p?.lng).toFixed(6)+'°';}
-  function updateReadout(){if(!state.map)return;const z=state.map.getZoom();$('mapZoomLabel').textContent='Z'+z;$('mapScaleLabel').textContent=z<7?'MUNDO':z<12?'REGIÃO':z<15?'CIDADE':'RUA';}
-  function scheduleViewport(){updateReadout();clearTimeout(state.viewportTimer);state.viewportTimer=setTimeout(()=>{renderEverything();if(state.map.getZoom()>=16)loadPoisAroundView();},120);}
+  function updateReadout(){if(!state.map)return;const z=state.map.getZoom();$('mapZoomLabel').textContent='Z'+z;$('mapScaleLabel').textContent=z<7?'MUNDO':z<12?'REGIÃO':z<15?'CIDADE':'RUA';$('mapScaleHint').textContent=z>=16?'MODO RUA':'ARRASTE PARA EXPLORAR';}
+  function scheduleViewport(){updateReadout();clearTimeout(state.viewportTimer);state.viewportTimer=setTimeout(()=>{renderLocations();renderEntities();renderFactions();renderNpcs();renderVehicles();renderStations();renderThreats();if(state.map.getZoom()>=16){clearTimeout(state.poiTimer);state.poiTimer=setTimeout(()=>loadPoisAroundView(),260);}else{state.layer.pois.clearLayers();}},140);}
   function renderStats(){renderPartyList();renderSelection();$('statLocations').textContent=String(state.locations.filter(x=>x.discovered!==false).length);$('statThreats').textContent=String(isMaster()?state.hordes.length:0);$('statTravels').textContent=String(state.travels.length);}
   function renderMasterTools(){if(isMaster()){$('masterCard').removeAttribute('aria-hidden');}else{$('masterCard').setAttribute('aria-hidden','true');}}
 
@@ -515,7 +511,7 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260920
   function drawPois(items){
     state.layer.pois.clearLayers();
     const bounds=state.map.getBounds().pad(.03);
-    (items||[]).filter(p=>bounds.contains([p.lat,p.lng])).slice(0,MAX_VISIBLE.pois).forEach(p=>{const c=L.circleMarker([p.lat,p.lng],{renderer:state.renderer,radius:4,color:'#090908',weight:1,fillColor:'#aca497',fillOpacity:.9}).addTo(state.layer.pois);c.bindTooltip(esc(p.name)+' · '+esc(p.type),{direction:'top'});c.on('click',()=>openPoi(p));});
+    (items||[]).filter(p=>bounds.contains([p.lat,p.lng])).slice(0,MAX_VISIBLE.pois).forEach(p=>{const c=L.circleMarker([p.lat,p.lng],{renderer:state.renderer,radius:4,color:'#090908',weight:1,fillColor:'#aca497',fillOpacity:.9}).addTo(state.layer.pois);c.on('click',e=>{L.DomEvent.stopPropagation(e);openPoi(p);});});
   }
   function openPoi(p){centerTo(p,16);openModal('PONTO REAL','<div class="map-location-sheet"><div class="selected-location-hero"><div class="selected-location-icon">'+esc(iconByCategory(p.type))+'</div><div><strong>'+esc(p.name)+'</strong><small>'+esc(p.type)+' · OpenStreetMap</small></div></div><p class="map-location-address">'+esc(p.address||'Ponto descoberto no mundo real.')+'</p><div class="selection-actions"><button type="button" id="savePoi">SALVAR NA CAMPANHA</button></div></div>');$('savePoi').onclick=async()=>{const r=await aeriom.rpc('discover_campaign_world_location',{p_campaign_id:state.campaign.id,p_source:'osm',p_external_id:p.key,p_name:p.name,p_category:p.type,p_latitude:p.lat,p_longitude:p.lng,p_address:p.address||null,p_metadata:{tags:p.tags||{}}});if(r.error){toast(r.error.message||'Falha ao salvar o ponto.','error');return;}await refreshLocations();renderLocations();renderStats();closeModal();toast('Local salvo na campanha.');};}
 
