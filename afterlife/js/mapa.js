@@ -77,6 +77,8 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260920
     return (Math.round(n(p.lat)/0.15)*0.15).toFixed(2)+':'+(Math.round(n(p.lng)/0.15)*0.15).toFixed(2);
   }
 
+  const weatherClock = value => value ? String(value).slice(11,16) : '--:--';
+
   function renderWeather(w){
     state.weather=w||null;
     const meta=weatherMeta(w?.weather_code,w?.is_day!==0);
@@ -89,11 +91,11 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260920
     if(feels)feels.textContent=(Number.isFinite(Number(w?.apparent_temperature))?Math.round(Number(w.apparent_temperature)):'--')+'°C';
     if(rain)rain.textContent=(Number.isFinite(Number(w?.precipitation))?Number(w.precipitation).toFixed(1):'0.0')+' mm';
     if(wind)wind.textContent=(Number.isFinite(Number(w?.wind_speed_10m))?Math.round(Number(w.wind_speed_10m)):'--')+' km/h';
-    if(time)time.textContent=w?.time?new Date(w.time).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):'--:--';
+    if(time)time.textContent=weatherClock(w?.time);
     if(zone)zone.textContent=w?.timezone||'hora local';
     if(quickIcon)quickIcon.textContent=meta.icon;
     if(quickTemp)quickTemp.textContent=(Number.isFinite(Number(w?.temperature_2m))?Math.round(Number(w.temperature_2m)):'--')+'°';
-    if(quickTime)quickTime.textContent=w?.time?new Date(w.time).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):'--:--';
+    if(quickTime)quickTime.textContent=weatherClock(w?.time);
   }
 
   async function loadWeatherAroundView(){
@@ -158,6 +160,8 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260920
       subscribeRealtime();
       setStatus('Mundo pronto para a mesa.');
       loadWeatherAroundView();
+      clearInterval(state.weatherTimer);
+      state.weatherTimer=setInterval(()=>loadWeatherAroundView(),5*60*1000);
     } catch(err) {
       console.error('[AFTERLIFE][MAP][BOOT]',err);
       report('map-boot-error',{message:err?.message||String(err),stack:err?.stack||''});
@@ -616,7 +620,7 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260920
       html='<div class="map-area-list">'+(t||'<div class="map-empty-state">Nenhuma viagem registrada.</div>')+'</div>';
     } else {
       const w=state.weather,wm=weatherMeta(w?.weather_code,w?.is_day!==0);
-      html='<div class="map-location-sheet"><section class="map-weather-mobile"><div class="map-weather-mobile-head"><span>'+esc(wm.icon)+'</span><div><strong>'+esc(wm.label)+'</strong><small>Clima da região visualizada</small></div><b>'+((Number.isFinite(Number(w?.temperature_2m))?Math.round(Number(w.temperature_2m)):'--')+'°C')+'</b></div><div class="map-location-kpis"><div><span>HORA LOCAL</span><b>'+esc(w?.time?new Date(w.time).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):'--:--')+'</b></div><div><span>CHUVA</span><b>'+esc(Number.isFinite(Number(w?.precipitation))?Number(w.precipitation).toFixed(1)+' mm':'—')+'</b></div><div><span>VENTO</span><b>'+esc(Number.isFinite(Number(w?.wind_speed_10m))?Math.round(Number(w.wind_speed_10m))+' km/h':'—')+'</b></div></div></section><p class="map-location-address">Infraestrutura e clima acompanham a região atualmente visualizada no mapa.</p><div class="map-location-kpis"><div><span>FACÇÕES</span><b>'+state.factions.length+'</b></div><div><span>NPCs</span><b>'+state.npcs.length+'</b></div><div><span>VEÍCULOS</span><b>'+state.vehicles.length+'</b></div></div></div>';
+      html='<div class="map-location-sheet"><section class="map-weather-mobile"><div class="map-weather-mobile-head"><span>'+esc(wm.icon)+'</span><div><strong>'+esc(wm.label)+'</strong><small>Clima da região visualizada</small></div><b>'+((Number.isFinite(Number(w?.temperature_2m))?Math.round(Number(w.temperature_2m)):'--')+'°C')+'</b></div><div class="map-location-kpis"><div><span>HORA LOCAL</span><b>'+esc(weatherClock(w?.time))+'</b></div><div><span>CHUVA</span><b>'+esc(Number.isFinite(Number(w?.precipitation))?Number(w.precipitation).toFixed(1)+' mm':'—')+'</b></div><div><span>VENTO</span><b>'+esc(Number.isFinite(Number(w?.wind_speed_10m))?Math.round(Number(w.wind_speed_10m))+' km/h':'—')+'</b></div></div></section><p class="map-location-address">Infraestrutura e clima acompanham a região atualmente visualizada no mapa.</p><div class="map-location-kpis"><div><span>FACÇÕES</span><b>'+state.factions.length+'</b></div><div><span>NPCs</span><b>'+state.npcs.length+'</b></div><div><span>VEÍCULOS</span><b>'+state.vehicles.length+'</b></div></div></div>';
     }
     openModal(titleMap[kind]||'SISTEMA',html);
     $('mapModalBody').querySelectorAll('[data-modal-location]').forEach(b=>b.onclick=()=>{const l=state.locations.find(x=>x.id===b.dataset.modalLocation);if(l){closeModal();openLocation(l);}});
@@ -749,7 +753,7 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260920
     }
   }
 
-  window.addEventListener('pagehide',()=>{if(state.playerLayerTimer)clearInterval(state.playerLayerTimer);state.realtime.forEach(ch=>{try{aeriom.removeChannel(ch);}catch{}});},{once:true});
+  window.addEventListener('pagehide',()=>{if(state.playerLayerTimer)clearInterval(state.playerLayerTimer);if(state.weatherTimer)clearInterval(state.weatherTimer);state.realtime.forEach(ch=>{try{aeriom.removeChannel(ch);}catch{}});},{once:true});
 
   boot();
 })();
