@@ -141,13 +141,7 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260920
     if(!force){timer=setTimeout(()=>saveDraft(true),900);return;}
     saving=true;setStatus('SALVANDO…');
     try{
-      const s=snapshot(),f=formulas(s.attributes);
-      const payload={
-        name:s.name||null,age:Number(s.age)||null,gender:s.gender||null,race:'Humano',
-        origin:s.origin_name||s.origin||null,class:s.class||null,
-        hp_current:f.hp,hp_max:f.hp,defense:f.defense,movement:f.movement,
-        attributes:s.attributes,creation_state:s,status:'draft',updated_at:new Date().toISOString()
-      };
+      const s=snapshot();
       const r=await aeriom.rpc('save_afterlife_character_draft',{p_character_id:draftId,p_data:s});
       if(r.error)throw r.error;
       setStatus('SALVO AGORA','ok');
@@ -167,6 +161,12 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260920
 
     saving=true;setStatus('FINALIZANDO…');
     try{
+      if(!user){
+        const session=await ensureAfterlifeSession();
+        if(!session?.user)throw new Error('Sessão Afterlife não encontrada.');
+        user=session.user;
+      }
+      if(!draftId)draftId=crypto.randomUUID();
       const r=await aeriom.rpc('finalize_afterlife_character',{p_character_id:draftId,p_data:s});
       if(r.error)throw r.error;
       localStorage.removeItem(keyPrefix+user.id);
@@ -198,7 +198,8 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260920
     window.addEventListener('pagehide',()=>{try{saveDraft(true)}catch{}},{once:true});
   }
 
-  ensureDraft().then(()=>bind()).catch(error=>{
+  bind();
+  ensureDraft().catch(error=>{
     console.error('[AFTERLIFE][FICHA][PERSISTENCE]',error);
     setStatus(error?.message||'NÃO FOI POSSÍVEL INICIAR O RASCUNHO','error');
   });
