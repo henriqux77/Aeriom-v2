@@ -96,18 +96,18 @@ async function save(event){
     let sharedAvatarPath=sharedNow.profile?.avatar_path||null;
     if(selectedFile){
       const path=`${sharedNow.user.id}/${crypto.randomUUID()}.jpg`;
-      const {error}=await sharedNow.client.storage.from(BUCKET).upload(path,selectedFile,{contentType:selectedFile.type,upsert:false,cacheControl:'3600'});
+      const {error}=await sharedNow.portal.storage.from(BUCKET).upload(path,selectedFile,{contentType:selectedFile.type,upsert:false,cacheControl:'3600'});
       if(error)throw error;
       sharedAvatarPath=path;
     }
 
     const now=new Date().toISOString();
-    const {error:sharedProfileError}=await sharedNow.client.from('profiles').upsert({id:sharedNow.user.id,display_name:name,avatar_path:sharedAvatarPath,updated_at:now},{onConflict:'id'});
+    const {error:sharedProfileError}=await sharedNow.portal.from('profiles').upsert({id:sharedNow.user.id,display_name:name,avatar_path:sharedAvatarPath,updated_at:now},{onConflict:'id'});
     if(sharedProfileError)throw sharedProfileError;
-    const {error:sharedMetadataError}=await sharedNow.client.auth.updateUser({data:{display_name:name}});
+    const {error:sharedMetadataError}=await sharedNow.portal.auth.updateUser({data:{display_name:name}});
     if(sharedMetadataError)throw sharedMetadataError;
-    if(recoveryEmail||recoveryPhone){ const {error}=await sharedNow.client.from('profile_recovery_contacts').upsert({user_id:sharedNow.user.id,recovery_email:recoveryEmail||null,recovery_phone:recoveryPhone||null,updated_at:now},{onConflict:'user_id'}); if(error)throw error; }
-    else { const {error}=await sharedNow.client.from('profile_recovery_contacts').delete().eq('user_id',sharedNow.user.id); if(error)throw error; }
+    if(recoveryEmail||recoveryPhone){ const {error}=await sharedNow.portal.from('profile_recovery_contacts').upsert({user_id:sharedNow.user.id,recovery_email:recoveryEmail||null,recovery_phone:recoveryPhone||null,updated_at:now},{onConflict:'user_id'}); if(error)throw error; }
+    else { const {error}=await sharedNow.portal.from('profile_recovery_contacts').delete().eq('user_id',sharedNow.user.id); if(error)throw error; }
 
     // Mirror the shared identity into the Afterlife profile cache too. Fiches/campaigns remain Afterlife-only.
     let localAvatarPath=profile.avatar_path||null;
@@ -119,7 +119,7 @@ async function save(event){
 
     profile={...profile,display_name:name,avatar_path:localAvatarPath}; selectedFile=null; shared={...sharedNow,profile:{...sharedNow.profile,display_name:name,avatar_path:sharedAvatarPath}};
     $('profile-avatar-status').textContent='Alterações salvas nos dois sistemas.'; $('profile-preview-name').textContent=name;
-    const avatarUrl=sharedAvatarPath?((await sharedNow.client.storage.from(BUCKET).createSignedUrl(sharedAvatarPath,3600)).data?.signedUrl||''):(localAvatarPath?await signedUrl(localAvatarPath):'');
+    const avatarUrl=sharedAvatarPath?((await sharedNow.portal.storage.from(BUCKET).createSignedUrl(sharedAvatarPath,3600)).data?.signedUrl||''):(localAvatarPath?await signedUrl(localAvatarPath):'');
     renderAvatar(avatarUrl,name); message('Perfil compartilhado atualizado com sucesso.','success');
   }catch(error){ console.error('[SHARED][PROFILE]',error); message(error?.message||'Não foi possível salvar o perfil compartilhado.','error'); }
   finally{saveBtn.disabled=false;}
