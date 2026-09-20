@@ -1,15 +1,10 @@
 (() => {
   "use strict";
 
-  const RELEASE = "20260919-atmosphere-order1";
+  const RELEASE = "20260919-atmosphere-order2";
 
   function loadStyles() {
-    if (document.getElementById("aeriom-campaign-repair-css")) return;
-    const link = document.createElement("link");
-    link.id = "aeriom-campaign-repair-css";
-    link.rel = "stylesheet";
-    link.href = `./css/campaign-repair.css?v=${RELEASE}`;
-    document.head.appendChild(link);
+    /* The repair package is self-contained; no legacy CSS file is required. */
   }
 
   function markCampaignShell() { document.documentElement.classList.add("aeriom-campaign-shell"); }
