@@ -21,7 +21,7 @@ import { aeriom, afterlifeReady } from './aeriom-client-v2.js?v=20260915-4';
     });
   }
 
-  async function boot(){
+  function normalizeDashboardNavigation(){const map=new Map([["inventário","./inventario.html"],["diário","./diario.html"],["configurações","./perfil.html"]]);document.querySelectorAll(".side-nav__item").forEach(link=>{const label=link.querySelector("span:last-child")?.textContent?.trim().toLowerCase();if(!label)return;if(map.has(label))link.setAttribute("href",map.get(label));if(["manual","comunidade","notícias"].includes(label))link.remove();});}\n\n  async function boot(){\n    normalizeDashboardNavigation();
     await afterlifeReady;
     const s=await aeriom.auth.getSession();
     user=s.data?.session?.user||null;
