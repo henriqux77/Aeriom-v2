@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#050807"><title>AFTERLIFE — Inventário</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./css/afterlife.css?v=20260920"><link rel="stylesheet" href="./css/afterlife-sidebar.css?v=20260920">
+<style>
+.inventory-page{padding:28px;max-width:1180px;margin:0 auto}.inventory-head{display:flex;justify-content:space-between;gap:20px;align-items:end;margin-bottom:22px}.inventory-head h1{margin:4px 0 6px;font:700 34px Cinzel,serif}.inventory-head p{margin:0;color:#819087;max-width:680px}.inventory-status{color:#9fb0a6;font-size:12px}.inventory-grid{display:grid;gap:10px}.inventory-card{display:grid;grid-template-columns:56px minmax(0,1fr) auto;gap:14px;align-items:center;padding:16px;border:1px solid rgba(127,160,145,.16);border-radius:16px;background:linear-gradient(180deg,rgba(15,25,21,.96),rgba(7,14,11,.94));box-shadow:0 12px 35px rgba(0,0,0,.16)}.inventory-icon{width:56px;height:56px;display:grid;place-items:center;border:1px solid rgba(57,245,138,.16);border-radius:14px;color:#8ef0b4;background:rgba(57,245,138,.035);font-size:22px}.inventory-main strong{display:block;color:#eef4f0;font-size:15px}.inventory-main small{display:block;margin-top:4px;color:#7f8d86}.inventory-meta{text-align:right;color:#9fb0a6;font-size:12px}.inventory-meta b{display:block;color:#d5e0da;font-size:14px}.empty{padding:44px;text-align:center;border:1px dashed rgba(127,160,145,.18);border-radius:16px;color:#829088}.toolbar{display:flex;gap:10px;align-items:center;margin-bottom:14px}.toolbar a{padding:9px 13px;border:1px solid rgba(127,160,145,.18);border-radius:10px;color:#dbe5df;text-decoration:none}.toolbar a:hover{border-color:rgba(57,245,138,.3);color:#8ef0b4}@media(max-width:700px){.inventory-page{padding:18px 14px}.inventory-head{align-items:start;flex-direction:column}.inventory-head h1{font-size:28px}.inventory-card{grid-template-columns:44px minmax(0,1fr)}.inventory-icon{width:44px;height:44px}.inventory-meta{grid-column:2;text-align:left}}
+</style></head>
+<body class="aeriom-page"><div class="app-shell">
+<aside class="sidebar" id="sidebar"><div class="brand"><div class="brand__title"><span>A</span>FTERLIFE</div></div>
+<nav class="side-nav" aria-label="Navegação Afterlife">
+<a class="side-nav__item" href="./index.html"><span class="icon">⌂</span><span>Início</span></a>
+<a class="side-nav__item" href="./campanhas.html"><span class="icon">◈</span><span>Campanhas</span></a>
+<a class="side-nav__item" href="./personagens.html"><span class="icon">●</span><span>Personagens</span></a>
+<a class="side-nav__item" href="./mapa-mundial.html"><span class="icon">◇</span><span>Mapa Mundial</span></a>
+<a class="side-nav__item is-active" href="./inventario.html"><span class="icon">▣</span><span>Inventário</span></a>
+<a class="side-nav__item" href="./diario.html"><span class="icon">▤</span><span>Diário</span></a>
+</nav><div class="sidebar-spacer"></div><a class="side-nav__item" href="./perfil.html"><span class="icon">⚙</span><span>Configurações</span></a></aside>
+<main class="main"><header class="topbar"><button class="mobile-menu" id="mobileMenu" type="button" aria-label="Abrir menu">☰</button></header>
+<section class="inventory-page"><header class="inventory-head"><div><div class="eyebrow">AFTERLIFE · SOBREVIVÊNCIA</div><h1>Inventário</h1><p id="campaignLabel">Carregando campanha…</p></div><span class="inventory-status" id="inventoryStatus">Sincronizando…</span></header>
+<div class="toolbar"><a id="backCampaign" href="./campanhas.html">← Campanhas</a><a id="backMap" href="./mapa-mundial.html">◇ Mapa</a></div>
+<div class="inventory-grid" id="inventoryGrid"><div class="empty">Carregando inventário…</div></div></section></main></div>
+<script type="module">
+import './js/error-monitor.js?v=20260920';import './js/afterlife-sidebar.js?v=20260920';
+import {aeriom,ensureAfterlifeSession} from './js/aeriom-client-v2.js?v=20260920';
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+const grid=document.getElementById('inventoryGrid'),status=document.getElementById('inventoryStatus'),label=document.getElementById('campaignLabel'),qs=new URLSearchParams(location.search);
+let campaignId=qs.get('campaign')||qs.get('id')||sessionStorage.getItem('afterlife_current_campaign_id')||'',timer=null;
+function render(rows){if(!rows.length){grid.innerHTML='<div class="empty"><strong>Inventário vazio</strong><br>Os itens adquiridos pelos sobreviventes aparecerão aqui.</div>';return;}grid.innerHTML=rows.map(i=>'<article class="inventory-card"><div class="inventory-icon">▣</div><div class="inventory-main"><strong>'+esc(i.item_name||'Item sem nome')+'</strong><small>'+esc(i.character_name||'Sobrevivente')+' · '+esc(i.category||'item')+' · '+esc(i.rarity||'comum')+'</small></div><div class="inventory-meta"><b>'+esc(i.quantity||0)+'x</b><span>'+esc(i.total_weight_kg||0)+' kg</span></div></article>').join('');}
+async function load(){const r=await aeriom.rpc('list_campaign_inventory',{p_campaign_id:campaignId});if(r.error)throw r.error;const rows=Array.isArray(r.data)?r.data:[];render(rows);status.textContent=rows.length+' registros · atualizado agora';}
+async function boot(){const session=await ensureAfterlifeSession();if(!session?.user){location.href='../index.html';return;}if(!campaignId){status.textContent='Campanha não informada';grid.innerHTML='<div class="empty">Abra o inventário a partir de uma campanha.</div>';return;}sessionStorage.setItem('afterlife_current_campaign_id',campaignId);const c=await aeriom.from('campaigns').select('id,name').eq('id',campaignId).maybeSingle();if(c.error)throw c.error;if(!c.data)throw new Error('Campanha não encontrada.');label.textContent=c.data.name;document.getElementById('backCampaign').href='./campanha.html?campaign='+encodeURIComponent(c.data.id);document.getElementById('backMap').href='./mapa-mundial.html?campaign='+encodeURIComponent(c.data.id);await load();timer=setInterval(()=>load().catch(e=>console.warn('[AFTERLIFE][INVENTORY][POLL]',e)),30000);addEventListener('pagehide',()=>{if(timer)clearInterval(timer)},{once:true});}
+boot().catch(e=>{console.error('[AFTERLIFE][INVENTORY][BOOT]',e);status.textContent=e?.message||'Erro ao carregar';});
+</script></body></html>
