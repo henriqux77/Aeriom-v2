@@ -13,11 +13,10 @@
     {id:'vigor',name:'Vigor',short:'VIG'},
     {id:'intelecto',name:'Intelecto',short:'INT'},
     {id:'presenca',name:'Presença',short:'PRE'},
-    {id:'controle',name:'Controle',short:'CON'},
-    {id:'precisao',name:'Precisão',short:'PRI'}
+    {id:'controle',name:'Controle',short:'CON'}
   ];
   const DICE = [
-    {id:'d4',label:'D4',sides:4}, {id:'d6a',label:'D6',sides:6}, {id:'d6b',label:'D6',sides:6}, {id:'d8',label:'D8',sides:8},
+    {id:'d4',label:'D4',sides:4}, {id:'d6',label:'D6',sides:6}, {id:'d8',label:'D8',sides:8},
     {id:'d10',label:'D10',sides:10}, {id:'d12',label:'D12',sides:12}, {id:'d20a',label:'D20',sides:20}, {id:'d20b',label:'D20',sides:20}
   ];
   const CLASSES = {
@@ -154,7 +153,7 @@
   function addItem(){state.inventory.push({id:crypto.randomUUID(),name:'',quantity:1,slots:1,weight:1});commit('aerion:inventory:add');}
   function updateItem(id,k,v){var i=state.inventory.find(function(x){return x.id===id;});if(!i)return;i[k]=['quantity','slots','weight'].includes(k)?Math.max(k==='quantity'?1:0,num(v)):txt(v);commit('aerion:inventory:update');}
   function removeItem(id){state.inventory=state.inventory.filter(function(x){return x.id!==id;});commit('aerion:inventory:remove');}
-  function validateStep(i){computeCompletion();if(i===0&&!state.completedSteps[0]){var missing=[];if(!txt(state.name))missing.push('nome');if(!['Masculino','Feminino'].includes(state.gender))missing.push('gênero');toast('Complete esta etapa antes de avançar: '+missing.join(' e ')+'.','warning');if(!txt(state.name)){var name=$('#characterName');if(name)name.focus();}return false;}if(i===1&&!state.completedSteps[1]){toast('Escolha a raça e, para Animalha, categoria e variação.','warning');return false;}if(i===2&&!state.completedSteps[2]){var r=getAgeRange();if(!validAge())toast('Defina uma idade entre '+r.min+' e '+r.max+' anos para esta raça/linhagem.','warning');else toast('Defina a altura.','warning');return false;}if(i===3&&!state.completedSteps[3]){toast('Escolha uma classe.','warning');return false;}if(i===4&&!state.completedSteps[4]){toast('Distribua os 8 dados nos atributos.','warning');return false;}if(i===5&&!state.completedSteps[5]){toast('Escolha ou sorteie um poder.','warning');return false;}return true;}
+  function validateStep(i){computeCompletion();if(i===0&&!state.completedSteps[0]){var missing=[];if(!txt(state.name))missing.push('nome');if(!['Masculino','Feminino'].includes(state.gender))missing.push('gênero');toast('Complete esta etapa antes de avançar: '+missing.join(' e ')+'.','warning');if(!txt(state.name)){var name=$('#characterName');if(name)name.focus();}return false;}if(i===1&&!state.completedSteps[1]){toast('Escolha a raça e, para Animalha, categoria e variação.','warning');return false;}if(i===2&&!state.completedSteps[2]){var r=getAgeRange();if(!validAge())toast('Defina uma idade entre '+r.min+' e '+r.max+' anos para esta raça/linhagem.','warning');else toast('Defina a altura.','warning');return false;}if(i===3&&!state.completedSteps[3]){toast('Escolha uma classe.','warning');return false;}if(i===4&&!state.completedSteps[4]){toast('Distribua os 7 dados nos atributos.','warning');return false;}if(i===5&&!state.completedSteps[5]){toast('Escolha ou sorteie um poder.','warning');return false;}return true;}
   function goToStep(target,validate){var current=state.currentStep,t=Math.max(0,Math.min(9,num(target,0)));if(t===current){renderRequest();return true;}if(t>current&&(validate!==false)){var ok=validateStep(current);if(!ok){state.currentStep=current;renderRequest();return false;}}if(t>current+1){state.currentStep=current;renderRequest();return false;}state.currentStep=t;saveLocal(false);emit('aerion:ficha:step',{currentStep:t});renderRequest();window.scrollTo({top:0,behavior:'smooth'});return true;}
   function next(){if(state.currentStep===9)return finalizeCharacter();return goToStep(state.currentStep+1,true);}
   function previous(){if(state.currentStep<=0)return false;state.currentStep--;saveLocal(false);emit('aerion:ficha:step',{currentStep:state.currentStep});renderRequest();window.scrollTo({top:0,behavior:'smooth'});return true;}
