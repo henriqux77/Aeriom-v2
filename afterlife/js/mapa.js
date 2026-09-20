@@ -34,47 +34,97 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260920
   const isMaster = () => state.role === 'master';
   const iconByCategory = c => ({
     hospital:'🏥',clinic:'🩺',pharmacy:'💊',chemist:'💊',healthcare:'🩺',doctors:'🩺',dentist:'🦷',
-    veterinary:'🐾',animal_boarding:'🐾',optometrist:'👓',
-    fuel:'⛽',charging_station:'⚡',police:'🚓',fire_station:'🚒',bank:'🏦',atm:'🏧',post_office:'📮',
-    restaurant:'🍽️',fast_food:'🍔',cafe:'☕',bar:'🍺',pub:'🍻',bakery:'🥖',food_court:'🍴',
-    supermarket:'🛒',marketplace:'🛒',convenience:'🏪',variety_store:'🏪',department_store:'🏬',
-    butcher:'🥩',greengrocer:'🥬',seafood:'🐟',beverages:'🧃',pet:'🐾',pet_grooming:'🐾',
-    hardware:'🧰',electronics:'📱',books:'📚',clothes:'👕',shoes:'👟',bicycle:'🚲',car:'🚗',car_repair:'🔧',
-    mall:'🏬',hotel:'🏨',hostel:'🛏️',motel:'🛏️',
-    park:'🌳',playground:'🛝',forest:'🌲',school:'🏫',university:'🎓',kindergarten:'🧸',
-    museum:'🏛️',library:'📚',theatre:'🎭',cinema:'🎬',stadium:'🏟️',sports_centre:'🏋️',pool:'🏊',
-    station:'🚉',bus_station:'🚌',train_station:'🚉',
-    ruins:'🏚️',monument:'🗿',memorial:'🪦',castle:'🏰',church:'⛪',place_of_worship:'⛪',
-    shelter:'⌂',house:'🏠',detached:'🏠',semidetached:'🏠',residential:'🏠',
+    veterinary:'🐾',animal_boarding:'🐾',optometrist:'👓',laboratory:'🧪',
+    fuel:'⛽',charging_station:'⚡',police:'🚓',fire_station:'🚒',ambulance_station:'🚑',
+    bank:'🏦',atm:'🏧',bureau_de_change:'💱',post_office:'📮',courier:'📦',
+    restaurant:'🍽️',fast_food:'🍔',cafe:'☕',bar:'🍻',pub:'🍺',nightclub:'🪩',bakery:'🥖',food_court:'🍴',
+    supermarket:'🛒',marketplace:'🛍️',convenience:'🏪',variety_store:'🏪',department_store:'🏬',
+    butcher:'🥩',greengrocer:'🥬',seafood:'🐟',beverages:'🧃',deli:'🥪',cheese:'🧀',
+    pet:'🐾',pet_grooming:'🐾',florist:'💐',garden_centre:'🌱',hardware:'🧰',doityourself:'🔨',
+    electronics:'📱',computer:'💻',mobile_phone:'📱',books:'📚',stationery:'✏️',clothes:'👕',
+    shoes:'👟',jewelry:'💍',beauty:'💄',hairdresser:'💈',cosmetics:'💄',laundry:'🧺',
+    bicycle:'🚲',car:'🚗',car_parts:'⚙️',car_repair:'🔧',motorcycle:'🏍️',tyres:'🛞',
+    mall:'🏬',hotel:'🏨',hostel:'🛏️',motel:'🛏️',camp_site:'⛺',
+    park:'🌳',playground:'🛝',garden:'🌿',forest:'🌲',nature_reserve:'🌲',beach_resort:'🏖️',
+    school:'🏫',university:'🎓',kindergarten:'🧸',college:'🎓',driving_school:'🚙',
+    museum:'🏛️',library:'📚',theatre:'🎭',cinema:'🎬',arts_centre:'🎨',gallery:'🖼️',
+    stadium:'🏟️',sports_centre:'🏋️',fitness_centre:'🏋️',swimming_pool:'🏊',pitch:'⚽',golf_course:'⛳',
+    station:'🚉',bus_station:'🚌',train_station:'🚆',tram_stop:'🚋',subway_entrance:'🚇',aerodrome:'✈️',
+    ruins:'🏚️',monument:'🗿',memorial:'🪦',castle:'🏰',church:'⛪',place_of_worship:'⛪',mosque:'🕌',synagogue:'✡️',temple:'🛕',
+    cemetery:'⚰️',grave_yard:'⚰️',wayside_shrine:'⛩️',
+    shelter:'🛖',house:'🏠',detached:'🏠',semidetached:'🏠',residential:'🏠',apartments:'🏢',
+    office:'🏢',government:'🏛️',townhall:'🏛️',courthouse:'⚖️',community_centre:'🏘️',
+    warehouse:'📦',industrial:'🏭',factory:'🏭',construction:'🚧',
+    tourist_information:'ℹ️',information:'ℹ️',viewpoint:'🔭',attraction:'🎟️',
+    lighthouse:'🗼',water_tower:'🚰',water_well:'🪣',fire_hydrant:'🚒',
+    recycling:'♻️',waste_basket:'🗑️',toilets:'🚻',
     npc:'🧍',vehicle:'🚙',station_crafting:'⚒️',faction:'⚑',horde:'☣️',
-    hospital_area:'🏥',hazard:'⚠️',military:'⚔️',barricade:'🚧',commerce:'🏪',
-    office:'🏢',industrial:'🏭',warehouse:'📦'
-  }[String(c||'').toLowerCase()] || '🏢');
+    hospital_area:'🏥',hazard:'⚠️',military:'⚔️',barricade:'🚧',commerce:'🛍️'
+  }[String(c||'').toLowerCase()] || '📍');
+
+  function normalizePoiText(v){
+    return String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
+  }
 
   function poiCategory(p){
     const tags=p?.tags||{};
-    const name=String(p?.name||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+    const name=normalizePoiText(p?.name);
     const values=[
-      tags.amenity,tags.shop,tags.healthcare,tags.tourism,tags.craft,tags.leisure,tags.historic,tags.building,
-      p?.type
-    ].map(v=>String(v||'').trim().toLowerCase()).filter(Boolean);
+      tags.amenity,tags.shop,tags.healthcare,tags.tourism,tags.craft,tags.leisure,tags.historic,
+      tags.building,tags.office,tags.public_transport,tags.railway,tags.sport,tags.man_made,tags.emergency,
+      tags.natural,p?.type
+    ].map(v=>normalizePoiText(v)).filter(Boolean);
     const all=values.join(' ');
-    if(/pharmacy|chemist/.test(all)||/farmacia|drogasil|pague menos|drogaria|ultrafarma|droga raia/.test(name))return 'pharmacy';
-    if(/veterinary/.test(all)||/pet shop|petshop|petz|cobasi/.test(name))return 'veterinary';
-    if(/bank/.test(all)||/banco |itau|itaú|bradesco|santander|caixa economica|sicredi|sicoob/.test(name))return 'bank';
-    if(/fuel/.test(all)||/posto|shell|ipiranga|petrobras|ale /.test(name))return 'fuel';
-    if(/supermarket|grocery/.test(all)||/mercado|supermercado|carrefour|extra|assai|atacadao|atacadão|dalben/.test(name))return 'supermarket';
-    if(/restaurant|fast_food|food_court/.test(all)||/restaurante|lanchonete|hamburg|pizza|churrasc|outback/.test(name))return 'restaurant';
-    if(/cafe/.test(all)||/cafe |café |starbucks/.test(name))return 'cafe';
-    if(/hospital/.test(all)||/hospital|pronto socorro|pronto-socorro/.test(name))return 'hospital';
-    if(/clinic|doctors|dentist|healthcare/.test(all)||/clinica|clínica|consultorio|consultório|odont|medic/.test(name))return 'clinic';
-    if(/police/.test(all)||/policia|polícia|delegacia/.test(name))return 'police';
-    if(/school|university|kindergarten/.test(all)||/escola|colegio|colégio|faculdade|universidade/.test(name))return 'school';
-    if(/park|playground|forest/.test(all)||/parque|praca|praça/.test(name))return 'park';
-    if(/pet|pet_grooming/.test(all))return 'pet';
-    if(/house|detached|semidetached|residential/.test(all))return 'house';
-    return values.find(v=>iconByCategory(v)!=='🏢')||p?.type||'commerce';
+    const has=t=>values.includes(t)||all.includes(t);
+
+    if(has('pharmacy')||has('chemist')||/farmacia|drogasil|pague menos|drogaria|ultrafarma|droga raia|droga sao paulo/.test(name))return 'pharmacy';
+    if(has('veterinary')||has('animal_boarding')||/pet shop|petshop|petz|cobasi|clinica veterinaria/.test(name))return 'veterinary';
+    if(has('bank')||has('atm')||/\bbanco\b|itau|itaú|bradesco|santander|caixa economica|caixa economica federal|sicredi|sicoob|nubank/.test(name))return has('atm')&&!has('bank')?'atm':'bank';
+    if(has('fuel')||/\bposto\b|shell|ipiranga|petrobras|ale /.test(name))return 'fuel';
+    if(has('supermarket')||has('grocery')||/mercado|supermercado|carrefour|extra|assai|atacadao|atacadão|dalben|mambo/.test(name))return 'supermarket';
+    if(has('convenience')||has('variety_store')||has('department_store')||has('mall')||/loja|shopping|magazine|americanas|magalu|kalunga/.test(name))return has('mall')||/shopping/.test(name)?'mall':'convenience';
+    if(has('butcher')||/acougue|açougue|carnes/.test(name))return 'butcher';
+    if(has('greengrocer')||/hortifruti|sacolao|sacolão|verduras/.test(name))return 'greengrocer';
+    if(has('seafood')||/peixaria|pescados/.test(name))return 'seafood';
+    if(has('bakery')||/padaria|panificadora|panificacao|panificação/.test(name))return 'bakery';
+    if(has('pet')||has('pet_grooming'))return 'pet';
+    if(has('florist')||/floricultura|flores/.test(name))return 'florist';
+    if(has('hardware')||has('doityourself')||/ferragens|ferramentas|material de construcao|material de construção/.test(name))return 'hardware';
+    if(has('electronics')||has('computer')||has('mobile_phone'))return 'electronics';
+    if(has('books')||has('stationery')||/livraria|papelaria/.test(name))return 'books';
+    if(has('clothes')||has('shoes')||has('jewelry')||has('beauty')||has('hairdresser')||has('cosmetics'))return values.find(v=>iconByCategory(v)!=='📍')||'convenience';
+    if(has('car_repair')||has('car_parts')||has('tyres'))return 'car_repair';
+    if(has('bicycle'))return 'bicycle';
+    if(has('restaurant')||has('fast_food')||has('food_court')||/restaurante|lanchonete|hamburg|pizza|churrasc|outback/.test(name))return has('fast_food')?'fast_food':'restaurant';
+    if(has('cafe')||/cafe |café |starbucks/.test(name))return 'cafe';
+    if(has('bar')||has('pub')||has('nightclub'))return has('nightclub')?'nightclub':'bar';
+    if(has('hospital')||has('ambulance_station')||/hospital|pronto socorro|pronto-socorro/.test(name))return 'hospital';
+    if(has('clinic')||has('doctors')||has('dentist')||has('healthcare')||has('laboratory')||/clinica|clínica|consultorio|consultório|odont|medic/.test(name))return has('dentist')?'dentist':has('laboratory')?'laboratory':'clinic';
+    if(has('police'))return 'police';
+    if(has('fire_station'))return 'fire_station';
+    if(has('school')||has('university')||has('kindergarten')||has('college')||/escola|colegio|colégio|faculdade|universidade/.test(name))return has('university')||has('college')?'university':'school';
+    if(has('park')||has('playground')||has('garden')||has('forest')||has('nature_reserve')||/parque|praca|praça/.test(name))return has('playground')?'playground':'park';
+    if(has('museum')||has('library')||has('theatre')||has('cinema')||has('arts_centre')||has('gallery'))return values.find(v=>['museum','library','theatre','cinema','arts_centre','gallery'].includes(v))||'museum';
+    if(has('stadium')||has('sports_centre')||has('fitness_centre')||has('swimming_pool')||has('pitch')||has('golf_course'))return values.find(v=>iconByCategory(v)!=='📍')||'sports_centre';
+    if(has('place_of_worship')||has('church')||has('mosque')||has('synagogue')||has('temple'))return has('mosque')?'mosque':has('synagogue')?'synagogue':has('temple')?'temple':'church';
+    if(has('cemetery')||has('grave_yard'))return 'cemetery';
+    if(has('station')||has('train_station')||has('tram_stop')||has('subway_entrance')||has('railway'))return has('tram_stop')?'tram_stop':has('subway_entrance')?'subway_entrance':has('train_station')?'train_station':'station';
+    if(has('tourist_information')||has('information'))return 'tourist_information';
+    if(has('viewpoint'))return 'viewpoint';
+    if(has('attraction'))return 'attraction';
+    if(has('castle')||has('ruins')||has('monument')||has('memorial')||has('lighthouse'))return values.find(v=>iconByCategory(v)!=='📍')||'monument';
+    if(has('government')||has('townhall')||has('courthouse')||has('community_centre')||has('office'))return has('courthouse')?'courthouse':has('government')||has('townhall')?'government':'office';
+    if(has('warehouse')||has('industrial')||has('factory')||has('construction'))return has('construction')?'construction':has('factory')||has('industrial')?'industrial':'warehouse';
+    if(has('house')||has('detached')||has('semidetached')||has('residential')||has('apartments'))return has('apartments')?'apartments':'house';
+    return 'commerce';
   }
+
+  function houseFlavor(key){
+    const variants=['Casa abandonada','Residência saqueada','Sobrado vazio','Casa com garagem','Casa de esquina','Residência intacta'];
+    let h=0; for(const ch of String(key||''))h=((h<<5)-h)+ch.charCodeAt(0)|0;
+    return variants[Math.abs(h)%variants.length];
+  }
+
 
   function mapIcon(symbol, kind='poi', label='Marcador'){
     const html='<span class="afterlife-map-icon afterlife-map-icon--'+esc(kind)+'" role="img" aria-label="'+esc(label)+'">'+esc(symbol)+'</span>';
@@ -695,7 +745,7 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260920
       try{const ac=new AbortController(),tm=setTimeout(()=>ac.abort(),6500),r=await fetch(ep,{method:'POST',body:q,headers:{'Content-Type':'text/plain;charset=UTF-8'},signal:ac.signal});clearTimeout(tm);if(r.ok){data=await r.json();break;}}catch{}
     }
     if(!data)return;
-    const items=(data.elements||[]).map(e=>{const tags=e.tags||{},p=pt(e.lat??e.center?.lat,e.lon??e.center?.lon),type=tags.amenity||tags.shop||tags.tourism||tags.craft||tags.leisure||tags.historic||tags.building||'POI';return p?{key:'osm:'+e.type+':'+e.id,name:tags.name||tags.brand||(String(type).toLowerCase().includes('house')?'Casa':'Local'),type,category:poiCategory({name:tags.name||tags.brand,type,tags}),lat:p.lat,lng:p.lng,address:tags['addr:full']||[tags['addr:street'],tags['addr:housenumber']].filter(Boolean).join(', '),tags}:null;}).filter(Boolean).filter(p=>!['bus_stop','stop_position','platform'].includes(String(p.type).toLowerCase()));
+    const items=(data.elements||[]).map(e=>{const tags=e.tags||{},p=pt(e.lat??e.center?.lat,e.lon??e.center?.lon),type=tags.amenity||tags.shop||tags.tourism||tags.craft||tags.leisure||tags.historic||tags.building||'POI';return p?{key:'osm:'+e.type+':'+e.id,name:tags.name||tags.brand||(String(type).toLowerCase().includes('house')?houseFlavor('osm:'+e.type+':'+e.id):'Local'),type,category:poiCategory({name:tags.name||tags.brand,type,tags}),lat:p.lat,lng:p.lng,address:tags['addr:full']||[tags['addr:street'],tags['addr:housenumber']].filter(Boolean).join(', '),tags}:null;}).filter(Boolean).filter(p=>!['bus_stop','stop_position','platform'].includes(String(p.type).toLowerCase()));
     state.poiCache.set(k,{ts:Date.now(),items});drawPois(items);
   }
 
@@ -724,7 +774,7 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260920
       m.bindTooltip(markerLabel(p.name,isHouse?'Casa':(p.category||poiCategory(p))),{direction:'top',offset:[0,-14]});
     });
   }
-  function openPoi(p){const isHouse=['house','detached','semidetached','residential'].includes(String(p.type||'').toLowerCase());centerTo(p,Math.max(16,state.map.getZoom()));openModal(isHouse?'CASA · PONTO REAL':'PONTO REAL','<div class="map-location-sheet"><div class="selected-location-hero"><div class="selected-location-icon">'+esc(iconByCategory(p.category||poiCategory(p)))+'</div><div><strong>'+esc(p.name)+'</strong><small>'+esc(isHouse?'Casa · possível loot':(p.category||poiCategory(p)))+' · OpenStreetMap</small></div></div><p class="map-location-address">'+esc(p.address||(isHouse?'Imóvel residencial no mundo real.':'Ponto descoberto no mundo real.'))+'</p><div class="selection-actions"><button type="button" id="savePoi">'+(isHouse?'MARCAR COMO LOOTÁVEL':'SALVAR NA CAMPANHA')+'</button></div></div>');$('savePoi').onclick=async()=>{const r=await aeriom.rpc('discover_campaign_world_location',{p_campaign_id:state.campaign.id,p_source:'osm',p_external_id:p.key,p_name:isHouse?(p.name||'Casa'):p.name,p_category:isHouse?'house':p.type,p_latitude:p.lat,p_longitude:p.lng,p_address:p.address||null,p_metadata:{tags:p.tags||{},lootable:isHouse}});if(r.error){toast(r.error.message||'Falha ao salvar o ponto.','error');return;}await refreshLocations();renderLocations();renderStats();closeModal();toast(isHouse?'Casa marcada como ponto lootável.':'Local salvo na campanha.');};}
+  function openPoi(p){const isHouse=['house','detached','semidetached','residential'].includes(String(p.type||'').toLowerCase());const category=isHouse?'house':(p.category||poiCategory(p));centerTo(p,Math.max(16,state.map.getZoom()));openModal(isHouse?'CASA · PONTO REAL':'PONTO REAL','<div class="map-location-sheet"><div class="selected-location-hero"><div class="selected-location-icon">'+esc(iconByCategory(category))+'</div><div><strong>'+esc(p.name)+'</strong><small>'+esc(isHouse?'Casa · ponto potencial de loot':category)+' · OpenStreetMap</small></div></div><p class="map-location-address">'+esc(p.address||(isHouse?'Residência escolhida como ponto esparso de exploração.':'Ponto descoberto no mundo real.'))+'</p><div class="map-location-kpis"><div><span>CATEGORIA</span><b>'+esc(category)+'</b></div><div><span>FONTE</span><b>OSM</b></div><div><span>LOOT</span><b>'+ (isHouse?'POTENCIAL':'A DEFINIR') +'</b></div></div><div class="selection-actions"><button type="button" id="savePoi">'+(isHouse?'MARCAR COMO LOOTÁVEL':'SALVAR NA CAMPANHA')+'</button></div></div>');$('savePoi').onclick=async()=>{const r=await aeriom.rpc('discover_campaign_world_location',{p_campaign_id:state.campaign.id,p_source:'osm',p_external_id:p.key,p_name:isHouse?(p.name||'Casa'):p.name,p_category:category,p_latitude:p.lat,p_longitude:p.lng,p_address:p.address||null,p_metadata:{tags:p.tags||{},lootable:isHouse,generated_house:isHouse,category}});if(r.error){toast(r.error.message||'Falha ao salvar o ponto.','error');return;}await refreshLocations();renderLocations();renderStats();closeModal();toast(isHouse?'Casa marcada como ponto lootável.':'Local salvo na campanha.');};}
 
   function locateDevice(){
     if(!navigator.geolocation){toast('GPS indisponível neste navegador.','error');return;}
