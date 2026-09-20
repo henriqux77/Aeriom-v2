@@ -71,12 +71,12 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260920
 
       await refresh();
       const channel = aeriom.channel('afterlife-campaign-systems:'+campaignId)
-        .on('postgres_changes',{event:'*',schema:'public',table:'campaign_missions',filter:'campaign_id=eq.'+campaignId},refresh)
-        .on('postgres_changes',{event:'*',schema:'public',table:'campaign_diary_entries',filter:'campaign_id=eq.'+campaignId},refresh)
+        .on('postgres_changes',{event:'*',schema:'public',table:'campaign_missions',filter:'campaign_id=eq.'+campaignId},()=>refresh().catch(error=>console.warn('[AFTERLIFE][CAMPAIGN-SYSTEMS][REALTIME-MISSIONS]',error)))
+        .on('postgres_changes',{event:'*',schema:'public',table:'campaign_diary_entries',filter:'campaign_id=eq.'+campaignId},()=>refresh().catch(error=>console.warn('[AFTERLIFE][CAMPAIGN-SYSTEMS][REALTIME-DIARY]',error)))
         .on('postgres_changes',{event:'*',schema:'public',table:'campaign_factions',filter:'campaign_id=eq.'+campaignId},()=>{if(masterOnly())refresh()})
         .on('postgres_changes',{event:'*',schema:'public',table:'campaign_npcs',filter:'campaign_id=eq.'+campaignId},()=>{if(masterOnly())refresh()})
         .on('postgres_changes',{event:'*',schema:'public',table:'campaign_vehicles',filter:'campaign_id=eq.'+campaignId},()=>{if(masterOnly())refresh()})
-        .on('postgres_changes',{event:'*',schema:'public',table:'campaign_hordes',filter:'campaign_id=eq.'+campaignId},refresh)
+        .on('postgres_changes',{event:'*',schema:'public',table:'campaign_hordes',filter:'campaign_id=eq.'+campaignId},()=>refresh().catch(error=>console.warn('[AFTERLIFE][CAMPAIGN-SYSTEMS][REALTIME-HORDES]',error)))
         .subscribe();
       if(!masterOnly()){
         playerPollTimer=setInterval(()=>refresh().catch(error=>console.warn('[AFTERLIFE][CAMPAIGN-SYSTEMS][POLL]',error)),30000);
