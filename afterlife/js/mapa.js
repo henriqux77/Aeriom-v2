@@ -155,6 +155,10 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260920
     if(!isMaster()) await refreshPlayerPosition();
     renderEverything();
     if(!isMaster()&&state.mapPosition) centerTo(state.mapPosition,Math.max(15,state.map.getZoom()));
+    if(isMaster()){
+      const party=state.members.map(validMemberPoint).filter(Boolean), base=center();
+      if(party.length) state.map.fitBounds([base,...party].map(p=>[p.lat,p.lng]),{padding:[90,90],maxZoom:10,animate:false});
+    }
     if(failed.length){setStatus('Mapa carregado com falhas: '+failed.join(', ')+'.','error');report('map-refresh-partial',{failed});}
     else setStatus('Mundo pronto para a mesa.');
   }
