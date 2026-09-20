@@ -28,8 +28,7 @@ import { getSupabase } from "./supabase.js";
     ["vigor", "Vigor"],
     ["intelecto", "Intelecto"],
     ["presenca", "Presença"],
-    ["controle", "Controle"],
-    ["precisao", "Precisão"]
+    ["controle", "Controle"]
   ];
 
   const $ = id => document.getElementById(id);
