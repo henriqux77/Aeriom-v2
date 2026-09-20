@@ -154,6 +154,7 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260920
     await refreshMembers();
     if(!isMaster()) await refreshPlayerPosition();
     renderEverything();
+    if(!isMaster()&&state.mapPosition) centerTo(state.mapPosition,Math.max(15,state.map.getZoom()));
     if(failed.length){setStatus('Mapa carregado com falhas: '+failed.join(', ')+'.','error');report('map-refresh-partial',{failed});}
     else setStatus('Mundo pronto para a mesa.');
   }
@@ -285,9 +286,18 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260920
   function renderStations(){state.layer.stations.clearLayers();const bounds=state.map.getBounds().pad(.08);state.stations.slice(0,25).forEach(x=>{const p=pt(x.latitude,x.longitude);if(p&&bounds.contains([p.lat,p.lng]))L.circleMarker([p.lat,p.lng],{renderer:state.renderer,radius:5,color:'#0a0a09',weight:2,fillColor:'#d5b46c',fillOpacity:.95}).addTo(state.layer.stations).on('click',e=>{L.DomEvent.stopPropagation(e);openEntity({entity_type:'station',name:x.name,description:x.station_type,latitude:p.lat,longitude:p.lng,state:{condition:x.condition},metadata:x});})})}
 
   function renderVision(){
-    state.layer.vision.clearLayers();
-    if(isMaster()||!state.mapPosition)return;
-    L.circle([state.mapPosition.lat,state.mapPosition.lng],{renderer:state.renderer,radius:VISION_M,color:'#7fe7a7',weight:1,dashArray:'5 6',fillColor:'#7fe7a7',fillOpacity:.025}).addTo(state.layer.vision);
+    const fog=$('mapFog');
+    if(!fog||!state.map)return;
+    if(isMaster()||!state.mapPosition||state.map.getZoom()<12){fog.classList.remove('is-active');return;}
+    const origin=L.latLng(state.mapPosition.lat,state.mapPosition.lng);
+    const px=state.map.latLngToContainerPoint(origin);
+    const px2=L.point(px.x+100,px.y);
+    const metersPer100px=Math.max(1,state.map.distance(origin,state.map.containerPointToLatLng(px2)));
+    const radius=Math.max(34,Math.min(560,VISION_M*(100/metersPer100px)));
+    fog.style.setProperty('--fog-x',px.x+'px');
+    fog.style.setProperty('--fog-y',px.y+'px');
+    fog.style.setProperty('--fog-radius',radius+'px');
+    fog.classList.add('is-active');
   }
 
   function renderPartyList(){
