@@ -1,0 +1,27 @@
+-- AERIOM-v2 hardening: remove anonymous execution for avatar helpers and fix current FK/index lints.
+revoke execute on function public.aerion_can_view_avatar(text) from anon,public;
+grant execute on function public.aerion_can_view_avatar(text) to authenticated;
+revoke execute on function public.aerion_can_view_profile_avatar(text) from anon,public;
+grant execute on function public.aerion_can_view_profile_avatar(text) to authenticated;
+create index if not exists aerion_mind_edges_from_node_id_idx on public.aerion_mind_edges(from_node_id);
+create index if not exists aerion_mind_edges_to_node_id_idx on public.aerion_mind_edges(to_node_id);
+create index if not exists campaign_content_created_by_idx on public.campaign_content(created_by);
+create index if not exists campaign_live_media_updated_by_idx on public.campaign_live_media(updated_by);
+create index if not exists combat_events_actor_id_idx on public.combat_events(actor_id);
+create index if not exists combat_events_source_combatant_id_idx on public.combat_events(source_combatant_id);
+create index if not exists combat_events_target_combatant_id_idx on public.combat_events(target_combatant_id);
+create index if not exists combat_loot_claims_character_id_idx on public.combat_loot_claims(character_id);
+create index if not exists combat_loot_claims_user_id_idx on public.combat_loot_claims(user_id);
+create index if not exists combat_sessions_turn_combatant_id_idx on public.combat_sessions(turn_combatant_id);
+create index if not exists combat_xp_awards_character_id_idx on public.combat_xp_awards(character_id);
+create index if not exists combatants_monster_id_idx on public.combatants(monster_id);
+create index if not exists homebrew_campaign_sources_attached_by_idx on public.homebrew_campaign_sources(attached_by);
+create index if not exists homebrew_campaign_sources_source_id_idx on public.homebrew_campaign_sources(source_id);
+create index if not exists homebrew_content_revisions_changed_by_idx on public.homebrew_content_revisions(changed_by);
+create index if not exists knowledge_edges_created_by_idx on public.knowledge_edges(created_by);
+create index if not exists knowledge_edges_to_node_id_idx on public.knowledge_edges(to_node_id);
+create index if not exists knowledge_node_history_actor_id_idx on public.knowledge_node_history(actor_id);
+create index if not exists knowledge_nodes_created_by_idx on public.knowledge_nodes(created_by);
+create index if not exists knowledge_nodes_linked_pin_id_idx on public.knowledge_nodes(linked_pin_id);
+create index if not exists knowledge_nodes_owner_id_idx on public.knowledge_nodes(owner_id);
+drop index if exists public.idx_timeline_campaign_created;
