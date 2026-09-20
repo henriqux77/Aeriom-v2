@@ -12,6 +12,13 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260920
     return Number.isFinite(a) && Number.isFinite(b) ? { lat: a, lng: b } : null;
   }
 
+  function cleanupLegacyMemberMarkers() {
+    document.querySelectorAll('.al-mini--master, .al-mini--me, .al-mini--player').forEach(node => {
+      const marker = node.closest('.leaflet-marker-icon');
+      if (marker) marker.remove();
+    });
+  }
+
   function installMapCapture() {
     if (!window.L || state.map) return;
     const originalMap = window.L.map;
@@ -23,6 +30,7 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260920
       state.layer = window.L.layerGroup().addTo(map);
       setTimeout(() => {
         map.invalidateSize({ pan: false });
+        cleanupLegacyMemberMarkers();
         loadMembers().catch(() => {});
       }, 120);
       return map;
@@ -41,6 +49,7 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260920
       if (r.error) throw r.error;
       const members = Array.isArray(r.data) ? r.data : [];
       renderMembers(members);
+      cleanupLegacyMemberMarkers();
       if (!state.channel) subscribe();
       state.ready = true;
     } catch (error) {
@@ -112,6 +121,7 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260920
   function attachMapEvents() {
     if (!state.map) return;
     state.map.on('moveend zoomend', () => {
+      cleanupLegacyMemberMarkers();
       clearTimeout(state.timer);
       state.timer = setTimeout(() => loadMembers().catch(() => {}), 100);
     });
