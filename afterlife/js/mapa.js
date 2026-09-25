@@ -256,7 +256,6 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260920
       if(c.error) throw c.error;
       if(!c.data) throw new Error('Campanha não encontrada.');
       state.campaign=c.data;
-      await safeCall('ensure_campaign_map_positions',()=>aeriom.rpc('ensure_campaign_map_positions',{p_campaign_id:cid}));
       const m=await aeriom.rpc('list_campaign_map_members',{p_campaign_id:cid});
       if(m.error) throw m.error;
       state.members=Array.isArray(m.data)?m.data:[];
@@ -396,14 +395,6 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260920
     const p=pt(ch?.latitude,ch?.longitude);
     if(p && !(Math.abs(p.lat)<0.00001 && Math.abs(p.lng)<0.00001)) return p;
     return null;
-  }
-
-  async function refreshPlayerPosition(){
-    const r=await aeriom.rpc('ensure_campaign_map_position',{p_campaign_id:state.campaign.id});
-    if(r.error){ state.mapPosition=null; report('map-position-error',{message:r.error.message}); return null; }
-    state.mapPosition=pt(r.data?.latitude,r.data?.longitude);
-    if(state.mapPosition && (Math.abs(state.mapPosition.lat)<.00001 && Math.abs(state.mapPosition.lng)<.00001)) state.mapPosition=null;
-    return state.mapPosition;
   }
 
   async function refreshLocations(){
