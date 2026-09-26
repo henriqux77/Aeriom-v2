@@ -112,7 +112,7 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260920
 
     const diaryPanel = document.getElementById('diario');
     if(diaryPanel) {
-      diaryPanel.innerHTML = '<header><h2>DIÁRIO</h2><div class="system-panel-head-actions"><span>'+esc(s.diary_entries||0)+' registros</span><button type="button" class="system-mini-action" data-create="diary">＋ REGISTRAR</button></div></header><div class="system-timeline">'+(diary.length?diary.slice(0,10).map(e=>'<article class="timeline-row"><time>'+new Date(e.occurred_at).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})+'</time><div><strong>'+esc(e.title)+'</strong><p>'+esc(e.body||'')+'</p><small>'+esc(e.event_type||'registro')+'</small></div></article>').join(''):'<div class="system-empty"><strong>Diário vazio</strong><small>Registre acontecimentos ou deixe o motor gerar eventos automaticamente.</small></div>')+'</div>';
+      diaryPanel.innerHTML = '<header><h2>DIÁRIO</h2><div class="system-panel-head-actions"><span>'+esc(s.diary_entries||0)+' registros</span>'+(masterOnly()?'<button type="button" class="system-mini-action" data-create="diary">＋ REGISTRAR</button>':'')</div></header><div class="system-timeline">'+(diary.length?diary.slice(0,10).map(e=>'<article class="timeline-row"><time>'+new Date(e.occurred_at).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})+'</time><div><strong>'+esc(e.title)+'</strong><p>'+esc(e.body||'')+'</p><small>'+esc(e.event_type||'registro')+'</small></div></article>').join(''):'<div class="system-empty"><strong>Diário vazio</strong><small>Registre acontecimentos ou deixe o motor gerar eventos automaticamente.</small></div>')+'</div>';
     }
 
     const inventoryPanel = document.getElementById('inventario');
@@ -285,6 +285,7 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260920
   }
 
   function openCreate(type) {
+    if(type==='diary' && !masterOnly()) return toast('Somente o Mestre pode registrar acontecimentos no diário.','info');
     if(type==='crafting') return openCraftManager();
     if(type==='mission') return openMissionForm();
     if(type==='diary') return openDiaryForm();
@@ -590,8 +591,13 @@ import { aeriom, ensureAfterlifeSession } from './aeriom-client-v2.js?v=20260920
       toast(success,'success');
       await refresh();
     } catch(error) {
-      console.error('[AFTERLIFE][CAMPAIGN-SYSTEMS]',error);
-      toast(error?.message||'Não foi possível concluir a ação.','error');
+      const message=String(error?.message||'');
+      if(error?.code==='MASTER_REQUIRED' || /MASTER_REQUIRED/i.test(message)) {
+        toast('Somente o Mestre pode executar esta ação.','info');
+      } else {
+        console.error('[AFTERLIFE][CAMPAIGN-SYSTEMS]',error);
+        toast(message||'Não foi possível concluir a ação.','error');
+      }
     } finally { busy=false; }
   }
 
